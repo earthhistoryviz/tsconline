@@ -11,9 +11,12 @@ import * as generalFileHandlerRequests from "../src/file-handlers/general-file-h
 import { User, Workshop } from "../src/types";
 import * as util from "../src/util";
 import * as fsp from "fs/promises";
+import * as fs from "fs";
 import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
 import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
+import * as userHandlers from "../src/user/user-handler";
+import * as fetchUserFiles from "../src/user/fetch-user-files";
 import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
@@ -39,18 +42,22 @@ vi.mock("../src/database", async () => {
   return {
     findUser: vi.fn(() => Promise.resolve([testAdminUser])), // just so we can verify the user is an admin for prehandlers
     isUserInWorkshop: vi.fn().mockResolvedValue(true),
-    findWorkshop: vi.fn().mockResolvedValue([])
+    findWorkshop: vi.fn().mockResolvedValue([]),
+    checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
+    createUsersWorkshops: vi.fn()
   };
 });
 vi.mock("../src/user/fetch-user-files", async () => {
   return {
-    getUserUUIDDirectory: vi.fn().mockResolvedValue("/tmp/fake-directory")
+    getUserUUIDDirectory: vi.fn().mockResolvedValue("/tmp/fake-directory"),
+    getFileFromWorkshop: vi.fn().mockResolvedValue("tmp/fake-file")
   };
 });
 vi.mock("../src/util", async () => {
   return {
     verifyNonExistentFilepath: vi.fn().mockResolvedValue(true),
     checkFileExists: vi.fn().mockRejectedValue(true),
+    verifyFilepath: vi.fn().mockResolvedValue(true),
     assetconfigs: { datapackImagesDirectory: "assets/images" }
   };
 });
@@ -60,6 +67,7 @@ vi.mock("fs/promises", async () => {
     readdir: vi.fn().mockResolvedValue(["file1.zip", "file2.zip"])
   };
 });
+
 vi.mock("../src/upload-handlers", async () => {
   return {
     fetchWorkshopCoverPictureFilepath: vi.fn().mockResolvedValue(""),
@@ -78,7 +86,13 @@ vi.mock("../src/error-logger", async () => {
 });
 vi.mock("fs", async () => {
   return {
-    createReadStream: vi.fn().mockImplementation(() => {})
+    createReadStream: vi.fn().mockImplementation(() => {}),
+    readFileSync: vi.fn().mockReturnValue(Buffer.from("fake-file-content"))
+  };
+});
+vi.mock("../src/user/user-handler", async () => {
+  return {
+    getUploadedDatapackFilepath: vi.fn().mockResolvedValue("/assets/fake-datapack-filepath")
   };
 });
 
@@ -188,7 +202,25 @@ const routes: RouteDefinition[] = [
     recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK,
     hasAuth: true
   },
-  { method: "GET", url: "/workshop/1/files/presentation", hasAuth: true }
+  { method: "GET", url: "/workshop/1/files/presentation", hasAuth: true },
+  {
+    method: "GET",
+    url: "/workshop/workshop-files/1/fileName",
+    recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_FILE,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/workshop/workshop-datapack/1/datapackTitle",
+    recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK,
+    hasAuth: true
+  },
+  {
+    method: "POST",
+    url: "/workshop/register/1",
+    recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_REGISTER,
+    hasAuth: true
+  }
 ];
 
 describe("Route Consistency Tests", () => {
@@ -538,6 +570,259 @@ describe("downloadWorkshopFilesZip tests", () => {
   });
 });
 
+describe("downloadWorkshopFile tests", () => {
+  const workshopId = 42;
+  const fileName = "test_file.txt";
+  const route = `/workshop/workshop-files/${workshopId}/${fileName}`;
+  const findUser = vi.spyOn(database, "findUser");
+  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+
+  beforeEach(() => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    vi.clearAllMocks();
+  });
+  it("should return 400 if workshopId is not a int", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-files/invalid-id/file.txt",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be integer",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if workshopId is less than 0", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "workshop/workshop-files/0/file.txt",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be >= 1",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if fileName is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "workshop/workshop-files/1/",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/fileName must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 403 if user is not admin AND not in workshop", async () => {
+    findUser.mockResolvedValueOnce([testNonAdminUser]).mockResolvedValueOnce([testNonAdminUser]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
+  });
+  it("should return 500 if getFileFromWorkshop returns false", async () => {
+    vi.spyOn(fetchUserFiles, "getFileFromWorkshop").mockImplementationOnce(() => {
+      throw new Error("Simulated error");
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid file path" });
+  });
+  it("should return 500 if createReadStream throws an error", async () => {
+    vi.spyOn(fs, "createReadStream").mockImplementationOnce(() => {
+      throw new Error("Simulated stream error");
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("Error creating file stream")
+    });
+  });
+  it("should return 500 if getWorkshopID throws an error", async () => {
+    vi.spyOn(fs, "createReadStream").mockImplementationOnce(() => {
+      throw new Error("Simulated stream error");
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("Error creating file stream")
+    });
+  });
+  it("should return 500 if isUserInWorkshop fails", async () => {
+    isUserInWorkshop.mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "An error has occurred" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 and file stream if createReadStream succeeds", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("downloadWorkshopDataPack tests", () => {
+  const workshopId = 42;
+  const datapackName = "datapackName";
+  const route = `/workshop/workshop-datapack/${workshopId}/${datapackName}`;
+  const findUser = vi.spyOn(database, "findUser");
+  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+  const readFileSpy = vi.spyOn(fsp, "readFile");
+
+  const getUploadedDatapackFilepathSpy = vi.spyOn(userHandlers, "getUploadedDatapackFilepath");
+
+  beforeEach(() => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    vi.clearAllMocks();
+  });
+  it("should return 400 if workshopId is not a int", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-datapack/bad-id/datapackName",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be integer",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if workshopId is less than 0", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-datapack/0/datapackName",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be >= 1",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if datapackTitle is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-datapack/1/",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 403 if user is not admin AND not in workshop", async () => {
+    findUser.mockResolvedValueOnce([testNonAdminUser]).mockResolvedValueOnce([testNonAdminUser]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
+  });
+  it("should return 500 if readFile fails", async () => {
+    readFileSpy.mockRejectedValueOnce(new Error("Something else"));
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("Error sending file buffer")
+    });
+  });
+  it("should return 500 if isUserInWorkshop fails", async () => {
+    isUserInWorkshop.mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "An error has occurred" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if datapackTitle is invalid", async () => {
+    getUploadedDatapackFilepathSpy.mockImplementationOnce(async () => {
+      throw new Error("Simulated error");
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/workshop/workshop-datapack/${workshopId}/bad..Datapack`,
+      headers
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid datapack title" });
+  });
+  it("should return 200 if successful", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/workshop/workshop-datapack/${workshopId}/DatapackName`,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
 describe("fetchWorkshopCoverImage tests", () => {
   const workshopId = 1;
   const route = `/workshop-images/${workshopId}`;
@@ -607,7 +892,7 @@ describe("serveWorkshopHyperlinks tests", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "params/workshopId must be number",
+      message: "params/workshopId must be integer",
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -672,6 +957,115 @@ describe("serveWorkshopHyperlinks tests", () => {
     expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
     expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
     expect(checkFileExists).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("registerUserForWorkshop tests", () => {
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+  const createUsersWorkshops = vi.spyOn(database, "createUsersWorkshops");
+  const checkWorkshopHasUser = vi.spyOn(database, "checkWorkshopHasUser");
+  it("should return 401 if user is not logged in", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1"
+    });
+    expect(findWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 404 if workshop not found", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(await response.json()).toEqual({ error: "Workshop not found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should return 403 if registration is restricted to admins only", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    findWorkshop.mockResolvedValueOnce([{ ...testWorkshopDatabase, regRestrict: 1 }]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(await response.json()).toEqual({ error: "Registration restricted to admins only" });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should return 400 if user is already registered for workshop", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(true);
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(await response.json()).toEqual({ error: "User already registered for this workshop" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if createUsersWorkshops fails", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+    createUsersWorkshops.mockRejectedValueOnce(new Error("Database error"));
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(createUsersWorkshops).toHaveBeenCalledWith({ userId: testAdminUser.userId, workshopId: 1 });
+    expect(await response.json()).toEqual({ error: "An error occurred while registering for the workshop" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if checkWorkshopHasUser returns empty array", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+    checkWorkshopHasUser.mockResolvedValueOnce([]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(createUsersWorkshops).toHaveBeenCalledWith({ userId: testAdminUser.userId, workshopId: 1 });
+    expect(checkWorkshopHasUser).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(await response.json()).toEqual({ error: "Failed to register user for workshop" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should register user for workshop successfully", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+    checkWorkshopHasUser.mockResolvedValueOnce([{ workshopId: 1, userId: testAdminUser.userId }]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(createUsersWorkshops).toHaveBeenCalledWith({ userId: testAdminUser.userId, workshopId: 1 });
+    expect(checkWorkshopHasUser).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(await response.json()).toEqual({ message: "User successfully registered for the workshop" });
     expect(response.statusCode).toBe(200);
   });
 });

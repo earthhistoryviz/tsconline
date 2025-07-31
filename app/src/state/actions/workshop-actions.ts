@@ -1,11 +1,16 @@
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { SharedWorkshop, assertSharedWorkshopArray } from "@tsconline/shared";
+import {
+  SharedWorkshop,
+  assertSharedWorkshopArray,
+  assertWorkshopDatapackDownloadResponse,
+  WorkshopRecaptchaActions
+} from "@tsconline/shared";
 import { state } from "../state";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { getRecaptchaToken, pushError } from "./general-actions";
-import { downloadFile } from "../non-action-util";
+import { downloadFile, convertBase64ToBlob } from "../non-action-util";
 
 export const fetchAllWorkshops = action(async () => {
   try {
@@ -63,5 +68,131 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
     } catch (error) {
       pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
     }
+  }
+});
+
+export const fetchWorkshopFile = action(async (fileName: string, workshop: SharedWorkshop) => {
+  try {
+    const fileURL = `/workshop/workshop-files/${workshop.workshopId}/${encodeURIComponent(fileName)}`;
+    const recaptchaToken = await getRecaptchaToken(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_FILE);
+    if (!recaptchaToken) return null;
+
+    const response = await fetcher(fileURL, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+
+    if (!response.ok) {
+      let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+      switch (response.status) {
+        case 404:
+          errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
+          break;
+        case 401:
+          errorCode = ErrorCodes.NOT_LOGGED_IN;
+          break;
+        case 500:
+          errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+          break;
+      }
+      displayServerError(response, errorCode, ErrorMessages[errorCode]);
+      return;
+    }
+
+    const file = await response.blob();
+    if (file) {
+      try {
+        await downloadFile(file, fileName);
+      } catch (error) {
+        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+      }
+    }
+  } catch (error) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string, workshop: SharedWorkshop) => {
+  const requestURL = `/workshop/workshop-datapack/${workshop.workshopId}/${datapackTitle}`;
+  try {
+    const recaptchaToken = await getRecaptchaToken(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK);
+    if (!recaptchaToken) return null;
+
+    const response = await fetcher(requestURL, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+
+    if (!response.ok) {
+      let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+      switch (response.status) {
+        case 404:
+          errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
+          break;
+        case 401:
+          errorCode = ErrorCodes.NOT_LOGGED_IN;
+          break;
+        case 500:
+          errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+          break;
+      }
+      displayServerError(response, errorCode, ErrorMessages[errorCode]);
+      return;
+    }
+
+    const data = await response.json();
+    const { fileName, fileData, fileType } = data;
+
+    assertWorkshopDatapackDownloadResponse(data);
+
+    const file = await convertBase64ToBlob(fileData, fileType);
+
+    if (file) {
+      try {
+        await downloadFile(file, fileName);
+      } catch (error) {
+        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+      }
+    }
+  } catch (error) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const registerUserForWorkshop = action(async (workshopId: number) => {
+  if (!state.isLoggedIn) {
+    pushError(ErrorCodes.NOT_LOGGED_IN);
+    return;
+  }
+  const recaptchaToken = await getRecaptchaToken(WorkshopRecaptchaActions.WORKSHOP_REGISTER);
+  if (!recaptchaToken) return;
+  const response = await fetcher(`/workshop/register/${workshopId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
+  });
+  if (response.ok) {
+    const workshop = await response.json();
+    runInAction(() => {
+      state.workshops.push(workshop);
+      if (!state.user.workshopIds) {
+        state.user.workshopIds = [];
+      }
+      state.user.workshopIds?.push(workshopId);
+    });
+  } else {
+    displayServerError(
+      response,
+      ErrorCodes.REGISTER_WORKSHOP_FAILED,
+      ErrorMessages[ErrorCodes.REGISTER_WORKSHOP_FAILED]
+    );
   }
 });
