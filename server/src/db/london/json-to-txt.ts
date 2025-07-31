@@ -267,6 +267,23 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
         console.log(chalk.yellow("missing dataset id for " + column.columnx));
         continue;
       }
+
+      // Find the "Chron Label" column with the same path as the current column
+      const chronLabelColumn = columns.find(
+        (col) => col.path === column.path && col.columnx === "Chron Label"
+      );
+
+      const chronLabelIntervals = chronLabelColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === chronLabelColumn.dataset_id &&
+                interval.subdataset === "" &&
+                interval.interval_type === chronLabelColumn.interval_type
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : [];
+
       let regex = new RegExp(column.interval_type!, "i");
       // % in sql is wildcard, so match anything
       if (column.interval_type === "%") {
@@ -296,6 +313,14 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
         if (inter.polarity === null) continue;
         if (inter.stage === null) continue;
 
+        const containingLabel = chronLabelIntervals.find(
+          (labelInt) =>
+            labelInt.top_age !== null &&
+            labelInt.base_age !== null &&
+            inter.base_age! >= labelInt.top_age &&
+            inter.base_age! <= labelInt.base_age
+        );
+
         // Output the data line
         let label = "";
         if (column.col_if_not_intvx !== "" && column.col_if_not_intvx !== null) {
@@ -304,7 +329,7 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
           }
           label = String(inter[column.col_if_not_intvx as keyof arkL_intervals]);
         } else {
-          label = inter.intervalx || "";
+          label = containingLabel ? containingLabel.intervalx || "" : "";
         }
 
         // Insert new series line if series changes
@@ -420,7 +445,6 @@ try {
   const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
   const sequenceColumns = await processSequenceColumns(events, columns, datasets);
   const chronColumns = await processChronColumns(datasets, columns, intervals);
-  console.log("getting here");
   organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns], pathDict, linesDict);
   const lines = await linesFromDicts(pathDict, linesDict);
   await writeFile(filePath, lines.join("\n"));
