@@ -56,7 +56,9 @@ export default defineConfig({
         "server/src/chart-generation/generate-chart-helpers.ts": fullyCoveredConfig,
         "server/src/user-routes.ts": fullyCoveredConfig,
         "sersver/src/routes/public-routes.ts": fullyCoveredConfig,
-        "server/src/routes/prehandlers.ts": thresholdConfig
+        "server/src/routes/prehandlers.ts": thresholdConfig,
+        "mcp/src/shutdown.ts": fullyCoveredConfig,
+        "mcp/src/fastify.ts": fullyCoveredConfig,
         // "server/src/user/user-handler.ts": thresholdConfig,
         // "server/src/routes/routes.ts": thresholdConfig
       },
