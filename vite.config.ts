@@ -19,10 +19,15 @@ export default defineConfig({
     pool: "forks",
     cache: false,
     environment: "node",
-    include: ["server/__tests__/**.test.ts", "app/__tests__/**.test.ts", "shared/__tests__/**.test.ts"],
+    include: [
+      "server/__tests__/**.test.ts",
+      "app/__tests__/**.test.ts",
+      "shared/__tests__/**.test.ts",
+      "mcp/__tests__/**.test.ts"
+    ],
     coverage: {
       reporter: ["text", "lcov", "html"],
-      include: ["server/src/**", "app/src/**", "shared/src/**"],
+      include: ["server/src/**", "app/src/**", "shared/src/**", "mcp/src/**"],
       // TODO: add the commented out files
       thresholds: {
         "server/src/admin/admin-auth.ts": fullyCoveredConfig,
@@ -51,7 +56,9 @@ export default defineConfig({
         "server/src/chart-generation/generate-chart-helpers.ts": fullyCoveredConfig,
         "server/src/user-routes.ts": fullyCoveredConfig,
         "sersver/src/routes/public-routes.ts": fullyCoveredConfig,
-        "server/src/routes/prehandlers.ts": thresholdConfig
+        "server/src/routes/prehandlers.ts": thresholdConfig,
+        "mcp/src/shutdown.ts": fullyCoveredConfig,
+        "mcp/src/fastify.ts": fullyCoveredConfig
         // "server/src/user/user-handler.ts": thresholdConfig,
         // "server/src/routes/routes.ts": thresholdConfig
       },
