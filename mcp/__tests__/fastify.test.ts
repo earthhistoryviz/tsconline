@@ -1,5 +1,5 @@
 import fastify, { FastifyInstance } from "fastify";
-import { beforeAll, afterAll, beforeEach, vi, describe, it, expect, Mock } from "vitest";
+import { beforeAll, afterAll, beforeEach, vi, describe, it, expect, Mock, MockInstance } from "vitest";
 import { createMCPServer } from "../src/mcp";
 import { registerMCPServer } from "../src/fastify";
 import * as nodeCrypto from "node:crypto";
@@ -114,6 +114,30 @@ const initializeRequestBody = {
     }
   }
 };
+const initializeTransport = async (randomUUIDSpy: MockInstance, sessionId?: string) => {
+  randomUUIDSpy.mockReturnValueOnce(
+    (sessionId || "mock-session-id") as `${string}-${string}-${string}-${string}-${string}`
+  );
+  // Mock the connect method to simulate the creation of a server connection to a transport
+  __mockServer.connect.mockImplementationOnce((transport) => {
+    transport.onsessioninitialized(sessionId || "mock-session-id");
+    return Promise.resolve();
+  });
+  const initializeResponse = await app.inject({
+    method: "POST",
+    url: "/mcp",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    payload: initializeRequestBody
+  });
+  expect(initializeResponse.json()).toEqual(mockInitializeSuccessfulTransportResponse);
+  expect(__mockServer.connect).toHaveBeenCalled();
+  expect(initializeResponse.statusCode).toBe(200);
+  expect(handleRequest).toHaveBeenCalled();
+  // Now we send a second request with the same session ID
+  handleRequest.mockClear(); // Clear the mock to check if it gets called again
+};
 describe("POST /mcp", () => {
   const randomUUIDSpy = vi.spyOn(nodeCrypto, "randomUUID");
   it("should return -32000 error for invalid session with no session id on intialize", async () => {
@@ -200,26 +224,7 @@ describe("POST /mcp", () => {
     expect(handleRequest).toHaveBeenCalled();
   });
   it("should handle request if transport is already initialized", async () => {
-    randomUUIDSpy.mockReturnValueOnce("mock-session-id" as `${string}-${string}-${string}-${string}-${string}`);
-    // Mock the connect method to simulate the creation of a server connection to a transport
-    __mockServer.connect.mockImplementationOnce((transport) => {
-      transport.onsessioninitialized("mock-session-id");
-      return Promise.resolve();
-    });
-    const initializeResponse = await app.inject({
-      method: "POST",
-      url: "/mcp",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      payload: initializeRequestBody
-    });
-    expect(initializeResponse.json()).toEqual(mockInitializeSuccessfulTransportResponse);
-    expect(__mockServer.connect).toHaveBeenCalled();
-    expect(initializeResponse.statusCode).toBe(200);
-    expect(handleRequest).toHaveBeenCalled();
-    // Now we send a second request with the same session ID
-    handleRequest.mockClear(); // Clear the mock to check if it gets called again
+    await initializeTransport(randomUUIDSpy);
     const toolResponse = {
       jsonrpc: "2.0",
       id: 2,
@@ -245,5 +250,44 @@ describe("POST /mcp", () => {
     expect(response.json()).toEqual(toolResponse);
     expect(handleRequest).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("GET /mcp", () => {
+  const randomUUIDSpy = vi.spyOn(nodeCrypto, "randomUUID");
+  it("should return 400 for invalid or missing session ID", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/mcp"
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toBe("Invalid or missing session ID");
+  });
+
+  it("should handle GET request with valid session ID", async () => {
+    const sessionId = "valid-session-id";
+    await initializeTransport(randomUUIDSpy, sessionId);
+    const responseValue = {
+      jsonrpc: "2.0",
+      id: 1,
+      result: "This is a response from GET request"
+    };
+    handleRequest.mockImplementationOnce((_req, res) => {
+      res.end(JSON.stringify(responseValue));
+      return Promise.resolve();
+    });
+    const response = await app.inject({
+      method: "GET",
+      url: "/mcp",
+      headers: {
+        "mcp-session-id": sessionId
+      }
+    });
+
+    expect(response.body).toContain("This is a response from GET request");
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["content-type"]).toBe("text/event-stream");
+    expect(handleRequest).toHaveBeenCalled();
   });
 });
