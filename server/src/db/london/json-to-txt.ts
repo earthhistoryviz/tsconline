@@ -257,6 +257,210 @@ async function processBlockColumns(
   return blockColumns;
 }
 
+async function processChronColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
+  const chronColumns: ProcessColumnOutput[] = [];
+  for (const column of columns) {
+    if (
+      column.column_type?.includes("interval") &&
+      column.interval_type?.includes("chron") &&
+      column.columnx != "Chron Label " &&
+      column.columnx != "Series Label"
+    ) {
+      const columnLines: string[] = [];
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
+        continue;
+      }
+
+      // There must be a space after chron label, if broken, space might have been removed so check for that
+      const chronLabelColumn = columns.find(
+        (col) =>
+          col.columnx?.includes("Chron Label") && col.dataset_id === column.dataset_id && col.path === column.path
+      );
+      if (!chronLabelColumn) {
+        console.log(chalk.yellow("missing chron label column for " + column.columnx));
+        continue;
+      }
+      const chronSeriesColumn = columns.find(
+        (col) =>
+          col.columnx?.includes("Series Label") && col.dataset_id === column.dataset_id && col.path === column.path
+      );
+      if (!chronSeriesColumn) {
+        console.log(chalk.yellow("missing chron series column for " + column.columnx));
+        continue;
+      }
+
+      let chronIntervals = [];
+      let chronLabelIntervals = [];
+      let chronSeriesIntervals = [];
+
+      const regex = new RegExp(column.interval_type!, "i");
+      const path = column.path || "";
+      if (path === null || path === "") {
+        console.log(chalk.yellow("missing path for " + column.columnx));
+        continue;
+      }
+
+      chronIntervals = intervals
+        .filter(
+          (interval) =>
+            interval.dataset_id === column.dataset_id &&
+            interval.interval_type?.match(regex) &&
+            (interval.subdataset === "" || interval.subdataset === null)
+        )
+        .sort((a, b) => a.base_age2020! - b.base_age2020!);
+      if (chronIntervals.length === 0) {
+        console.log(chalk.yellow("no chron intervals found for " + column.columnx));
+        continue;
+      }
+
+      chronLabelIntervals = chronLabelColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === column.dataset_id &&
+                interval.interval_type?.match(chronLabelColumn.interval_type!) &&
+                interval.subdataset === "" &&
+                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : [];
+      if (chronLabelIntervals.length === 0 && chronLabelColumn) {
+        console.log(chalk.yellow("no chron label intervals found for " + column.columnx));
+        continue;
+      }
+
+      chronSeriesIntervals = chronSeriesColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === column.dataset_id &&
+                interval.interval_type?.match(chronSeriesColumn.interval_type!) &&
+                interval.subdataset === "" &&
+                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : [];
+
+      if (chronSeriesIntervals.length === 0 && chronSeriesColumn) {
+        console.log(chalk.yellow("no chron series intervals found for " + column.columnx));
+        continue;
+      }
+
+      const popup = dataset.notes_Jur;
+      let line = `${column.columnx}\tchron\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${
+        popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""
+      }`;
+      columnLines.push(line);
+
+      let topWritten = false;
+      let prevSeries = "";
+
+      for (const chronInter of chronIntervals) {
+        // london database is missing data
+        if (chronInter.base_age === null) continue;
+        if (chronInter.polarity === null) continue;
+        if (chronInter.intervalx === null) continue;
+
+        const chronLabel = chronLabelIntervals.find(
+          (inter) =>
+            inter.top_age2020 != null &&
+            inter.base_age2020 != null &&
+            inter.base_age2020 >= chronInter.base_age2020! &&
+            inter.top_age2020 <= chronInter.base_age2020!
+        );
+        if (!chronLabel) {
+          console.log(
+            chalk.yellow(`No chron label found for interval ${chronInter.intervalx} in column ${column.columnx}`)
+          );
+          continue;
+        }
+        const chronSeries = chronSeriesIntervals.find(
+          (inter) =>
+            inter.top_age2020 != null &&
+            inter.base_age2020 != null &&
+            inter.base_age2020 >= chronInter.base_age2020! &&
+            inter.top_age2020 <= chronInter.base_age2020!
+        );
+        if (!chronSeries) {
+          console.log(
+            chalk.yellow(`No chron series found for interval ${chronInter.intervalx} in column ${column.columnx}`)
+          );
+          continue;
+        }
+
+        if (chronSeries?.intervalx !== prevSeries) {
+          prevSeries = chronSeries?.intervalx ?? "";
+          if (prevSeries != "") {
+            line = `${chronSeries?.intervalx || ""}\tPrimary`;
+            columnLines.push(line);
+          }
+          if (!topWritten) {
+            columnLines.push(
+              `\tTOP\t\t${chronIntervals[0]!.top_age2020 === null ? 0 : Number(chronIntervals[0]!.top_age2020.toFixed(3))}`
+            );
+            topWritten = true;
+          }
+        }
+
+        const polarity = chronInter.polarity === "n" ? "N" : chronInter.polarity === "r" ? "R" : "U";
+
+        // If top event and base event are the same, use chronInter.intervalx as label
+        let label = "";
+        if (
+          chronInter.top_event &&
+          chronInter.base_event &&
+          chronInter.top_event
+            .replace(/^top\s+/i, "")
+            .replace(/^base\s+/i, "")
+            .trim() ===
+            chronInter.base_event
+              .replace(/^top\s+/i, "")
+              .replace(/^base\s+/i, "")
+              .trim()
+        ) {
+          label = chronInter.has_added_abv === "yes" ? chronInter.intervalx.split(" ")[0]! : chronInter.intervalx;
+          console.log(chronInter.has_added_abv, chronInter.intervalx, label);
+        } else {
+          label = chronLabel.has_added_abv === "yes" ? chronLabel.intervalx.split(" ")[0]! : chronLabel.intervalx;
+          if (column.columnx === "Pre-M26 Deep-Tow at depth") {
+            console.log("test", chronInter.has_added_abv, chronInter.intervalx.split(" ")[0], label);
+          }
+        }
+
+        // Remove any " (word continued)" at the end of the label, e.g. "C1r.2r (Matuyama continued)" -> "C1r.2r"
+        let chronPopup = "";
+        if (
+          chronInter.preset_duration_notes !== null &&
+          chronInter.preset_duration_notes !== undefined &&
+          chronInter.preset_duration_notes !== ""
+        ) {
+          chronPopup = String(chronInter.preset_duration_notes).replace(/[\r\n]+/g, " ");
+        } else {
+          chronPopup = chronInter.intervalx.replace(/[\r\n]+/g, " ") || "";
+          chronPopup = chronInter.has_added_abv
+            ? chronPopup.split(" ")[0]!
+            : chronPopup.replace(/\s*\([^)]+continued\)$/i, "");
+        }
+
+        line = `\t${polarity}\t${label}\t${Number(chronInter.base_age2020?.toFixed(3))}\t${chronPopup}`;
+        columnLines.push(line);
+      }
+
+      columnLines.push("");
+      if (column.path && column.columnx) {
+        chronColumns.push({
+          path: column.path,
+          column: column.columnx,
+          lines: columnLines
+        });
+      }
+    }
+  }
+  return chronColumns;
+}
+
 const organizeColumn = (entries: ProcessColumnOutput[], pathDict: StringDictSet, linesDict: StringDict) => {
   for (const entry of entries) {
     const { path, column, lines } = entry;
@@ -341,7 +545,8 @@ try {
   const eventColumns = await processEventColumns(datasets, columns, events);
   const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
   const sequenceColumns = await processSequenceColumns(events, columns, datasets);
-  organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns], pathDict, linesDict);
+  const chronColumns = await processChronColumns(datasets, columns, intervals);
+  organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns], pathDict, linesDict);
   const lines = await linesFromDicts(pathDict, linesDict);
   await writeFile(filePath, lines.join("\n"));
   console.log(chalk.green("Processed columns"));
