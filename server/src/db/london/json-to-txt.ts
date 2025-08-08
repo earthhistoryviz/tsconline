@@ -263,7 +263,8 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
     if (
       column.column_type?.includes("interval") &&
       column.interval_type?.includes("chron") &&
-      column.columnx != "Chron Label"
+      column.columnx != "Chron Label " &&
+      column.columnx != "Series Label"
     ) {
       const columnLines: string[] = [];
       const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
@@ -272,85 +273,181 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
         continue;
       }
 
-      // Find the "Chron Label" column with the same path as the current column
+      // There must be a space after chron label, if broken, space might have been removed so check for that
       const chronLabelColumn = columns.find(
-        (col) => col.path === column.path && col.columnx === "Chron Label"
+        (col) =>
+          col.columnx?.includes("Chron Label") && col.dataset_id === column.dataset_id && col.path === column.path
       );
-
-      const chronLabelIntervals = chronLabelColumn
-        ? intervals
-            .filter(
-              (interval) =>
-                interval.dataset_id === chronLabelColumn.dataset_id &&
-                interval.subdataset === "" &&
-                interval.interval_type === chronLabelColumn.interval_type
-            )
-            .sort((a, b) => a.base_age2020! - b.base_age2020!)
-        : [];
-
-      let regex = new RegExp(column.interval_type!, "i");
-      // % in sql is wildcard, so match anything
-      if (column.interval_type === "%") {
-        regex = new RegExp(".*", "i");
+      if (!chronLabelColumn) {
+        console.log(chalk.yellow("missing chron label column for " + column.columnx));
+        continue;
       }
-      let dbIntervals = [];
-      dbIntervals = intervals
+      const chronSeriesColumn = columns.find(
+        (col) =>
+          col.columnx?.includes("Series Label") && col.dataset_id === column.dataset_id && col.path === column.path
+      );
+      if (!chronSeriesColumn) {
+        console.log(chalk.yellow("missing chron series column for " + column.columnx));
+        continue;
+      }
+
+      let chronIntervals = [];
+      let chronLabelIntervals = [];
+      let chronSeriesIntervals = [];
+
+      const regex = new RegExp(column.interval_type!, "i");
+      const path = column.path || "";
+      if (path === null || path === "") {
+        console.log(chalk.yellow("missing path for " + column.columnx));
+        continue;
+      }
+
+      chronIntervals = intervals
         .filter(
           (interval) =>
             interval.dataset_id === column.dataset_id &&
             interval.interval_type?.match(regex) &&
-            interval.subdataset === ""
+            (interval.subdataset === "" || interval.subdataset === null)
         )
         .sort((a, b) => a.base_age2020! - b.base_age2020!);
-      // console.log("intervalx:", dbIntervals.map((item) => item.intervalx), "id:", dbIntervals.map((item) => item.id));
-      if (dbIntervals.length === 0) {
-        console.log(chalk.yellow("no chron blocks found for " + column.columnx));
+      if (chronIntervals.length === 0) {
+        console.log(chalk.yellow("no chron intervals found for " + column.columnx));
         continue;
       }
+
+      chronLabelIntervals = chronLabelColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === column.dataset_id &&
+                interval.interval_type?.match(chronLabelColumn.interval_type!) &&
+                interval.subdataset === "" &&
+                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : [];
+      if (chronLabelIntervals.length === 0 && chronLabelColumn) {
+        console.log(chalk.yellow("no chron label intervals found for " + column.columnx));
+        continue;
+      }
+
+      chronSeriesIntervals = chronSeriesColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === column.dataset_id &&
+                interval.interval_type?.match(chronSeriesColumn.interval_type!) &&
+                interval.subdataset === "" &&
+                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : [];
+
+      if (chronSeriesIntervals.length === 0 && chronSeriesColumn) {
+        console.log(chalk.yellow("no chron series intervals found for " + column.columnx));
+        continue;
+      }
+
       const popup = dataset.notes_Jur;
-      let line = `${column.columnx}\tchron\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
+      let line = `${column.columnx}\tchron\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${
+        popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""
+      }`;
       columnLines.push(line);
 
-      let prevSeries: string | null = null;
-      for (const inter of dbIntervals) {
-        if (inter.base_age === null) continue;
-        if (inter.polarity === null) continue;
-        if (inter.stage === null) continue;
+      let topWritten = false;
+      let prevSeries = "";
 
-        const containingLabel = chronLabelIntervals.find(
-          (labelInt) =>
-            labelInt.top_age !== null &&
-            labelInt.base_age !== null &&
-            inter.base_age! >= labelInt.top_age &&
-            inter.base_age! <= labelInt.base_age
+      for (const chronInter of chronIntervals) {
+        // london database is missing data
+        if (chronInter.base_age === null) continue;
+        if (chronInter.polarity === null) continue;
+        if (chronInter.intervalx === null) continue;
+
+        const chronLabel = chronLabelIntervals.find(
+          (inter) =>
+            inter.top_age2020 != null &&
+            inter.base_age2020 != null &&
+            inter.base_age2020 >= chronInter.base_age2020! &&
+            inter.top_age2020 <= chronInter.base_age2020!
         );
+        if (!chronLabel) {
+          console.log(
+            chalk.yellow(`No chron label found for interval ${chronInter.intervalx} in column ${column.columnx}`)
+          );
+          continue;
+        }
+        const chronSeries = chronSeriesIntervals.find(
+          (inter) =>
+            inter.top_age2020 != null &&
+            inter.base_age2020 != null &&
+            inter.base_age2020 >= chronInter.base_age2020! &&
+            inter.top_age2020 <= chronInter.base_age2020!
+        );
+        if (!chronSeries) {
+          console.log(
+            chalk.yellow(`No chron series found for interval ${chronInter.intervalx} in column ${column.columnx}`)
+          );
+          continue;
+        }
 
-        // Output the data line
+        if (chronSeries?.intervalx !== prevSeries) {
+          prevSeries = chronSeries?.intervalx ?? "";
+          if (prevSeries != "") {
+            line = `${chronSeries?.intervalx || ""}\tPrimary`;
+            columnLines.push(line);
+          }
+          if (!topWritten) {
+            columnLines.push(
+              `\tTOP\t\t${chronIntervals[0]!.top_age2020 === null ? 0 : Number(chronIntervals[0]!.top_age2020.toFixed(3))}`
+            );
+            topWritten = true;
+          }
+        }
+
+        const polarity = chronInter.polarity === "n" ? "N" : chronInter.polarity === "r" ? "R" : "U";
+
+        // If top event and base event are the same, use chronInter.intervalx as label
         let label = "";
-        if (column.col_if_not_intvx !== "" && column.col_if_not_intvx !== null) {
-          if (inter[column.col_if_not_intvx as keyof arkL_intervals] === null) {
-            continue;
-          }
-          label = String(inter[column.col_if_not_intvx as keyof arkL_intervals]);
+        if (
+          chronInter.top_event &&
+          chronInter.base_event &&
+          chronInter.top_event
+            .replace(/^top\s+/i, "")
+            .replace(/^base\s+/i, "")
+            .trim() ===
+            chronInter.base_event
+              .replace(/^top\s+/i, "")
+              .replace(/^base\s+/i, "")
+              .trim()
+        ) {
+          label = chronInter.has_added_abv === "yes" ? chronInter.intervalx.split(" ")[0]! : chronInter.intervalx;
+          console.log(chronInter.has_added_abv, chronInter.intervalx, label);
         } else {
-          label = containingLabel ? containingLabel.intervalx || "" : "";
-        }
-
-        // Insert new series line if series changes
-        if (inter.stage !== prevSeries) {
-          prevSeries = inter.stage ?? null;
-          if (prevSeries !== null) {
-            // Output the series header line: <SERIESNAME> (blank) <WIDTH>
-            columnLines.push(`${prevSeries}\tPrimary`);
-            // Output the TOP line for the series
-            columnLines.push(`\tTOP\t\t${inter!.top_age === null ? 0 : inter!.top_age}`);
+          label = chronLabel.has_added_abv === "yes" ? chronLabel.intervalx.split(" ")[0]! : chronLabel.intervalx;
+          if (column.columnx === "Pre-M26 Deep-Tow at depth") {
+            console.log("test", chronInter.has_added_abv, chronInter.intervalx.split(" ")[0], label);
           }
         }
 
-        const polarity = inter.polarity == "r" ? "R" : inter.polarity == "n" ? "N" : "U";
-        line = `\t${polarity}\t${label}\t${inter.base_age}\t${inter.interval_notes !== null ? inter.interval_notes.replace(/[\r\n]+/g, " ") : ""}`;
+        // Remove any " (word continued)" at the end of the label, e.g. "C1r.2r (Matuyama continued)" -> "C1r.2r"
+        let chronPopup = "";
+        if (
+          chronInter.preset_duration_notes !== null &&
+          chronInter.preset_duration_notes !== undefined &&
+          chronInter.preset_duration_notes !== ""
+        ) {
+          chronPopup = String(chronInter.preset_duration_notes).replace(/[\r\n]+/g, " ");
+        } else {
+          chronPopup = chronInter.intervalx.replace(/[\r\n]+/g, " ") || "";
+          chronPopup = chronInter.has_added_abv
+            ? chronPopup.split(" ")[0]!
+            : chronPopup.replace(/\s*\([^)]+continued\)$/i, "");
+        }
+
+        line = `\t${polarity}\t${label}\t${Number(chronInter.base_age2020?.toFixed(3))}\t${chronPopup}`;
         columnLines.push(line);
       }
+
       columnLines.push("");
       if (column.path && column.columnx) {
         chronColumns.push({
