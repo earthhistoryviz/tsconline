@@ -263,8 +263,8 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
     if (
       column.column_type?.includes("interval") &&
       column.interval_type?.includes("chron") &&
-      column.columnx != "Chron Label " &&
-      column.columnx != "Series Label"
+      !column.columnx?.includes("Chron Label ") &&
+      !column.columnx?.includes("Series Label")
     ) {
       const columnLines: string[] = [];
       const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
@@ -342,7 +342,6 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
             )
             .sort((a, b) => a.base_age2020! - b.base_age2020!)
         : [];
-
       if (chronSeriesIntervals.length === 0 && chronSeriesColumn) {
         console.log(chalk.yellow("no chron series intervals found for " + column.columnx));
         continue;
@@ -376,13 +375,16 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
           );
           continue;
         }
-        const chronSeries = chronSeriesIntervals.find(
-          (inter) =>
-            inter.top_age2020 != null &&
-            inter.base_age2020 != null &&
-            inter.base_age2020 >= chronInter.base_age2020! &&
-            inter.top_age2020 <= chronInter.base_age2020!
-        );
+        const chronSeries = chronSeriesIntervals.find((inter) => {
+          const interBase = inter.base_age != null ? inter.base_age : inter.base_age2020;
+          const interTop = inter.top_age != null ? inter.top_age : inter.top_age2020;
+          return (
+            interTop != null &&
+            interBase != null &&
+            interBase >= chronInter.base_age2020! &&
+            interTop <= chronInter.base_age2020!
+          );
+        });
         if (!chronSeries) {
           console.log(
             chalk.yellow(`No chron series found for interval ${chronInter.intervalx} in column ${column.columnx}`)
@@ -421,12 +423,8 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
               .trim()
         ) {
           label = chronInter.has_added_abv === "yes" ? chronInter.intervalx.split(" ")[0]! : chronInter.intervalx;
-          console.log(chronInter.has_added_abv, chronInter.intervalx, label);
         } else {
           label = chronLabel.has_added_abv === "yes" ? chronLabel.intervalx.split(" ")[0]! : chronLabel.intervalx;
-          if (column.columnx === "Pre-M26 Deep-Tow at depth") {
-            console.log("test", chronInter.has_added_abv, chronInter.intervalx.split(" ")[0], label);
-          }
         }
 
         // Remove any " (word continued)" at the end of the label, e.g. "C1r.2r (Matuyama continued)" -> "C1r.2r"
