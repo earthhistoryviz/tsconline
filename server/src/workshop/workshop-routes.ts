@@ -12,6 +12,7 @@ import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-hand
 import path from "node:path";
 import { readFile } from "fs/promises";
 import { createReadStream } from "fs";
+import fsSync from "fs";
 import { getFileFromWorkshop } from "../user/fetch-user-files.js";
 import { verifyNonExistentFilepath } from "../util.js";
 import { getUploadedDatapackFilepath } from "../user/user-handler.js";
@@ -152,20 +153,25 @@ export const downloadWorkshopFilesZip = async (
     // Copy filesDir and datapacksDir into tempDir (if they exist)
     const copyIfExists = async (src: string, dest: string) => {
       try {
-        // Validate that paths don't escape their intended directories
+        // Resolve and validate that paths don't escape their intended directories
+        const resolvedSrc = fsSync.realpathSync(path.resolve(src));
+        const resolvedDatapacksRootDir = fsSync.realpathSync(path.resolve(datapacksRootDir));
+        const resolvedFilesDir = fsSync.realpathSync(path.resolve(filesDir));
         if (
-          !path.normalize(src).startsWith(path.normalize(datapacksRootDir)) &&
-          !path.normalize(src).startsWith(path.normalize(filesDir))
+          !resolvedSrc.startsWith(resolvedDatapacksRootDir) &&
+          !resolvedSrc.startsWith(resolvedFilesDir)
         ) {
           throw new Error("Invalid source path");
         }
 
-        if (!path.normalize(dest).startsWith(path.normalize(tempDir))) {
+        const resolvedDest = path.resolve(dest);
+        const resolvedTempDir = path.resolve(tempDir);
+        if (!resolvedDest.startsWith(resolvedTempDir)) {
           throw new Error("Invalid destination path");
         }
 
-        await fs.access(src);
-        await fs.cp(src, dest, { recursive: true });
+        await fs.access(resolvedSrc);
+        await fs.cp(resolvedSrc, resolvedDest, { recursive: true });
       } catch (error) {
         if (error instanceof Error && error.message.includes("Invalid")) {
           throw error;
