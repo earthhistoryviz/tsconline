@@ -118,6 +118,14 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
   }
 };
 
+// Fix for CodeQL
+function sanitizePathSegment(segment: string): string {
+  if (typeof segment !== "string" || segment.includes("..") || segment.includes("/") || segment.includes("\\")) {
+    throw new Error("Invalid path segment");
+  }
+  return segment;
+}
+
 export const downloadWorkshopFilesZip = async (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
@@ -131,33 +139,10 @@ export const downloadWorkshopFilesZip = async (
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
-    /*const filesFolder = await getWorkshopFilesPath(workshopId);
-    const baseDir = path.dirname(filesFolder);
-    const zipfile = path.resolve(baseDir, `filesFor${workshopId}.zip`);
-    if (!(await verifyNonExistentFilepath(zipfile))) {
-      reply.status(500).send({ error: "Invalid directory path" });
-      return;
-    }
-    let file: Buffer;
-    try {
-      file = await readFile(zipfile);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        const dir = await readdir(filesFolder, { withFileTypes: true });
-        if (dir.length === 0) {
-          reply.status(404).send({ error: "No files found for this workshop" });
-          return;
-        }
-        file = await createZipFile(zipfile, filesFolder);
-      } else {
-        reply.status(500).send({ error: `Read error: ${(error as Error).message}` });
-        return;
-      }
-    }
-    reply.send(file);*/
     const filesDir = await getWorkshopFilesPath(workshopId);
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-    const datapacksRootDir = await getUserUUIDDirectory(workshopUUID, true);
+    const safeWorkshopUUID = sanitizePathSegment(workshopUUID);
+    const datapacksRootDir = await getUserUUIDDirectory(safeWorkshopUUID, true);
     const datapacksDir = path.join(datapacksRootDir, "datapacks");
 
     // Create a temp directory to hold both folders
