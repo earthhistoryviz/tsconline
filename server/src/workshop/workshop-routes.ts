@@ -151,23 +151,22 @@ export const downloadWorkshopFilesZip = async (
     const datapacksRootDir = await getUserUUIDDirectory(safeWorkshopUUID, true);
     const datapacksDir = path.join(datapacksRootDir, "datapacks");
 
-    // Validate that filesDir and datapacksDir are within expected root directories
-    const WORKSHOP_FILES_ROOT = path.resolve(assetconfigs.workshopFilesRoot);
-    const USER_UUID_ROOT = path.resolve(assetconfigs.userUUIDRoot);
-    const resolvedFilesDir = fsSync.realpathSync(path.resolve(filesDir));
-    const resolvedDatapacksDir = fsSync.realpathSync(path.resolve(datapacksDir));
-    if (!resolvedFilesDir.startsWith(WORKSHOP_FILES_ROOT)) {
-      reply.status(400).send({ error: "Invalid files directory path" });
-      return;
-    }
-    if (!resolvedDatapacksDir.startsWith(USER_UUID_ROOT)) {
-      reply.status(400).send({ error: "Invalid datapacks directory path" });
-      return;
-    }
-
     // Create a temp directory to hold both folders
-    const tempDir = path.join(os.tmpdir(), `workshop_zip_${workshopId}`);
+    const tempDirName = `workshop_zip_${workshopId}`;
+    // Sanitize the workshop ID in the temp directory name
+    if (!tempDirName.match(/^workshop_zip_\d+$/)) {
+      reply.status(400).send({ error: "Invalid workshop ID format" });
+      return;
+    }
+    const tempDir = path.join(os.tmpdir(), tempDirName);
     await fs.mkdir(tempDir, { recursive: true });
+    
+    // Verify the tempDir is within the expected tmp directory
+    const resolvedTempDir = fsSync.realpathSync(path.resolve(tempDir));
+    if (!resolvedTempDir.startsWith(path.resolve(os.tmpdir()))) {
+      reply.status(400).send({ error: "Invalid temporary directory path" });
+      return;
+    }
 
     // Copy filesDir and datapacksDir into tempDir (if they exist)
     const copyIfExists = async (src: string, dest: string) => {
