@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import styles from "./WorkshopDetails.module.css";
@@ -26,6 +26,7 @@ type WorkshopReservedFileProps = {
   workshopId: number;
   userInWorkshop: boolean;
 };
+
 const WorkshopReservedFile: React.FC<WorkshopReservedFileProps> = ({
   renderLink,
   fileType,
@@ -69,6 +70,7 @@ export const WorkshopDetails = observer(() => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { t } = useTranslation();
+  const [loadingRegister, setLoadingRegister] = useState(false);
 
   const fetchWorkshop = () => {
     if (!id) return;
@@ -77,14 +79,13 @@ export const WorkshopDetails = observer(() => {
   };
 
   const workshop = fetchWorkshop();
-  const shouldLoadRecaptcha = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
-  useEffect(() => {
-    if (shouldLoadRecaptcha) loadRecaptcha();
-    return () => {
-      if (shouldLoadRecaptcha) removeRecaptcha();
-    };
-  }, [shouldLoadRecaptcha]);
 
+  useEffect(() => {
+    loadRecaptcha();
+    return () => {
+      removeRecaptcha();
+    };
+  }, []);
   async function downloadWorkshopFiles() {
     if (workshop && workshop.files && workshop.files.length > 0) {
       await actions.fetchWorkshopFilesForDownload(workshop);
@@ -92,7 +93,11 @@ export const WorkshopDetails = observer(() => {
       if (workshop.datapacks && workshop.datapacks.length > 0) {
         for (const datapackTitle of workshop.datapacks) {
           try {
-            await actions.fetchDatapackFiles(datapackTitle, getWorkshopUUIDFromWorkshopId(workshop.workshopId), true);
+            await actions.fetchDatapackFiles(
+              datapackTitle,
+              getWorkshopUUIDFromWorkshopId(workshop.workshopId),
+              true
+            );
           } catch (error) {
             console.error("Failed to download datapack files:", error);
             actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
@@ -103,10 +108,27 @@ export const WorkshopDetails = observer(() => {
       actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
     }
   }
+  async function downloadWorkshopFile(fileName: string) {
+    if (workshop && workshop.files && workshop.files.length > 0) {
+      await actions.fetchWorkshopFile(fileName, workshop);
+    } else {
+      actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
+    }
+  }
+  async function downloadWorkshopDatapack(dataPackTitle: string) {
+    if (workshop && workshop.files && workshop.files.length > 0) {
+      await actions.fetchWorkshopDetailsDatapack(dataPackTitle, workshop);
+    } else {
+      actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
+    }
+  
+  }
+
   if (!workshop || !id) return <PageNotFound />;
   const isRegistered = state.user.isAdmin || state.user.workshopIds?.includes(workshop.workshopId) || false;
   const isPublicWorkshop = !workshop.regRestrict;
   const isDisabled = !isPublicWorkshop && !isRegistered;
+  
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -115,7 +137,6 @@ export const WorkshopDetails = observer(() => {
             <ArrowBackIcon className={styles.icon} />
           </IconButton>
           <Typography className={styles.ht}>{workshop.title}</Typography>
-
           <img className={styles.di} src={getWorkshopCoverImage(workshop.workshopId)} />
         </div>
         <CustomDivider className={styles.divider} />
@@ -136,7 +157,19 @@ export const WorkshopDetails = observer(() => {
                 {workshop.datapacks && workshop.datapacks.length > 0 ? (
                   workshop.datapacks.map((datapack, index) => (
                     <Typography key={index} className={styles.fileName}>
-                      • {datapack}
+                      •{" "}
+                      <a
+                        href={isRegistered ? "" : undefined}
+                        onClick={
+                          isRegistered
+                            ? async (e) => {
+                                e.preventDefault();
+                                await downloadWorkshopDatapack(datapack);
+                              }
+                            : undefined
+                        }>
+                        {datapack}
+                      </a>
                     </Typography>
                   ))
                 ) : (
@@ -146,18 +179,19 @@ export const WorkshopDetails = observer(() => {
                 )}
               </Box>
             </div>
+
             <div className={styles.ai}>
               <WorkshopReservedFile
                 renderLink={workshop.files?.includes(RESERVED_INSTRUCTIONS_FILENAME) || false}
                 fileType="instructions"
                 workshopId={workshop.workshopId}
-                userInWorkshop={shouldLoadRecaptcha}
+                userInWorkshop={isRegistered}
               />
               <WorkshopReservedFile
                 renderLink={workshop.files?.includes(RESERVED_PRESENTATION_FILENAME) || false}
                 fileType="presentation"
                 workshopId={workshop.workshopId}
-                userInWorkshop={shouldLoadRecaptcha}
+                userInWorkshop={isRegistered}
               />
               <Typography className={styles.aih}>{t("workshops.details-page.other-files")}</Typography>
               {(() => {
@@ -169,7 +203,19 @@ export const WorkshopDetails = observer(() => {
                   <>
                     {nonReservedFiles.map((file, index) => (
                       <Typography key={index} className={styles.fileName}>
-                        • {file}
+                        •{" "}
+                        <a
+                          href={isRegistered ? "" : undefined}
+                          onClick={
+                            isRegistered
+                              ? async (e) => {
+                                  e.preventDefault();
+                                  await downloadWorkshopFile(file);
+                                }
+                              : undefined
+                          }>
+                          {file}
+                        </a>
                       </Typography>
                     ))}
                   </>
@@ -180,7 +226,7 @@ export const WorkshopDetails = observer(() => {
                 );
               })()}
               <Box sx={{ display: "flex", marginTop: 2, gap: 2 }}>
-                {!shouldLoadRecaptcha ? (
+                {!isRegistered ? (
                   <CustomTooltip
                     title={t("workshops.details-page.please-register")}
                     slotProps={{
@@ -217,11 +263,16 @@ export const WorkshopDetails = observer(() => {
                     <TSCLoadingButton
                       variant="contained"
                       sx={{ marginRight: 2, backgroundColor: "primary" }}
-                      onClick={() => {
-                        console.warn("Register button clicked, but no action defined yet.");
+                      onClick={async () => {
+                        try {
+                          setLoadingRegister(true);
+                          await actions.registerUserForWorkshop(workshop.workshopId);
+                        } finally {
+                          setLoadingRegister(false);
+                        }
                       }}
                       disabled={isRegistered || isDisabled}
-                      loading={false}>
+                      loading={loadingRegister}>
                       {isRegistered
                         ? t("workshops.details-page.registered-button")
                         : t("workshops.details-page.register-button")}

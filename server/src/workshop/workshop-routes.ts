@@ -1,6 +1,6 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyRequest, FastifyReply, RouteGenericInterface } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
-import { findWorkshop, isUserInWorkshop } from "../database.js";
+import { checkWorkshopHasUser, createUsersWorkshops, findWorkshop, isUserInWorkshop } from "../database.js";
 import { getWorkshopFilesPath, getWorkshopIdFromUUID, verifyWorkshopValidity } from "./workshop-util.js";
 import {
   ReservedWorkshopFileKey,
@@ -11,14 +11,17 @@ import {
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
+import { createReadStream } from "fs";
+import { getFileFromWorkshop } from "../user/fetch-user-files.js";
 import { verifyNonExistentFilepath } from "../util.js";
+import { getUploadedDatapackFilepath } from "../user/user-handler.js";
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
-import { createReadStream } from "fs";
 import fs from "fs/promises";
 import os from "os";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
+import { readdir } from "node:fs/promises";
 
 export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
@@ -194,6 +197,84 @@ export const downloadWorkshopFilesZip = async (
   }
 };
 
+export const downloadWorkshopFile = async function downloadWorkshopFile(
+  request: FastifyRequest<{ Params: { workshopId: number; fileName: string } }>,
+  reply: FastifyReply
+) {
+  try {
+    const { workshopId, fileName } = request.params;
+
+    const user = request.user!;
+    const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
+    if (!isAuthorized) {
+      reply.status(403).send({ error: "Unauthorized access" });
+      return;
+    }
+
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+
+    let filePath: string;
+    try {
+      filePath = await getFileFromWorkshop(workshopUUID, fileName);
+    } catch (error) {
+      reply.status(500).send({ error: "Invalid file path" });
+      return;
+    }
+
+    try {
+      const stream = createReadStream(filePath);
+      return reply.send(stream);
+    } catch (e) {
+      reply.status(500).send({ error: "Error creating file stream" });
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "An error has occurred" });
+  }
+};
+
+export const downloadWorkshopDatapack = async function downloadWorkshopDatapack(
+  request: FastifyRequest<{ Params: { workshopId: number; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  try {
+    // already verified uuid in verifyAuthority
+    const { workshopId, datapackTitle } = request.params;
+
+    // user exists, already verified in verifyAuthority
+    const user = request.user!;
+    const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
+    if (!isAuthorized) {
+      reply.status(403).send({ error: "Unauthorized access" });
+      return;
+    }
+
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+
+    let dataPackPath: string;
+    try {
+      dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
+    } catch (error) {
+      reply.status(500).send({ error: "Invalid datapack title" });
+      return;
+    }
+
+    try {
+      const fileBuffer = await readFile(dataPackPath);
+      const fileBase64 = fileBuffer.toString("base64");
+      const fileType = "application/octet-stream";
+      reply.send({
+        fileName: path.basename(dataPackPath),
+        fileData: fileBase64,
+        fileType
+      });
+    } catch (e) {
+      reply.status(500).send({ error: "Error sending file buffer" });
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "An error has occurred" });
+  }
+};
+
 export const fetchWorkshopCoverImage = async function (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
@@ -216,5 +297,40 @@ export const fetchWorkshopCoverImage = async function (
     }
     console.error("Error fetching image: ", e);
     reply.status(500).send({ error: "Internal Server Error" });
+  }
+};
+
+interface RegisterUserForWorkshopParams extends RouteGenericInterface {
+  Params: {
+    workshopId: number;
+  };
+}
+export const registerUserForWorkshop = async (
+  request: FastifyRequest<RegisterUserForWorkshopParams>,
+  reply: FastifyReply
+) => {
+  const { workshopId } = request.params;
+  const user = request.user!; // already verified in verifyAuthority
+  try {
+    const workshop = await findWorkshop({ workshopId });
+    if (!workshop || workshop.length !== 1) {
+      return reply.status(404).send({ error: "Workshop not found" });
+    }
+    if (workshop[0]!.regRestrict === 1 && !user.isAdmin) {
+      return reply.status(403).send({ error: "Registration restricted to admins only" });
+    }
+    const isRegistered = await isUserInWorkshop(user.userId, workshopId);
+    if (isRegistered) {
+      return reply.status(400).send({ error: "User already registered for this workshop" });
+    }
+    await createUsersWorkshops({ userId: user.userId, workshopId });
+    if ((await checkWorkshopHasUser(user.userId, workshopId)).length === 0) {
+      return reply.status(500).send({ error: "Failed to register user for workshop" });
+    }
+
+    reply.send({ message: "User successfully registered for the workshop" });
+  } catch (error) {
+    logger.error("Error registering user for workshop:", error);
+    reply.status(500).send({ error: "An error occurred while registering for the workshop" });
   }
 };
