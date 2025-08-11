@@ -388,7 +388,7 @@ const routes: RouteDefinition[] = [
   },
   {
     method: "GET",
-    url: `/user/datapack/files/datapack/${uuid}`,
+    url: `/user/datapack/files/datapack/${uuid}`
   },
   {
     method: "DELETE",
@@ -2279,8 +2279,6 @@ describe("fetchDatapackAttachedFileNames tests", () => {
   });
 });
 describe("deleteDatapackAttachedFile tests", () => {
-
-  
   const mockFetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const mockReaddir = vi.spyOn(fspModule, "readdir");
   const mockEditDatapackHandler = vi.spyOn(editHandler, "editDatapack");
