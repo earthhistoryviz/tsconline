@@ -388,18 +388,17 @@ const routes: RouteDefinition[] = [
   },
   {
     method: "GET",
-    url: "/user/datapack/files/testDatapackTitle/12345/false",
-    hasAuth: false
+    url: `/user/datapack/files/datapack/${uuid}`,
   },
   {
     method: "DELETE",
-    url: "/user/datapack/files/testDatapackTitle/12345/false/testfile.pdf",
+    url: `/user/datapack/files/datapack/${uuid}/test_filename`,
     recaptchaAction: UserRecaptchaActions.USER_DELETE_DATAPACK_ATTACHED_FILE,
     hasAuth: true
   },
   {
     method: "PATCH",
-    url: "/user/datapack/files/testDatapackTitle/12345/false",
+    url: `/user/datapack/files/testDatapackTitle/${uuid}/false`,
     recaptchaAction: UserRecaptchaActions.USER_ADD_ATTACHED_DATAPACK_FILES,
     hasAuth: true
   }
@@ -2280,6 +2279,8 @@ describe("fetchDatapackAttachedFileNames tests", () => {
   });
 });
 describe("deleteDatapackAttachedFile tests", () => {
+
+  
   const mockFetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const mockReaddir = vi.spyOn(fspModule, "readdir");
   const mockEditDatapackHandler = vi.spyOn(editHandler, "editDatapack");
