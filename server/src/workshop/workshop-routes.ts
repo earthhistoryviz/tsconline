@@ -133,6 +133,11 @@ export const downloadWorkshopFilesZip = async (
 ) => {
   const { workshopId } = request.params;
   try {
+    // Validate workshopId is a number
+    if (typeof workshopId !== "number" || !Number.isInteger(workshopId) || workshopId < 0) {
+      reply.status(400).send({ error: "Invalid workshopId" });
+      return;
+    }
     // user exists, already verified in verifyAuthority
     const user = request.user!;
     const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
@@ -145,6 +150,20 @@ export const downloadWorkshopFilesZip = async (
     const safeWorkshopUUID = sanitizePathSegment(workshopUUID);
     const datapacksRootDir = await getUserUUIDDirectory(safeWorkshopUUID, true);
     const datapacksDir = path.join(datapacksRootDir, "datapacks");
+
+    // Validate that filesDir and datapacksDir are within expected root directories
+    const WORKSHOP_FILES_ROOT = path.resolve(assetconfigs.workshopFilesRoot);
+    const USER_UUID_ROOT = path.resolve(assetconfigs.userUUIDRoot);
+    const resolvedFilesDir = fsSync.realpathSync(path.resolve(filesDir));
+    const resolvedDatapacksDir = fsSync.realpathSync(path.resolve(datapacksDir));
+    if (!resolvedFilesDir.startsWith(WORKSHOP_FILES_ROOT)) {
+      reply.status(400).send({ error: "Invalid files directory path" });
+      return;
+    }
+    if (!resolvedDatapacksDir.startsWith(USER_UUID_ROOT)) {
+      reply.status(400).send({ error: "Invalid datapacks directory path" });
+      return;
+    }
 
     // Create a temp directory to hold both folders
     const tempDir = path.join(os.tmpdir(), `workshop_zip_${workshopId}`);
