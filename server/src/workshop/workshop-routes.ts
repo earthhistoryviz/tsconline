@@ -21,7 +21,6 @@ import logger from "../error-logger.js";
 import fs from "fs/promises";
 import os from "os";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
-import { readdir } from "node:fs/promises";
 
 export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
