@@ -93,11 +93,7 @@ export const WorkshopDetails = observer(() => {
       if (workshop.datapacks && workshop.datapacks.length > 0) {
         for (const datapackTitle of workshop.datapacks) {
           try {
-            await actions.fetchDatapackFiles(
-              datapackTitle,
-              getWorkshopUUIDFromWorkshopId(workshop.workshopId),
-              true
-            );
+            await actions.fetchDatapackFiles(datapackTitle, getWorkshopUUIDFromWorkshopId(workshop.workshopId), true);
           } catch (error) {
             console.error("Failed to download datapack files:", error);
             actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
@@ -121,14 +117,13 @@ export const WorkshopDetails = observer(() => {
     } else {
       actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
     }
-  
   }
 
   if (!workshop || !id) return <PageNotFound />;
   const isRegistered = state.user.isAdmin || state.user.workshopIds?.includes(workshop.workshopId) || false;
   const isPublicWorkshop = !workshop.regRestrict;
   const isDisabled = !isPublicWorkshop && !isRegistered;
-  
+
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
