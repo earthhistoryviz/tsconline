@@ -12,13 +12,16 @@ import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-hand
 import path from "node:path";
 import { readFile } from "fs/promises";
 import { createReadStream } from "fs";
+import fsSync from "fs";
 import { getFileFromWorkshop } from "../user/fetch-user-files.js";
 import { verifyNonExistentFilepath } from "../util.js";
 import { getUploadedDatapackFilepath } from "../user/user-handler.js";
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
-import { readdir } from "node:fs/promises";
+import fs from "fs/promises";
+import os from "os";
+import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
@@ -116,12 +119,25 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
   }
 };
 
+// Fix for CodeQL
+function sanitizePathSegment(segment: string): string {
+  if (typeof segment !== "string" || segment.includes("..") || segment.includes("/") || segment.includes("\\")) {
+    throw new Error("Invalid path segment");
+  }
+  return segment;
+}
+
 export const downloadWorkshopFilesZip = async (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
 ) => {
   const { workshopId } = request.params;
   try {
+    // Validate workshopId is a number
+    if (typeof workshopId !== "number" || !Number.isInteger(workshopId) || workshopId < 0) {
+      reply.status(400).send({ error: "Invalid workshopId" });
+      return;
+    }
     // user exists, already verified in verifyAuthority
     const user = request.user!;
     const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
@@ -129,30 +145,75 @@ export const downloadWorkshopFilesZip = async (
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
-    const filesFolder = await getWorkshopFilesPath(workshopId);
-    const baseDir = path.dirname(filesFolder);
-    const zipfile = path.resolve(baseDir, `filesFor${workshopId}.zip`);
-    if (!(await verifyNonExistentFilepath(zipfile))) {
+    const filesDir = await getWorkshopFilesPath(workshopId);
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+    const safeWorkshopUUID = sanitizePathSegment(workshopUUID);
+    const datapacksRootDir = await getUserUUIDDirectory(safeWorkshopUUID, true);
+    const datapacksDir = path.join(datapacksRootDir, "datapacks");
+
+    // Create a temp directory to hold both folders
+    const tempDirName = `workshop_zip_${workshopId}`;
+    // Sanitize the workshop ID in the temp directory name
+    if (!tempDirName.match(/^workshop_zip_\d+$/)) {
+      reply.status(400).send({ error: "Invalid workshop ID format" });
+      return;
+    }
+    const tempDir = path.join(os.tmpdir(), tempDirName);
+    await fs.mkdir(tempDir, { recursive: true });
+    
+    // Verify the tempDir is within the expected tmp directory
+    const resolvedTempDir = fsSync.realpathSync(path.resolve(tempDir));
+    if (!resolvedTempDir.startsWith(path.resolve(os.tmpdir()))) {
+      reply.status(400).send({ error: "Invalid temporary directory path" });
+      return;
+    }
+
+    // Copy filesDir and datapacksDir into tempDir (if they exist)
+    const copyIfExists = async (src: string, dest: string) => {
+      try {
+        // Resolve and validate that paths don't escape their intended directories
+        const resolvedSrc = fsSync.realpathSync(path.resolve(src));
+        const resolvedDatapacksRootDir = fsSync.realpathSync(path.resolve(datapacksRootDir));
+        const resolvedFilesDir = fsSync.realpathSync(path.resolve(filesDir));
+        if (
+          !resolvedSrc.startsWith(resolvedDatapacksRootDir) &&
+          !resolvedSrc.startsWith(resolvedFilesDir)
+        ) {
+          throw new Error("Invalid source path");
+        }
+
+        const resolvedDest = path.resolve(dest);
+        const resolvedTempDir = path.resolve(tempDir);
+        if (!resolvedDest.startsWith(resolvedTempDir)) {
+          throw new Error("Invalid destination path");
+        }
+
+        await fs.access(resolvedSrc);
+        await fs.cp(resolvedSrc, resolvedDest, { recursive: true });
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("Invalid")) {
+          throw error;
+        }
+        // ignore if not exists
+      }
+    };
+    await copyIfExists(filesDir, path.join(tempDir, "files"));
+    await copyIfExists(datapacksDir, path.join(tempDir, "datapacks"));
+
+    // Create the zip
+    const zipFilePath = path.join(os.tmpdir(), `workshop_${workshopId}_all_files.zip`);
+    if (!(await verifyNonExistentFilepath(zipFilePath))) {
       reply.status(500).send({ error: "Invalid directory path" });
       return;
     }
-    let file: Buffer;
-    try {
-      file = await readFile(zipfile);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        const dir = await readdir(filesFolder, { withFileTypes: true });
-        if (dir.length === 0) {
-          reply.status(404).send({ error: "No files found for this workshop" });
-          return;
-        }
-        file = await createZipFile(zipfile, filesFolder);
-      } else {
-        reply.status(500).send({ error: `Read error: ${(error as Error).message}` });
-        return;
-      }
-    }
-    reply.send(file);
+    const zipBuffer = await createZipFile(zipFilePath, tempDir);
+
+    // Clean up tempDir
+    await fs.rm(tempDir, { recursive: true, force: true });
+    reply
+      .header("Content-Type", "application/zip")
+      .header("Content-Disposition", `attachment; filename="workshop_${workshopId}_all_files.zip"`)
+      .send(zipBuffer);
   } catch (error) {
     logger.error("Error downloading workshop files zip:", error);
     reply.status(500).send({ error: "An error occurred" });

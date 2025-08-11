@@ -14,7 +14,8 @@ import { loadRecaptcha, removeRecaptcha } from "./util";
 import {
   ReservedWorkshopFileKey,
   RESERVED_INSTRUCTIONS_FILENAME,
-  RESERVED_PRESENTATION_FILENAME
+  RESERVED_PRESENTATION_FILENAME,
+  getWorkshopUUIDFromWorkshopId
 } from "@tsconline/shared";
 import { ErrorCodes } from "./util/error-codes";
 import { backendUrl } from "./util/constant";
@@ -25,6 +26,7 @@ type WorkshopReservedFileProps = {
   workshopId: number;
   userInWorkshop: boolean;
 };
+
 const WorkshopReservedFile: React.FC<WorkshopReservedFileProps> = ({
   renderLink,
   fileType,
@@ -77,6 +79,7 @@ export const WorkshopDetails = observer(() => {
   };
 
   const workshop = fetchWorkshop();
+
   useEffect(() => {
     loadRecaptcha();
     return () => {
@@ -86,6 +89,17 @@ export const WorkshopDetails = observer(() => {
   async function downloadWorkshopFiles() {
     if (workshop && workshop.files && workshop.files.length > 0) {
       await actions.fetchWorkshopFilesForDownload(workshop);
+      // If there are datapacks, download them as well
+      if (workshop.datapacks && workshop.datapacks.length > 0) {
+        for (const datapackTitle of workshop.datapacks) {
+          try {
+            await actions.fetchDatapackFiles(datapackTitle, getWorkshopUUIDFromWorkshopId(workshop.workshopId), true);
+          } catch (error) {
+            console.error("Failed to download datapack files:", error);
+            actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
+          }
+        }
+      }
     } else {
       actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
     }
@@ -109,6 +123,7 @@ export const WorkshopDetails = observer(() => {
   const isRegistered = state.user.isAdmin || state.user.workshopIds?.includes(workshop.workshopId) || false;
   const isPublicWorkshop = !workshop.regRestrict;
   const isDisabled = !isPublicWorkshop && !isRegistered;
+
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -117,7 +132,6 @@ export const WorkshopDetails = observer(() => {
             <ArrowBackIcon className={styles.icon} />
           </IconButton>
           <Typography className={styles.ht}>{workshop.title}</Typography>
-
           <img className={styles.di} src={getWorkshopCoverImage(workshop.workshopId)} />
         </div>
         <CustomDivider className={styles.divider} />
@@ -160,6 +174,7 @@ export const WorkshopDetails = observer(() => {
                 )}
               </Box>
             </div>
+
             <div className={styles.ai}>
               <WorkshopReservedFile
                 renderLink={workshop.files?.includes(RESERVED_INSTRUCTIONS_FILENAME) || false}
