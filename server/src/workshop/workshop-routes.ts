@@ -152,9 +152,24 @@ export const downloadWorkshopFilesZip = async (
     // Copy filesDir and datapacksDir into tempDir (if they exist)
     const copyIfExists = async (src: string, dest: string) => {
       try {
+        // Validate that paths don't escape their intended directories
+        if (
+          !path.normalize(src).startsWith(path.normalize(datapacksRootDir)) &&
+          !path.normalize(src).startsWith(path.normalize(filesDir))
+        ) {
+          throw new Error("Invalid source path");
+        }
+
+        if (!path.normalize(dest).startsWith(path.normalize(tempDir))) {
+          throw new Error("Invalid destination path");
+        }
+
         await fs.access(src);
         await fs.cp(src, dest, { recursive: true });
-      } catch {
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("Invalid")) {
+          throw error;
+        }
         // ignore if not exists
       }
     };
