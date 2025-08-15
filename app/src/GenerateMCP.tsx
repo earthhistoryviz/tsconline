@@ -1,18 +1,73 @@
 import { useEffect, useContext, useState } from "react";
 import { context } from "./state";
 import { ErrorCodes } from "./util/error-codes";
-import { DatapackConfigForChartRequest, assertPointSettings } from "@tsconline/shared";
-import { useNavigate, useLocation } from "react-router-dom";
+import { DatapackConfigForChartRequest } from "@tsconline/shared";
+import { useLocation } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import LoadingChart from "./LoadingChart";
 import { useTranslation } from "react-i18next";
 import "./Chart.css";
+import cloneDeep from "lodash/cloneDeep";
+import { jsonToXml } from "./state/parse-settings";
+import { sendChartRequestToServer, resetChartTabStateForGeneration } from "./state/actions/generate-chart-actions";
+import { ChartRequest, ColumnInfo } from "@tsconline/shared";
+import * as generalActions from "./state/actions/general-actions";
+import { ChartSettings } from "./types";
+import { state } from "./state";
 
-export const GenerateExternalChart: React.FC = () => {
+/**
+ * Generates a chart and returns its hash if successful so MCP can get SVG and the XML
+ *
+ * @returns The chart hash if successful
+ */
+export async function generateChartAndGetHash(): Promise<string | null> {
+  resetChartTabStateForGeneration(state.chartTab.state);
+  generalActions.setTab(3);
+  try {
+    let chartRequest: ChartRequest | null = null;
+    try {
+      const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
+      const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+      const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+      chartRequest = {
+        settings: xmlSettings,
+        datapacks: state.config.datapacks,
+        useCache: state.useCache,
+        isCrossPlot: false
+      };
+    } catch (e) {
+      console.error(e);
+      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return null;
+    }
+    if (!chartRequest) {
+      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return null;
+    }
+    const response = await sendChartRequestToServer(chartRequest);
+    generalActions.updateChartLoadingProgress(0, "Initializing");
+    if (!response) {
+      // error SHOULD already displayed
+      return null;
+    }
+    generalActions.setChartTabState(state.chartTab.state, {
+      chartContent: response.chartContent,
+      chartHash: response.hash,
+      madeChart: true,
+      unsafeChartContent: response.unsafeChartContent,
+      chartTimelineEnabled: false
+    });
+    generalActions.removeAllErrors();
+    return response.hash;
+  } finally {
+    generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
+  }
+}
+
+export const GenerateMCPChart: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const datapackTitle = queryParams.get("datapackTitle");
-  const chartConfig = queryParams.get("chartConfig");
   const parsedBase = parseFloat(queryParams.get("baseVal") ?? "");
   const baseVal = isNaN(parsedBase) ? 10 : parsedBase;
   const parsedTop = parseFloat(queryParams.get("topVal") ?? "");
@@ -20,10 +75,8 @@ export const GenerateExternalChart: React.FC = () => {
   const parsedStep = parseFloat(queryParams.get("unitStep") ?? "");
   const unitStep = isNaN(parsedStep) ? 0.1 : parsedStep;
   const unitType = queryParams.get("unitType") ?? "Ma";
-  const minMaxPlot = queryParams.get("minMaxPlot"); // treatise use only: min_total-max_total-min_new-max_new-min_extinct-max_extinct
 
   const { actions } = useContext(context);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [errorPushed, setErrorPushed] = useState(false);
   const { state } = useContext(context);
@@ -53,36 +106,7 @@ export const GenerateExternalChart: React.FC = () => {
           type: "official"
         };
 
-        if (chartConfig === "Internal") {
-          const internalDatapack = await actions.fetchDatapack(
-            {
-              isPublic: true,
-              title: "TimeScale Creator Internal Datapack",
-              type: "official"
-            },
-            { signal: controller.signal }
-          );
-          if (!internalDatapack) {
-            console.error("Error: Internal Datapack not found.");
-            return;
-          }
-          actions.addDatapack(internalDatapack);
-
-          const internalDatapackConfig: DatapackConfigForChartRequest = {
-            storedFileName: internalDatapack.storedFileName,
-            title: internalDatapack.title,
-            isPublic: internalDatapack.isPublic,
-            type: "official"
-          };
-          await actions.processDatapackConfig([internalDatapackConfig, externalDatapackConfig]);
-          actions.toggleSettingsTabColumn("Geomagnetic Polarity");
-          actions.toggleSettingsTabColumn("Marine Macrofossils (Mesozoic-Paleozoic)");
-          actions.toggleSettingsTabColumn("Microfossils");
-          actions.toggleSettingsTabColumn("Global Reconstructions (R. Blakey)");
-        } else {
-          await actions.processDatapackConfig([externalDatapackConfig]);
-        }
-
+        await actions.processDatapackConfig([externalDatapackConfig]);
         // !isNaN here isn't redundant, reason is because 0 and negative numbers need to also work
         // This is mainly to warn users one of their inputs didn't work
         if (isNaN(parsedTop) || isNaN(parsedBase) || isNaN(parsedStep)) {
@@ -107,37 +131,12 @@ export const GenerateExternalChart: React.FC = () => {
         } catch (err) {
           console.warn("Failed to set stage ages or unit steps: ", err);
         }
-
-        if (chartConfig === "Internal" && minMaxPlot) {
-          const parts = minMaxPlot.split("-");
-          if (parts.length == 6) {
-            const values = parts.map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
-            const columnNames = ["Total", "New", "Extinct"];
-            for (let i = 0; i < columnNames.length; i++) {
-              const columnInfo = state.settingsTabs.columnHashMap.get(`${datapackTitle} ${columnNames[i]}-Genera`);
-              if (columnInfo && columnInfo.columnSpecificSettings) {
-                const [min, max] = [values[i * 2], values[i * 2 + 1]];
-
-                if (isNaN(min) || isNaN(max) || min > max) {
-                  console.warn(
-                    `Warning: Invalid min-max numbers detected for ${columnNames[i]}-Genera ${datapackTitle}. Skipping...`
-                  );
-                  continue;
-                }
-
-                const stepValue = Math.floor((max - min) / 20);
-                assertPointSettings(columnInfo.columnSpecificSettings);
-                actions.setPointColumnSettings(columnInfo.columnSpecificSettings, { scaleStep: stepValue });
-              }
-            }
-          } else {
-            console.warn(
-              "Warning: chartInfo format is incorrect. No changes to settings. Expected 6 parts, got:",
-              parts.length
-            );
-          }
+        const hash = await generateChartAndGetHash();
+        if (hash) {
+          console.log("Generated chart hash:", hash);
+        } else {
+          console.error("Chart generation failed");
         }
-        actions.initiateChartGeneration(navigate, location.pathname);
       } catch (error) {
         actions.pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
       } finally {
