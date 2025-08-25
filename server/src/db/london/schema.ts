@@ -242,6 +242,8 @@ export interface arkL_intervals {
   interval_notes: string | null;
   interval_type: string | null;
   intervalx: string;
+  lithology: string | null;
+  lithology_id: number | null;
   parent_interval: string | null;
   polarity: string | null;
   preset_duration: number | null;
@@ -279,6 +281,8 @@ export function assertarkL_intervals(o: any): asserts o is arkL_intervals {
     if (o.interval_notes !== null && typeof o.interval_notes !== "string") throwError("arkL_intervals", "interval_notes", "string", o.interval_notes);
     if (o.interval_type !== null && typeof o.interval_type !== "string") throwError("arkL_intervals", "interval_type", "string", o.interval_type);
     if (typeof o.intervalx !== "string") throwError("arkL_intervals", "intervalx", "string", o.intervalx);
+    if (o.lithology !== null && typeof o.lithology !== "string") throwError("arkL_intervals", "lithology", "string", o.lithology);
+    if (o.lithology_id !== null && typeof o.lithology_id !== "number") throwError("arkL_intervals", "lithology_id", "number", o.lithology_id);
     if (o.parent_interval !== null && typeof o.parent_interval !== "string") throwError("arkL_intervals", "parent_interval", "string", o.parent_interval);
     if (o.polarity !== null && typeof o.polarity !== "string") throwError("arkL_intervals", "polarity", "string", o.polarity);
     if (o.preset_duration !== null && typeof o.preset_duration !== "number") throwError("arkL_intervals", "preset_duration", "number", o.preset_duration);
@@ -302,6 +306,7 @@ export function assertarkL_intervalsArray(o: any[]): asserts o is arkL_intervals
 
 export interface arkL_subdatasets {
   colshare: string | null;
+  data_types: string | null;
   dataset: string | null;
   dataset_id: number | null;
   id: number;
@@ -318,6 +323,7 @@ export interface arkL_subdatasets {
 export function assertarkL_subdatasets(o: any): asserts o is arkL_subdatasets {
   if (typeof o !== 'object' || o === null) throw new Error('Expected object');
     if (o.colshare !== null && typeof o.colshare !== "string") throwError("arkL_subdatasets", "colshare", "string", o.colshare);
+    if (o.data_types !== null && typeof o.data_types !== "string") throwError("arkL_subdatasets", "data_types", "string", o.data_types);
     if (o.dataset !== null && typeof o.dataset !== "string") throwError("arkL_subdatasets", "dataset", "string", o.dataset);
     if (o.dataset_id !== null && typeof o.dataset_id !== "number") throwError("arkL_subdatasets", "dataset_id", "number", o.dataset_id);
     if (typeof o.id !== "number") throwError("arkL_subdatasets", "id", "number", o.id);

@@ -37,7 +37,7 @@ async function loadJSONS() {
 
 type StringDict = { [key: string]: string[] };
 type StringDictSet = { [key: string]: Set<string> };
-type ProcessColumnOutput = { path: string; column: string; lines: string[] };
+type ProcessColumnOutput = { path: string; column: string; lines: string[]; sort: number };
 
 async function processSequenceColumns(events: arkL_events[], columns: arkL_columns[], datasets: arkL_datasets[]) {
   const sequenceColumns: ProcessColumnOutput[] = [];
@@ -86,7 +86,8 @@ async function processSequenceColumns(events: arkL_events[], columns: arkL_colum
         sequenceColumns.push({
           path: column.path,
           column: column.columnx,
-          lines
+          lines,
+          sort: column.sort ?? 0
         });
       }
     }
@@ -160,7 +161,8 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
         eventColumns.push({
           path: column.path,
           column: column.columnx,
-          lines: columnLines
+          lines: columnLines,
+          sort: column.sort ?? 0
         });
       }
     }
@@ -249,7 +251,8 @@ async function processBlockColumns(
         blockColumns.push({
           path: column.path,
           column: column.columnx,
-          lines: columnLines
+          lines: columnLines,
+          sort: column.sort ?? 0
         });
       }
     }
@@ -451,7 +454,8 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
         chronColumns.push({
           path: column.path,
           column: column.columnx,
-          lines: columnLines
+          lines: columnLines,
+          sort: column.sort ?? 0
         });
       }
     }
@@ -544,7 +548,10 @@ try {
   const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
   const sequenceColumns = await processSequenceColumns(events, columns, datasets);
   const chronColumns = await processChronColumns(datasets, columns, intervals);
-  organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns], pathDict, linesDict);
+  const allColumns = [...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns].sort(
+    (a, b) => a.sort - b.sort
+  );
+  organizeColumn(allColumns, pathDict, linesDict);
   const lines = await linesFromDicts(pathDict, linesDict);
   await writeFile(filePath, lines.join("\n"));
   console.log(chalk.green("Processed columns"));
