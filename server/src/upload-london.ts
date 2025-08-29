@@ -16,6 +16,6 @@ export async function processLondonDatapack() {
     }
 }
 
-// if (import.meta.url === `file://${process.argv[1]}`) {
-//     await processLondonDatapack();
-// }
+if (import.meta.url === `file://${process.argv[1]}`) {
+    await processLondonDatapack();
+}
