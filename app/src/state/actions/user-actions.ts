@@ -289,3 +289,31 @@ export const removeUserHistoryEntry = action((timestamp: string) => {
 export const clearUserHistory = action(() => {
   state.user.historyEntries = [];
 });
+
+export const migrateLondon = action(async () => {
+  try {
+    const res = await fetcher("/migrate-london", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
+
+    if (res.ok) {
+      const { metadata, message } = await res.json();
+      pushSnackbar(message ?? "London datapack migration started", "success");
+      return metadata ?? null;
+    } else {
+      displayServerError(
+        res.statusText,
+        ErrorCodes.USER_DELETE_HISTORY_FAILED,
+        ErrorMessages[ErrorCodes.USER_DELETE_HISTORY_FAILED]
+      );
+      return null;
+    }
+  } catch {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return null;
+  }
+});

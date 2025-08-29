@@ -333,18 +333,52 @@ const customSplit = (path: string): string[] => {
   return parts;
 };
 
-try {
-  const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
-  const filePath = join(outputDir, "group_organized_test_datapack.txt");
-  const pathDict: StringDictSet = {}; // dictionary to stucture groups and their children
-  const linesDict: StringDict = {}; // dictionary to link groups to their columns in the form of lines
-  const eventColumns = await processEventColumns(datasets, columns, events);
-  const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
-  const sequenceColumns = await processSequenceColumns(events, columns, datasets);
-  organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns], pathDict, linesDict);
-  const lines = await linesFromDicts(pathDict, linesDict);
-  await writeFile(filePath, lines.join("\n"));
-  console.log(chalk.green("Processed columns"));
-} catch (error) {
-  console.error(chalk.red(`Failed to create test_datapack.txt: ${error}`));
+export async function generateAndWriteConfig(fileName: string) {
+  const niceTitle = fileName.replace(/_/g, " ").replace(/\.txt$/i, "");
+  const config = [
+    {
+      title: "UCL TSC Chron",
+      description: "A test datapack created by a group",
+      originalFileName: fileName,
+      storedFileName: fileName,
+      date: new Date().toISOString().split("T")[0],
+      size: "1.00 MB",
+      authoredBy: "Group Testers",
+      references: [],
+      tags: [],
+      notes: "here 11",
+      type: "official",
+      isPublic: true,
+      priority: 1,
+      hasFiles: false
+    }
+  ];
+  const configPath = join(outputDir, "london-config.json");
+  await writeFile(configPath, JSON.stringify(config, null, 2), "utf8");
 }
+
+export async function generateLondonDatapack() {
+  try {
+    const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
+    const date = new Date();
+    const formattedDate = `${date.getDate().toString().padStart(2, "0")}${date.toLocaleString("en-US", { month: "short" })}${date.getFullYear()}`;
+    const fileName = `UCL_TSC_Chronostrat_${formattedDate}.txt`;
+    const filePath = join(outputDir, fileName);
+
+    const pathDict: StringDictSet = {}; // dictionary to stucture groups and their children
+    const linesDict: StringDict = {}; // dictionary to link groups to their columns in the form of lines
+    const eventColumns = await processEventColumns(datasets, columns, events);
+    const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
+    const sequenceColumns = await processSequenceColumns(events, columns, datasets);
+    organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns], pathDict, linesDict);
+    const lines = await linesFromDicts(pathDict, linesDict);
+    await writeFile(filePath, lines.join("\n"));
+    await generateAndWriteConfig(fileName);
+  } catch (error) {
+    console.error(chalk.red(`Failed to create test_datapack.txt: ${error}`));
+  }
+}
+
+// if (import.meta.url === `file://${process.argv[1]}`) {
+//   await generateLondonDatapack();
+// }

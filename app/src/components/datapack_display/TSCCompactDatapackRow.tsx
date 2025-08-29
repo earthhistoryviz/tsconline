@@ -17,6 +17,7 @@ import {
   isOwnedByUser
 } from "../../state/non-action-util";
 import { Public } from "@mui/icons-material";
+import { addDatapack } from "../../state/actions";
 
 type TSCCompactDatapackRowProps = {
   datapack?: DatapackMetadata;
@@ -60,10 +61,21 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         }
         onClick={async (e) => {
           e.stopPropagation();
-          if (loading) return;
-          setLoading(true);
-          !skeleton && (await onChange(datapack));
-          setLoading(false);
+            if (loading) return;
+            setLoading(true);
+            try {
+            if (!skeleton) {
+              await onChange(datapack);
+              if (datapack!.title === "UCL TSC Chron") {
+                console.log(`Datapack ${datapack!.title} updated`);
+                const response = await actions.migrateLondon();
+                console.log(response);
+                addDatapack(response);
+              }
+            }
+            } finally {
+            setLoading(false);
+            }
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>

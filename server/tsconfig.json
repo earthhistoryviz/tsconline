@@ -7,10 +7,12 @@
     "declaration": false
   },
   "exclude": [
-    "assets/uploads"
+    "assets/uploads",
+    "src/db/london"
   ],
   "include": [
     "src",
-    "app/src/util"
+    "app/src/util",
+    "../db/london/output"
   ]
 }
