@@ -17,7 +17,7 @@ import {
   isOwnedByUser
 } from "../../state/non-action-util";
 import { Public } from "@mui/icons-material";
-import { addDatapack } from "../../state/actions";
+import { addDatapack, refreshPublicDatapacks } from "../../state/actions";
 
 type TSCCompactDatapackRowProps = {
   datapack?: DatapackMetadata;
@@ -60,17 +60,15 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
             : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()
         }
         onClick={async (e) => {
-          e.stopPropagation();
+            e.stopPropagation();
             if (loading) return;
             setLoading(true);
             try {
             if (!skeleton) {
               await onChange(datapack);
               if (datapack!.title === "UCL TSC Chron") {
-                console.log(`Datapack ${datapack!.title} updated`);
-                const response = await actions.migrateLondon();
-                console.log(response);
-                addDatapack(response);
+              await actions.migrateLondon();
+              refreshPublicDatapacks();
               }
             }
             } finally {

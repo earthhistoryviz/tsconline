@@ -8,7 +8,7 @@
   },
   "exclude": [
     "assets/uploads",
-    "src/db/london"
+    "src/db/london/schema.ts"
   ],
   "include": [
     "src",

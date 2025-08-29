@@ -346,7 +346,7 @@ export async function generateAndWriteConfig(fileName: string) {
       authoredBy: "Group Testers",
       references: [],
       tags: [],
-      notes: "here 11",
+      notes: "here 17",
       type: "official",
       isPublic: true,
       priority: 1,
@@ -355,6 +355,7 @@ export async function generateAndWriteConfig(fileName: string) {
   ];
   const configPath = join(outputDir, "london-config.json");
   await writeFile(configPath, JSON.stringify(config, null, 2), "utf8");
+  console.log()
 }
 
 export async function generateLondonDatapack() {
