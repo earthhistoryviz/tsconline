@@ -13,7 +13,7 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
-import { fetchUserDatapack } from "../user/user-handler.js";
+import { deleteOfficialDatapack, fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 import logger from "../error-logger.js";
@@ -21,6 +21,7 @@ import "dotenv/config";
 import { waitForSVGReady } from "../chart-generation/generate-chart-helpers.js";
 import type { WebSocket } from "ws";
 import { generateChart, ChartGenerationError } from "../chart-generation/generate-chart.js";
+// import { deleteDatapackFileAndDecryptedCounterpart } from "../user/user-handler.js";
 
 export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();
@@ -242,6 +243,75 @@ export async function handleChartGeneration(socket: WebSocket, request: FastifyR
       socket.send(JSON.stringify({ stage: "Error", percent: 0, error: message, errorCode }));
     } finally {
       socket.close();
+    }
+  });
+}
+
+// ToDo: In the future need to implement way to accept xml file
+export async function handleMCPChartGeneration(socket: WebSocket, request: FastifyRequest) {
+  socket.once("message", async (message) => {
+    const datapackTitle = message.toString();
+    try {
+      const authHeader = request.headers["authorization"];
+      if (!authHeader) {
+        socket.send(JSON.stringify({ stage: "Error", error: "Token missing", errorCode: 401 }));
+        return;
+      }
+      const token = authHeader.split(" ")[1];
+      if (!token) {
+        socket.send(JSON.stringify({ stage: "Error", error: "Token missing", errorCode: 401 }));
+        return;
+      }
+      const validToken = process.env.BEARER_TOKEN;
+      if (!validToken) {
+        socket.send(
+          JSON.stringify({
+            stage: "Error",
+            error: `Server misconfiguration: Missing BEARER_TOKEN: ${process.env.BEARER_TOKEN}`,
+            errorCode: 500
+          })
+        );
+        return;
+      }
+      if (token !== validToken) {
+        socket.send(JSON.stringify({ stage: "Error", error: "Token mismatch", errorCode: 403 }));
+        socket.close();
+        return;
+      }
+
+      const { chartpath, hash } = await generateChart(
+        {
+          settings: `${datapackTitle}`, // won't be used in "settings" mode, but needed for hashing, so something needs to be written to have unique hashing
+          datapacks: [], // won't be used in "settings" mode
+          useCache: false,
+          isCrossPlot: false
+        },
+        (progress) => {
+          socket.send(JSON.stringify({ stage: progress.stage, percent: progress.percent }));
+        },
+        undefined, // uuid that doesn't exist
+        "chart-no-settings", // mode
+        datapackTitle
+      );
+      socket.send(JSON.stringify({ stage: "Waiting for file", percent: 90 }));
+      await waitForSVGReady(path.join(assetconfigs.chartsDirectory, hash, "chart.svg"), 30000);
+      socket.send(JSON.stringify({ stage: "Complete", percent: 100, chartpath, hash }));
+    } catch (error) {
+      let message = "Unknown error";
+      let errorCode = 5000;
+      if (error instanceof ChartGenerationError) {
+        message = error.message;
+        errorCode = error.errorCode ?? 5000;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+      socket.send(JSON.stringify({ stage: "Error", percent: 0, error: message, errorCode }));
+    } finally {
+      socket.close();
+      // Remove the datapack too
+      // await rm(`${datapackTitle}`, { force: true });
+      // `${assetconfigs.publicDatapacksDirectory}/official/datapacks/${datapackTitle}`;
+      if (datapackTitle) deleteOfficialDatapack(datapackTitle);
     }
   });
 }
