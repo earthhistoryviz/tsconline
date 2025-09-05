@@ -116,29 +116,50 @@ export async function checkForCacheHit(
   return { chartpath: chartUrlPath, hash };
 }
 
+export type ChartGenerationMode = "chart" | "chart-no-settings" | "settings-only";
 export async function runJavaChartGeneration(
   chartRequest: ChartRequest,
   datapacks: string[],
   settingsFile: string,
   outputFile: string,
   filenameMap: Record<string, string>,
-  onProgress: (p: ChartProgressUpdate) => void
+  onProgress: (p: ChartProgressUpdate) => void,
+  mode: ChartGenerationMode = "chart"
 ) {
-  const args = [
-    "-jar",
-    assetconfigs.activeJar,
-    "-node",
-    "-s",
-    settingsFile,
-    "-ss",
-    settingsFile,
-    "-d",
-    ...datapacks,
-    "-o",
-    outputFile,
-    "-a",
-    ...(chartRequest.isCrossPlot ? ["-cross"] : [])
-  ];
+  let args: string[];
+
+  if (mode === "settings-only") {
+    args = ["-jar", assetconfigs.activeJar, "-node", "-sse", settingsFile, "-d", ...datapacks];
+  } else if (mode === "chart-no-settings") {
+    args = [
+      "-jar",
+      assetconfigs.activeJar,
+      "-node",
+      "-d",
+      ...datapacks,
+      "-o",
+      outputFile,
+      "-a",
+      ...(chartRequest.isCrossPlot ? ["-cross"] : [])
+    ];
+  } else {
+    // Default: generate a chart
+    args = [
+      "-jar",
+      assetconfigs.activeJar,
+      "-node",
+      "-s",
+      settingsFile,
+      "-ss",
+      settingsFile,
+      "-d",
+      ...datapacks,
+      "-o",
+      outputFile,
+      "-a",
+      ...(chartRequest.isCrossPlot ? ["-cross"] : [])
+    ];
+  }
 
   let knownErrorCode = 0;
   let errorMessage = "";
@@ -182,28 +203,31 @@ export async function runJavaChartGeneration(
       const stdoutLines = stdout.split("\n");
       const stderrLines = stderr.split("\n");
 
-      if (stdoutLines.at(-2) !== "ImageGenerator did not have any errors on generation") {
-        /*  
+      if (mode === "chart") {
+        if (stdoutLines.at(-2) !== "ImageGenerator did not have any errors on generation") {
+          /*  
           Last line is empty, so need to do -2
           Note, this print was placed such that it happens when no fatal errors were caught/the java program did not crash
           in the case that the above statement was not listed, something went wrong
           The below finds the exact issue that cause the crash
         */
-        console.log("Java had issues. Checking for specific error message in Java output.");
-        for (const line of stdoutLines.concat(stderrLines)) {
-          knownErrorCode = containsKnownError(line);
-          if (knownErrorCode) {
-            errorMessage = line;
-            break;
+          console.log("Java had issues. Checking for specific error message in Java output.");
+          for (const line of stdoutLines.concat(stderrLines)) {
+            knownErrorCode = containsKnownError(line);
+            if (knownErrorCode) {
+              errorMessage = line;
+              break;
+            }
           }
+          if (!knownErrorCode) {
+            knownErrorCode = 1005;
+            errorMessage = "Unknown error occurred during chart generation";
+          }
+        } else {
+          console.log("Java did not have issues on generation");
         }
-        if (!knownErrorCode) {
-          knownErrorCode = 1005;
-          errorMessage = "Unknown error occurred during chart generation";
-        }
-      } else {
-        console.log("Java did not have issues on generation");
       }
+
       resolve();
     });
   });
