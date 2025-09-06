@@ -66,7 +66,7 @@ export async function areDropboxDatapacksDifferent(access_token: string): Promis
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      path: "/VIP-Fall2023 EarthHistoryVisualization/Supporting TSCOnline Files/datapacks"
+      path: "/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/datapacks"
     })
   });
   if (!response.ok) {
@@ -89,7 +89,7 @@ export async function downloadDatapacks(access_token: string) {
     headers: {
       Authorization: `Bearer ${access_token}`,
       "Dropbox-API-Arg": JSON.stringify({
-        path: `/VIP-Fall2023 EarthHistoryVisualization/Supporting TSCOnline Files/datapacks`
+        path: `/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/datapacks`
       })
     }
   });
@@ -97,7 +97,9 @@ export async function downloadDatapacks(access_token: string) {
     throw new Error("Failed to download datapack file, file may not exist in dropbox => please check with team leads");
   }
   // make sure the datapacks directory is fully clean
-  await rm(assetconfigs.datapacksDirectory, { recursive: true });
+  if (await verifyFile(assetconfigs.datapacksDirectory)) {
+    await rm(assetconfigs.datapacksDirectory, { recursive: true });
+  }
   await mkdir(assetconfigs.datapacksDirectory, { recursive: true });
   const datapackZip = join(assetconfigs.datapacksDirectory, "datapacks.zip");
   await writeFile(datapackZip, Buffer.from(await datapackResponse.arrayBuffer()));
@@ -111,25 +113,38 @@ export async function downloadDatapacks(access_token: string) {
 }
 
 export async function downloadJars(access_token: string) {
-  // download the jar file
-  const jarResponse = await fetch("https://content.dropboxapi.com/2/files/download", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-      "Dropbox-API-Arg": JSON.stringify({
-        path: `/VIP-Fall2023 EarthHistoryVisualization/Supporting TSCOnline Files/${basename(assetconfigs.activeJar)}`
-      })
+  // List of jars to download: [Dropbox path, local path, description]
+  const jars = [
+    {
+      dropboxPath: `/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/${basename(assetconfigs.activeJar)}`,
+      localPath: assetconfigs.activeJar,
+      description: "Jar file"
+    },
+    {
+      dropboxPath: `/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/${basename(assetconfigs.decryptionJar)}`,
+      localPath: assetconfigs.decryptionJar,
+      description: "Decryption jar file"
     }
-  });
-  if (!jarResponse.ok) {
-    throw new Error("Failed to download jar file, file may not exist in dropbox => please check with team leads");
-  }
-  await mkdir(dirname(assetconfigs.activeJar), { recursive: true });
-  await writeFile(assetconfigs.activeJar, Buffer.from(await jarResponse.arrayBuffer()));
-  if (await verifyFile(assetconfigs.activeJar)) {
-    console.log(chalk.green("Jar file downloaded successfully"));
-  } else {
-    throw new Error("Failed to download jar file");
+  ];
+
+  for (const jar of jars) {
+    const response = await fetch("https://content.dropboxapi.com/2/files/download", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        "Dropbox-API-Arg": JSON.stringify({ path: jar.dropboxPath })
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to download ${jar.description}, file may not exist in dropbox => please check with team leads`);
+    }
+    await mkdir(dirname(jar.localPath), { recursive: true });
+    await writeFile(jar.localPath, Buffer.from(await response.arrayBuffer()));
+    if (await verifyFile(jar.localPath)) {
+      console.log(chalk.green(`${jar.description} downloaded successfully`));
+    } else {
+      throw new Error(`Failed to download ${jar.description}`);
+    }
   }
 }
 
