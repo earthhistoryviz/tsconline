@@ -136,7 +136,9 @@ export async function downloadJars(access_token: string) {
       }
     });
     if (!response.ok) {
-      throw new Error(`Failed to download ${jar.description}, file may not exist in dropbox => please check with team leads`);
+      throw new Error(
+        `Failed to download ${jar.description}, file may not exist in dropbox => please check with team leads`
+      );
     }
     await mkdir(dirname(jar.localPath), { recursive: true });
     await writeFile(jar.localPath, Buffer.from(await response.arrayBuffer()));
