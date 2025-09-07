@@ -67,7 +67,7 @@ import {
   getMetadataFromArray,
   isOwnedByUser
 } from "../non-action-util";
-import { fetchUserDatapack } from "./user-actions";
+import { fetchUserDatapack, setEditRequestInProgress } from "./user-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 export const updateChartLoadingProgress = action("updateChartLoadingProgress", (percent: number, stage: string) => {
@@ -213,6 +213,116 @@ export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: str
     console.error(e);
   }
 });
+
+export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid: string) => {
+  try {
+    const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}`, {
+      method: "GET",
+      credentials: "include"
+    });
+    const names = await response.json();
+    if (response.ok) {
+      return names;
+    } else {
+      displayServerError(
+        response,
+        ErrorCodes.USER_FETCH_ATTACHED_DATAPACK_FILES_FAILED,
+        ErrorMessages[ErrorCodes.USER_FETCH_ATTACHED_DATAPACK_FILES_FAILED]
+      );
+    }
+  } catch (e) {
+    if ((e as Error).name === "AbortError") return;
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
+export const deleteAttachedDatapackFile = action(async (datapackTitle: string, uuid: string, fileName: string) => {
+  try {
+    setEditRequestInProgress(true);
+    const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_DELETE_DATAPACK_ATTACHED_FILE);
+    if (!recaptchaToken) return null;
+    try {
+      const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${fileName}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+
+      if (response.ok) {
+        // return number of files remaining
+        const data = await response.json();
+        pushSnackbar("File deleted", "success");
+        return data.numFilesRemaining;
+      } else {
+        displayServerError(
+          response,
+          ErrorCodes.USER_DELETE_ATTACHED_DATAPACK_FILES_FAILED,
+          ErrorMessages[ErrorCodes.USER_DELETE_ATTACHED_DATAPACK_FILES_FAILED]
+        );
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setEditRequestInProgress(false);
+  }
+});
+
+export const addAttachedDatapackFiles = action(
+  async (datapackTitle: string, uuid: string, isPublic: boolean, newFiles: File[]) => {
+    try {
+      setEditRequestInProgress(true);
+      const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_ADD_ATTACHED_DATAPACK_FILES);
+      if (!recaptchaToken) return null;
+
+      // create form data to send files
+      const formData = new FormData();
+      if (newFiles?.length) {
+        newFiles.forEach((pdfFile) => {
+          formData.append("newFiles[]", pdfFile);
+        });
+      }
+      try {
+        const response = await fetcher(
+          `/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`,
+          {
+            method: "PATCH",
+            body: formData,
+            credentials: "include",
+            headers: {
+              "recaptcha-token": recaptchaToken
+            }
+          }
+        );
+        if (response.ok) {
+          pushSnackbar("File(s) added", "success");
+          return true;
+        } else {
+          displayServerError(
+            response,
+            ErrorCodes.USER_ADD_ATTACHED_DATAPACK_FILES_FAILED,
+            ErrorMessages[ErrorCodes.USER_ADD_ATTACHED_DATAPACK_FILES_FAILED]
+          );
+        }
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+        displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        console.error("error bruh", e);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setEditRequestInProgress(false);
+    }
+  }
+);
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
