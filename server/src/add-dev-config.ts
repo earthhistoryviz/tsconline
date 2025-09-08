@@ -5,6 +5,7 @@ import { assertDatapackMetadataArray } from "@tsconline/shared";
 import chalk from "chalk";
 import { setupNewDatapackDirectoryInUUIDDirectory } from "./upload-handlers.js";
 import { deleteOfficialDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
+import type { DatapackMetadata } from "@tsconline/shared";
 
 export const configPaths = {
   london: path.resolve("db", "london", "output", "london-config.json"),
@@ -13,13 +14,13 @@ export const configPaths = {
 
 const successSymbol = chalk.green("✔");
 
-export async function readConfig(configPath: string) {
+export async function readConfig(configPath: string): Promise<DatapackMetadata[]> {
   if (!(await checkFileExists(configPath))) {
     throw new Error(`Config file does not exist: ${configPath}`);
   }
   const config = JSON.parse(await readFile(configPath, "utf8"));
   assertDatapackMetadataArray(config);
-  return config;
+  return config as DatapackMetadata[];
 }
 
 async function processConfig({
