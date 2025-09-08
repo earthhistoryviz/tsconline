@@ -346,7 +346,7 @@ export async function generateAndWriteConfig(fileName: string) {
       authoredBy: "Group Testers",
       references: [],
       tags: [],
-      notes: "here 17",
+      notes: "here 20",
       type: "official",
       isPublic: true,
       priority: 1,
@@ -358,7 +358,7 @@ export async function generateAndWriteConfig(fileName: string) {
   console.log()
 }
 
-export async function generateLondonDatapack() {
+export async function generateLondonDatapack(): Promise<File | undefined> {
   try {
     const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
     const date = new Date();
@@ -366,8 +366,8 @@ export async function generateLondonDatapack() {
     const fileName = `UCL_TSC_Chronostrat_${formattedDate}.txt`;
     const filePath = join(outputDir, fileName);
 
-    const pathDict: StringDictSet = {}; // dictionary to stucture groups and their children
-    const linesDict: StringDict = {}; // dictionary to link groups to their columns in the form of lines
+    const pathDict: StringDictSet = {};
+    const linesDict: StringDict = {};
     const eventColumns = await processEventColumns(datasets, columns, events);
     const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
     const sequenceColumns = await processSequenceColumns(events, columns, datasets);
@@ -375,8 +375,17 @@ export async function generateLondonDatapack() {
     const lines = await linesFromDicts(pathDict, linesDict);
     await writeFile(filePath, lines.join("\n"));
     await generateAndWriteConfig(fileName);
+
+    // Read the file back and return as a File object (browser-compatible)
+    const buffer = Buffer.from(lines.join("\n"), "utf8");
+    // @ts-ignore
+    return new File([buffer], fileName, {
+      type: "text/plain",
+      lastModified: Date.now()
+    });
   } catch (error) {
     console.error(chalk.red(`Failed to create test_datapack.txt: ${error}`));
+    return undefined;
   }
 }
 

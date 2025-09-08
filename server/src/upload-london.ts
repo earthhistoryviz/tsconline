@@ -16,6 +16,18 @@ export async function processLondonDatapack() {
     }
 }
 
+export async function retrieveLondonDatapack(): Promise<File> {
+    try {
+        await connectToDB();
+        const londonDatapack = await generateLondonDatapack();
+        console.log("London datapack retrieved successfully.");
+        return londonDatapack as File;
+    } catch (error) {
+        console.error("Error retrieving London datapack:", error);
+        throw error;
+    }
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
     await processLondonDatapack();
 }
