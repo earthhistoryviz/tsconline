@@ -345,6 +345,7 @@ server.get("/markdown-tree", moderateRateLimit, fetchMarkdownFiles);
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.get("/chart", { websocket: true }, routes.handleChartGeneration);
+server.get("/chart-mcp", { websocket: true }, routes.handleMCPChartGeneration);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);
