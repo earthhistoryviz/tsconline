@@ -496,6 +496,7 @@ translation.errors.WORKSHOP_FILE_DOWNLOAD_NOT_AUTHORIZED,Please register for the
 translation.errors.INVALID_DATAPACK_HASH,Invalid treatise datapack hash provided.
 translation.errors.USER_FETCH_HISTORY_FAILED,Failed to fetch user history. Please try again later.
 translation.errors.USER_DELETE_HISTORY_FAILED,Failed to delete user history. Please try again later
+translation.errors.USER_LONDON_DATABASE_FAILED,Failed to fetch London database. Please try again later
 translation.errors.USER_FETCH_HISTORY_METADATA_FAILED,Failed to fetch user history metadata. Please try again later
 translation.errors.USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING,This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.
 translation.errors.title,Error

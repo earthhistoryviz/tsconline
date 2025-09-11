@@ -289,3 +289,37 @@ export const removeUserHistoryEntry = action((timestamp: string) => {
 export const clearUserHistory = action(() => {
   state.user.historyEntries = [];
 });
+
+export const fetchLondonDatapack = action(async () => {
+  try {
+    const res = await fetcher("/migrate-london", {
+      method: "GET",
+      credentials: "include"
+    });
+
+    if (res.ok) {
+      // Get JSON object from header (not actual metadata)
+      const metadataHeader = res.headers.get("X-Config");
+      const metadata = metadataHeader ? JSON.parse(metadataHeader) : null;
+
+      // Get file blob
+      const blob = await res.blob();
+      const file = new File([blob], "london-datapack.txt", {
+        type: blob.type || "text/plain",
+        lastModified: Date.now()
+      });
+
+      return { metadata, file };
+    } else {
+      displayServerError(
+        res.statusText,
+        ErrorCodes.USER_LONDON_DATABASE_FAILED,
+        ErrorMessages[ErrorCodes.USER_LONDON_DATABASE_FAILED]
+      );
+      return null;
+    }
+  } catch {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return null;
+  }
+});
