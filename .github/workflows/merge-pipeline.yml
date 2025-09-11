@@ -342,8 +342,8 @@ jobs:
           echo "Contents of the JAR file (${DECRYPTION_JAR}):"
           jar tf "${DECRYPTION_JAR}" || echo "Failed to list contents of ${DECRYPTION_JAR}"
 
-          echo "Contents of the datapacks directory (${github.workspace}/server/assets/datapacks):"
-          find "${github.workspace}/server/assets/datapacks" -type f || echo "Failed to list contents of datapacks directory"
+          echo "Contents of the datapacks directory (${{ github.workspace }}/server/assets/datapacks):"
+          find "${{ github.workspace }}/server/assets/datapacks" -type f || echo "Failed to list contents of datapacks directory"
 
       - name: e2e Tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -415,7 +415,7 @@ jobs:
             }
 
       - name: Check for any test failures
-        if:  steps.e2e_tests.outputs.e2e_failed == 'true'
+        if: steps.e2e_tests.outputs.e2e_failed == 'true'
         run: |
           if [ "${{ steps.e2e_tests.outputs.e2e_failed }}" = "true" ]; then
             echo "E2E tests failed."
