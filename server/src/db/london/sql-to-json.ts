@@ -171,6 +171,6 @@ export async function connectToDB() {
   }
 }
 
-// if (import.meta.url === `file://${process.argv[1]}`) {
-//     await connectToDB();
-// }
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await connectToDB();
+}

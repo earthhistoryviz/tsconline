@@ -334,7 +334,6 @@ const customSplit = (path: string): string[] => {
 };
 
 export async function generateAndWriteConfig(fileName: string) {
-  const niceTitle = fileName.replace(/_/g, " ").replace(/\.txt$/i, "");
   const config = [
     {
       title: "UCL TSC Chron",
@@ -346,7 +345,7 @@ export async function generateAndWriteConfig(fileName: string) {
       authoredBy: "Group Testers",
       references: [],
       tags: [],
-      notes: "here 20",
+      notes: "here 21",
       type: "official",
       isPublic: true,
       priority: 1,
@@ -355,7 +354,7 @@ export async function generateAndWriteConfig(fileName: string) {
   ];
   const configPath = join(outputDir, "london-config.json");
   await writeFile(configPath, JSON.stringify(config, null, 2), "utf8");
-  console.log()
+  console.log();
 }
 
 export async function generateLondonDatapack(): Promise<File | undefined> {
@@ -378,7 +377,6 @@ export async function generateLondonDatapack(): Promise<File | undefined> {
 
     // Read the file back and return as a File object (browser-compatible)
     const buffer = Buffer.from(lines.join("\n"), "utf8");
-    // @ts-ignore
     return new File([buffer], fileName, {
       type: "text/plain",
       lastModified: Date.now()

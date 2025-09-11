@@ -9,7 +9,7 @@ import type { DatapackMetadata } from "@tsconline/shared";
 
 export const configPaths = {
   london: path.resolve("db", "london", "output", "london-config.json"),
-  dev: path.resolve(process.cwd(), "assets", "dev-config.json"),
+  dev: path.resolve(process.cwd(), "assets", "dev-config.json")
 };
 
 const successSymbol = chalk.green("✔");
@@ -26,7 +26,7 @@ export async function readConfig(configPath: string): Promise<DatapackMetadata[]
 async function processConfig({
   configType,
   alwaysOverwrite = false,
-  copyFirstLondonPack = false,
+  copyFirstLondonPack = false
 }: {
   configType: "dev" | "london";
   alwaysOverwrite?: boolean;
@@ -65,12 +65,7 @@ async function processConfig({
           }
         }
 
-        await setupNewDatapackDirectoryInUUIDDirectory(
-          "official",
-          storedPath,
-          datapack,
-          true
-        );
+        await setupNewDatapackDirectoryInUUIDDirectory("official", storedPath, datapack, true);
 
         console.log(
           chalk.blueBright(

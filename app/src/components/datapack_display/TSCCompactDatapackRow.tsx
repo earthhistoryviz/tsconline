@@ -17,7 +17,7 @@ import {
   isOwnedByUser
 } from "../../state/non-action-util";
 import { Public } from "@mui/icons-material";
-import { addDatapack, refreshPublicDatapacks } from "../../state/actions";
+import { LondonSyncButton } from "../../admin/LondonDatabaseSync";
 
 type TSCCompactDatapackRowProps = {
   datapack?: DatapackMetadata;
@@ -60,20 +60,16 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
             : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()
         }
         onClick={async (e) => {
-            e.stopPropagation();
-            if (loading) return;
-            setLoading(true);
-            try {
+          e.stopPropagation();
+          if (loading) return;
+          setLoading(true);
+          try {
             if (!skeleton) {
               await onChange(datapack);
-              if (datapack!.title === "UCL TSC Chron") {
-              await actions.migrateLondon();
-              refreshPublicDatapacks();
-              }
             }
-            } finally {
+          } finally {
             setLoading(false);
-            }
+          }
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
@@ -92,6 +88,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
             </Typography>
           )}
           {!skeleton && isUserDatapack(datapack) && datapack.isPublic && <Public className={styles.publicIcon} />}
+          <LondonSyncButton datapack={datapack} />
         </Box>
       </div>
       {!skeleton && isOwnedByUser(datapack, state.user?.uuid) && (

@@ -33,10 +33,7 @@ import { deleteAllUserDatapacks } from "./user/user-handler.js";
 import { fetchMarkdownFiles } from "./help/help-routes.js";
 import { CommentType, assertCommentType } from "@tsconline/shared";
 import fastifyWebsocket from "@fastify/websocket";
-import { exec } from "child_process";
-import { addLondonConfigToAdminConfig } from "./add-dev-config.js";
-import { migrateLondonCachedDatapacks } from "./migrate-cached-datapacks.js";
-import { add } from "lodash";
+import { processLondonDatapack } from "./upload-london.js";
 import { fetchLondonDatapack } from "./london-routes.js";
 
 const maxConcurrencySize = 2;
@@ -474,8 +471,7 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
 
 cron.schedule("0 0 * * *", async () => {
   try {
-    await addLondonConfigToAdminConfig();
-    await migrateLondonCachedDatapacks();
+    await processLondonDatapack();
   } catch (e) {
     logger.error("Error migrating cached datapacks", e);
   }
