@@ -339,8 +339,8 @@ jobs:
           fi
           echo "Successfully downloaded and extracted datapacks folder to assets/datapacks."
 
-          echo "Contents of the JAR file (${DECRYPTION_JAR}):"
-          jar tf "${DECRYPTION_JAR}" || echo "Failed to list contents of ${DECRYPTION_JAR}"
+          echo "Contents of the jars directory (${{ github.workspace }}/server/assets/jars):"
+          find "${{ github.workspace }}/server/assets/jars" -type f || echo "Failed to list contents of jars directory"
 
           echo "Contents of the datapacks directory (${{ github.workspace }}/server/assets/datapacks):"
           find "${{ github.workspace }}/server/assets/datapacks" -type f || echo "Failed to list contents of datapacks directory"
