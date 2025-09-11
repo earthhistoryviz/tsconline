@@ -96,9 +96,9 @@ export async function addLondonConfigToAdminConfig() {
 }
 
 // Run the script if executed directly
-// if (import.meta.url === `file://${process.argv[1]}`) {
-//   await addLondonConfigToAdminConfig();
-//   if (!process.argv.includes("--london")) {
-//     await addDevConfigToAdminConfig();
-//   }
-// }
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await addDevConfigToAdminConfig();
+  if (process.argv.includes("--london")) {
+    await addLondonConfigToAdminConfig();
+  }
+}
