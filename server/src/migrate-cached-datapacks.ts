@@ -143,8 +143,8 @@ export async function migrateDevCachedDatapacks() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  await migrateLondonCachedDatapacks();
-  if (!process.argv.includes("--london")) {
-    await migrateDevCachedDatapacks();
+  await migrateDevCachedDatapacks();
+  if (process.argv.includes("--london")) {
+    await migrateLondonCachedDatapacks();
   }
 }
