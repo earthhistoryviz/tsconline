@@ -40,7 +40,7 @@
     "setup": "yarn && yarn build",
     "start": "yarn workspace @tsconline/server start",
     "setup-files": "yarn workspace @tsconline/server run pull-supporting-files && yarn dev:config --overwrite && yarn workspace @tsconline/server run init-translations && yarn workspace @tsconline/server run migrate-datapacks",
-    "dev:playwright": "yarn setup-files && concurrently \"NODE_ENV=test yarn start\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\"",
+    "dev:playwright": "yarn workspace @tsconline/server run dev:config --overwrite && yarn workspace @tsconline/server run init-translations && yarn workspace @tsconline/server run migrate-datapacks && concurrently \"NODE_ENV=test yarn start\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\"",
     "london-setup": "yarn workspace @tsconline/server run london",
     "dev": "yarn setup-files && yarn workspace @tsconline/server run pull-help && yarn london-setup && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
     "production": "yarn workspace @tsconline/server run production",
