@@ -310,6 +310,7 @@ export interface arkL_subdatasets {
   data_types: string | null;
   interval_types: string | null;
   dataset: string | null;
+  added_abv: string | null;
   dataset_id: number | null;
   colshare: string | null;
   notes: string | null;
@@ -327,6 +328,7 @@ export function assertarkL_subdatasets(o: any): asserts o is arkL_subdatasets {
     if (o.data_types !== null && typeof o.data_types !== "string") throwError("arkL_subdatasets", "data_types", "string", o.data_types);
     if (o.interval_types !== null && typeof o.interval_types !== "string") throwError("arkL_subdatasets", "interval_types", "string", o.interval_types);
     if (o.dataset !== null && typeof o.dataset !== "string") throwError("arkL_subdatasets", "dataset", "string", o.dataset);
+    if (o.added_abv !== null && typeof o.added_abv !== "string") throwError("arkL_subdatasets", "added_abv", "string", o.added_abv);
     if (o.dataset_id !== null && typeof o.dataset_id !== "number") throwError("arkL_subdatasets", "dataset_id", "number", o.dataset_id);
     if (o.colshare !== null && typeof o.colshare !== "string") throwError("arkL_subdatasets", "colshare", "string", o.colshare);
     if (o.notes !== null && typeof o.notes !== "string") throwError("arkL_subdatasets", "notes", "string", o.notes);

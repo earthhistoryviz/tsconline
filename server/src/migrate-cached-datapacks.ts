@@ -6,11 +6,15 @@ import {
 } from "./user/fetch-user-files.js";
 import { assetconfigs, loadAssetConfigs } from "./util.js";
 import { mkdir, readdir, readFile, writeFile } from "fs/promises";
-import { DatapackIndex, DatapackMetadata, assertDatapackMetadata, assertDatapackMetadataArray } from "@tsconline/shared";
+import {
+  DatapackIndex,
+  DatapackMetadata,
+  assertDatapackMetadata,
+  assertDatapackMetadataArray
+} from "@tsconline/shared";
 import { loadDatapackIntoIndex } from "./load-packs.js";
 import chalk from "chalk";
 import { checkFileExists } from "./util.js";
-import { config } from "process";
 import { copyFile } from "fs/promises";
 
 const londonConfigPath = path.resolve(process.cwd(), "db", "london", "output", "london-config.json");
@@ -44,7 +48,6 @@ export async function migrateCachedDatapacks(london: boolean) {
         const datapacksDir = await getUsersDatapacksDirectoryFromUUIDDirectory(path.join(directory, user));
         const datapacks = await getDirectories(datapacksDir);
         for (const datapack of datapacks) {
-
           if (args.includes("--london") || london) {
             const londonConfigArray = await readLondonConfig();
             const londonConfig = londonConfigArray[0];
@@ -139,9 +142,9 @@ export async function migrateDevCachedDatapacks() {
   await migrateCachedDatapacks(false);
 }
 
-// if (import.meta.url === `file://${process.argv[1]}`) {
-//   await migrateLondonCachedDatapacks();
-//   if (!process.argv.includes("--london")) {
-//     await migrateDevCachedDatapacks();
-//   }
-// }
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await migrateLondonCachedDatapacks();
+  if (!process.argv.includes("--london")) {
+    await migrateDevCachedDatapacks();
+  }
+}
