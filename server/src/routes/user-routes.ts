@@ -17,6 +17,7 @@ import {
   fetchUserDatapack
 } from "../user/user-handler.js";
 import { getWorkshopIdFromUUID, verifyWorkshopValidity } from "../workshop/workshop-util.js";
+import { downloadWorkshopFilesZip } from "../workshop/workshop-routes.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata, getWorkshopUUIDFromWorkshopId, checkUserAllowedDownloadDatapack } from "@tsconline/shared";
@@ -195,6 +196,14 @@ export const requestDownload = async function requestDownload(
       reply.status(500).send({ error: "An error occurred: " + e });
     }
   }
+};
+
+// user route to download all workshop files
+export const downloadAllFilesZip = async (
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
+  reply: FastifyReply
+) => {
+  await downloadWorkshopFilesZip(request, reply);
 };
 
 /**
