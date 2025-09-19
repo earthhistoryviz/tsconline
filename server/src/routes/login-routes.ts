@@ -15,7 +15,7 @@ import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
 import { Email, NewUser, NewVerification, UpdatedUser } from "../types.js";
 import { sendEmail } from "../send-email.js";
-import "dotenv/config";
+import "@dotenvx/dotenvx/config";
 import { assetconfigs } from "../util.js";
 import path from "path";
 import { pipeline } from "stream/promises";

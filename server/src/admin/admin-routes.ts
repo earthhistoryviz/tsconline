@@ -49,7 +49,7 @@ import {
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
-import "dotenv/config";
+import "@dotenvx/dotenvx/config";
 import {
   checkFileTypeIsDatapackImage,
   deleteAllUserDatapacks,

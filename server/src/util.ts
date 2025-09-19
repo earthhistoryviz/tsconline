@@ -8,7 +8,7 @@ import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
 import { createHash, randomUUID } from "crypto";
 import { Datapack, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
-import "dotenv/config";
+import "@dotenvx/dotenvx/config";
 
 /**
  * Uploads a file to GitHub and returns a link to the uploaded file.

@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "@dotenvx/dotenvx/config";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { assertRecaptchaResponse } from "./types.js";
 
