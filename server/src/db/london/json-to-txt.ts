@@ -77,6 +77,9 @@ async function processSequenceColumns(events: arkL_events[], columns: arkL_colum
         if (sequenceType === "SB" && label) {
           label = label.replace(/seqbdy/gi, "").trim();
         }
+        if (event.seq_scale == null || event.seq_scale === "") {
+          continue;
+        }
         line = `\t${label}\t${sequenceType}\t${event.age}\t${event.seq_scale}${event.notes_2020 !== null ? `\t${event.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
         lines.push(line);
       }
@@ -348,7 +351,7 @@ export async function generateAndWriteConfig(fileName: string) {
       notes: "here 21",
       type: "official",
       isPublic: true,
-      priority: 1,
+      priority: 2,
       hasFiles: false
     }
   ];
