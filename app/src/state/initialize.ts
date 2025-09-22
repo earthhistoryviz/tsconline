@@ -6,7 +6,38 @@ export async function initialize() {
   actions.sessionCheck();
   actions.fetchAllPublicDatapacksMetadata();
   actions.fetchPresets();
-  await actions.processDatapackConfig([]);
+  
+  // Auto-load the TimeScale Creator Internal Datapack by default
+  try {
+    const internalDatapack = await actions.fetchDatapack(
+      {
+        isPublic: true,
+        title: "TimeScale Creator Internal Datapack",
+        type: "official"
+      }
+    );
+    
+    if (internalDatapack) {
+      actions.addDatapack(internalDatapack);
+      
+      const internalDatapackConfig = {
+        storedFileName: internalDatapack.storedFileName,
+        title: internalDatapack.title,
+        isPublic: internalDatapack.isPublic,
+        type: "official" as const
+      };
+      
+      await actions.processDatapackConfig([internalDatapackConfig]);
+      console.log("Auto-loaded TimeScale Creator Internal Datapack");
+    } else {
+      console.warn("TimeScale Creator Internal Datapack not found, loading with empty config");
+      await actions.processDatapackConfig([]);
+    }
+  } catch (error) {
+    console.error("Failed to load TimeScale Creator Internal Datapack:", error);
+    await actions.processDatapackConfig([]);
+  }
+  
   actions.fetchFaciesPatterns();
   actions.fetchTimescaleDataAction();
   actions.fetchAllWorkshops();
