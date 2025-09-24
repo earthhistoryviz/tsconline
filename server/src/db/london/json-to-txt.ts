@@ -348,7 +348,7 @@ export async function generateAndWriteConfig(fileName: string) {
       authoredBy: "Group Testers",
       references: [],
       tags: [],
-      notes: "here 21",
+      notes: "here 22",
       type: "official",
       isPublic: true,
       priority: 2,
