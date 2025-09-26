@@ -67,6 +67,8 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
             if (!skeleton) {
               await onChange(datapack);
             }
+          } catch (e) {
+            console.error(e);
           } finally {
             setLoading(false);
           }
