@@ -35,10 +35,10 @@ export const LondonSyncButton: React.FC<TSCLondonDatabaseSyncButtonProps> = obse
                       if (officialDatapack) {
                         await actions.adminDeleteOfficialDatapacks([metadata]);
                         await actions.adminUploadOfficialDatapack(file, metadata);
-                      } else {
-                        console.error("London datapack does not exist");
                       }
                     }
+                  } catch (e) {
+                    console.error(e);
                   } finally {
                     setLoading(false);
                   }
