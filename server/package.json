@@ -89,7 +89,9 @@
     "migrate-datapacks": "node dist/migrate-cached-datapacks.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist",
-    "london": "node dist/db/london/sql-to-json.js && node dist/db/london/json-to-txt.js",
+    "london:process": "node dist/db/london/sql-to-json.js && node dist/db/london/json-to-txt.js",
+    "london:upload": "yarn dev:config:overwrite --london && yarn migrate-datapacks --london",
+    "london": "node dist/upload-london.js",
     "pull-supporting-files": "node dist/pull-supporting-files.js",
     "reset-markdown": "node dist/help/reset-markdown-files-to-template.js",
     "process-markdown": "node dist/help/process-markdown-tree.js"

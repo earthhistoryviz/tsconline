@@ -2,6 +2,7 @@ import "@dotenvx/dotenvx/config";
 import { loadAssetConfigs, assetconfigs } from "./util.js";
 import { access, mkdir, readdir, rm, writeFile } from "fs/promises";
 import { basename, dirname, join } from "path";
+import { readConfig, configPaths } from "./add-dev-config.js";
 import chalk from "chalk";
 import AdmZip from "adm-zip";
 
@@ -78,7 +79,15 @@ export async function areDropboxDatapacksDifferent(access_token: string): Promis
     return true;
   }
   const localFiles = await readdir(assetconfigs.datapacksDirectory);
-  return files.length !== localFiles.length || files.some((file: string) => !localFiles.includes(file));
+  const configResult = await readConfig(configPaths.london);
+  const londonFile = configResult[0]?.storedFileName;
+
+  // If londonFile exists, allow it to be present in addition to the Dropbox files
+  const expectedFiles = londonFile ? [...files, londonFile] : files;
+  // All local files must be in expectedFiles, and all Dropbox files must be present locally (except possibly londonFile)
+  const allDropboxFilesPresent = files.every((file: string) => localFiles.includes(file));
+  const onlyExpectedFiles = localFiles.every((file: string) => expectedFiles.includes(file));
+  return !(allDropboxFilesPresent && onlyExpectedFiles);
 }
 
 // download the datapacks

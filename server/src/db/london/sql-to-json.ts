@@ -137,7 +137,7 @@ async function exportRowsToJson(connection: mysql.Connection) {
   }
 }
 
-async function connectToDB() {
+export async function connectToDB() {
   try {
     const configCheck = {
       host: process.env.LONDON_DATABASE_HOST,
@@ -171,4 +171,6 @@ async function connectToDB() {
   }
 }
 
-await connectToDB();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await connectToDB();
+}
