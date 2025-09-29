@@ -36,6 +36,38 @@
   color: rgba(0, 0, 0, 0.4);
   scale: 1.1;
 }
+.sync-icon {
+  color: rgb(153, 153, 153);
+  transition: scale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: scale;
+  scale: 1;
+}
+
+.sync-icon:hover {
+  color: rgba(0, 0, 0, 0.4);
+  scale: 1.15;
+}
+
+.sync-icon::after,
+.sync-icon::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  width: 10px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 5px;
+  top: 8px;
+  left: 4px;
+}
+
+.sync-icon::after {
+  width: 2px;
+  height: 10px;
+  top: 4px;
+  left: 8px;
+}
 
 .general-loader {
   width: 22px;
