@@ -624,11 +624,11 @@ jobs:
             fi
 
             cd "$PR_PREVIEW_DIR"
-            docker-compose -f docker-compose-preview.yml up --build --remove-orphans pr-preview-install
+            docker compose -f docker-compose-preview.yml up --build --remove-orphans pr-preview-install
 
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
-              docker-compose -f docker-compose-preview.yml restart pr-preview-run
+              docker compose -f docker-compose-preview.yml restart pr-preview-run
               MAX_WAIT=180
               INTERVAL=5
               ELAPSED=0
@@ -636,8 +636,8 @@ jobs:
               while ! docker logs --since "$START_TIME" "$CONTAINER_NAME" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
                 if [ $ELAPSED -ge $MAX_WAIT ]; then
                   echo "Max wait time exceeded. Exiting..."
-                  docker-compose -f docker-compose-preview.yml logs --tail=200 pr-preview-run
-                  docker-compose -f docker-compose-preview.yml down
+                  docker compose -f docker-compose-preview.yml logs --tail=200 pr-preview-run
+                  docker compose -f docker-compose-preview.yml down
                   exit 1
                 fi
                 echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
