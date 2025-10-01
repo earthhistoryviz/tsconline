@@ -16,7 +16,10 @@ import {
   fetchUserHistory,
   deleteUserHistory,
   fetchDatapackComments,
-  downloadPrivateDatapackFilesZip
+  downloadPrivateDatapackFilesZip,
+  fetchDatapackAttachedFileNames,
+  deleteDatapackAttachedFile,
+  addDatapackAttachedFiles
 } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { UserRecaptchaActions } from "@tsconline/shared";
@@ -78,6 +81,32 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       uuid: { type: "string", minLength: 1 }
     },
     required: ["datapackTitle", "uuid"]
+  };
+  const fetchDatapackAttachedFileNamesParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string", minLength: 1 },
+      uuid: { type: "string", minLength: 1, format: "uuid" }
+    },
+    required: ["datapackTitle", "uuid"]
+  };
+  const deleteDatapackAttachedFileParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string", minLength: 1 },
+      uuid: { type: "string", minLength: 1, format: "uuid" },
+      fileName: { type: "string", minLength: 1 }
+    },
+    required: ["datapackTitle", "uuid", "fileName"]
+  };
+  const addDatapackAttachedFilesParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string", minLength: 1 },
+      uuid: { type: "string", minLength: 1, format: "uuid" },
+      isPublic: { type: "boolean" }
+    },
+    required: ["datapackTitle", "uuid", "isPublic"]
   };
   const uploadDatapackCommentParams = {
     type: "object",
@@ -277,6 +306,38 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       ]
     },
     downloadPrivateDatapackFilesZip
+  );
+  fastify.get(
+    "/datapack/files/:datapackTitle/:uuid",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: fetchDatapackAttachedFileNamesParams }
+    },
+    fetchDatapackAttachedFileNames
+  );
+  fastify.delete(
+    "/datapack/files/:datapackTitle/:uuid/:fileName",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: deleteDatapackAttachedFileParams },
+      preHandler: [
+        verifySession,
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DELETE_DATAPACK_ATTACHED_FILE)
+      ]
+    },
+    deleteDatapackAttachedFile
+  );
+  fastify.patch(
+    "/datapack/files/:datapackTitle/:uuid/:isPublic",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: addDatapackAttachedFilesParams },
+      preHandler: [
+        verifySession,
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_ADD_ATTACHED_DATAPACK_FILES)
+      ]
+    },
+    addDatapackAttachedFiles
   );
   fastify.post(
     "/datapack/addComment/:datapackTitle",
