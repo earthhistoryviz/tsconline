@@ -684,6 +684,7 @@
             "INVALID_DATAPACK_HASH": "Invalid treatise datapack hash provided.",
             "USER_FETCH_HISTORY_FAILED": "Failed to fetch user history. Please try again later.",
             "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
+            "USER_LONDON_DATABASE_FAILED": "Failed to fetch London database. Please try again later",
             "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
             "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.",
             "title": "Error",

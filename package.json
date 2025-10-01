@@ -41,7 +41,8 @@
     "start": "yarn workspace @tsconline/server start",
     "setup-files": "yarn workspace @tsconline/server run pull-supporting-files && yarn dev:config --overwrite && yarn workspace @tsconline/server run init-translations && yarn workspace @tsconline/server run migrate-datapacks && yarn workspace @tsconline/server run pull-help",
     "dev:playwright": "yarn setup-files && concurrently \"NODE_ENV=test yarn start\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\"",
-    "dev": "yarn setup-files && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
+    "london-setup": "yarn workspace @tsconline/server run london",
+    "dev": "yarn setup-files && yarn london-setup && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
     "production": "yarn workspace @tsconline/server run production",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -59,6 +60,7 @@
   "workspaces": [
     "app",
     "shared",
-    "server"
+    "server",
+    "mcp"
   ]
 }
