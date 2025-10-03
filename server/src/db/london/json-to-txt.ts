@@ -464,7 +464,7 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
     }
   }
   return chronColumns;
-};
+}
 
 const organizeColumn = (entries: ProcessColumnOutput[], pathDict: StringDictSet, linesDict: StringDict) => {
   for (const entry of entries) {
@@ -546,7 +546,7 @@ export async function generateAndWriteConfig(fileName: string) {
   const filePath = join(outputDir, fileName);
   let fileSize = "0 MB";
   try {
-    const stats = await import("fs/promises").then(fs => fs.stat(filePath));
+    const stats = await import("fs/promises").then((fs) => fs.stat(filePath));
     fileSize = `${(stats.size / (1024 * 1024)).toFixed(2)} MB`;
   } catch {
     fileSize = "0 MB";
