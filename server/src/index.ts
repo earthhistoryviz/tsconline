@@ -14,7 +14,7 @@ import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
-import "dotenv/config";
+import "@dotenvx/dotenvx/config";
 import { db, findIp, createIp, updateIp, initializeDatabase, findRecentDatapackComments } from "./database.js";
 import { sendCommentsEmail, sendEmail } from "./send-email.js";
 import cron from "node-cron";

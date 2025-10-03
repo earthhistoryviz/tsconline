@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import { CommentsEmail, Email, assertCommentsEmail } from "./types.js";
 import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
-import "dotenv/config";
+import "@dotenvx/dotenvx/config";
 import { CommentType, assertCommentType } from "@tsconline/shared";
 
 const transporter = nodemailer.createTransport({

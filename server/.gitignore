@@ -1,6 +1,7 @@
 node_modules
 dist
-.env
+#.env
 db
 !src/db
 *.log
+.env.keys
