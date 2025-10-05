@@ -37,7 +37,7 @@ async function loadJSONS() {
 
 type StringDict = { [key: string]: string[] };
 type StringDictSet = { [key: string]: Set<string> };
-type ProcessColumnOutput = { path: string; column: string; lines: string[] };
+type ProcessColumnOutput = { path: string; column: string; lines: string[]; sort: number };
 
 async function processSequenceColumns(events: arkL_events[], columns: arkL_columns[], datasets: arkL_datasets[]) {
   const sequenceColumns: ProcessColumnOutput[] = [];
@@ -77,6 +77,9 @@ async function processSequenceColumns(events: arkL_events[], columns: arkL_colum
         if (sequenceType === "SB" && label) {
           label = label.replace(/seqbdy/gi, "").trim();
         }
+        if (event.seq_scale == null || event.seq_scale === "") {
+          continue;
+        }
         line = `\t${label}\t${sequenceType}\t${event.age}\t${event.seq_scale}${event.notes_2020 !== null ? `\t${event.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
         lines.push(line);
       }
@@ -86,7 +89,8 @@ async function processSequenceColumns(events: arkL_events[], columns: arkL_colum
         sequenceColumns.push({
           path: column.path,
           column: column.columnx,
-          lines
+          lines,
+          sort: column.sort ?? 0
         });
       }
     }
@@ -160,7 +164,8 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
         eventColumns.push({
           path: column.path,
           column: column.columnx,
-          lines: columnLines
+          lines: columnLines,
+          sort: column.sort ?? 0
         });
       }
     }
@@ -249,12 +254,216 @@ async function processBlockColumns(
         blockColumns.push({
           path: column.path,
           column: column.columnx,
-          lines: columnLines
+          lines: columnLines,
+          sort: column.sort ?? 0
         });
       }
     }
   }
   return blockColumns;
+}
+
+async function processChronColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
+  const chronColumns: ProcessColumnOutput[] = [];
+  for (const column of columns) {
+    if (
+      column.column_type?.includes("interval") &&
+      column.interval_type?.includes("chron") &&
+      !column.columnx?.includes("Chron Label ") &&
+      !column.columnx?.includes("Series Label")
+    ) {
+      const columnLines: string[] = [];
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
+        continue;
+      }
+
+      // There must be a space after chron label, if broken, space might have been removed so check for that
+      const chronLabelColumn = columns.find(
+        (col) =>
+          col.columnx?.includes("Chron Label") && col.dataset_id === column.dataset_id && col.path === column.path
+      );
+      if (!chronLabelColumn) {
+        console.log(chalk.yellow("missing chron label column for " + column.columnx));
+        continue;
+      }
+      const chronSeriesColumn = columns.find(
+        (col) =>
+          col.columnx?.includes("Series Label") && col.dataset_id === column.dataset_id && col.path === column.path
+      );
+      if (!chronSeriesColumn) {
+        console.log(chalk.yellow("missing chron series column for " + column.columnx));
+        continue;
+      }
+
+      let chronIntervals = [];
+      let chronLabelIntervals = [];
+      let chronSeriesIntervals = [];
+
+      const regex = new RegExp(column.interval_type!, "i");
+      const path = column.path || "";
+      if (path === null || path === "") {
+        console.log(chalk.yellow("missing path for " + column.columnx));
+        continue;
+      }
+
+      chronIntervals = intervals
+        .filter(
+          (interval) =>
+            interval.dataset_id === column.dataset_id &&
+            interval.interval_type?.match(regex) &&
+            (interval.subdataset === "" || interval.subdataset === null)
+        )
+        .sort((a, b) => a.base_age2020! - b.base_age2020!);
+      if (chronIntervals.length === 0) {
+        console.log(chalk.yellow("no chron intervals found for " + column.columnx));
+        continue;
+      }
+
+      chronLabelIntervals = chronLabelColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === column.dataset_id &&
+                interval.interval_type?.match(chronLabelColumn.interval_type!) &&
+                interval.subdataset === "" &&
+                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : [];
+      if (chronLabelIntervals.length === 0 && chronLabelColumn) {
+        console.log(chalk.yellow("no chron label intervals found for " + column.columnx));
+        continue;
+      }
+
+      chronSeriesIntervals = chronSeriesColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === column.dataset_id &&
+                interval.interval_type?.match(chronSeriesColumn.interval_type!) &&
+                interval.subdataset === "" &&
+                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : [];
+      if (chronSeriesIntervals.length === 0 && chronSeriesColumn) {
+        console.log(chalk.yellow("no chron series intervals found for " + column.columnx));
+        continue;
+      }
+
+      const popup = dataset.notes_Jur;
+      let line = `${column.columnx}\tchron\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${
+        popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""
+      }`;
+      columnLines.push(line);
+
+      let topWritten = false;
+      let prevSeries = "";
+
+      for (const chronInter of chronIntervals) {
+        // london database is missing data
+        if (chronInter.base_age === null) continue;
+        if (chronInter.polarity === null) continue;
+        if (chronInter.intervalx === null) continue;
+
+        const chronLabel = chronLabelIntervals.find(
+          (inter) =>
+            inter.top_age2020 != null &&
+            inter.base_age2020 != null &&
+            inter.base_age2020 >= chronInter.base_age2020! &&
+            inter.top_age2020 <= chronInter.base_age2020!
+        );
+        if (!chronLabel) {
+          console.log(
+            chalk.yellow(`No chron label found for interval ${chronInter.intervalx} in column ${column.columnx}`)
+          );
+          continue;
+        }
+        const chronSeries = chronSeriesIntervals.find((inter) => {
+          const interBase = inter.base_age != null ? inter.base_age : inter.base_age2020;
+          const interTop = inter.top_age != null ? inter.top_age : inter.top_age2020;
+          return (
+            interTop != null &&
+            interBase != null &&
+            interBase >= chronInter.base_age2020! &&
+            interTop <= chronInter.base_age2020!
+          );
+        });
+        if (!chronSeries) {
+          console.log(
+            chalk.yellow(`No chron series found for interval ${chronInter.intervalx} in column ${column.columnx}`)
+          );
+          continue;
+        }
+
+        if (chronSeries?.intervalx !== prevSeries) {
+          prevSeries = chronSeries?.intervalx ?? "";
+          if (prevSeries != "") {
+            line = `${chronSeries?.intervalx || ""}\tPrimary`;
+            columnLines.push(line);
+          }
+          if (!topWritten) {
+            columnLines.push(
+              `\tTOP\t\t${chronIntervals[0]!.top_age2020 === null ? 0 : Number(chronIntervals[0]!.top_age2020.toFixed(3))}`
+            );
+            topWritten = true;
+          }
+        }
+
+        const polarity = chronInter.polarity === "n" ? "N" : chronInter.polarity === "r" ? "R" : "U";
+
+        // If top event and base event are the same, use chronInter.intervalx as label
+        let label = "";
+        if (
+          chronInter.top_event &&
+          chronInter.base_event &&
+          chronInter.top_event
+            .replace(/^top\s+/i, "")
+            .replace(/^base\s+/i, "")
+            .trim() ===
+            chronInter.base_event
+              .replace(/^top\s+/i, "")
+              .replace(/^base\s+/i, "")
+              .trim()
+        ) {
+          label = chronInter.has_added_abv === "yes" ? chronInter.intervalx.split(" ")[0]! : chronInter.intervalx;
+        } else {
+          label = chronLabel.has_added_abv === "yes" ? chronLabel.intervalx.split(" ")[0]! : chronLabel.intervalx;
+        }
+
+        // Remove any " (word continued)" at the end of the label, e.g. "C1r.2r (Matuyama continued)" -> "C1r.2r"
+        let chronPopup = "";
+        if (
+          chronInter.preset_duration_notes !== null &&
+          chronInter.preset_duration_notes !== undefined &&
+          chronInter.preset_duration_notes !== ""
+        ) {
+          chronPopup = String(chronInter.preset_duration_notes).replace(/[\r\n]+/g, " ");
+        } else {
+          chronPopup = chronInter.intervalx.replace(/[\r\n]+/g, " ") || "";
+          chronPopup = chronInter.has_added_abv
+            ? chronPopup.split(" ")[0]!
+            : chronPopup.replace(/\s*\([^)]+continued\)$/i, "");
+        }
+
+        line = `\t${polarity}\t${label}\t${Number(chronInter.base_age2020?.toFixed(3))}\t${chronPopup}`;
+        columnLines.push(line);
+      }
+
+      columnLines.push("");
+      if (column.path && column.columnx) {
+        chronColumns.push({
+          path: column.path,
+          column: column.columnx,
+          lines: columnLines,
+          sort: column.sort ?? 0
+        });
+      }
+    }
+  }
+  return chronColumns;
 }
 
 const organizeColumn = (entries: ProcessColumnOutput[], pathDict: StringDictSet, linesDict: StringDict) => {
@@ -333,18 +542,71 @@ const customSplit = (path: string): string[] => {
   return parts;
 };
 
-try {
-  const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
-  const filePath = join(outputDir, "group_organized_test_datapack.txt");
-  const pathDict: StringDictSet = {}; // dictionary to stucture groups and their children
-  const linesDict: StringDict = {}; // dictionary to link groups to their columns in the form of lines
-  const eventColumns = await processEventColumns(datasets, columns, events);
-  const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
-  const sequenceColumns = await processSequenceColumns(events, columns, datasets);
-  organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns], pathDict, linesDict);
-  const lines = await linesFromDicts(pathDict, linesDict);
-  await writeFile(filePath, lines.join("\n"));
-  console.log(chalk.green("Processed columns"));
-} catch (error) {
-  console.error(chalk.red(`Failed to create test_datapack.txt: ${error}`));
+export async function generateAndWriteConfig(fileName: string) {
+  const filePath = join(outputDir, fileName);
+  let fileSize = "0 MB";
+  try {
+    const stats = await import("fs/promises").then((fs) => fs.stat(filePath));
+    fileSize = `${(stats.size / (1024 * 1024)).toFixed(2)} MB`;
+  } catch {
+    fileSize = "0 MB";
+  }
+  const config = [
+    {
+      title: "UCL TSC Chron",
+      description: "A test datapack created by a group",
+      originalFileName: fileName,
+      storedFileName: fileName,
+      date: new Date().toISOString().split("T")[0],
+      size: fileSize,
+      authoredBy: "Group Testers",
+      references: [],
+      tags: [],
+      notes: "This is a sample datapack generated from the London database.",
+      type: "official",
+      isPublic: true,
+      priority: 2,
+      hasFiles: false
+    }
+  ];
+  const configPath = join(outputDir, "london-config.json");
+  await writeFile(configPath, JSON.stringify(config, null, 2), "utf8");
 }
+
+export async function generateLondonDatapack(): Promise<File | undefined> {
+  try {
+    const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
+    const date = new Date();
+    const formattedDate = `${date.getDate().toString().padStart(2, "0")}${date.toLocaleString("en-US", { month: "short" })}${date.getFullYear()}`;
+    const fileName = `UCL_TSC_Chronostrat_${formattedDate}.txt`;
+    const filePath = join(outputDir, fileName);
+
+    const pathDict: StringDictSet = {};
+    const linesDict: StringDict = {};
+    const eventColumns = await processEventColumns(datasets, columns, events);
+    const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
+    const sequenceColumns = await processSequenceColumns(events, columns, datasets);
+    const chronColumns = await processChronColumns(datasets, columns, intervals);
+    const allColumns = [...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns].sort(
+      (a, b) => a.sort - b.sort
+    );
+    organizeColumn(allColumns, pathDict, linesDict);
+    const lines = await linesFromDicts(pathDict, linesDict);
+    await writeFile(filePath, lines.join("\n"));
+    await generateAndWriteConfig(fileName);
+
+    // Read the file back and return as a File object (browser-compatible)
+    const buffer = Buffer.from(lines.join("\n"), "utf8");
+    return new File([buffer], fileName, {
+      type: "text/plain",
+      lastModified: Date.now()
+    });
+  } catch (error) {
+    console.error(chalk.red(`Failed to create test_datapack.txt: ${error}`));
+    return undefined;
+  }
+}
+
+// if (import.meta.url === `file://${process.argv[1]}`) {
+//   await generateLondonDatapack();
+// }
