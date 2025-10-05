@@ -2,6 +2,7 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import z from "zod";
 
 export const createMCPServer = () => {
+  console.log("Starting MCP server...");
   const server = new McpServer({
     name: "demo-server",
     version: "1.0.0",
