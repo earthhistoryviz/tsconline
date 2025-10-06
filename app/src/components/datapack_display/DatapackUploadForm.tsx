@@ -155,7 +155,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               max: 100
             }}
             value={state.priority}
-            onChange={(event: { target: { value: string; }; }) => setters.setPriority(parseInt(event.target.value))}
+            onChange={(event: { target: { value: string } }) => setters.setPriority(parseInt(event.target.value))}
             helperText={t("settings.datapacks.upload-form.priority-placeholder")}
           />
           <TextField
