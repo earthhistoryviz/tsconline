@@ -273,6 +273,8 @@
                     "name-placeholder": "请为你的数据包输入名称",
                     "author": "作者",
                     "author-placeholder": "作者为...",
+                    "priority": "优先级",
+                    "priority-placeholder": "请输入数据包优先级",
                     "description": "数据包概述",
                     "description-placeholder": "请为你的数据包添加概述",
                     "tags": "标签",
