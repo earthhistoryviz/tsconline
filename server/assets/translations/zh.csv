@@ -194,6 +194,8 @@ translation.settings.datapacks.upload-form.name,数据包名称
 translation.settings.datapacks.upload-form.name-placeholder,请为你的数据包输入名称
 translation.settings.datapacks.upload-form.author,作者
 translation.settings.datapacks.upload-form.author-placeholder,作者为...
+translation.settings.datapacks.upload-form.priority,优先级
+translation.settings.datapacks.upload-form.priority-placeholder,请输入数据包优先级
 translation.settings.datapacks.upload-form.description,数据包概述
 translation.settings.datapacks.upload-form.description-placeholder,请为你的数据包添加概述
 translation.settings.datapacks.upload-form.tags,标签

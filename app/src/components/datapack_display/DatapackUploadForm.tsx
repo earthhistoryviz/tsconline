@@ -146,6 +146,19 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             />
           </Box>
           <TextField
+            label={t("settings.datapacks.upload-form.priority")}
+            type="number"
+            placeholder="0"
+            InputLabelProps={{ shrink: true }}
+            inputProps={{
+              min: 0,
+              max: 100
+            }}
+            value={state.priority}
+            onChange={(event: { target: { value: string; }; }) => setters.setPriority(parseInt(event.target.value))}
+            helperText={t("settings.datapacks.upload-form.priority-placeholder")}
+          />
+          <TextField
             multiline
             required
             rows={5}

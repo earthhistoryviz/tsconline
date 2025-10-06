@@ -481,6 +481,8 @@
                     "name-placeholder": "Enter a name for your datapack.",
                     "author": "Authored By",
                     "author-placeholder": "Credited to...",
+                    "priority": "Priority",
+                    "priority-placeholder": "Enter datapack priority level",
                     "description": "Datapack Description",
                     "description-placeholder": "Enter a description for your datapack.",
                     "tags": "Tags",
