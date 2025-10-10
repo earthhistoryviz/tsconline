@@ -198,7 +198,7 @@ translation.settings.time.interval.top,Top of Interval
 translation.settings.time.interval.base,Base of Interval
 translation.settings.time.interval.top-name,Top Age/Stage Name
 translation.settings.time.interval.base-name,Base Age/Stage Name
-translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1
+translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1)
 translation.settings.time.interval.helper-text,Base age should be older than top age
 translation.settings.time.interval.vertical-scale-header,Vertical Scale
 translation.settings.preferences.checkboxs.skip-empty-columns,Gray out (and do not draw) columns which do not have data on the selected time interval
@@ -520,6 +520,7 @@ translation.no,No
 translation.languageNames.en-US,English
 translation.languageNames.en,English
 translation.languageNames.zh,中文
+translation.languageNames.ru,Русский
 translation.tours.quit,Quit Tour
 translation.tours.finish,Finish Tour
 translation.tours.next,Next
@@ -543,3 +544,5 @@ translation.tours.settings.step4,In the Search Settings, you can quickly locate 
 translation.tours.settings.step5,The Font Settings section allows you to customize the appearance of text within your charts. You can adjust font styles, sizes, and formatting for various elements such as column headers, age labels, and more. Each setting is inheritable, ensuring consistency across related elements unless specified otherwise. Changing a font setting here applies it system-wide, but you can override these for individual columns by using the "Change Font" option within each columns settings.Experiment with different fonts and sizes to enhance readability and visual appeal of your charts.
 translation.tours.settings.step6,In the Map Points Settings, you can access and manage geographic data points for different locations. This feature allows you to view specific location details directly on the interactive map. You can toggle different map layers and visualize data points with detailed descriptions, like latitude, longitude, and additional notes. Please note, however, that not all datapacks contain map points.
 translation.tours.settings.step7,In the Datapacks Settings, you can select the datapacks you wish to use for generating charts. We offer nine official datapacks, each comprising a curated collection of datasets tailored for specific thematic explorations. You might notice that this page resembles the Datapack page; selections can be configured here or there interchangeably. For more detailed guidance on how to utilize datapacks, please refer to the Datapacks Tour in the Help page "Tours" section.
+
+
