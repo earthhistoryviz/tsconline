@@ -16,17 +16,17 @@ export async function initialize() {
     try {
       // First initialize with empty config to check current state
       await actions.processDatapackConfig([], { silent: true });
-      
+
       // Only auto-load if no datapacks are currently configured and not in test environment
       // Check for various test environment indicators including Playwright
-      const isTestEnvironment = 
-        import.meta.env.MODE === 'test' || 
+      const isTestEnvironment =
+        import.meta.env.MODE === "test" ||
         import.meta.env.VITEST ||
         // Detect browser automation (Playwright, Selenium, etc.)
-        (typeof navigator !== 'undefined' && navigator.webdriver === true) ||
-        (typeof window !== 'undefined' && (window as any).__playwright !== undefined) ||
-        (typeof window !== 'undefined' && (window as any).__webdriver_script_fn !== undefined);
-      
+        (typeof navigator !== "undefined" && navigator.webdriver === true) ||
+        (typeof window !== "undefined" && (window as any).__playwright !== undefined) ||
+        (typeof window !== "undefined" && (window as any).__webdriver_script_fn !== undefined);
+
       if (state.config.datapacks.length === 0 && !isTestEnvironment) {
         const internalDatapack = await actions.fetchDatapack({
           isPublic: true,
