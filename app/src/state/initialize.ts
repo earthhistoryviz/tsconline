@@ -24,8 +24,8 @@ export async function initialize() {
         import.meta.env.VITEST ||
         // Detect browser automation (Playwright, Selenium, etc.)
         (typeof navigator !== "undefined" && navigator.webdriver === true) ||
-        (typeof window !== "undefined" && (window as any).__playwright !== undefined) ||
-        (typeof window !== "undefined" && (window as any).__webdriver_script_fn !== undefined);
+        (typeof window !== "undefined" && "__playwright" in window) ||
+        (typeof window !== "undefined" && "__webdriver_script_fn" in window);
 
       if (state.config.datapacks.length === 0 && !isTestEnvironment) {
         const internalDatapack = await actions.fetchDatapack({
