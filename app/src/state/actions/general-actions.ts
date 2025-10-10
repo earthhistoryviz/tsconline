@@ -577,16 +577,19 @@ export const processDatapackConfig = action(
       force?: boolean;
       setter?: (message: SetDatapackConfigReturnValue) => Promise<void>;
       currentConfig?: DatapackConfigForChartRequest[];
+      silent?: boolean;
     }
   ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
-    const { settings, force, currentConfig } = options ?? {};
+    const { settings, force, currentConfig, silent } = options ?? {};
     const config = currentConfig ?? state.config.datapacks;
     if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(config))) return true;
-    setIsProcessingDatapacks(true);
+    if (!silent) {
+      setIsProcessingDatapacks(true);
+    }
     const fetchSettings = async () => {
       if (settings) {
         if (typeof settings !== "string") return settings;
@@ -640,7 +643,9 @@ export const processDatapackConfig = action(
                 );
                 setUnsavedDatapackConfig(datapacks);
               }
-              pushSnackbar("Datapack Config Updated", "success");
+              if (!silent) {
+                pushSnackbar("Datapack Config Updated", "success");
+              }
               resolve("Datapack Config Updated successfully.");
             } catch (e) {
               reject(new Error("Failed to set datapack config with error " + e));
@@ -648,19 +653,25 @@ export const processDatapackConfig = action(
           } else {
             reject(new Error("Setting Datapack Config Timed Out"));
           }
-          setIsProcessingDatapacks(false);
+          if (!silent) {
+            setIsProcessingDatapacks(false);
+          }
           setDatapackConfigWorker.terminate();
         };
 
         setDatapackConfigWorker.onerror = function (error) {
           setDatapackConfigWorker.terminate();
-          setIsProcessingDatapacks(false);
+          if (!silent) {
+            setIsProcessingDatapacks(false);
+          }
           reject(new Error("Webworker failed with error." + error.message));
         };
       });
     } catch (e) {
       console.error(e);
-      setIsProcessingDatapacks(false);
+      if (!silent) {
+        setIsProcessingDatapacks(false);
+      }
       pushError(ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG);
       return false;
     }
@@ -1126,6 +1137,9 @@ export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: 
 });
 export const setLoadingDatapacks = action("setLoadingDatapacks", (loading: boolean) => {
   state.loadingDatapacks = loading;
+});
+export const setIsInitializing = action("setIsInitializing", (initializing: boolean) => {
+  state.isInitializing = initializing;
 });
 export const setUser = action("setUser", (user: SharedUser) => {
   state.user = { ...state.user, ...user };
