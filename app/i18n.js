@@ -39,3 +39,6 @@ i18n
 
 
 export default i18n;
+
+
+// test change to verify git detection
