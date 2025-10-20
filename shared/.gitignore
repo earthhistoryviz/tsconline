@@ -1,2 +1,3 @@
 dist
 translations/dev-translation-en.json
+.DS_Store
