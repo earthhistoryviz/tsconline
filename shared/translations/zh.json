@@ -457,5 +457,10 @@
             "en": "English",
             "zh": "中文"
         }
+    },
+    "#translation": {
+        "languageNames": {
+            "ru": "Русский"
+        }
     }
 }
