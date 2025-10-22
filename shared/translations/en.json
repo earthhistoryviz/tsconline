@@ -500,7 +500,10 @@
                     "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
                 },
                 "pdf-upload": "PDF Upload",
-                "comment-flagged": "This comment has been flagged."
+                "comment-flagged": "This comment has been flagged.",
+                "upload-pdf-files": "Upload PDF Files",
+                "no-attached-files": "No attached files",
+                "attached-files": "Attached Files"
             }
         },
         "chart": {
