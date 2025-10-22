@@ -198,7 +198,7 @@ translation.settings.time.interval.top,Top of Interval
 translation.settings.time.interval.base,Base of Interval
 translation.settings.time.interval.top-name,Top Age/Stage Name
 translation.settings.time.interval.base-name,Base Age/Stage Name
-translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1
+translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1)
 translation.settings.time.interval.helper-text,Base age should be older than top age
 translation.settings.time.interval.vertical-scale-header,Vertical Scale
 translation.settings.preferences.checkboxs.skip-empty-columns,Gray out (and do not draw) columns which do not have data on the selected time interval
@@ -520,6 +520,7 @@ translation.no,No
 translation.languageNames.en-US,English
 translation.languageNames.en,English
 translation.languageNames.zh,中文
+translation.languageNames.ru,Русский
 translation.tours.quit,Quit Tour
 translation.tours.finish,Finish Tour
 translation.tours.next,Next

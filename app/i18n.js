@@ -5,6 +5,8 @@ import Backend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslation from '@tsconline/shared/translations/en.json'
 import zhTranslation from '@tsconline/shared/translations/zh.json'
+import ruTranslation from '@tsconline/shared/translations/ru.json'; 
+
 
 i18n
     // load translation using http -> see /public/locales (i.e. https://github.com/i18next/react-i18next/tree/master/example/react/public/locales)
@@ -19,7 +21,7 @@ i18n
     // init i18next
     // for all options read: https://www.i18next.com/overview/configuration-options
     .init({
-        fallbackLng: ['en', 'zh'],
+        fallbackLng: ['en', 'zh', 'ru'], 
         debug: true,
         saveMissing: true,
         interpolation: {
@@ -27,7 +29,8 @@ i18n
         },
         resources: {
             en: enTranslation, //English
-            zh: zhTranslation  //Chinese
+            zh: zhTranslation,  //Chinese
+            ru: ruTranslation //Russian
         },
         missingKeyHandler: function (lng, ns, key, fallbackValue) {
             console.error(`Missing translation for key "${key}" in namespace "${ns}" and language "${lng}"`);
@@ -36,3 +39,6 @@ i18n
 
 
 export default i18n;
+
+
+// test change to verify git detection
