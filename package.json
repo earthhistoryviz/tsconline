@@ -5,7 +5,7 @@
     "fastify": "^4.27.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.51.1",
+    "@playwright/test": "^1.55.1",
     "@types/eslint": "^8",
     "@types/node": "^20.11.28",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
@@ -39,7 +39,7 @@
     "prettier-format": "prettier --write \"**/*.{ts,tsx,css,yml}\"",
     "setup": "yarn && yarn build",
     "start": "yarn workspace @tsconline/server start",
-    "setup-files": "yarn workspace @tsconline/server run pull-supporting-files && yarn dev:config --overwrite && yarn workspace @tsconline/server run init-translations && yarn workspace @tsconline/server run migrate-datapacks && yarn workspace @tsconline/server run pull-help",
+    "setup-files": "yarn workspace @tsconline/server run pull-supporting-files && yarn dev:config && yarn workspace @tsconline/server run init-translations && yarn workspace @tsconline/server run migrate-datapacks && yarn workspace @tsconline/server run pull-help",
     "dev:playwright": "yarn setup-files && concurrently \"NODE_ENV=test yarn start\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\"",
     "london-setup": "yarn workspace @tsconline/server run london",
     "dev": "yarn setup-files && yarn london-setup && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",

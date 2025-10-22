@@ -455,11 +455,7 @@
         "languageNames": {
             "en-US": "English",
             "en": "English",
-            "zh": "中文"
-        }
-    },
-    "#translation": {
-        "languageNames": {
+            "zh": "中文",
             "ru": "Русский"
         }
     }
