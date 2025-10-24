@@ -16,6 +16,8 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
   fastify.post("/mcp", async (request, reply) => {
     const { mcpServer } = opts;
     const sessionId = request.headers["mcp-session-id"] as string | undefined;
+    console.log("Received POST /mcp request, sessionId:", sessionId);
+
     const body = request.body;
 
     let transport: StreamableHTTPServerTransport;
@@ -36,6 +38,7 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
       };
 
       try {
+        console.log("Connecting MCP server for new session:", transport.sessionId);
         await mcpServer.connect(transport);
       } catch (err) {
         request.log.error("Failed to connect MCP server:", err);

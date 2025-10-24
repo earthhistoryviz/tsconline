@@ -481,6 +481,7 @@ jobs:
             app/dist
             shared/dist
             server/dist
+            mcp/dist
 
   wait-for-checks:
     runs-on: ubuntu-latest
