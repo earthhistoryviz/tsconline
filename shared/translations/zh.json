@@ -455,7 +455,8 @@
         "languageNames": {
             "en-US": "English",
             "en": "English",
-            "zh": "中文"
+            "zh": "中文",
+            "ru": "Русский"
         }
     }
 }

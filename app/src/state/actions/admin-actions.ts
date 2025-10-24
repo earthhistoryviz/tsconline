@@ -275,7 +275,7 @@ export const adminDeleteUserDatapacks = action(async (datapacks: { uuid: string;
 
 export const adminDeleteOfficialDatapacks = action(
   async (datapacks: DatapackMetadata[] | EditableDatapackMetadata[]) => {
-    const recaptchaToken = await getRecaptchaToken("adminDeleteOfficialDatapacks");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_DELETE_OFFICIAL_DATAPACK);
     if (!recaptchaToken) return;
     let deletedAllDatapacks = true;
     let deletedNoDatapacks = true;
@@ -335,7 +335,7 @@ export const adminDeleteOfficialDatapacks = action(
 
 export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: File[]) => {
-    const recaptchaToken = await getRecaptchaToken("adminUploadOfficialDatapack");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_UPLOAD_OFFICIAL_DATAPACK);
     if (!recaptchaToken) return;
     if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);

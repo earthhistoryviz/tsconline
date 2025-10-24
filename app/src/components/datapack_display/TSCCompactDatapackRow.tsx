@@ -17,6 +17,7 @@ import {
   isOwnedByUser
 } from "../../state/non-action-util";
 import { Public } from "@mui/icons-material";
+import { LondonSyncButton } from "../../admin/LondonDatabaseSync";
 
 type TSCCompactDatapackRowProps = {
   datapack?: DatapackMetadata;
@@ -62,8 +63,15 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
           e.stopPropagation();
           if (loading) return;
           setLoading(true);
-          !skeleton && (await onChange(datapack));
-          setLoading(false);
+          try {
+            if (!skeleton) {
+              await onChange(datapack);
+            }
+          } catch (e) {
+            console.error(e);
+          } finally {
+            setLoading(false);
+          }
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
@@ -82,6 +90,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
             </Typography>
           )}
           {!skeleton && isUserDatapack(datapack) && datapack.isPublic && <Public className={styles.publicIcon} />}
+          <LondonSyncButton datapack={datapack} />
         </Box>
       </div>
       {!skeleton && isOwnedByUser(datapack, state.user?.uuid) && (

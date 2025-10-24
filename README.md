@@ -18,112 +18,82 @@ Before we start learning how things work, let's setup our dev environment.
 
 You'll first want to gain access to write access so you can start pull requests, so ask the team lead for permissions to the [repo](https://github.com/earthhistoryviz/tsconline).
 
-Additionally, you'll want access to the dropbox for the required datapacks and jars (JAVA YAY) which should be in the Supporting TSCOnline Files folder
+Additionally, you'll want access to the dropbox for the required datapacks and jars will be pulled from
 
-Only take the newest jar date and make sure you take the `TSCreatorBASE-8.1_DDMonthYYYY.jar` and the `datapack-decrypter_DDMonYYYY.jar` and put them in `server/assets/jars`
-Put all the datapacks in `datapacks` into `server/assets/datapacks`
+Now, clone this repo to your local device:
+```
+git clone git@github.com:earthhistoryviz/tsconline.git
+```
 
-### Ensure you have a package manager
+### Environment Requirement
+- **Windows:** You must run this project inside **WSL2** (Windows Subsystem for Linux 2) with an Ubuntu-based distribution.  
+- **Linux / macOS:** You should be able to run the project directly in your system.
 
-1. **npm** (note, you will still need `nvm` for both `Chocolatey` and `Homebrew`)
 
-- First, check if npm is installed by running:
+### 1. Installing nvm and Node.js v20
+
+First, check if npm is installed by running:
 
   ```bash
   npm -v
   ```
 
-- If you see a version number, npm is installed. If not and you would like `npm`, installing `Node` in a future step will come with a bundled `npm`
+If you see a version number, npm is installed. If not, or if the version is not v20, install nvm first:
+  - **MACOS**
+    - Visit the [nvm repo](https://github.com/nvm-sh/nvm) and install `nvm`
+  - **WINDOWS**
+    - use [nvm-windows](https://github.com/coreybutler/nvm-windows/releases)
 
-2. **Chocolatey** ([more](https://chocolatey.org/installhttps://chocolatey.org/install))
-
-- If Chocolatey is not installed follow these steps
-- Run `Get-ExecutionPolicy`. If it returns `Restricted`, then run `Set-ExecutionPolicy AllSigned` or `Set-ExecturionPolicy Bypass -Scope Process`.
-- Now install it by running the following command in an elevated (admin) PowerShell:
-  ```powershell
-  Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-  ```
-
-3. **Homebrew**
-
-- If Homebrew is not already installed, install it by running:
-  ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  ```
-
-### Installing nvm and Node.js v20
-
-- **MACOS**
-  - Visit the [nvm repo](https://github.com/nvm-sh/nvm) and install `nvm`
-- **WINDOWS**
-  - use [nvm-windows](https://github.com/coreybutler/nvm-windows/releases)
-  - use WSL with VSCode (install nvm from MACOS link)
-  - use Docker (explanation below)
-- Then run these commands to install the `node` version 20 that the repo uses and `npm` which it should come bundled with
-
+  Then run:
   ```bash
   nvm install 20
   nvm use 20
   ```
 
-### Installing Yarn Globally
+### 2. Installing Yarn Globally
 
-1. **npm**
+  ```bash
+  npm install -g yarn
+  ```
 
-- You can check if `npm` is installed by running `npm -v`. If you see a version number, `npm` is installed and you can run the following command to install `yarn` (our package manager for the repo) globally.
+### 3. Installing Java 8
+First, check if java is installed by running:
+  ```bash
+  java -version
+  javac -version
+  ```
+The output should be similar to ```openjdk version "1.8.0_402"``` and ```javac 1.8.0_402```. If java 8 is not installed, run the following: 
 
+  ```bash
+  sudo apt-get install openjdk-8-jdk
+  ```
+  or
+
+  ```bash
+  sudo apt install openjdk-8-jdk
+  ```
+
+### 4. Install Dependencies & Build
 ```bash
-npm install -g yarn
+yarn
+yarn build
 ```
 
-2. **Using Chocolatey**
+### 5. Setup Environment Variables
 
-```powershell
-choco install yarn
-```
+Take the .env file (ask a team member for the file) and place it into the /server folder. Rename the file to be ".env" if it was named otherwise. 
 
-3. **Using Homebrew**
-
-```bash
-brew install yarn
-```
-
-### Installing Java 8
-```bash
-sudo apt-get install openjdk-8-jdk
-```
-or
-
-```bash
-sudo apt install openjdk-8-jdk
-```
-### Setting up locally hosted website
-
-1. On first time being in the repo, `cd` into `tsconline` (or whatever you named the repo and ensure you are in the root dir) and run
-
-```bash
-yarn setup
-```
-
-- Make sure to note the exit code and make sure it is 0. If not, try running
-```bash
-sudo apt-get install -y python3 make g++
-```
-
-- If above doesn't seem to work, print out the `build.log` using `cat` and ask a team member for assistance (or download whatever it doesn't have)
-
-- For reference, this will run `yarn install` and `yarn build` to download all the packages we use internally (dev and production) and additionally compile all the `Typescript` files (`.ts`) into `Javascript` files (`.js`)
-
-- Make sure to get the env file from the Dropbox and put it in the root of the `server` directory. This file is called `.env` and contains all the environment variables needed to setup various files. If you don't have access to the dropbox, ask a team member for it.
-
-2. **Quick Website Setup**
-- If you have already run `yarn setup` and have the dependencies installed you can run
+### 6. Run the dev server
 ```bash
 yarn dev
 ```
-This will start the development server and you can view the website at `http://localhost:5173` in your browser.
+This step may take some time as it pulls all required datapacks from Dropbox. The site should open at http://localhost:5173.
 
-3. **Manual setup**
+
+
+## Optional
+
+### Manual setup
 
 - Open two (or four) terminals and run these commands in each
 
