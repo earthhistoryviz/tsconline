@@ -1,5 +1,5 @@
 {
-  "name": "mcp",
+  "name": "@tsconline/mcp",
   "packageManager": "yarn@4.0.2",
   "main": "dist/index.js",
   "version": "1.0.0",

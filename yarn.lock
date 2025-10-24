@@ -2694,6 +2694,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tsconline/mcp@workspace:mcp":
+  version: 0.0.0-use.local
+  resolution: "@tsconline/mcp@workspace:mcp"
+  dependencies:
+    "@fastify/cors": "npm:^9.0.1"
+    "@fastify/rate-limit": "npm:^9.1.0"
+    "@modelcontextprotocol/sdk": "npm:^1.17.0"
+    "@types/node": "npm:^24.1.0"
+    chalk: "npm:^5.4.1"
+    fastify: "npm:4.27.0"
+    node-fetch: "npm:^3.3.2"
+    nodemon: "npm:^3.1.10"
+    typescript: "npm:5.2.2"
+    vitest: "npm:^3.2.4"
+    zod: "npm:3"
+  languageName: unknown
+  linkType: soft
+
 "@tsconline/server@workspace:server":
   version: 0.0.0-use.local
   resolution: "@tsconline/server@workspace:server"
@@ -9408,24 +9426,6 @@ __metadata:
   checksum: 11df2eda46d092a6035479632e1ec865b8134bdfc4bd9e571a656f4191525404f13a283a515938c3a8de934dbfd9c09674d9da9fa831e6eb7e22b50b197d2edd
   languageName: node
   linkType: hard
-
-"mcp@workspace:mcp":
-  version: 0.0.0-use.local
-  resolution: "mcp@workspace:mcp"
-  dependencies:
-    "@fastify/cors": "npm:^9.0.1"
-    "@fastify/rate-limit": "npm:^9.1.0"
-    "@modelcontextprotocol/sdk": "npm:^1.17.0"
-    "@types/node": "npm:^24.1.0"
-    chalk: "npm:^5.4.1"
-    fastify: "npm:4.27.0"
-    node-fetch: "npm:^3.3.2"
-    nodemon: "npm:^3.1.10"
-    typescript: "npm:5.2.2"
-    vitest: "npm:^3.2.4"
-    zod: "npm:3"
-  languageName: unknown
-  linkType: soft
 
 "md5@npm:^2.3.0":
   version: 2.3.0
