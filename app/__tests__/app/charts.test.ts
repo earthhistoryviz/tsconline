@@ -41,6 +41,14 @@ async function generateBasicChart(page: Page) {
 test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
   await page.waitForTimeout(5000);
+
+  // Clear any auto-loaded datapacks to ensure clean test state
+  const clearButton = page.locator("text=Clear All");
+  if (await clearButton.isVisible()) {
+    await clearButton.click();
+    await page.waitForTimeout(1000);
+  }
+
   await page.locator(".qsg-datapacks").click();
   await expect(page.locator("text=Africa Bight")).toBeVisible();
 });

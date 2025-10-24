@@ -17,17 +17,8 @@ export async function initialize() {
       // First initialize with empty config to check current state
       await actions.processDatapackConfig([], { silent: true });
 
-      // Only auto-load if no datapacks are currently configured and not in test environment
-      // Check for various test environment indicators including Playwright
-      const isTestEnvironment =
-        import.meta.env.MODE === "test" ||
-        import.meta.env.VITEST ||
-        // Detect browser automation (Playwright, Selenium, etc.)
-        (typeof navigator !== "undefined" && navigator.webdriver === true) ||
-        (typeof window !== "undefined" && "__playwright" in window) ||
-        (typeof window !== "undefined" && "__webdriver_script_fn" in window);
-
-      if (state.config.datapacks.length === 0 && !isTestEnvironment) {
+      // Only auto-load if no datapacks are currently configured
+      if (state.config.datapacks.length === 0) {
         const internalDatapack = await actions.fetchDatapack({
           isPublic: true,
           title: "TimeScale Creator Internal Datapack",
@@ -53,13 +44,9 @@ export async function initialize() {
           actions.setUnsavedDatapackConfig([]);
         }
       } else {
-        // User already has datapacks configured or in test environment, don't auto-load
+        // User already has datapacks configured, don't auto-load
         actions.setUnsavedDatapackConfig(state.config.datapacks);
-        if (isTestEnvironment) {
-          console.log("Test environment detected, skipping auto-load");
-        } else {
-          console.log("Existing datapack configuration found, skipping auto-load");
-        }
+        console.log("Existing datapack configuration found, skipping auto-load");
       }
     } catch (error) {
       console.error("Failed during datapack initialization:", error);
