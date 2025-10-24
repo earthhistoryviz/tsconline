@@ -303,7 +303,7 @@
                     "base": "Base of Interval",
                     "top-name": "Top Age/Stage Name",
                     "base-name": "Base Age/Stage Name",
-                    "vertical-scale": "Vertical Scale (cm per 1",
+                    "vertical-scale": "Vertical Scale (cm per 1)",
                     "helper-text": "Base age should be older than top age",
                     "vertical-scale-header": "Vertical Scale"
                 }
@@ -710,7 +710,8 @@
         "languageNames": {
             "en-US": "English",
             "en": "English",
-            "zh": "中文"
+            "zh": "中文",
+            "ru": "Русский"
         },
         "tours": {
             "quit": "Quit Tour",
