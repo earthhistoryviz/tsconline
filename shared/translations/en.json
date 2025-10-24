@@ -483,6 +483,7 @@
                     "author-placeholder": "Credited to...",
                     "priority": "Priority",
                     "priority-placeholder": "Enter datapack priority level",
+                    "priority-tooltip": "Lowest priority datapacks will appear first",
                     "description": "Datapack Description",
                     "description-placeholder": "Enter a description for your datapack.",
                     "tags": "Tags",

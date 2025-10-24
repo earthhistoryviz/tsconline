@@ -328,6 +328,7 @@ translation.settings.datapacks.upload-form.author,Authored By
 translation.settings.datapacks.upload-form.author-placeholder,Credited to...
 translation.settings.datapacks.upload-form.priority,Priority
 translation.settings.datapacks.upload-form.priority-placeholder,Enter datapack priority level
+translation.settings.datapacks.upload-form.priority-tooltip,Lowest priority datapacks will appear first
 translation.settings.datapacks.upload-form.description,Datapack Description
 translation.settings.datapacks.upload-form.description-placeholder,Enter a description for your datapack.
 translation.settings.datapacks.upload-form.tags,Tags

@@ -196,6 +196,7 @@ translation.settings.datapacks.upload-form.author,作者
 translation.settings.datapacks.upload-form.author-placeholder,作者为...
 translation.settings.datapacks.upload-form.priority,优先级
 translation.settings.datapacks.upload-form.priority-placeholder,请输入数据包优先级
+translation.settings.datapacks.upload-form.priority-tooltip,优先显示优先级最低的数据包
 translation.settings.datapacks.upload-form.description,数据包概述
 translation.settings.datapacks.upload-form.description-placeholder,请为你的数据包添加概述
 translation.settings.datapacks.upload-form.tags,标签

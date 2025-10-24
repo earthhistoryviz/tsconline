@@ -142,8 +142,12 @@ export interface arkL_events {
   eventx: string | null;
   GSSP: string | null;
   has_added_abvE: string | null;
+  hev: string | null;
+  hev_id: number | null;
   id: number;
   image: string | null;
+  lev: string | null;
+  lev_id: number | null;
   longterm_sl: number | null;
   Mega_TR_cycle: string | null;
   notes_2004: string | null;
@@ -153,6 +157,7 @@ export interface arkL_events {
   offset_from_id: number | null;
   preset_age: number | null;
   preset_age_notes: string | null;
+  pub: number | null;
   pup: number | null;
   refstoadd: string | null;
   sea_level_notes: string | null;
@@ -187,8 +192,12 @@ export function assertarkL_events(o: any): asserts o is arkL_events {
     if (o.eventx !== null && typeof o.eventx !== "string") throwError("arkL_events", "eventx", "string", o.eventx);
     if (o.GSSP !== null && typeof o.GSSP !== "string") throwError("arkL_events", "GSSP", "string", o.GSSP);
     if (o.has_added_abvE !== null && typeof o.has_added_abvE !== "string") throwError("arkL_events", "has_added_abvE", "string", o.has_added_abvE);
+    if (o.hev !== null && typeof o.hev !== "string") throwError("arkL_events", "hev", "string", o.hev);
+    if (o.hev_id !== null && typeof o.hev_id !== "number") throwError("arkL_events", "hev_id", "number", o.hev_id);
     if (typeof o.id !== "number") throwError("arkL_events", "id", "number", o.id);
     if (o.image !== null && typeof o.image !== "string") throwError("arkL_events", "image", "string", o.image);
+    if (o.lev !== null && typeof o.lev !== "string") throwError("arkL_events", "lev", "string", o.lev);
+    if (o.lev_id !== null && typeof o.lev_id !== "number") throwError("arkL_events", "lev_id", "number", o.lev_id);
     if (o.longterm_sl !== null && typeof o.longterm_sl !== "number") throwError("arkL_events", "longterm_sl", "number", o.longterm_sl);
     if (o.Mega_TR_cycle !== null && typeof o.Mega_TR_cycle !== "string") throwError("arkL_events", "Mega_TR_cycle", "string", o.Mega_TR_cycle);
     if (o.notes_2004 !== null && typeof o.notes_2004 !== "string") throwError("arkL_events", "notes_2004", "string", o.notes_2004);
@@ -198,6 +207,7 @@ export function assertarkL_events(o: any): asserts o is arkL_events {
     if (o.offset_from_id !== null && typeof o.offset_from_id !== "number") throwError("arkL_events", "offset_from_id", "number", o.offset_from_id);
     if (o.preset_age !== null && typeof o.preset_age !== "number") throwError("arkL_events", "preset_age", "number", o.preset_age);
     if (o.preset_age_notes !== null && typeof o.preset_age_notes !== "string") throwError("arkL_events", "preset_age_notes", "string", o.preset_age_notes);
+    if (o.pub !== null && typeof o.pub !== "number") throwError("arkL_events", "pub", "number", o.pub);
     if (o.pup !== null && typeof o.pup !== "number") throwError("arkL_events", "pup", "number", o.pup);
     if (o.refstoadd !== null && typeof o.refstoadd !== "string") throwError("arkL_events", "refstoadd", "string", o.refstoadd);
     if (o.sea_level_notes !== null && typeof o.sea_level_notes !== "string") throwError("arkL_events", "sea_level_notes", "string", o.sea_level_notes);
