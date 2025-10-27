@@ -42,30 +42,33 @@ test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
   await page.waitForTimeout(5000);
 
-  // Clear any auto-loaded datapacks to ensure clean test state
+  // Navigate to datapacks page
+  await page.locator(".qsg-datapacks").click();
+  await page.waitForTimeout(1000);
+
+  // Clear any auto-loaded datapacks by clicking their selection circles
   try {
-    // Navigate to datapacks page first
-    await page.locator(".qsg-datapacks").click();
-    await page.waitForTimeout(1000);
+    // Look for TimeScale Creator Internal Datapack container
+    const internalDatapackContainer = page.locator("text=TimeScale Creator Internal Datapack").locator("..");
+    if (await internalDatapackContainer.isVisible({ timeout: 2000 })) {
+      // Find and click the selected circle (checkmark) to deselect
+      const selectedCircle = internalDatapackContainer.locator("circle[class*='_circle_']").first();
+      if (await selectedCircle.isVisible({ timeout: 1000 })) {
+        await selectedCircle.click();
+        await page.waitForTimeout(500);
 
-    // Look for the auto-loaded "TimeScale Creator Internal Datapack" and deselect it
-    const internalDatapack = page.locator("text=TimeScale Creator Internal Datapack");
-    if (await internalDatapack.isVisible({ timeout: 2000 })) {
-      await internalDatapack.click(); // Deselect it
-      await page.waitForTimeout(500);
-
-      // Confirm the selection change
-      const confirmButton = page.locator("text=Confirm Selection");
-      if (await confirmButton.isVisible({ timeout: 2000 })) {
-        await confirmButton.click();
-        await page.waitForTimeout(2000); // Wait for confirmation to process
+        // Confirm the deselection
+        const confirmButton = page.locator("text=Confirm Selection");
+        if (await confirmButton.isVisible({ timeout: 2000 })) {
+          await confirmButton.click();
+          await page.waitForTimeout(2000);
+        }
       }
     }
   } catch (error) {
-    console.log("Clear auto-loaded datapack step failed, continuing with test:", error.message);
+    console.log("Clear auto-loaded datapack failed, continuing");
   }
 
-  await page.locator(".qsg-datapacks").click();
   await expect(page.locator("text=Africa Bight")).toBeVisible();
 });
 
