@@ -101,7 +101,11 @@ export const Home = observer(function Home() {
           </Box>
           {hasUpcomingWorkshops && (
             <>
-              <WorkshopToggle expanded={expanded} setExpanded={setExpanded} upcomingWorkshopsLength={upcomingWorkshopsLength} />
+              <WorkshopToggle
+                expanded={expanded}
+                setExpanded={setExpanded}
+                upcomingWorkshopsLength={upcomingWorkshopsLength}
+              />
               {expanded && <UpcomingWorkshops />}
             </>
           )}
@@ -576,11 +580,19 @@ const ChartCreationSteps = observer(
   })
 );
 
-const WorkshopToggle = observer(function WorkshopToggle({ expanded, setExpanded, upcomingWorkshopsLength }: { expanded: boolean, setExpanded: (value: boolean) => void, upcomingWorkshopsLength: number }) {
+const WorkshopToggle = observer(function WorkshopToggle({
+  expanded,
+  setExpanded,
+  upcomingWorkshopsLength
+}: {
+  expanded: boolean;
+  setExpanded: (value: boolean) => void;
+  upcomingWorkshopsLength: number;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
-  
+
   return (
     <Box
       sx={{
@@ -605,17 +617,17 @@ const WorkshopToggle = observer(function WorkshopToggle({ expanded, setExpanded,
         onChange={(e) => setExpanded(e.target.checked)}
         size="small"
         sx={{
-          '& .MuiSwitch-switchBase.Mui-checked': {
-            color: "white",
+          "& .MuiSwitch-switchBase.Mui-checked": {
+            color: "white"
           },
-          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-            backgroundColor: "rgba(255,255,255,0.3)",
+          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+            backgroundColor: "rgba(255,255,255,0.3)"
           },
-          '& .MuiSwitch-track': {
-            backgroundColor: "rgba(255,255,255,0.2)",
+          "& .MuiSwitch-track": {
+            backgroundColor: "rgba(255,255,255,0.2)"
           },
-          '& .MuiSwitch-thumb': {
-            backgroundColor: "white",
+          "& .MuiSwitch-thumb": {
+            backgroundColor: "white"
           }
         }}
       />
