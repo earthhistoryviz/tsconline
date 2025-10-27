@@ -14,7 +14,7 @@ import {
   TableChart,
   Tune
 } from "@mui/icons-material";
-import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer, Portal, Switch, FormControlLabel } from "@mui/material";
+import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer, Portal, Switch } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, Attribution, CustomDivider, StyledScrollbar } from "./components";
 import "./Home.css";
