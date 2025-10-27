@@ -14,7 +14,7 @@ import {
   TableChart,
   Tune
 } from "@mui/icons-material";
-import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer, Portal } from "@mui/material";
+import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer, Portal, Switch, FormControlLabel } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, Attribution, CustomDivider, StyledScrollbar } from "./components";
 import "./Home.css";
@@ -35,6 +35,7 @@ export const Home = observer(function Home() {
   const { actions } = useContext(context);
   const theme = useTheme();
   const [hoveringGetStarted, setHoveringGetStarted] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
   const scrollRef = createRef<HTMLDivElement>();
   const handleScrollToPreset = () => {
@@ -49,7 +50,9 @@ export const Home = observer(function Home() {
       });
     }
   };
-  const hasUpcomingWorkshops = getUpcomingWorkshops(state.workshops).length > 0;
+  const upcomingWorkshops = getUpcomingWorkshops(state.workshops);
+  const hasUpcomingWorkshops = upcomingWorkshops.length > 0;
+  const upcomingWorkshopsLength = upcomingWorkshops.length;
   return (
     <div className="whole_page">
       <Box sx={{ backgroundColor: "secondaryBackgroud.main" }}>
@@ -96,7 +99,12 @@ export const Home = observer(function Home() {
               </motion.div>
             </Box>
           </Box>
-          {hasUpcomingWorkshops && <UpcomingWorkshops />}
+          {hasUpcomingWorkshops && (
+            <>
+              <WorkshopToggle expanded={expanded} setExpanded={setExpanded} upcomingWorkshopsLength={upcomingWorkshopsLength} />
+              {expanded && <UpcomingWorkshops />}
+            </>
+          )}
         </Box>
       </Box>
       <CustomDivider />
@@ -568,6 +576,53 @@ const ChartCreationSteps = observer(
   })
 );
 
+const WorkshopToggle = observer(function WorkshopToggle({ expanded, setExpanded, upcomingWorkshopsLength }: { expanded: boolean, setExpanded: (value: boolean) => void, upcomingWorkshopsLength: number }) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
+  
+  return (
+    <Box
+      sx={{
+        position: "absolute",
+        top: "20px",
+        right: expanded ? "350px" : "20px",
+        zIndex: 1000,
+        background: gradient.dark,
+        borderRadius: "25px",
+        padding: "8px 16px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+        transition: "all 0.3s ease-in-out"
+      }}>
+      <Typography variant="body2" sx={{ fontSize: "12px", fontWeight: 600, color: "white" }}>
+        {t("Upcoming Workshops")} ({upcomingWorkshopsLength})
+      </Typography>
+      <Switch
+        checked={expanded}
+        onChange={(e) => setExpanded(e.target.checked)}
+        size="small"
+        sx={{
+          '& .MuiSwitch-switchBase.Mui-checked': {
+            color: "white",
+          },
+          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+            backgroundColor: "rgba(255,255,255,0.3)",
+          },
+          '& .MuiSwitch-track': {
+            backgroundColor: "rgba(255,255,255,0.2)",
+          },
+          '& .MuiSwitch-thumb': {
+            backgroundColor: "white",
+          }
+        }}
+      />
+    </Box>
+  );
+});
+
 const UpcomingWorkshops = observer(
   forwardRef<HTMLDivElement>(function UpcomingWorkshops() {
     const isMobile = useMediaQuery("(max-width:900px)");
@@ -598,7 +653,6 @@ const UpcomingWorkshops = observer(
                     ? { height: "calc(100% - 60px)", maxHeight: "calc(100% - 60px)" }
                     : { height: "590px", maxHeight: "590px" }
                 }>
-                {" "}
                 {upcomingWorkshops.map((workshop, index) => (
                   <WorkshopItem key={index} workshop={workshop} />
                 ))}
