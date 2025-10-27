@@ -11,7 +11,8 @@ import {
   Typography,
   FormControlLabel,
   Badge,
-  SvgIcon
+  SvgIcon,
+  Tooltip
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { InputFileUpload } from "../TSCFileUpload";
@@ -191,17 +192,43 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               />
             )}
           />
-          <FormControlLabel
-            name="public-datapack"
-            control={
-              <TSCCheckbox
-                disabled={forcePublic}
-                checked={state.isPublic}
-                onChange={(event) => setters.setIsPublic(event.target.checked)}
+          <Box display="flex" alignItems="center" gap="20px" flexWrap="wrap" marginTop="10px">
+            <FormControlLabel
+              name="public-datapack"
+              control={
+                <TSCCheckbox
+                  disabled={forcePublic}
+                  checked={state.isPublic}
+                  onChange={(event) => setters.setIsPublic(event.target.checked)}
+                />
+              }
+              label={t("settings.datapacks.upload-form.make-public")}
+            />
+
+            <Tooltip title={t("settings.datapacks.upload-form.priority-tooltip")}>
+              <TextField
+                label={t("settings.datapacks.upload-form.priority")}
+                type="number"
+                placeholder={t("settings.datapacks.upload-form.priority-placeholder")}
+                InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  min: 0,
+                  max: 100
+                }}
+                value={state.priority}
+                onChange={(event: { target: { value: string } }) => setters.setPriority(parseInt(event.target.value))}
+                sx={{
+                  width: 230,
+                  "& .MuiInputBase-root": {
+                    height: 40
+                  },
+                  "& .MuiInputBase-input": {
+                    padding: "8px 10px"
+                  }
+                }}
               />
-            }
-            label={t("settings.datapacks.upload-form.make-public")}
-          />
+            </Tooltip>
+          </Box>
           <Stack spacing={2} flexShrink={0} alignSelf="center" width="100%">
             {state.references.map((reference, index) => (
               <Box key={reference.id} display="flex" alignItems="center">
