@@ -142,6 +142,11 @@ export interface arkL_events {
   offset: number | null;
   offset_from_event: string | null;
   offset_from_id: number | null;
+  pub: number | null;
+  hev: string | null;
+  hev_id: number | null;
+  lev: string | null;
+  lev_id: number | null;
   age2020: number | null;
   age2020_uncorrected: number | null;
   stage: string | null;
@@ -187,6 +192,11 @@ export function assertarkL_events(o: any): asserts o is arkL_events {
     if (o.offset !== null && typeof o.offset !== "number") throwError("arkL_events", "offset", "number", o.offset);
     if (o.offset_from_event !== null && typeof o.offset_from_event !== "string") throwError("arkL_events", "offset_from_event", "string", o.offset_from_event);
     if (o.offset_from_id !== null && typeof o.offset_from_id !== "number") throwError("arkL_events", "offset_from_id", "number", o.offset_from_id);
+    if (o.pub !== null && typeof o.pub !== "number") throwError("arkL_events", "pub", "number", o.pub);
+    if (o.hev !== null && typeof o.hev !== "string") throwError("arkL_events", "hev", "string", o.hev);
+    if (o.hev_id !== null && typeof o.hev_id !== "number") throwError("arkL_events", "hev_id", "number", o.hev_id);
+    if (o.lev !== null && typeof o.lev !== "string") throwError("arkL_events", "lev", "string", o.lev);
+    if (o.lev_id !== null && typeof o.lev_id !== "number") throwError("arkL_events", "lev_id", "number", o.lev_id);
     if (o.age2020 !== null && typeof o.age2020 !== "number") throwError("arkL_events", "age2020", "number", o.age2020);
     if (o.age2020_uncorrected !== null && typeof o.age2020_uncorrected !== "number") throwError("arkL_events", "age2020_uncorrected", "number", o.age2020_uncorrected);
     if (o.stage !== null && typeof o.stage !== "string") throwError("arkL_events", "stage", "string", o.stage);

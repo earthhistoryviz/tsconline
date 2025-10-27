@@ -48,25 +48,35 @@ test.beforeEach(async ({ page }) => {
 
   // Clear any auto-loaded datapacks by clicking their selection circles
   try {
-    // Look for TimeScale Creator Internal Datapack container
-    const internalDatapackContainer = page.locator("text=TimeScale Creator Internal Datapack").locator("..");
-    if (await internalDatapackContainer.isVisible({ timeout: 2000 })) {
-      // Find and click the selected circle (checkmark) to deselect
-      const selectedCircle = internalDatapackContainer.locator("circle[class*='_circle_']").first();
-      if (await selectedCircle.isVisible({ timeout: 1000 })) {
-        await selectedCircle.click();
-        await page.waitForTimeout(500);
+    // Target the specific selected datapack with checkmark (css-1oo4k8z indicates selected)
+    const selectedDatapackDiv = page.locator("div[class*='_cc_w61hf_'][class*='css-1oo4k8z']").first();
 
-        // Confirm the deselection
-        const confirmButton = page.locator("text=Confirm Selection");
-        if (await confirmButton.isVisible({ timeout: 2000 })) {
-          await confirmButton.click();
-          await page.waitForTimeout(2000);
-        }
+    if (await selectedDatapackDiv.isVisible({ timeout: 2000 })) {
+      console.log("Found selected datapack, clicking to deselect...");
+      await selectedDatapackDiv.click();
+      await page.waitForTimeout(500);
+
+      // Confirm the deselection
+      const confirmButton = page.locator("text=Confirm Selection");
+      if (await confirmButton.isVisible({ timeout: 3000 })) {
+        console.log("Clicking Confirm Selection...");
+        await confirmButton.click();
+
+        // Wait for datapack processing to complete
+        await page
+          .locator("text=Loading Datapacks")
+          .waitFor({ state: "hidden", timeout: 5000 })
+          .catch(() => {
+            console.log("No loading indicator found");
+          });
+        await page.waitForTimeout(1000);
+        console.log("Datapack clearing completed");
       }
+    } else {
+      console.log("No selected datapack found to clear");
     }
   } catch (error) {
-    console.log("Clear auto-loaded datapack failed, continuing");
+    console.log("Clear auto-loaded datapack failed:", error);
   }
 
   await expect(page.locator("text=Africa Bight")).toBeVisible();
