@@ -2,7 +2,8 @@
   "name": "tsconline-monorepo",
   "type": "module",
   "dependencies": {
-    "fastify": "^4.27.0"
+    "fastify": "^4.27.0",
+    "concurrently": "^8.2.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
@@ -13,7 +14,6 @@
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.6.1",
     "@yarnpkg/sdks": "^3.0.0-rc.43",
-    "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-check-file": "^2.7.1",
