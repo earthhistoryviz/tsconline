@@ -4,6 +4,7 @@ import { NavBar } from "./NavBar";
 import { Home } from "./Home";
 import { Settings } from "./Settings";
 import { ChartTab } from "./Chart";
+import {ChartPreview} from "./ChartPreview"
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { ddeDarkTheme, ddeLightTheme, originalDarkTheme, originalLightTheme } from "./theme";
@@ -150,6 +151,7 @@ export default observer(function App() {
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/chart" element={<ChartTab />} />
+              <Route path="/chart/preview" element={<ChartPreview />} />
               <Route path="/help/*" element={<Help />} />
               <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />

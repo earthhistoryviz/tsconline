@@ -8,6 +8,7 @@ import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FileSaver from "file-saver";
@@ -208,6 +209,34 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       </CustomTooltip>
     );
   };
+  const NewWindowButton = () => {
+    return (
+      <CustomTooltip title="New Window">
+        <StyledIconButton
+          onClick={() => {
+            openPreview()}}>
+          <OpenInNewIcon />
+        </StyledIconButton>
+      </CustomTooltip>
+    );
+  };
+
+  const openPreview = () => {
+    const { chartContent, madeChart, chartTimelineEnabled, chartZoomSettings } = chartTabState;
+    const snapshot = {
+      chartContent: chartContent,
+      madeChart: madeChart,
+      chartTimelineEnabled: chartTabState.chartTimelineEnabled,
+      chartZoomSettings: chartTabState.chartZoomSettings
+    };
+    try {
+      localStorage.setItem("chartPreview", JSON.stringify(snapshot));
+      window.open("/chart/preview", "_blank");
+    } catch (err) {
+      actions.pushSnackbar("Unable to open preview", "warning");      
+      console.error("Failed to open preview", err);
+    }
+  };
 
   const HelpButton = () => {
     return (
@@ -237,6 +266,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
+        <NewWindowButton />
         {(actionChartOptions || []).map(({ icon, label, onClick }) => {
           return (
             <Box key={label}>
@@ -264,6 +294,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     </div>
   );
 });
+
 
 type DownloadButtonProps = {
   svgRef: React.RefObject<HTMLDivElement>;
