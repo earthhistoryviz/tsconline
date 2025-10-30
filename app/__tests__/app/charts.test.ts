@@ -178,9 +178,11 @@ test("Load Basic Settings", async ({ page }) => {
 });
 
 test("check if generate crossplot works", async ({ page }) => {
-  const addCircleWrapper = page.locator(".add-circle").first();
-  await expect(addCircleWrapper).toBeVisible();
-  await addCircleWrapper.click();
+  const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
+  const addButton = container.locator(".add-circle");
+
+  await expect(addButton).toBeVisible();
+  await addButton.click();
 
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();

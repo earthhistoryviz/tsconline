@@ -8,6 +8,7 @@ services:
       - secrets.env
     ports:
       - "3000:3000"
+      - "3001:3001"
       - "5173:5173"
       # Uncomment these if you need to view the GUI, connect browser to one of them
       # - "5900:5900"

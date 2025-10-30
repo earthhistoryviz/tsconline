@@ -10,7 +10,7 @@ services:
       - shared_network
     environment:
       NODE_ENV: production
-    command: bash -c "yarn workspaces focus -A --production && yarn dev:config"
+    command: bash -c "yarn workspaces focus -A --production && yarn dev:config && yarn london-setup"
 
   pr-preview-run:
     build: .
@@ -19,6 +19,7 @@ services:
       - .:/code
     expose:
       - "3000"
+      - "3001"
     networks:
       - shared_network
     environment:

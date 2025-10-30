@@ -303,7 +303,7 @@
                     "base": "Base of Interval",
                     "top-name": "Top Age/Stage Name",
                     "base-name": "Base Age/Stage Name",
-                    "vertical-scale": "Vertical Scale (cm per 1",
+                    "vertical-scale": "Vertical Scale (cm per 1)",
                     "helper-text": "Base age should be older than top age",
                     "vertical-scale-header": "Vertical Scale"
                 }
@@ -481,6 +481,9 @@
                     "name-placeholder": "Enter a name for your datapack.",
                     "author": "Authored By",
                     "author-placeholder": "Credited to...",
+                    "priority": "Priority",
+                    "priority-placeholder": "Enter datapack priority level",
+                    "priority-tooltip": "Lowest priority datapacks will appear first",
                     "description": "Datapack Description",
                     "description-placeholder": "Enter a description for your datapack.",
                     "tags": "Tags",
@@ -681,6 +684,7 @@
             "INVALID_DATAPACK_HASH": "Invalid treatise datapack hash provided.",
             "USER_FETCH_HISTORY_FAILED": "Failed to fetch user history. Please try again later.",
             "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
+            "USER_LONDON_DATABASE_FAILED": "Failed to fetch London database. Please try again later",
             "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
             "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.",
             "title": "Error",
@@ -707,7 +711,8 @@
         "languageNames": {
             "en-US": "English",
             "en": "English",
-            "zh": "中文"
+            "zh": "中文",
+            "ru": "Русский"
         },
         "tours": {
             "quit": "Quit Tour",

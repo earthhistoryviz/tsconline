@@ -33,6 +33,8 @@ import { deleteAllUserDatapacks } from "./user/user-handler.js";
 import { fetchMarkdownFiles } from "./help/help-routes.js";
 import { CommentType, assertCommentType } from "@tsconline/shared";
 import fastifyWebsocket from "@fastify/websocket";
+import { processLondonDatapack } from "./upload-london.js";
+import { fetchLondonDatapack } from "./london-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -467,6 +469,16 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
     }
   );
 }
+
+cron.schedule("0 0 * * *", async () => {
+  try {
+    await processLondonDatapack();
+  } catch (e) {
+    logger.error("Error migrating cached datapacks", e);
+  }
+});
+
+server.get("/migrate-london", moderateRateLimit, fetchLondonDatapack);
 
 server.setNotFoundHandler((_request, reply) => {
   void reply.sendFile("index.html");

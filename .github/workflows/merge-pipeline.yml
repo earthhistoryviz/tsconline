@@ -410,7 +410,17 @@ jobs:
 
       - name: Check for any test failures
         if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true' || steps.e2e_tests.outputs.e2e_failed == 'true'
-        run: exit 1
+        run: |
+          if [ "${{ steps.run_tests.outputs.test_failed }}" = "true" ]; then
+            echo "Unit/coverage tests failed."
+            exit 1
+          elif [ "${{ steps.run_tests.outputs.coverage_failed }}" = "true" ]; then
+            echo "Coverage threshold not met."
+            exit 2
+          elif [ "${{ steps.e2e_tests.outputs.e2e_failed }}" = "true" ]; then
+            echo "E2E tests failed."
+            exit 3
+          fi
 
       - name: Determine if Jar Upload is Necessary
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -471,6 +481,7 @@ jobs:
             app/dist
             shared/dist
             server/dist
+            mcp/dist
 
   wait-for-checks:
     runs-on: ubuntu-latest
@@ -614,11 +625,11 @@ jobs:
             fi
 
             cd "$PR_PREVIEW_DIR"
-            docker-compose -f docker-compose-preview.yml up --build --remove-orphans pr-preview-install
+            docker compose -f docker-compose-preview.yml up --build --remove-orphans pr-preview-install
 
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
-              docker-compose -f docker-compose-preview.yml restart pr-preview-run
+              docker compose -f docker-compose-preview.yml restart pr-preview-run
               MAX_WAIT=180
               INTERVAL=5
               ELAPSED=0
@@ -626,8 +637,8 @@ jobs:
               while ! docker logs --since "$START_TIME" "$CONTAINER_NAME" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
                 if [ $ELAPSED -ge $MAX_WAIT ]; then
                   echo "Max wait time exceeded. Exiting..."
-                  docker-compose -f docker-compose-preview.yml logs --tail=200 pr-preview-run
-                  docker-compose -f docker-compose-preview.yml down
+                  docker compose -f docker-compose-preview.yml logs --tail=200 pr-preview-run
+                  docker compose -f docker-compose-preview.yml down
                   exit 1
                 fi
                 echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"

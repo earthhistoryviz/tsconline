@@ -198,7 +198,7 @@ translation.settings.time.interval.top,Top of Interval
 translation.settings.time.interval.base,Base of Interval
 translation.settings.time.interval.top-name,Top Age/Stage Name
 translation.settings.time.interval.base-name,Base Age/Stage Name
-translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1
+translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1)
 translation.settings.time.interval.helper-text,Base age should be older than top age
 translation.settings.time.interval.vertical-scale-header,Vertical Scale
 translation.settings.preferences.checkboxs.skip-empty-columns,Gray out (and do not draw) columns which do not have data on the selected time interval
@@ -326,6 +326,9 @@ translation.settings.datapacks.upload-form.name,Datapack Name
 translation.settings.datapacks.upload-form.name-placeholder,Enter a name for your datapack.
 translation.settings.datapacks.upload-form.author,Authored By
 translation.settings.datapacks.upload-form.author-placeholder,Credited to...
+translation.settings.datapacks.upload-form.priority,Priority
+translation.settings.datapacks.upload-form.priority-placeholder,Enter datapack priority level
+translation.settings.datapacks.upload-form.priority-tooltip,Lowest priority datapacks will appear first
 translation.settings.datapacks.upload-form.description,Datapack Description
 translation.settings.datapacks.upload-form.description-placeholder,Enter a description for your datapack.
 translation.settings.datapacks.upload-form.tags,Tags
@@ -496,6 +499,7 @@ translation.errors.WORKSHOP_FILE_DOWNLOAD_NOT_AUTHORIZED,Please register for the
 translation.errors.INVALID_DATAPACK_HASH,Invalid treatise datapack hash provided.
 translation.errors.USER_FETCH_HISTORY_FAILED,Failed to fetch user history. Please try again later.
 translation.errors.USER_DELETE_HISTORY_FAILED,Failed to delete user history. Please try again later
+translation.errors.USER_LONDON_DATABASE_FAILED,Failed to fetch London database. Please try again later
 translation.errors.USER_FETCH_HISTORY_METADATA_FAILED,Failed to fetch user history metadata. Please try again later
 translation.errors.USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING,This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.
 translation.errors.title,Error
@@ -519,6 +523,7 @@ translation.no,No
 translation.languageNames.en-US,English
 translation.languageNames.en,English
 translation.languageNames.zh,中文
+translation.languageNames.ru,Русский
 translation.tours.quit,Quit Tour
 translation.tours.finish,Finish Tour
 translation.tours.next,Next
