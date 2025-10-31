@@ -17,10 +17,38 @@ import LoadSettings from "./settings_tabs/LoadSettings";
 import SaveSettings from "./settings_tabs/SaveSettings";
 import { useTranslation } from "react-i18next";
 
+const getSettingsTabLabel = (id: string, t: (k: string) => string, i18n: any) => {
+  const special: Record<string, string> = {
+    mappoints: "Map Points",
+    datapacks: "Datapacks",
+  };
+
+  const keyLower = `settingsTabs.${id}`;
+  if (i18n.exists(keyLower, { lng: i18n.language, fallbackLng: false })) {
+    return t(keyLower);
+  }
+
+  if (special[id]) {
+    const keySpecial = `settingsTabs.${special[id]}`;
+    if (i18n.exists(keySpecial, { lng: i18n.language, fallbackLng: false })) {
+      return t(keySpecial);
+    }
+  }
+
+  const cap = id.charAt(0).toUpperCase() + id.slice(1);
+  const keyCap = `settingsTabs.${cap}`;
+  if (i18n.exists(keyCap, { lng: i18n.language, fallbackLng: false })) {
+    return t(keyCap);
+  }
+
+  return t(keyLower);
+};
+
+
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const tabs = Object.entries(SettingsMenuOptionLabels).map(([key, val]) => ({
     id: key,
     tab: val.label,
@@ -47,7 +75,7 @@ export const Settings = observer(function Settings() {
                 <TabWrapper
                   showIndicator={state.settingsTabs.selected === tab.id}
                   key={tab.id}
-                  label={tab.tab}
+                  label={getSettingsTabLabel(tab.id, t, i18n)}
                   setting-tour={`setting-tour-${tab.tab}-tab`}
                   icon={<tab.icon />}
                   iconPosition="start"
