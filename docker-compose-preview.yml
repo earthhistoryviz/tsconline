@@ -19,6 +19,7 @@ services:
       - .:/code
     expose:
       - "3000"
+      - "3001"
     networks:
       - shared_network
     environment:
