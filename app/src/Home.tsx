@@ -12,9 +12,11 @@ import {
   HelpOutline,
   RocketLaunch,
   TableChart,
-  Tune
+  Tune,
+  AccessAlarms,
+  KeyboardDoubleArrowRight
 } from "@mui/icons-material";
-import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer, Portal, Switch } from "@mui/material";
+import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer, Portal } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, Attribution, CustomDivider, StyledScrollbar } from "./components";
 import "./Home.css";
@@ -55,11 +57,18 @@ export const Home = observer(function Home() {
   const upcomingWorkshopsLength = upcomingWorkshops.length;
   return (
     <div className="whole_page">
+      {hasUpcomingWorkshops && (
+        <WorkshopToggle
+          expanded={expanded}
+          setExpanded={setExpanded}
+          upcomingWorkshopsLength={upcomingWorkshopsLength}
+        />
+      )}
       <Box sx={{ backgroundColor: "secondaryBackgroud.main" }}>
         <Box
           className="sub-header-section-landing-page"
           style={{
-            ...(!hasUpcomingWorkshops && { gridTemplateColumns: "0.8fr 1.2fr" })
+            ...(!(hasUpcomingWorkshops && expanded) && { gridTemplateColumns: "0.8fr 1.2fr" })
           }}>
           <Box className="sub-header-section-landing-page-text">
             <Typography className="landing-page-title" fontWeight="600">
@@ -99,16 +108,7 @@ export const Home = observer(function Home() {
               </motion.div>
             </Box>
           </Box>
-          {hasUpcomingWorkshops && (
-            <>
-              <WorkshopToggle
-                expanded={expanded}
-                setExpanded={setExpanded}
-                upcomingWorkshopsLength={upcomingWorkshopsLength}
-              />
-              {expanded && <UpcomingWorkshops />}
-            </>
-          )}
+          {hasUpcomingWorkshops && expanded && <UpcomingWorkshops />}
         </Box>
       </Box>
       <CustomDivider />
@@ -589,49 +589,30 @@ const WorkshopToggle = observer(function WorkshopToggle({
   setExpanded: (value: boolean) => void;
   upcomingWorkshopsLength: number;
 }) {
-  const { t } = useTranslation();
   const theme = useTheme();
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
 
   return (
-    <Box
+    <IconButton
+      onClick={() => setExpanded(!expanded)}
+      className={`workshop-toggle-button ${expanded ? "expanded" : ""}`}
       sx={{
-        position: "absolute",
-        top: "20px",
-        right: expanded ? "350px" : "20px",
-        zIndex: 1000,
         background: gradient.dark,
-        borderRadius: "25px",
-        padding: "8px 16px",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-        transition: "all 0.3s ease-in-out"
+        color: "white",
+        "&:hover": {
+          background: gradient.light,
+          color: "white"
+        }
       }}>
-      <Typography variant="body2" sx={{ fontSize: "12px", fontWeight: 600, color: "white" }}>
-        {t("Upcoming Workshops")} ({upcomingWorkshopsLength})
-      </Typography>
-      <Switch
-        checked={expanded}
-        onChange={(e) => setExpanded(e.target.checked)}
-        size="small"
-        sx={{
-          "& .MuiSwitch-switchBase.Mui-checked": {
-            color: "white"
-          },
-          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-            backgroundColor: "rgba(255,255,255,0.3)"
-          },
-          "& .MuiSwitch-track": {
-            backgroundColor: "rgba(255,255,255,0.2)"
-          },
-          "& .MuiSwitch-thumb": {
-            backgroundColor: "white"
-          }
-        }}
-      />
-    </Box>
+      {expanded ? (
+        <KeyboardDoubleArrowRight sx={{ fontSize: "24px" }} />
+      ) : (
+        <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <AccessAlarms sx={{ fontSize: "20px" }} />
+          <Typography className="workshop-toggle-number">{upcomingWorkshopsLength}</Typography>
+        </Box>
+      )}
+    </IconButton>
   );
 });
 

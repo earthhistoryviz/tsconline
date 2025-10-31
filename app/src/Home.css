@@ -540,6 +540,39 @@
 
 /* upcoming workshop */
 
+.workshop-toggle-button {
+  position: fixed !important;
+  top: 80px;
+  right: 20px;
+  z-index: 1000;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease-in-out;
+  padding: 8px !important;
+}
+
+.workshop-toggle-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.workshop-toggle-button:active {
+  transform: scale(0.95);
+}
+
+.workshop-toggle-button.expanded {
+  right: calc(18vw + 40px) !important;
+  transition: all 0.3s ease-in-out;
+}
+
+.workshop-toggle-number {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+}
+
 .upcoming-workshops-section {
   display: flex;
   align-self: flex-start;
