@@ -147,49 +147,76 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
  * @returns json object containing the font info
  */
 function processFonts(fontsNode: Element): FontsInfo {
+  console.log("processFonts: node=", fontsNode.tagName, "childCount=", fontsNode.childNodes.length);
   const fonts: FontsInfo = JSON.parse(JSON.stringify(defaultFontsInfoConstant));
   const childNodes = fontsNode.childNodes;
   for (let i = 0; i < childNodes.length; i++) {
     const maybeChild = childNodes[i];
     if (maybeChild && maybeChild.nodeType === Node.ELEMENT_NODE) {
       const child = <Element>maybeChild;
+      const funcAttr = child.getAttribute("function");
+      if (!funcAttr) {
+        console.log("processFonts: skipping child without function attribute", child);
+        continue;
+      }
+      const key = funcAttr as keyof FontsInfo;
       let fontProps: string[] = [];
       if (child.textContent) {
         fontProps = child.textContent.trim().split(";");
       }
-      for (let i = 0; i < fontProps.length; i++) {
-        let key = "" as keyof FontsInfo;
-        if (child.getAttribute("function")) {
-          key = child.getAttribute("function")! as keyof FontsInfo;
-        } else continue;
-        fonts[key].inheritable = Boolean(child.getAttribute("inheritable"));
-        if (!fontProps[i]) continue;
+      console.log("processFonts: function=", key, "inheritable=", child.getAttribute("inheritable"), "rawProps=", fontProps);
+      // safety: ensure key exists on defaults
+      if (!fonts[key]) {
+        console.warn("processFonts: unknown font key", key);
+        continue;
+      }
+      fonts[key].inheritable = child.getAttribute("inheritable") === "true";
+      for (let j = 0; j < fontProps.length; j++) {
+        const fontProp = fontProps[j];
+        if (!fontProp) continue;
 
-        let fontPropsValue = fontProps[i]!.split(": ")[1];
+        // split on the first ':' to allow ':' inside values if any
+        const parts = fontProp.split(":");
+        if (parts.length < 2) continue;
+        const propName = parts[0].trim().toLowerCase();
+        let fontPropsValue = parts.slice(1).join(":").trim();
         if (!fontPropsValue) continue;
-        if (fontProps[i]!.includes("font-family")) {
-          fonts[key].fontFace =
-            fontPropsValue === "Arial" || "Courier" || "Verdana"
-              ? <"Arial" | "Courier" | "Verdana">fontPropsValue
-              : "Arial";
+
+        console.log("processFonts: parsing prop:", j, "propName=", propName, "value=", fontPropsValue);
+
+        if (propName.includes("font-family")) {
+          const allowed = ["Arial", "Courier", "Verdana"];
+          fonts[key].fontFace = allowed.includes(fontPropsValue)
+            ? (fontPropsValue as "Arial" | "Courier" | "Verdana")
+            : "Arial";
+          console.log("processFonts: set fontFace ->", fonts[key].fontFace);
         }
-        if (fontProps[i]!.includes("font-size")) {
-          fonts[key].size = Number(fontPropsValue.substring(0, fontPropsValue.length - 2));
+        if (propName.includes("font-size")) {
+          const sizeStr = fontPropsValue.replace(/px$/i, "").trim();
+          const parsed = Number(sizeStr);
+          if (!isNaN(parsed)) {
+            fonts[key].size = parsed;
+            console.log("processFonts: set size ->", fonts[key].size);
+          }
         }
-        if (fontProps[i]!.includes("font-style")) {
-          if (fontProps[i]!.includes("italic")) {
+        if (propName.includes("font-style")) {
+          if (fontPropsValue.toLowerCase().includes("italic")) {
             fonts[key].italic = true;
+            console.log("processFonts: set italic -> true");
           }
         }
-        if (fontProps[i]!.includes("font-weight")) {
-          if (fontProps[i]!.includes("bold")) {
+        if (propName.includes("font-weight")) {
+          if (fontPropsValue.toLowerCase().includes("bold")) {
             fonts[key].bold = true;
+            console.log("processFonts: set bold -> true");
           }
         }
-        if (fontProps[i]!.includes("fill")) {
+        if (propName.includes("fill")) {
           fonts[key].color = fontPropsValue;
+          console.log("processFonts: set color ->", fonts[key].color);
         }
       }
+      console.log("processFonts: final fonts[", key, "] =", fonts[key]);
     }
   }
   return fonts;
@@ -542,21 +569,27 @@ export function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string 
   let xml = "";
   for (const key in fontsInfo) {
     const fontTarget = fontsInfo[key as keyof FontsInfo];
+    // If the font is not enabled or identical to defaults, emit empty font tag
     if (!fontTarget.on || JSON.stringify(fontTarget) === JSON.stringify(defInfo[key])) {
       xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}"/>\n`;
     } else {
-      xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">`;
-      xml += `font-family: ${fontTarget.fontFace};`;
-      // removed px from font size because jar uses parseDouble and doesn't parse px
-      xml += ` font-size: ${fontTarget.size};`;
-      if (fontTarget.italic) {
-        xml += ` font-style: italic;`;
+      // Build a normalized style string with only valid entries
+      const styleParts: string[] = [];
+      const allowedFonts = ["Arial", "Courier", "Verdana"];
+      const face = allowedFonts.includes(fontTarget.fontFace) ? fontTarget.fontFace : "Arial";
+      if (face) styleParts.push(`font-family: ${face};`);
+      if (typeof fontTarget.size === "number" && !isNaN(fontTarget.size)) styleParts.push(`font-size: ${fontTarget.size};`);
+      if (fontTarget.italic) styleParts.push(`font-style: italic;`);
+      if (fontTarget.bold) styleParts.push(`font-weight: bold;`);
+      if (fontTarget.color && typeof fontTarget.color === "string") styleParts.push(`fill: ${fontTarget.color};`);
+
+      const styleStr = styleParts.join(" ");
+      // Ensure we always emit a well-formed tag
+      if (styleStr.length === 0) {
+        xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}"/>\n`;
+      } else {
+        xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">${styleStr}</font>\n`;
       }
-      if (fontTarget.bold) {
-        xml += `font-weight: bold;`;
-      }
-      xml += `fill: ${fontTarget.color};`;
-      xml += `</font>\n`;
     }
   }
   return xml;
