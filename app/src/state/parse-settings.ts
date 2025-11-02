@@ -164,14 +164,7 @@ function processFonts(fontsNode: Element): FontsInfo {
       if (child.textContent) {
         fontProps = child.textContent.trim().split(";");
       }
-      console.log(
-        "processFonts: function=",
-        key,
-        "inheritable=",
-        child.getAttribute("inheritable"),
-        "rawProps=",
-        fontProps
-      );
+      console.log("processFonts: function=", key, "inheritable=", child.getAttribute("inheritable"), "rawProps=", fontProps);
       // safety: ensure key exists on defaults
       if (!fonts[key]) {
         console.warn("processFonts: unknown font key", key);
@@ -585,8 +578,7 @@ export function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string 
       const allowedFonts = ["Arial", "Courier", "Verdana"];
       const face = allowedFonts.includes(fontTarget.fontFace) ? fontTarget.fontFace : "Arial";
       if (face) styleParts.push(`font-family: ${face};`);
-      if (typeof fontTarget.size === "number" && !isNaN(fontTarget.size))
-        styleParts.push(`font-size: ${fontTarget.size};`);
+      if (typeof fontTarget.size === "number" && !isNaN(fontTarget.size)) styleParts.push(`font-size: ${fontTarget.size};`);
       if (fontTarget.italic) styleParts.push(`font-style: italic;`);
       if (fontTarget.bold) styleParts.push(`font-weight: bold;`);
       if (fontTarget.color && typeof fontTarget.color === "string") styleParts.push(`fill: ${fontTarget.color};`);
