@@ -73,31 +73,90 @@ jobs:
             exit 1
           fi
 
-      - name: Download Datapacks And Decryption Jar From Dropbox
+      - name: Set up Decryption Jar and Datapacks (verbose)
         env:
           DROPBOX_PATH: ${{ secrets.DROPBOX_PATH }}
         run: |
-          # --- Get the access token ---
-          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+          set -euo pipefail
+          echo "=== Dropbox setup start ==="
+          echo "DROPBOX_PATH='${DROPBOX_PATH}'"
 
-          # --- Download the datapacks ---
-          DATAPACKS_PATH="$DROPBOX_PATH/datapacks"
-          curl -X POST https://content.dropboxapi.com/2/files/download_zip \
-            --header "Authorization: Bearer $ACCESS_TOKEN" \
-            --header "Dropbox-API-Arg: {\"path\":\"$DATAPACKS_PATH\"}" \
-            --output datapacks.zip
+          echo "Fetching Dropbox access token..."
+          ACCESS_TOKEN=$(curl -sS https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+          echo "Access token length: $(echo -n "$ACCESS_TOKEN" | wc -c)"
 
-          # --- Download the decryption jar ---
-          DECRYPTION_JAR_PATH="$DROPBOX_PATH/${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
-          curl -X POST https://content.dropboxapi.com/2/files/download \
-            --header "Authorization: Bearer $ACCESS_TOKEN" \
-            --header "Dropbox-API-Arg: {\"path\":\"$DECRYPTION_JAR_PATH\"}" \
-            --output ${{ steps.parse_jar_name.outputs.decryption_jar_name }}
-            
-          if [ ! -f "datapacks.zip" ] || [ ! -f "${{ steps.parse_jar_name.outputs.decryption_jar_name }}" ]; then
-            echo "Error: Failed to download required files from Dropbox."
+          DECRYPTION_NAME=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename || true)
+          echo "Parsed decryptionJar from config.json: '$DECRYPTION_NAME'"
+          if [ -z "$DECRYPTION_NAME" ]; then
+            echo "ERROR: decryptionJar not found in server/assets/config.json" >&2
+            echo "Contents of server/assets/config.json:" >&2
+            cat server/assets/config.json >&2 || true
             exit 1
           fi
+
+          echo "Listing Dropbox folder to discover exact paths..."
+          LIST_RESPONSE=$(curl -s -X POST "https://api.dropboxapi.com/2/files/list_folder" \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "{\"path\": \"$DROPBOX_PATH\"}")
+
+          echo "Dropbox list response (first 200 chars):"
+          echo "$LIST_RESPONSE" | head -c 200 || true
+          echo
+
+          DECRYPTION_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DECRYPTION_NAME "$DECRYPTION_NAME" '.entries[] | select(.name == $DECRYPTION_NAME) | .path_lower' || true)
+          echo "Resolved DECRYPTION_PATH: '$DECRYPTION_PATH'"
+          if [ -z "$DECRYPTION_PATH" ]; then
+            echo "ERROR: Decryption jar not found in Dropbox list." >&2
+            echo "Full Dropbox list response:" >&2
+            echo "$LIST_RESPONSE" >&2
+            exit 1
+          fi
+
+          DATAPACKS_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DATA_PACKS_NAME "datapacks" '.entries[] | select(.name == $DATA_PACKS_NAME) | .path_lower' || true)
+          echo "Resolved DATAPACKS_PATH: '$DATAPACKS_PATH'"
+          if [ -z "$DATAPACKS_PATH" ]; then
+            echo "ERROR: Datapacks folder not found in Dropbox list." >&2
+            echo "Full Dropbox list response:" >&2
+            echo "$LIST_RESPONSE" >&2
+            exit 1
+          fi
+
+          mkdir -p server/assets/jars
+
+          echo "Downloading decryption jar from Dropbox path: $DECRYPTION_PATH"
+          curl -f -S -X POST "https://content.dropboxapi.com/2/files/download" \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Dropbox-API-Arg: {\"path\": \"$DECRYPTION_PATH\"}" \
+            --output "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
+
+          DECRYPTION_JAR="${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
+          echo "Downloaded decryption jar path: $DECRYPTION_JAR"
+          echo "Size: $(wc -c < "$DECRYPTION_JAR") bytes"
+          echo "File command output:"; file "$DECRYPTION_JAR" || true
+          if unzip -t "$DECRYPTION_JAR" >/dev/null 2>&1; then
+            echo "Decryption jar appears to be a valid jar/zip"
+          else
+            echo "ERROR: Decryption jar is not a valid jar/zip. Dumping first 512 bytes for debugging:" >&2
+            head -c 512 "$DECRYPTION_JAR" | sed -n '1,200p' >&2 || true
+            exit 1
+          fi
+
+          echo "Downloading datapacks zip from Dropbox path: $DATAPACKS_PATH"
+          curl -f -S -X POST "https://content.dropboxapi.com/2/files/download_zip" \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Dropbox-API-Arg: {\"path\": \"$DATAPACKS_PATH\"}" \
+            --output datapacks.zip
+          echo "Datapacks zip size: $(wc -c < datapacks.zip) bytes"
+          if unzip -t datapacks.zip >/dev/null 2>&1; then
+            echo "datapacks.zip is a valid zip"
+          else
+            echo "ERROR: datapacks.zip is not a valid zip. Dumping first 512 bytes for debugging:" >&2
+            head -c 512 datapacks.zip | sed -n '1,200p' >&2 || true
+            exit 1
+          fi
+
+          echo "=== Dropbox setup complete ==="
 
       - name: Delete existing release
         env:
