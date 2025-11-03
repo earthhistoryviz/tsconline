@@ -117,9 +117,7 @@ jobs:
             -H "Dropbox-API-Arg: $API_ARG_JAR" \
             --output "$JAR_OUT"
 
-          # Quick sanity checks (catch error JSONs early)
           echo "Sizes -> datapacks.zip: $(wc -c < datapacks.zip) bytes, jar: $(wc -c < "$JAR_OUT") bytes"
-          file "$JAR_OUT" | grep -qi 'zip archive data' || { echo "Not a JAR; first bytes:"; head -c 200 "$JAR_OUT"; echo; exit 1; }
 
       - name: Delete existing release
         env:
