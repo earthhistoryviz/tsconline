@@ -75,59 +75,45 @@ jobs:
 
       - name: Download Datapacks And Decryption Jar From Dropbox
         run: |
-          # --- Get the access token ---
-          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+          set -euo pipefail
 
-          # --- Download the datapacks ---
-          DATAPACKS_PATH="${{ secrets.DROPBOX_PATH}}/datapacks"
-          curl -X POST https://content.dropboxapi.com/2/files/download_zip \
-            --header "Authorization: Bearer $ACCESS_TOKEN" \
-            --header "Dropbox-API-Arg: {\"path\":\"$DATAPACKS_PATH\"}" \
+          ACCESS_TOKEN=$(curl --fail --show-error -s https://api.dropbox.com/oauth2/token \
+            -d refresh_token='${{ secrets.DROPBOX_REFRESH_TOKEN }}' \
+            -d grant_type=refresh_token \
+            -d client_id='${{ secrets.DROPBOX_APP_KEY }}' \
+            -d client_secret='${{ secrets.DROPBOX_APP_SECRET }}' | jq -r '.access_token')
+
+          # --- Get exact paths from Dropbox (avoid guessing)
+          LIST_RESPONSE=$(curl --fail --show-error -s -X POST https://api.dropboxapi.com/2/files/list_folder \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"path":"'"${{ secrets.DROPBOX_PATH }}"'"}')
+
+          DECRYPTION_NAME='${{ steps.parse_jar_name.outputs.decryption_jar_name }}'
+          DECRYPTION_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg n "$DECRYPTION_NAME" '.entries[] | select(.name == $n) | .path_lower')
+          [ -n "$DECRYPTION_PATH" ] || { echo "Decryption jar not found in ${{
+            secrets.DROPBOX_PATH }}"; exit 1; }
+
+          DATAPACKS_PATH=$(echo "$LIST_RESPONSE" | jq -r '.entries[] | select(.name == "datapacks") | .path_lower')
+          [ -n "$DATAPACKS_PATH" ] || { echo "datapacks folder not found"; exit 1; }
+
+          # --- Download datapacks
+          curl --fail --show-error -s -X POST https://content.dropboxapi.com/2/files/download_zip \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Dropbox-API-Arg: {\"path\":\"'"$DATAPACKS_PATH"'\"}" \
             --output datapacks.zip
 
-            # --- Download the decryption jar (with debug output) ---
-            DECRYPTION_JAR_PATH="${{ secrets.DROPBOX_PATH}}/${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
+          # --- Download decrypter jar (quote output!)
+          JAR_OUT='${{ steps.parse_jar_name.outputs.decryption_jar_name }}'
+          curl --fail --show-error -s -X POST https://content.dropboxapi.com/2/files/download \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Dropbox-API-Arg: {\"path\":\"'"$DECRYPTION_PATH"'\"}" \
+            --output "$JAR_OUT"
 
-            echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-            echo "PWD: $(pwd)"
-            echo "Listing current directory:"
-            ls -la
-
-            echo "DATAPACKS_PATH: ${DATAPACKS_PATH:-<unset>}"
-            echo "DECRYPTION_JAR_PATH: $DECRYPTION_JAR_PATH"
-            echo "decryption_jar_name: ${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
-            echo "datapacks output: datapacks.zip"
-
-            # Check that ACCESS_TOKEN was obtained (do NOT print the token)
-            if [ -z "$ACCESS_TOKEN" ]; then
-            echo "ERROR: ACCESS_TOKEN is empty"
-            exit 1
-            else
-            echo "ACCESS_TOKEN: present (redacted)"
-            fi
-
-            # Download the decryption jar
-            curl -X POST https://content.dropboxapi.com/2/files/download \
-            --header "Authorization: Bearer $ACCESS_TOKEN" \
-            --header "Dropbox-API-Arg: {\"path\":\"$DECRYPTION_JAR_PATH\"}" \
-            --output "${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
-
-            echo "After download, listing files:"
-            ls -la
-
-            # Show basic file info (size) without exposing contents
-            for f in datapacks.zip "${{ steps.parse_jar_name.outputs.decryption_jar_name }}"; do
-            if [ -f "$f" ]; then
-              echo "$f exists — size: $(stat -c%s "$f") bytes"
-            else
-              echo "$f missing"
-            fi
-            done
-
-            if [ ! -f "datapacks.zip" ] || [ ! -f "${{ steps.parse_jar_name.outputs.decryption_jar_name }}" ]; then
-            echo "Error: Failed to download required files from Dropbox."
-            exit 1
-            fi
+          # --- Validate content (fail fast if it’s error JSON)
+          file "$JAR_OUT" | grep -qi 'zip archive data' || { echo "Not a valid JAR; first bytes:"; head -c 200 "$JAR_OUT"; echo; exit 1; }
+          unzip -t "$JAR_OUT" >/dev/null || { echo "JAR corrupt"; exit 1; }
+          unzip -t datapacks.zip >/dev/null || { echo "datapacks.zip corrupt"; exit 1; }
 
       - name: Delete existing release
         env:
