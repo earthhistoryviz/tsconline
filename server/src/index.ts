@@ -167,6 +167,7 @@ server.register(fastifySecureSession, {
   }
 });
 
+
 await server.register(fastifyRateLimit, {
   global: true,
   max: 500,
