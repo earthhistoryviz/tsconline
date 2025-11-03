@@ -2,8 +2,8 @@
   "name": "tsconline-monorepo",
   "type": "module",
   "dependencies": {
-    "fastify": "^4.27.0",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "fastify": "^4.27.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
