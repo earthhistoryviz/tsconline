@@ -32,7 +32,7 @@ jobs:
 
       - name: Archive build artifacts
         run: |
-          zip -r -q build-artifacts.zip app/dist server/dist shared/dist
+          zip -r -q build-artifacts.zip app/dist server/dist shared/dist mcp/dist
 
       - name: Parse Jar Name
         id: parse_jar_name
@@ -85,16 +85,49 @@ jobs:
             --header "Dropbox-API-Arg: {\"path\":\"$DATAPACKS_PATH\"}" \
             --output datapacks.zip
 
-          # --- Download the decryption jar ---
-          DECRYPTION_JAR_PATH="${{ secrets.DROPBOX_PATH}}/${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
-          curl -X POST https://content.dropboxapi.com/2/files/download \
+            # --- Download the decryption jar (with debug output) ---
+            DECRYPTION_JAR_PATH="${{ secrets.DROPBOX_PATH}}/${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
+
+            echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+            echo "PWD: $(pwd)"
+            echo "Listing current directory:"
+            ls -la
+
+            echo "DATAPACKS_PATH: ${DATAPACKS_PATH:-<unset>}"
+            echo "DECRYPTION_JAR_PATH: $DECRYPTION_JAR_PATH"
+            echo "decryption_jar_name: ${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
+            echo "datapacks output: datapacks.zip"
+
+            # Check that ACCESS_TOKEN was obtained (do NOT print the token)
+            if [ -z "$ACCESS_TOKEN" ]; then
+            echo "ERROR: ACCESS_TOKEN is empty"
+            exit 1
+            else
+            echo "ACCESS_TOKEN: present (redacted)"
+            fi
+
+            # Download the decryption jar
+            curl -X POST https://content.dropboxapi.com/2/files/download \
             --header "Authorization: Bearer $ACCESS_TOKEN" \
             --header "Dropbox-API-Arg: {\"path\":\"$DECRYPTION_JAR_PATH\"}" \
-            --output ${{ steps.parse_jar_name.outputs.decryption_jar_name }}
-          if [ ! -f "datapacks.zip" ] || [ ! -f "${{ steps.parse_jar_name.outputs.decryption_jar_name }}" ]; then
+            --output "${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
+
+            echo "After download, listing files:"
+            ls -la
+
+            # Show basic file info (size) without exposing contents
+            for f in datapacks.zip "${{ steps.parse_jar_name.outputs.decryption_jar_name }}"; do
+            if [ -f "$f" ]; then
+              echo "$f exists — size: $(stat -c%s "$f") bytes"
+            else
+              echo "$f missing"
+            fi
+            done
+
+            if [ ! -f "datapacks.zip" ] || [ ! -f "${{ steps.parse_jar_name.outputs.decryption_jar_name }}" ]; then
             echo "Error: Failed to download required files from Dropbox."
             exit 1
-          fi
+            fi
 
       - name: Delete existing release
         env:
