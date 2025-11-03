@@ -32,7 +32,7 @@ jobs:
 
       - name: Archive build artifacts
         run: |
-          zip -r -q build-artifacts.zip app/dist server/dist shared/dist
+          zip -r -q build-artifacts.zip app/dist server/dist shared/dist mcp/dist
 
       - name: Parse Jar Name
         id: parse_jar_name
