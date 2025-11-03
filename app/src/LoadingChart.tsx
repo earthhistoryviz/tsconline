@@ -8,8 +8,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   backgroundColor: theme.palette.secondaryBackground?.main || undefined,
   "& .MuiLinearProgress-bar": {
     borderRadius: 5,
-    backgroundColor:
-      theme.palette.mode === "light" ? theme.palette.button.main : theme.palette.primary.main
+    backgroundColor: theme.palette.mode === "light" ? theme.palette.button.main : theme.palette.primary.main
   }
 }));
 
