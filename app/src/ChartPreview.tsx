@@ -10,7 +10,48 @@ import TimeLine from "./assets/icons/axes=one.svg";
 export function ChartPreview() {
   const { state, actions } = useContext(context);
 
-  console.log("Rendering ChartPreview with state:",  state.chartTab.state);
+  useEffect(() => {
+    const channel = new BroadcastChannel("tsconline-chart");
+
+    const applyPayload = (payloadStr: string | null) => {
+      if (!payloadStr) return;
+      try {
+        const snap = JSON.parse(payloadStr);
+        actions.setChartTabState(state.chartTab.state, snap);
+      } catch (err) {
+        console.error("ChartPreview: invalid incoming snapshot", err);
+      }
+    };
+
+    channel.onmessage = (ev) => {
+      try {
+        const msg = ev.data;
+        if (msg?.type === "snapshot" && typeof msg.payload === "string") {
+          applyPayload(msg.payload);
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    };
+
+    // storage-event fallback
+    const onStorage = (ev: StorageEvent) => {
+      if (ev.key === "chartPreview" && ev.newValue) {
+        applyPayload(ev.newValue);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+
+    // request an immediate snapshot from the main window(s)
+    channel.postMessage({ type: "request" });
+
+    return () => {
+      channel.close();
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [state.chartTab.state, actions]);
+
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     let payload: string | null = null;
@@ -37,18 +78,7 @@ export function ChartPreview() {
     }
   }, [state.chartTab.state, actions]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const hide = "1";
-    if (hide) document.body.classList.add("hide-top-banner");
-    return () => {
-      if (hide) document.body.classList.remove("hide-top-banner");
-    };
-  }, []);
 
-  if (!state.chartTab.state.madeChart) {
-    return <Box>No chart available</Box>;
-  }
 
   return (
       <ChartContext.Provider
