@@ -48,6 +48,7 @@ export type State = {
     state: ChartTabState;
     percent: number;
     stage: string;
+    previewLocked?: boolean;
   };
   crossPlot: {
     lockX: boolean;
@@ -185,7 +186,8 @@ export const state = observable<State>({
     chartTimelineLocked: false,
     state: cloneDeep(defaultChartTabState),
     percent: 0,
-    stage: "Initializing"
+    stage: "Initializing",
+    previewLocked: false
   },
   crossPlot: observable(
     {

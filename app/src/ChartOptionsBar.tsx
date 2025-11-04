@@ -10,6 +10,8 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SettingsIcon from "@mui/icons-material/Settings";
 import FileSaver from "file-saver";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
@@ -238,6 +240,33 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     }
   };
 
+  const LockButton = () => {
+  const { state, actions } = useContext(context);
+    const isLocked = state.chartTab.previewLocked;
+    return (
+      <div>
+        <CustomTooltip
+          title={
+            <>
+              {isLocked ? "Unlock graph to allow changes from main window" : "Lock graph from main window"}
+              <br />
+              (prevents changes from main window)
+            </>
+          }>
+        <StyledIconButton 
+          onClick={() => {
+            actions.setChartTab({
+              ...state.chartTab,
+              previewLocked: !state.chartTab.previewLocked
+            });
+          }}>
+            {isLocked ? <LockOutlinedIcon /> : <LockOpenIcon />}
+          </StyledIconButton>
+        </CustomTooltip>
+      </div>
+    );
+  };
+
   const HelpButton = () => {
     return (
       <div>
@@ -289,6 +318,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <DownloadButton svgRef={svgRef} altSaveOptions={altSaveOptions} />
       </div>
       <div className="flex-row" ref={helpRef}>
+        {location.pathname == "/chart/preview" && <LockButton/>}
         <HelpButton />
       </div>
     </div>

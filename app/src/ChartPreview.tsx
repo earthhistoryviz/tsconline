@@ -6,9 +6,12 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Box } from "@mui/material";
 import TimeLine from "./assets/icons/axes=one.svg";
 
-// A thin page that provides the same ChartContext and renders the Chart with your SVG component
+
+
 export function ChartPreview() {
   const { state, actions } = useContext(context);
+  const [isLocked, setIsLocked] = useState(false); // Add lock state
+
 
   useEffect(() => {
     const channel = new BroadcastChannel("tsconline-chart");
@@ -17,7 +20,9 @@ export function ChartPreview() {
       if (!payloadStr) return;
       try {
         const snap = JSON.parse(payloadStr);
-        actions.setChartTabState(state.chartTab.state, snap);
+        if (!state.chartTab.previewLocked) { // Only apply if not locked
+          actions.setChartTabState(state.chartTab.state, snap);
+        }
       } catch (err) {
         console.error("ChartPreview: invalid incoming snapshot", err);
       }
@@ -76,7 +81,7 @@ export function ChartPreview() {
     } catch (err) {
       console.error("ChartPreview: invalid snapshot", err);
     }
-  }, [state.chartTab.state, actions]);
+  }, [state.chartTab.state, actions, state.chartTab.previewLocked]);
 
 
 
