@@ -4,10 +4,11 @@ import {context} from "./state";
 import { TSCSvgComponent } from "./components";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Box } from "@mui/material";
+import TimeLine from "./assets/icons/axes=one.svg";
+
 // A thin page that provides the same ChartContext and renders the Chart with your SVG component
 export function ChartPreview() {
   const { state, actions } = useContext(context);
-  const svgContainerRef = useRef<HTMLDivElement>(null);
 
   console.log("Rendering ChartPreview with state:",  state.chartTab.state);
   useEffect(() => {
@@ -36,42 +37,37 @@ export function ChartPreview() {
     }
   }, [state.chartTab.state, actions]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hide = "1";
+    if (hide) document.body.classList.add("hide-top-banner");
+    return () => {
+      if (hide) document.body.classList.remove("hide-top-banner");
+    };
+  }, []);
+
   if (!state.chartTab.state.madeChart) {
     return <Box>No chart available</Box>;
   }
 
   return (
-    <Box sx={{ width: '100vw', height: '100vh' }}>
-      <div id="chart-transform-wrapper" style={{ width: '100%', height: '100%' }}>
-        <TransformWrapper
-          limitToBounds={true}
-          minScale={0.1}
-          maxScale={8}
-          disablePadding={true}
-        >
-          <TransformComponent
-            wrapperStyle={{
-              width: "100%",
-              height: "100%",
-              maxWidth: "100%",
-              maxHeight: "100%",
-              overflow: "hidden",
-              display: "flex"
-            }}
-          >
-            {/* Provide the ChartContext so Chart sees the current chart state/actions.
-                Render Chart directly and request that it hide the options bar and fill the space.
-                TSCSvgComponent is passed as the SVG renderer; if Chart doesn't use these props it will ignore them. */}
-            <ChartContext.Provider value={{ state: state.chartTab.state, actions }}>
-              <div style={{ flex: 1, width: "100%", height: "100%" }} ref={svgContainerRef}>
-                <Chart hideOptionsBar={true} fullScreen={true} svgComponent={TSCSvgComponent} />
-              </div>
-            </ChartContext.Provider>
-
-          </TransformComponent>
-        </TransformWrapper>
-      </div>
-    </Box>
+      <ChartContext.Provider
+        value={{
+          chartTabState: state.chartTab.state,
+          stateChartOptions: [
+            {
+              label: "Timeline On/Off",
+              onChange: (bool: boolean) =>
+                actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
+              value: state.chartTab.state.chartTimelineEnabled,
+              icon: <img src={TimeLine} width="24" height="24" />
+            }
+          ]
+        }}>
+        <Box className="chart-tab">
+          <Chart Component={TSCSvgComponent} />
+        </Box>
+      </ChartContext.Provider>
   );
 }
 
