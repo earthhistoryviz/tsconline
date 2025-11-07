@@ -37,7 +37,7 @@ export const Home = observer(function Home() {
   const { actions } = useContext(context);
   const theme = useTheme();
   const [hoveringGetStarted, setHoveringGetStarted] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const { t } = useTranslation();
   const scrollRef = createRef<HTMLDivElement>();
   const handleScrollToPreset = () => {
@@ -609,6 +609,7 @@ const WorkshopToggle = observer(function WorkshopToggle({
       ) : (
         <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <AccessAlarms sx={{ fontSize: "20px" }} />
+          <Typography className="workshop-toggle-text">Workshop</Typography>
           <Typography className="workshop-toggle-number">{upcomingWorkshopsLength}</Typography>
         </Box>
       )}

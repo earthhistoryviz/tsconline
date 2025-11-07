@@ -545,12 +545,12 @@
   top: 80px;
   right: 20px;
   z-index: 1000;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  min-width: 120px;
+  height: 48px;
+  border-radius: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease-in-out;
-  padding: 8px !important;
+  padding: 8px 16px !important;
 }
 
 .workshop-toggle-button:hover {
@@ -565,6 +565,18 @@
 .workshop-toggle-button.expanded {
   right: calc(18vw + 40px) !important;
   transition: all 0.3s ease-in-out;
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  padding: 8px !important;
+}
+
+.workshop-toggle-text {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  color: white !important;
 }
 
 .workshop-toggle-number {
