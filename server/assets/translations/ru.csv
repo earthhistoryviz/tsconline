@@ -326,6 +326,9 @@ translation.settings.datapacks.upload-form.name,Название датапак�
 translation.settings.datapacks.upload-form.name-placeholder,Введите название датапака.
 translation.settings.datapacks.upload-form.author,Автор
 translation.settings.datapacks.upload-form.author-placeholder,Укажите автора...
+translation.settings.datapacks.upload-form.priority,Приоритет
+translation.settings.datapacks.upload-form.priority-placeholder,Введите уровень приоритета пакета данных
+translation.settings.datapacks.upload-form.priority-tooltip,Пакеты данных с наименьшим приоритетом будут отображаться первыми
 translation.settings.datapacks.upload-form.description,Описание датапака
 translation.settings.datapacks.upload-form.description-placeholder,Введите описание датапака.
 translation.settings.datapacks.upload-form.tags,Теги

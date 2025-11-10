@@ -973,7 +973,6 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
         tempProfilePictureFilepath: expect.any(String),
         filepath: expect.any(String),
         originalFileName: "datapack.zip",
-        priority: "0",
         storedFileName: "filename"
       });
       expect(data.pdfFields).toEqual({
