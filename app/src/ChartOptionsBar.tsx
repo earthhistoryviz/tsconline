@@ -255,7 +255,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               (prevents changes from main window)
             </>
           }>
-          <StyledIconButton className= "lock-button"
+          <StyledIconButton
+            className="lock-button"
             onClick={() => {
               actions.setChartTab({
                 ...state.chartTab,

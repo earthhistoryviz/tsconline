@@ -261,10 +261,9 @@ test("check if new window button works", async ({ page, context }) => {
   expect(newPage.url()).toContain("/chart/preview");
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
-  await newPage.close();
-  const newWindowButtonPrev = await page.locator(".new-window-button");
-
+  const newWindowButtonPrev = await newPage.locator(".new-window-button");
   await expect(newWindowButtonPrev).toBeHidden();
+  await newPage.close();
 });
 
 //add a test if the updates work
@@ -300,10 +299,8 @@ test("check sync of preview with window", async ({ page, context }) => {
   await newPage.bringToFront();
   await expect(newPage.locator("text=Greater NW Shelf")).toBeVisible({ timeout: 10000 });
 
-
-  const newWindowButtonPrev = await page.locator(".new-window-button");
+  const newWindowButtonPrev = await newPage.locator(".new-window-button");
   await expect(newWindowButtonPrev).toBeHidden();
-
 });
 
 test("test locking of preview window", async ({ page, context }) => {
@@ -318,8 +315,6 @@ test("test locking of preview window", async ({ page, context }) => {
 
   await expect(newPage.locator(".lock-button")).toBeVisible();
   await newPage.locator(".lock-button").click();
-
-  
 
   //bring first page to front and make an update
   await page.bringToFront();
@@ -344,8 +339,4 @@ test("test locking of preview window", async ({ page, context }) => {
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
   await newPage.locator(".lock-button").click();
   await expect(newPage.locator("text=Greater NW Shelf")).toBeVisible({ timeout: 10000 });
-
-  
-
-
 });
