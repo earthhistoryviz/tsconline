@@ -298,7 +298,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
-        {location.pathname !== "/chart/preview" && <NewWindowButton />}
+        {location.pathname == "/chart" && <NewWindowButton />}
         {(actionChartOptions || []).map(({ icon, label, onClick }) => {
           return (
             <Box key={label}>
