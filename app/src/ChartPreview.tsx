@@ -1,17 +1,12 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import {ChartContext, Chart} from "./Chart";
-import {context} from "./state";
+import { useContext, useEffect } from "react";
+import { ChartContext, Chart } from "./Chart";
+import { context } from "./state";
 import { TSCSvgComponent } from "./components";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Box } from "@mui/material";
 import TimeLine from "./assets/icons/axes=one.svg";
 
-
-
 export function ChartPreview() {
   const { state, actions } = useContext(context);
-  const [isLocked, setIsLocked] = useState(false); // Add lock state
-
 
   useEffect(() => {
     const channel = new BroadcastChannel("tsconline-chart");
@@ -20,7 +15,8 @@ export function ChartPreview() {
       if (!payloadStr) return;
       try {
         const snap = JSON.parse(payloadStr);
-        if (!state.chartTab.previewLocked) { // Only apply if not locked
+        if (!state.chartTab.previewLocked) {
+          // Only apply if not locked
           actions.setChartTabState(state.chartTab.state, snap);
         }
       } catch (err) {
@@ -56,7 +52,6 @@ export function ChartPreview() {
     };
   }, [state.chartTab.state, actions]);
 
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     let payload: string | null = null;
@@ -83,26 +78,22 @@ export function ChartPreview() {
     }
   }, [state.chartTab.state, actions, state.chartTab.previewLocked]);
 
-
-
   return (
-      <ChartContext.Provider
-        value={{
-          chartTabState: state.chartTab.state,
-          stateChartOptions: [
-            {
-              label: "Timeline On/Off",
-              onChange: (bool: boolean) =>
-                actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
-              value: state.chartTab.state.chartTimelineEnabled,
-              icon: <img src={TimeLine} width="24" height="24" />
-            }
-          ]
-        }}>
-        <Box className="chart-tab">
-          <Chart Component={TSCSvgComponent} />
-        </Box>
-      </ChartContext.Provider>
+    <ChartContext.Provider
+      value={{
+        chartTabState: state.chartTab.state,
+        stateChartOptions: [
+          {
+            label: "Timeline On/Off",
+            onChange: (bool: boolean) => actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
+            value: state.chartTab.state.chartTimelineEnabled,
+            icon: <img src={TimeLine} width="24" height="24" />
+          }
+        ]
+      }}>
+      <Box className="chart-tab">
+        <Chart Component={TSCSvgComponent} />
+      </Box>
+    </ChartContext.Provider>
   );
 }
-

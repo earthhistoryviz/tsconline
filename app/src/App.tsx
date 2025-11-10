@@ -4,7 +4,7 @@ import { NavBar } from "./NavBar";
 import { Home } from "./Home";
 import { Settings } from "./Settings";
 import { ChartTab } from "./Chart";
-import {ChartPreview} from "./ChartPreview"
+import { ChartPreview } from "./ChartPreview";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { ddeDarkTheme, ddeLightTheme, originalDarkTheme, originalLightTheme } from "./theme";
@@ -60,21 +60,21 @@ export default observer(function App() {
     };
   }, []);
   useEffect(() => {
-     const channel = new BroadcastChannel("tsconline-chart");
-     const sendSnapshot = (snapObj: any) => {
-       try {
-         const payload = JSON.stringify(snapObj);
-         channel.postMessage({ type: "snapshot", payload });
-         // write to localStorage as a storage-event fallback (add ts to force change)
-         localStorage.setItem("chartPreview", payload);
-         localStorage.setItem("chartPreview_ts", String(Date.now()));
-       } catch (err) {
-         console.error("broadcast snapshot failed", err);
-       }
-     };
-    
-     // send initial snapshot
-    const disposer = reaction(
+    const channel = new BroadcastChannel("tsconline-chart");
+    const sendSnapshot = (snapObj: object) => {
+      try {
+        const payload = JSON.stringify(snapObj);
+        channel.postMessage({ type: "snapshot", payload });
+        // write to localStorage as a storage-event fallback (add ts to force change)
+        localStorage.setItem("chartPreview", payload);
+        localStorage.setItem("chartPreview_ts", String(Date.now()));
+      } catch (err) {
+        console.error("broadcast snapshot failed", err);
+      }
+    };
+
+    // send initial snapshot
+    reaction(
       () => toJS(state.chartTab.state),
       (snap) => {
         sendSnapshot(snap);

@@ -206,7 +206,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         <LoadingChart percent={state.chartTab.percent} stage={state.chartTab.stage} />
       ) : madeChart ? (
         <div className="chart-and-options-bar">
-          {transformContainerRef?.current && svgContainerRef?.current &&  (
+          {transformContainerRef?.current && svgContainerRef?.current && (
             <OptionsBar
               transformRef={transformContainerRef}
               svgRef={svgContainerRef}
