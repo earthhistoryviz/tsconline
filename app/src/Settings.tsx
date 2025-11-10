@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 const getSettingsTabLabel = (id: string, t: (k: string) => string, i18n: any) => {
   const special: Record<string, string> = {
     mappoints: "Map Points",
-    datapacks: "Datapacks",
+    datapacks: "Datapacks"
   };
 
   const keyLower = `settingsTabs.${id}`;
@@ -43,7 +43,6 @@ const getSettingsTabLabel = (id: string, t: (k: string) => string, i18n: any) =>
 
   return t(keyLower);
 };
-
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
