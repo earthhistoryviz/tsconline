@@ -21,9 +21,9 @@ export const createMCPServer = () => {
       inputSchema: { a: z.number(), b: z.number() }
     },
     async ({ a, b }) => {
-      console.log(`MCP tool \"add\" invoked with`, { a, b });
+      console.log(`MCP tool "add" invoked with`, { a, b });
       const result = a + b;
-      console.log(`MCP tool \"add\" result:`, result);
+      console.log(`MCP tool "add" result:`, result);
       return {
         content: [{ type: "text", text: String(result) }]
       };

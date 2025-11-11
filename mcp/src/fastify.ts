@@ -21,7 +21,7 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
   opts: MCPServerOptions
 ) => {
   fastify.post("/mcp", async (request, reply) => {
-  const { mcpServer } = opts;
+    const { mcpServer } = opts;
     const sessionId = request.headers["mcp-session-id"] as string | undefined;
     console.log("Received POST /mcp request, sessionId:", sessionId);
 
@@ -70,7 +70,7 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
 
   fastify.get("/mcp", async (request, reply) => {
     const sessionId = request.headers["mcp-session-id"] as string | undefined;
-  const transport = sessionId && transports.streamable[sessionId];
+    const transport = sessionId && transports.streamable[sessionId];
 
     if (!transport) {
       reply.status(400).send("Invalid or missing session ID");
@@ -83,7 +83,7 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
 
   fastify.delete("/mcp", async (request: FastifyRequest, reply: FastifyReply) => {
     const sessionId = request.headers["mcp-session-id"] as string | undefined;
-  const transport = sessionId && transports.streamable[sessionId];
+    const transport = sessionId && transports.streamable[sessionId];
 
     if (!transport) {
       reply.status(400).send("Invalid or missing session ID");
@@ -118,7 +118,12 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
 
   // Legacy message endpoint for older clients to POST messages
   fastify.post("/messages", async (request, reply) => {
-    const sessionId = (request.query as any).sessionId as string | undefined;
+    const q = request.query;
+    let sessionId: string | undefined;
+    if (typeof q === "object" && q !== null) {
+      const s = (q as Record<string, unknown>)["sessionId"];
+      if (typeof s === "string") sessionId = s;
+    }
     if (!sessionId) {
       reply.status(400).send("Missing sessionId");
       return;
