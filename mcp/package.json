@@ -20,7 +20,8 @@
     "dev": "concurrently \"tsc -b -w\" \"yarn start\"",
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch dist/index.js",
     "test-mcp": "node ./dist/test-mcp-server.js",
-    "test-client": "node ./dist/client.js"
+    "test-client": "node ./dist/client.js",
+    "inspector": "npx @modelcontextprotocol/inspector"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
