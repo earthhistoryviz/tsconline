@@ -16,8 +16,9 @@ import { TabWrapper, TabsWrapper } from "./components";
 import LoadSettings from "./settings_tabs/LoadSettings";
 import SaveSettings from "./settings_tabs/SaveSettings";
 import { useTranslation } from "react-i18next";
+import type { TFunction, i18n as I18n } from "i18next";
 
-const getSettingsTabLabel = (id: string, t: (k: string) => string, i18n: any) => {
+const getSettingsTabLabel = (id: string, t: TFunction, i18n: I18n) => {
   const special: Record<string, string> = {
     mappoints: "Map Points",
     datapacks: "Datapacks"
