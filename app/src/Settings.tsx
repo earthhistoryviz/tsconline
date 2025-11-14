@@ -24,21 +24,30 @@ const getSettingsTabLabel = (id: string, t: TFunction, i18n: I18n) => {
     datapacks: "Datapacks"
   };
 
+  const getDefaultNamespace = (i18nInstance: I18n): string => {
+    const ns = i18nInstance.options.defaultNS ?? "translation";
+    return Array.isArray(ns) ? ns[0] : (ns as string);
+  };
+
+  const ns = getDefaultNamespace(i18n);
+
+  const hasKeyInCurrentLang = (key: string) => Boolean(i18n.getResource(i18n.language, ns, key));
+
   const keyLower = `settingsTabs.${id}`;
-  if (i18n.exists(keyLower, { lng: i18n.language, fallbackLng: false })) {
+  if (hasKeyInCurrentLang(keyLower)) {
     return t(keyLower);
   }
 
   if (special[id]) {
     const keySpecial = `settingsTabs.${special[id]}`;
-    if (i18n.exists(keySpecial, { lng: i18n.language, fallbackLng: false })) {
+    if (hasKeyInCurrentLang(keySpecial)) {
       return t(keySpecial);
     }
   }
 
   const cap = id.charAt(0).toUpperCase() + id.slice(1);
   const keyCap = `settingsTabs.${cap}`;
-  if (i18n.exists(keyCap, { lng: i18n.language, fallbackLng: false })) {
+  if (hasKeyInCurrentLang(keyCap)) {
     return t(keyCap);
   }
 
