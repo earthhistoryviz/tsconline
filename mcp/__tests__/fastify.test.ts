@@ -1,8 +1,10 @@
 import fastify, { FastifyInstance } from "fastify";
 import { beforeAll, afterAll, beforeEach, vi, describe, it, expect, Mock, MockInstance } from "vitest";
 import { createMCPServer } from "../src/mcp";
-import * as fastifyModule from "../src/fastify";
+import { registerMCPServer, transports } from "../src/fastify";
 import * as nodeCrypto from "node:crypto";
+
+const fastifyModule = { registerMCPServer, transports };
 const mockServer = {
   connect: vi.fn(),
   registerTool: vi.fn(),
