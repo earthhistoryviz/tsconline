@@ -13,16 +13,15 @@ try {
 
   const tools = await client.listTools();
   console.log("Tools:", JSON.stringify(tools, null, 2));
+  // Call the new `listDatapacks` tool (it will call the main server's /mcp/datapacks endpoint)
+  try {
+    const listResult = await client.callTool({ name: "listDatapacks", arguments: {} });
+    console.log("Result of listDatapacks:", JSON.stringify(listResult, null, 2));
+  } catch (e) {
+    console.error("Error calling listDatapacks:", e);
+  }
 
-  const result = await client.callTool({
-    name: "add",
-    arguments: { a: 4, b: 5 }
-  });
-  console.log("Result of add:", result);
-
-  const greeting = await client.readResource({
-    uri: "greeting://World"
-  });
+  const greeting = await client.readResource({ uri: "greeting://World" });
   console.log("Greeting:", greeting);
   await client.close();
   await transport.close();
