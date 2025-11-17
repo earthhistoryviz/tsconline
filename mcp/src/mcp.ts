@@ -41,6 +41,31 @@ export const createMCPServer = () => {
     })
   );
 
+  // Tool: list datapacks from the main server's /mcp/datapacks endpoint.
+  server.registerTool(
+    "listDatapacks",
+    {
+      title: "List Datapacks",
+      description: "Fetch the current public and official datapacks from the main server",
+      inputSchema: {}
+    },
+    async () => {
+      try {
+        const serverUrl = "http://localhost:3000";
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        const res = await fetch(`${serverUrl}/mcp/datapacks`, { method: "GET", headers });
+        if (!res.ok) {
+          const text = await res.text();
+          return { content: [{ type: "text", text: `Server error: ${res.status} ${text}` }] };
+        }
+        const json = await res.json();
+        return { content: [{ type: "text", text: JSON.stringify(json) }] };
+      } catch (e) {
+        return { content: [{ type: "text", text: `Error fetching datapacks: ${String(e)}` }] };
+      }
+    }
+  );
+
   server.registerResource(
     "greeting",
     new ResourceTemplate("greeting://{name}", { list: undefined }),
