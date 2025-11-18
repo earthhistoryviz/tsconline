@@ -2792,7 +2792,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tsconline/shared@npm:1.0.0, @tsconline/shared@workspace:*, @tsconline/shared@workspace:shared":
+"@tsconline/shared@npm:1.0.0, @tsconline/shared@workspace:shared":
   version: 0.0.0-use.local
   resolution: "@tsconline/shared@workspace:shared"
   dependencies:
