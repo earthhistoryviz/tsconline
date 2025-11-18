@@ -10,6 +10,7 @@ import { assetconfigs } from "../util.js";
 import { queue, maxQueueSize } from "../index.js";
 import { deleteUserDatapack } from "../user/user-handler.js";
 import { mkdir, writeFile } from "fs/promises";
+import fs from "fs";
 
 export class ChartGenerationError extends Error {
   public errorCode: number;
@@ -20,22 +21,88 @@ export class ChartGenerationError extends Error {
   }
 }
 
+async function exists(pathToCheck: string): Promise<boolean> {
+  return fs.promises
+    .access(pathToCheck)
+    .then(() => true)
+    .catch(() => false);
+}
+
+export type ChartGenerationMode = "chart" | "chart-no-settings";
 export async function generateChart(
   chartRequest: ChartRequest,
   onProgress: (p: ChartProgressUpdate) => void,
-  uuid?: string
+  uuid?: string,
+  mode: ChartGenerationMode = "chart",
+  datapackTitle?: string
 ) {
+  // If running in setting mode, the settings variable is a placeholder because settings.tsc not actually been made
   const { useCache, isCrossPlot, settings } = chartRequest;
   const hash = md5(isCrossPlot + settings + chartRequest.datapacks.join(","));
   const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
   const isInWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
+
   const chartDir = path.join(assetconfigs.chartsDirectory, hash);
   const chartFile = path.join(chartDir, "chart.svg");
   const settingsFile = path.join(chartDir, "settings.tsc");
   const chartUrlPath = `/${assetconfigs.chartsDirectory}/${hash}/chart.svg`;
 
-  const { datapacksToSendToCommandLine, usedUserDatapackFilepaths, usedTempDatapacks, filenameMap } =
-    await resolveDatapacks(chartRequest, uuid);
+  await fs.promises.mkdir(chartDir, { recursive: true });
+
+  let datapacksToSendToCommandLine: string[] = [];
+  let usedUserDatapackFilepaths: string[] = [];
+  let usedTempDatapacks: string[] = [];
+  let filenameMap: Record<string, string> = {};
+
+  if (mode === "chart-no-settings") {
+    if (!datapackTitle) {
+      throw new Error("datapackTitle is required in settings mode");
+    }
+
+    const root = `${assetconfigs.publicDatapacksDirectory}/official/datapacks`;
+    const baseFolderPath = path.join(root, datapackTitle, "decrypted");
+    if (!(await exists(baseFolderPath))) throw new Error(`Datapack folder does not exist: ${baseFolderPath}`);
+
+    // Find the first temp__* folder
+    // Regex reads contents at the baseFolderPath, and stores each name into array, then it tests each
+    // to see if it starts with the word temp
+    const entries = await fs.promises.readdir(baseFolderPath);
+    const tempFolder = entries.find((name) => /^temp__/.test(name));
+    if (!tempFolder) throw new Error(`No temp__ folder found in ${baseFolderPath}`);
+
+    const datapacksPath = path.join(baseFolderPath, tempFolder, "datapacks");
+    if (!(await exists(datapacksPath))) throw new Error(`Datapacks folder missing at ${datapacksPath}`);
+
+    const datapackFiles = await fs.promises.readdir(datapacksPath);
+    const txtFile = datapackFiles.find((name) => name.endsWith(".txt"));
+    if (!txtFile) throw new Error(`No .txt datapack found in ${datapacksPath}`);
+    const datapackTxtPath = path.join(datapacksPath, txtFile);
+
+    // We don't technically need a settings file for the chart to be made, as the Java
+    // program will generate a default one if it doesn't exist. I create one anyways so we can also return this
+    // We could just do it all in one step, but it seems to time out sometimes if the file is large
+    // so we do it in two steps
+    await runJavaChartGeneration(
+      {
+        settings: "",
+        datapacks: [],
+        useCache: false,
+        isCrossPlot: false
+      },
+      [datapackTxtPath],
+      settingsFile,
+      "", // outputFile not needed when generating only settings
+      {}, // filenameMap not needed when generating only settings
+      onProgress,
+      "settings-only"
+    );
+    datapacksToSendToCommandLine = [datapackTxtPath];
+    filenameMap = { [txtFile]: datapackTitle };
+    console.log("Successfully created and saved chart settings at", settingsFile);
+  } else {
+    ({ datapacksToSendToCommandLine, usedUserDatapackFilepaths, usedTempDatapacks, filenameMap } =
+      await resolveDatapacks(chartRequest, uuid));
+  }
 
   const cached = await checkForCacheHit(chartFile, useCache, chartUrlPath, hash);
   if (cached) {
@@ -55,9 +122,11 @@ export async function generateChart(
     throw new ChartGenerationError("Failed to update file metadata", 100);
   });
 
-  await mkdir(chartDir, { recursive: true });
-  await writeFile(settingsFile, settings);
-  console.log("Successfully created and saved chart settings at", settingsFile);
+  if (mode !== "chart-no-settings") {
+    await mkdir(chartDir, { recursive: true });
+    await writeFile(settingsFile, settings);
+    console.log("Successfully created and saved chart settings at", settingsFile);
+  }
 
   let knownErrorCode = 0;
   let errorMessage = "";
@@ -72,7 +141,8 @@ export async function generateChart(
           settingsFile,
           chartFile,
           filenameMap,
-          onProgress
+          onProgress,
+          mode
         );
         knownErrorCode = result.knownErrorCode;
         errorMessage = result.errorMessage;
