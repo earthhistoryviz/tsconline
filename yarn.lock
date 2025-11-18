@@ -2708,6 +2708,7 @@ __metadata:
     "@fastify/cors": "npm:^9.0.1"
     "@fastify/rate-limit": "npm:^9.1.0"
     "@modelcontextprotocol/sdk": "npm:^1.17.0"
+    "@tsconline/shared": "workspace:*"
     "@types/node": "npm:^24.1.0"
     "@types/ws": "npm:^8.18.1"
     chalk: "npm:^5.4.1"
@@ -2791,7 +2792,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tsconline/shared@npm:1.0.0, @tsconline/shared@workspace:shared":
+"@tsconline/shared@npm:1.0.0, @tsconline/shared@workspace:*, @tsconline/shared@workspace:shared":
   version: 0.0.0-use.local
   resolution: "@tsconline/shared@workspace:shared"
   dependencies:
