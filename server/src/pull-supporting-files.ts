@@ -2,7 +2,7 @@ import "dotenv/config";
 import { loadAssetConfigs, assetconfigs } from "./util.js";
 import { access, mkdir, readdir, rm, writeFile } from "fs/promises";
 import { basename, dirname, join } from "path";
-import { readConfig, configPaths } from "./add-dev-config.js";
+import { readConfig, configPaths, readLondonConfig } from "./add-dev-config.js";
 import chalk from "chalk";
 import AdmZip from "adm-zip";
 
@@ -79,8 +79,14 @@ export async function areDropboxDatapacksDifferent(access_token: string): Promis
     return true;
   }
   const localFiles = await readdir(assetconfigs.datapacksDirectory);
-  const configResult = await readConfig(configPaths.london);
-  const londonFile = configResult[0]?.storedFileName;
+  let londonFile: string | undefined;
+  try {
+    const londonConfig = await readLondonConfig();
+    londonFile = londonConfig[0]?.storedFileName;
+  } catch (e) {
+    // London config not present — that's fine for normal "yarn dev" runs
+    londonFile = undefined;
+  }
 
   // If londonFile exists, allow it to be present in addition to the Dropbox files
   const expectedFiles = londonFile ? [...files, londonFile] : files;
