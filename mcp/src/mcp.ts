@@ -73,16 +73,16 @@ export const createMCPServer = () => {
     }
   );
 
- server.registerTool(
+  server.registerTool(
     "generateChart",
     {
       title: "Generate Chart",
-      description:
-        "Send settings + datapack metadata to the main server to generate a chart",
+      description: "Send settings + datapack metadata to the main server to generate a chart",
       inputSchema: {
         settings: z.string(),
         datapacks: z.array(
-          z.object({
+          z
+            .object({
               storedFileName: z.string(),
               title: z.string(),
               isPublic: z.boolean()
@@ -129,7 +129,6 @@ export const createMCPServer = () => {
         }
         console.log("Chart generation response:", json);
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
-        const chartUrl = chartPath.startsWith("http") ? chartPath : `${serverUrl}${chartPath}`;
         console.log("chart path", path.join("..", "server", chartPath));
         const filePath = path.join("..", "server", chartPath);
         const svg = await readFile(filePath, "utf8"); // read SVG as text

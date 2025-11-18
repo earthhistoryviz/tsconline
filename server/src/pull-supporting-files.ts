@@ -2,7 +2,7 @@ import "dotenv/config";
 import { loadAssetConfigs, assetconfigs } from "./util.js";
 import { access, mkdir, readdir, rm, writeFile } from "fs/promises";
 import { basename, dirname, join } from "path";
-import { readConfig, configPaths, readLondonConfig } from "./add-dev-config.js";
+import { readLondonConfig } from "./add-dev-config.js";
 import chalk from "chalk";
 import AdmZip from "adm-zip";
 

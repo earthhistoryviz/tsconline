@@ -8,7 +8,7 @@ import { generateChart } from "../chart-generation/generate-chart.js";
 export async function mcpGenerateChart(_request: FastifyRequest, _reply: FastifyReply) {
   try {
     const chartRequest = _request.body as unknown as ChartRequest;
-    const uuid = ((_request.query as unknown) as { uuid?: string })?.uuid;
+    const uuid = (_request.query as unknown as { uuid?: string })?.uuid;
 
     // We don't stream progress back to MCP for now; MCP only needs the final chart info.
     const onProgress = (_p: ChartProgressUpdate) => {
@@ -18,7 +18,8 @@ export async function mcpGenerateChart(_request: FastifyRequest, _reply: Fastify
     const result = await generateChart(chartRequest, onProgress, uuid);
     _reply.send(result);
   } catch (err) {
-    _reply.status(500).send({ error: (err as Error)?.message ?? String(err) });
+    // Normalize error output to a string to avoid branching on Error.message vs other values
+    _reply.status(500).send({ error: String(err) });
   }
 }
 
