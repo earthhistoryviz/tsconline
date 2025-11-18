@@ -1,5 +1,12 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  assertDatapackConfigForChartRequest,
+  type DatapackConfigForChartRequest,
+  type ChartRequest
+} from "@tsconline/shared";
 import z from "zod";
+import { readFile } from "fs/promises";
+import * as path from "path";
 
 export const createMCPServer = () => {
   console.log("Starting MCP server...");
@@ -62,6 +69,91 @@ export const createMCPServer = () => {
         return { content: [{ type: "text", text: JSON.stringify(json) }] };
       } catch (e) {
         return { content: [{ type: "text", text: `Error fetching datapacks: ${String(e)}` }] };
+      }
+    }
+  );
+
+ server.registerTool(
+    "generateChart",
+    {
+      title: "Generate Chart",
+      description:
+        "Send settings + datapack metadata to the main server to generate a chart",
+      inputSchema: {
+        settings: z.string(),
+        datapacks: z.array(
+          z.object({
+              storedFileName: z.string(),
+              title: z.string(),
+              isPublic: z.boolean()
+            })
+            .passthrough()
+        ),
+        useCache: z.boolean().optional(),
+        isCrossPlot: z.boolean().optional()
+      }
+    },
+    async ({ settings, datapacks, useCache, isCrossPlot }) => {
+      try {
+        const validatedDatapacks: DatapackConfigForChartRequest[] = [];
+        for (const dp of datapacks) {
+          assertDatapackConfigForChartRequest(dp);
+          validatedDatapacks.push(dp as DatapackConfigForChartRequest);
+        }
+
+        const chartRequest: ChartRequest = {
+          settings,
+          datapacks: validatedDatapacks,
+          useCache: useCache ?? true,
+          isCrossPlot: isCrossPlot ?? false
+        };
+
+        const serverUrl = "http://localhost:3000"; // adjust if needed
+        const res = await fetch(`${serverUrl}/mcp/generate-chart`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(chartRequest)
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Server error ${res.status}: ${JSON.stringify(json)}`
+              }
+            ]
+          };
+        }
+        console.log("Chart generation response:", json);
+        const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
+        const chartUrl = chartPath.startsWith("http") ? chartPath : `${serverUrl}${chartPath}`;
+        console.log("chart path", path.join("..", "server", chartPath));
+        const filePath = path.join("..", "server", chartPath);
+        const svg = await readFile(filePath, "utf8"); // read SVG as text
+
+        // Return the raw SVG content (as text). If you prefer a data URI or base64,
+        // replace the returned object accordingly.
+        return {
+          content: [
+            {
+              type: "text",
+              text: svg,
+              mediaType: "image/svg+xml"
+            }
+          ]
+        };
+      } catch (e) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error generating chart: ${String(e)}`
+            }
+          ]
+        };
       }
     }
   );
