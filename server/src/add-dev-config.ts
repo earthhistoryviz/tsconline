@@ -8,7 +8,6 @@ import { deleteOfficialDatapack, doesDatapackFolderExistInAllUUIDDirectories } f
 import type { DatapackMetadata } from "@tsconline/shared";
 
 export const configPaths = {
-  london: path.resolve("db", "london", "output", "london-config.json"),
   dev: path.resolve(process.cwd(), "assets", "dev-config.json")
 };
 
@@ -23,6 +22,16 @@ export async function readConfig(configPath: string): Promise<DatapackMetadata[]
   return config as DatapackMetadata[];
 }
 
+export async function readLondonConfig() {
+  const londonConfigPath = path.resolve(process.cwd(), "db", "london", "output", "london-config.json");
+  if (!(await checkFileExists(londonConfigPath))) {
+    throw new Error("London config file does not exist");
+  }
+  const londonConfig = JSON.parse(await readFile(londonConfigPath, "utf8"));
+  assertDatapackMetadataArray(londonConfig);
+  return londonConfig as DatapackMetadata[];
+}
+
 async function processConfig({
   configType,
   alwaysOverwrite = false,
@@ -35,16 +44,24 @@ async function processConfig({
   try {
     const args = process.argv;
     console.log(`Reading ${configType} config...`);
-    const config = await readConfig(configPaths[configType]);
-    console.log(chalk.green(`${successSymbol} ${configType} config read successfully`));
-    await loadAssetConfigs();
 
-    if (copyFirstLondonPack && config[0]) {
-      const src = path.resolve(process.cwd(), "db", "london", "output", config[0].storedFileName);
-      const dest = path.join(assetconfigs.datapacksDirectory, config[0].originalFileName);
-      await copyFile(src, dest);
-      console.log(chalk.green(`Copied ${config[0].title} to assets/datapacks`));
+    let config: DatapackMetadata[];
+    if (configType === "london") {
+      config = await readLondonConfig();
+      console.log(chalk.green(`${successSymbol} london config read successfully`));
+
+      if (copyFirstLondonPack && config[0]) {
+        const src = path.resolve(process.cwd(), "db", "london", "output", config[0].storedFileName);
+        const dest = path.join(assetconfigs.datapacksDirectory, config[0].originalFileName);
+        await copyFile(src, dest);
+        console.log(chalk.green(`Copied ${config[0].title} to assets/datapacks`));
+      }
+    } else {
+      config = await readConfig(configPaths.dev);
+      console.log(chalk.green(`${successSymbol} dev config read successfully`));
     }
+
+    await loadAssetConfigs();
 
     for (const datapack of config) {
       console.log("\n======================================================================\n");

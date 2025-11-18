@@ -17,8 +17,8 @@ import chalk from "chalk";
 import { checkFileExists } from "./util.js";
 import { copyFile } from "fs/promises";
 
-const londonConfigPath = path.resolve(process.cwd(), "db", "london", "output", "london-config.json");
 export async function readLondonConfig() {
+  const londonConfigPath = path.resolve(process.cwd(), "db", "london", "output", "london-config.json");
   if (!(await checkFileExists(londonConfigPath))) {
     throw new Error("London config file does not exist");
   }

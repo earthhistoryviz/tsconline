@@ -1,15 +1,17 @@
 import { retrieveLondonDatapack } from "./upload-london.js";
 import { FastifyRequest, FastifyReply } from "fastify";
-import { readConfig, configPaths } from "./add-dev-config.js";
+import { readLondonConfig } from "./add-dev-config.js";
 import { DatapackMetadata } from "@tsconline/shared";
 export const fetchLondonDatapack = async function (_request: FastifyRequest, reply: FastifyReply) {
   try {
     const londonDatapack: File = await retrieveLondonDatapack();
     if (!londonDatapack) return reply.status(404).send({ error: "London datapack not found" });
 
-    const configResult = await readConfig(configPaths.london);
-    const config: DatapackMetadata | undefined = configResult[0];
-    if (!config) {
+    let config: DatapackMetadata | undefined;
+    try {
+      const londonConfig = await readLondonConfig();
+      config = londonConfig[0];
+    } catch (e) {
       return reply.status(500).send({ error: "London datapack config not found" });
     }
     const arrayBuffer = await londonDatapack.arrayBuffer();

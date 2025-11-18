@@ -4,5 +4,12 @@
     "**/.pnp.*": true
   },
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "chat.mcp.serverSampling": {
+    "tsconline/.vscode/mcp.json: tsc": {
+      "allowedModels": [
+        "copilot/gpt-5-mini"
+      ]
+    }
+  }
 }
