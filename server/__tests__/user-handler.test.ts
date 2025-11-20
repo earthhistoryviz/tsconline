@@ -10,6 +10,7 @@ import {
   fetchUserDatapack,
   getUploadedDatapackFilepath,
   processEditDatapackRequest,
+  processMultipartPartsForAttachedDatapackFilesEditUpload,
   renameUserDatapack,
   writeUserDatapack
 } from "../src/user/user-handler";
@@ -25,6 +26,7 @@ import * as fetchUserFiles from "../src/user/fetch-user-files";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { cloneDeep } from "lodash";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+import * as userHandler from "../src/user/user-handler";
 
 vi.mock("../src/database", async () => {
   return {
@@ -90,7 +92,9 @@ vi.mock("fs/promises", () => {
     rm: vi.fn(async () => {}),
     rename: vi.fn(async () => {}),
     writeFile: vi.fn(async () => {}),
-    readFile: vi.fn(async () => Promise.resolve(JSON.stringify(readFileMockReturn)))
+    readFile: vi.fn(async () => Promise.resolve(JSON.stringify(readFileMockReturn))),
+    copyFile: vi.fn().mockResolvedValueOnce(undefined),
+    readdir: vi.fn(async () => {})
   };
 });
 vi.mock("../src/util", () => {
@@ -111,7 +115,10 @@ vi.mock("../src/user/fetch-user-files", () => {
     getDirectories: vi.fn(async () => ["test"]),
     fetchUserDatapackDirectory: vi.fn(async () => "test/test"),
     getPrivateUserUUIDDirectory: vi.fn(async () => "test"),
-    getCachedDatapackFilePath: vi.fn(() => "test/test/test-cached-filename")
+    getCachedDatapackFilePath: vi.fn(() => "test/test/test-cached-filename"),
+    getUserUUIDDirectory: vi.fn(() => "/valid/uuid"),
+    getUsersDatapacksDirectoryFromUUIDDirectory: vi.fn(() => "/valid/uuid/datapacks"),
+    getPDFFilesDirectoryFromDatapackDirectory: vi.fn(() => "/valid/uuid/datapacks/TestPack/files")
   };
 });
 const testUser = {
@@ -764,6 +771,114 @@ describe("convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest tests", 
       date: "2021-01-01",
       tags: ["tag1", "tag2"],
       references: ["ref1", "ref2"]
+    });
+  });
+});
+describe("processMultipartPartsForAttachedDatapackFilesEditUpload tests", () => {
+  const mockGetUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  const mockGetUsersDatapacksDir = vi.spyOn(fetchUserFiles, "getUsersDatapacksDirectoryFromUUIDDirectory");
+  const mockGetPDFDir = vi.spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory");
+  const mockCheckFileTypeIsPDF = vi.spyOn(userHandler, "checkFileTypeIsPDF");
+  const mockUploadFileToFileSystem = vi.spyOn(uploadHandler, "uploadFileToFileSystem");
+
+  let formData: AsyncIterableIterator<Multipart>;
+  function createFormData(
+    json: Record<string, string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }> = {}
+  ) {
+    formData = {
+      async *[Symbol.asyncIterator]() {
+        yield* Object.entries(json).map(([name, value]) => {
+          if (typeof value === "object") {
+            return {
+              name,
+              type: "file",
+              mimetype: value.mimetype,
+              filename: value.filename,
+              fieldname: value.fieldname,
+              bytesRead: value.bytesRead,
+              file: {
+                truncated: false,
+                bytesRead: value.bytesRead ?? 0,
+                pipe: vi.fn(),
+                on: vi.fn(),
+                resume: vi.fn(),
+                pause: vi.fn(),
+                destroy: vi.fn(),
+                destroySoon: vi.fn(),
+                unpipe: vi.fn(),
+                unshift: vi.fn(),
+                wrap: vi.fn(),
+                [Symbol.asyncIterator]: vi.fn()
+              }
+            };
+          }
+          return {
+            name,
+            type: "field",
+            data: Buffer.from(value.toString())
+          };
+        });
+      }
+    } as AsyncIterableIterator<Multipart>;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const testDatapack = { datapackTitle: "TestPack", uuid: "uuid", isPublic: false };
+
+  it("should return pdfFields on valid upload", async () => {
+    createFormData({
+      "newFiles[]": {
+        mimetype: "application/pdf",
+        filename: "file.pdf",
+        fieldname: "newFiles[]",
+        bytesRead: 123
+      }
+    });
+
+    mockCheckFileTypeIsPDF.mockReturnValue(true);
+    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
+    mockGetUsersDatapacksDir.mockResolvedValue(path.join("/valid/uuid", "datapacks"));
+    mockGetPDFDir.mockResolvedValue(path.join("/valid/uuid", "datapacks", "TestPack", "files"));
+    mockUploadFileToFileSystem.mockResolvedValue({ code: 200, message: "File uploaded" });
+
+    const res = await processMultipartPartsForAttachedDatapackFilesEditUpload(
+      testDatapack.uuid,
+      testDatapack.datapackTitle,
+      testDatapack.isPublic,
+      formData
+    );
+
+    expect(res).toEqual({
+      pdfFields: {
+        "file.pdf": expect.stringContaining("file.pdf")
+      }
+    });
+  });
+  it("should return 415 if file is not a PDF", async () => {
+    createFormData({
+      "newFiles[]": {
+        mimetype: "application/x-msdownload",
+        filename: "badfile.exe",
+        fieldname: "newFiles[]",
+        bytesRead: 123
+      }
+    });
+
+    mockCheckFileTypeIsPDF.mockReturnValue(false);
+
+    const res = await processMultipartPartsForAttachedDatapackFilesEditUpload(
+      testDatapack.uuid,
+      testDatapack.datapackTitle,
+      testDatapack.isPublic,
+      formData
+    );
+
+    expect(res).toEqual({
+      code: 415,
+      message: "Invalid file type for datapack pdf file"
     });
   });
 });
