@@ -60,6 +60,17 @@
   width: 100%;
   min-width: 0;
 }
+
+.chart-and-options-bar.full-height {
+  height: 100%;
+  width: 100%;
+}
+
+.full-height #chart-transform-wrapper {
+  height: 100%;
+  width: 100%;
+}
+
 .flex-row {
   display: flex;
   flex-direction: row;
