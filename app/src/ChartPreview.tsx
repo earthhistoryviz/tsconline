@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { ChartContext, Chart } from "./Chart";
 import { context } from "./state";
 import { TSCSvgComponent } from "./components";
@@ -7,10 +7,15 @@ import TimeLine from "./assets/icons/axes=one.svg";
 
 export function ChartPreview() {
   const { state, actions } = useContext(context);
+  const channelRef = useRef<BroadcastChannel | null>(null);
+
+    // Initialize channel once on mount (before useEffect)
+  if (!channelRef.current) {
+    channelRef.current = new BroadcastChannel("tsconline-chart");
+  }
+  const channel = channelRef.current;
 
   useEffect(() => {
-    const channel = new BroadcastChannel("tsconline-chart");
-
     const applyPayload = (payloadStr: string | null) => {
       if (!payloadStr) return;
       try {
@@ -47,10 +52,18 @@ export function ChartPreview() {
     channel.postMessage({ type: "request" });
 
     return () => {
-      channel.close();
       window.removeEventListener("storage", onStorage);
     };
   }, [state.chartTab.state, actions]);
+
+    // Cleanup channel on unmount
+  useEffect(() => {
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.close();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
