@@ -2784,7 +2784,7 @@ __metadata:
     sqlite3: "npm:^5.1.7"
     svgson: "npm:^5.3.1"
     typescript: "npm:5.2.2"
-    validator: "npm:^13.12.0"
+    validator: "npm:^13.15.22"
     vitest: "npm:^1.6.1"
     winston: "npm:^3.14.0"
     xlsx: "npm:^0.17.1"
@@ -2798,7 +2798,7 @@ __metadata:
     "@types/node": "npm:^20.11.28"
     "@types/validator": "npm:^13"
     typescript: "npm:5.2.2"
-    validator: "npm:^13.12.0"
+    validator: "npm:^13.15.22"
     vitest: "npm:^1.6.1"
   languageName: unknown
   linkType: soft
@@ -14123,10 +14123,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"validator@npm:^13.12.0":
-  version: 13.12.0
-  resolution: "validator@npm:13.12.0"
-  checksum: db6eb0725e2b67d60d30073ae8573982713b5903195d031dc3c7db7e82df8b74e8c13baef8e2106d146d979599fd61a06cde1fec5c148e4abd53d52817ff0fd9
+"validator@npm:^13.15.22":
+  version: 13.15.23
+  resolution: "validator@npm:13.15.23"
+  checksum: 03e4a37c04c4e8337b0c91e529bdb6376de6b52ef683616e2e909276be73903e6054203d274ed35e88e3498ec68764125b194338dd2ee893818d3008fbad1ba7
   languageName: node
   linkType: hard
 
