@@ -170,7 +170,8 @@ const workshop: Workshop = {
   end: end.toISOString(),
   regRestrict: 0,
   creatorUUID: testUser.uuid,
-  regLink: undefined
+  description: null,
+  regLink: null
 };
 
 beforeAll(async () => {

@@ -57,6 +57,7 @@ export default defineConfig({
         "server/src/user-routes.ts": fullyCoveredConfig,
         "sersver/src/routes/public-routes.ts": fullyCoveredConfig,
         "server/src/routes/prehandlers.ts": thresholdConfig,
+        "server/src/routes/mcp-routes.ts": thresholdConfig,
         "mcp/src/shutdown.ts": thresholdConfig,
         "mcp/src/fastify.ts": thresholdConfig
         // "server/src/user/user-handler.ts": thresholdConfig,
