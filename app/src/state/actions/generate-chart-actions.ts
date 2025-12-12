@@ -95,6 +95,10 @@ export const initiateChartGeneration = action(
   }
 );
 
+export const setChartTab = action("setChartTab", (chartTab: typeof state.chartTab) => {
+  state.chartTab = chartTab;
+});
+
 function areSettingsValidForGeneration(options?: { from?: string }) {
   if (!state.config.datapacks || state.config.datapacks.length === 0 || !state.settingsTabs.columns) {
     generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
