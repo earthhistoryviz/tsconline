@@ -8,88 +8,63 @@ import TimeLine from "./assets/icons/axes=one.svg";
 export function ChartPreview() {
   const { state, actions } = useContext(context);
   const channelRef = useRef<BroadcastChannel | null>(null);
+  const previewLockedRef = useRef<boolean>(!!state.chartTab.previewLocked);
+  const currentChartSnapshotRef = useRef<string | null>(null);
 
-    // Initialize channel once on mount (before useEffect)
-  if (!channelRef.current) {
-    channelRef.current = new BroadcastChannel("tsconline-chart");
-  }
-  const channel = channelRef.current;
-
+  // keep previewLockedRef up-to-date
   useEffect(() => {
-    const applyPayload = (payloadStr: string | null) => {
-      if (!payloadStr) return;
-      try {
-        const snap = JSON.parse(payloadStr);
-        if (!state.chartTab.previewLocked) {
-          // Only apply if not locked
-          actions.setChartTabState(state.chartTab.state, snap);
-        }
-      } catch (err) {
-        console.error("ChartPreview: invalid incoming snapshot", err);
-      }
-    };
+    previewLockedRef.current = !!state.chartTab.previewLocked;
+    console.log("ChartPreview: previewLocked =", previewLockedRef.current);
+    if (!previewLockedRef.current && currentChartSnapshotRef.current) {
+      applyPayload(currentChartSnapshotRef.current);
+    }
+  }, [state.chartTab.previewLocked]);
 
-    channel.onmessage = (ev) => {
+  // create channel once and attach listeners; clean up on unmount
+  useEffect(() => {
+    if (!channelRef.current) channelRef.current = new BroadcastChannel("tsconline-chart");
+    const channel = channelRef.current;
+
+    const onMessage = (ev: MessageEvent) => {
       try {
         const msg = ev.data;
-        if (msg?.type === "snapshot" && typeof msg.payload === "string") {
-          applyPayload(msg.payload);
-        }
+        if (msg?.type === "snapshot" && typeof msg.payload === "string") applyPayload(msg.payload);
+        currentChartSnapshotRef.current = msg.payload;
       } catch (e) {
         /* ignore */
       }
     };
 
-    // storage-event fallback
     const onStorage = (ev: StorageEvent) => {
-      if (ev.key === "chartPreview" && ev.newValue) {
-        applyPayload(ev.newValue);
-      }
+      if (ev.key === "chartPreview" && ev.newValue) applyPayload(ev.newValue);
     };
+
+    channel.addEventListener("message", onMessage);
     window.addEventListener("storage", onStorage);
 
-    // request an immediate snapshot from the main window(s)
+    // ask other windows for the latest snapshot if desired
     channel.postMessage({ type: "request" });
 
     return () => {
+      channel.removeEventListener("message", onMessage);
       window.removeEventListener("storage", onStorage);
+      channel.close();
+      channelRef.current = null;
     };
-  }, [state.chartTab.state, actions]);
-
-    // Cleanup channel on unmount
-  useEffect(() => {
-    return () => {
-      if (channelRef.current) {
-        channelRef.current.close();
-      }
-    };
+    // empty deps: one-time setup
   }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    let payload: string | null = null;
-    if (params.has("snapshot")) {
-      try {
-        payload = atob(params.get("snapshot") || "");
-      } catch {
-        payload = null;
-      }
-    }
-    // fallback to localStorage
-    if (!payload) {
-      payload = localStorage.getItem("chartPreview");
-    }
-    if (!payload) return;
+  const applyPayload = (payloadStr: string | null) => {
+    if (!payloadStr) return;
     try {
-      const snap = JSON.parse(payload);
-      // apply snapshot to current chart tab state (partial update)
-      actions.setChartTabState(state.chartTab.state, snap);
-      // remove local key to avoid reuse
-      localStorage.removeItem("chartPreview");
+      const snap = JSON.parse(payloadStr);
+      if (!previewLockedRef.current) {
+        actions.setChartTabState(state.chartTab.state, snap);
+      }
     } catch (err) {
-      console.error("ChartPreview: invalid snapshot", err);
+      console.error("ChartPreview: invalid incoming snapshot", err);
     }
-  }, [state.chartTab.state, actions, state.chartTab.previewLocked]);
+  };
 
   return (
     <ChartContext.Provider

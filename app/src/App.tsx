@@ -59,6 +59,7 @@ export default observer(function App() {
       cleanup();
     };
   }, []);
+
   useEffect(() => {
     const channel = new BroadcastChannel("tsconline-chart");
     const sendSnapshot = (snapObj: object) => {
