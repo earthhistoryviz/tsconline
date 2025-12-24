@@ -24,7 +24,7 @@ jobs:
         run: |
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MESSAGE"
-          PR_NUMBER=$(echo "$COMMIT_MESSAGE" | grep -oE '#[0-9]+' | tr -d '#')
+          PR_NUMBER=$(echo "$COMMIT_MESSAGE" | grep -oE 'Merge pull request #[0-9]+' | grep -oE '#[0-9]+' | head -1 | tr -d '#')
           if [ -z "$PR_NUMBER" ]; then
             echo "No PR number detected in the commit message."
             echo "pr_number=" >> $GITHUB_OUTPUT
