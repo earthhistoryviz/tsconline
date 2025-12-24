@@ -281,6 +281,7 @@ const looseRateLimit = rateLimitConfig(30);
 
 server.get("/mcp/datapacks", looseRateLimit, mcpRoutes.mcpListDatapacks);
 server.post("/mcp/generate-chart", looseRateLimit, mcpRoutes.mcpGenerateChart);
+server.post("/mcp/generate-settings", looseRateLimit, mcpRoutes.mcpGenerateSettings);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);

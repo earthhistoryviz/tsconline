@@ -1,9 +1,13 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { DatapackMetadata, ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
+import { DatapackMetadata, ChartRequest, ChartProgressUpdate, DatapackConfigForChartRequest, Datapack } from "@tsconline/shared";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks } from "../user/user-handler.js";
 import { extractMetadataFromDatapack } from "../util.js";
 import { generateChart } from "../chart-generation/generate-chart.js";
+import { buildSettingsFromDatapacks } from "../settings-generation/build-settings-from-datapacks.js";
+import { getCachedDatapackFromDirectory } from "../user/fetch-user-files.js";
+import path from "path";
+import { assetconfigs } from "../util.js";
 
 export async function mcpGenerateChart(_request: FastifyRequest, _reply: FastifyReply) {
   try {
@@ -32,4 +36,35 @@ export async function mcpListDatapacks(_request: FastifyRequest, reply: FastifyR
   const combined = [...publicDatapacks, ...officialDatapacks];
   const datapackMetadata: DatapackMetadata[] = combined.map((dp) => extractMetadataFromDatapack(dp));
   reply.send(datapackMetadata);
+}
+
+/**
+ * MCP route: generate settings XML from datapack metadata
+ */
+export async function mcpGenerateSettings(_request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const body = _request.body as { datapacks: DatapackConfigForChartRequest[] };
+    
+    if (!body.datapacks || !Array.isArray(body.datapacks)) {
+      reply.status(400).send({ error: "Invalid request: datapacks array is required" });
+      return;
+    }
+
+    console.log("body.datapacks:", JSON.stringify(body.datapacks, null, 2));
+
+    const publicDatapacks = await loadPublicUserDatapacks();
+    const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
+    const allDatapacks = [...publicDatapacks, ...officialDatapacks];
+    
+    const requestedDatapacks = allDatapacks.filter((dp) =>
+      body.datapacks.some((config) => config.storedFileName === dp.storedFileName)
+    );
+
+    const settingsXml = buildSettingsFromDatapacks(requestedDatapacks);
+    
+    reply.type("application/xml").send(settingsXml);
+  } catch (err) {
+    console.error("Error generating settings:", err);
+    reply.status(500).send({ error: String(err) });
+  }
 }

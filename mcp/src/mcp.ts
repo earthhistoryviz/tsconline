@@ -157,6 +157,73 @@ export const createMCPServer = () => {
     }
   );
 
+  server.registerTool(
+    "generateSettings",
+    {
+      title: "Generate Settings",
+      description: "Generate TSC settings XML from datapack metadata. This builds a default settings file based on the selected datapacks.",
+      inputSchema: {
+        datapacks: z.array(
+          z
+            .object({
+              storedFileName: z.string(),
+              title: z.string(),
+              isPublic: z.boolean()
+            })
+            .passthrough()
+        )
+      }
+    },
+    async ({ datapacks }) => {
+      try {
+        const validatedDatapacks: DatapackConfigForChartRequest[] = [];
+        for (const dp of datapacks) {
+          assertDatapackConfigForChartRequest(dp);
+          validatedDatapacks.push(dp as DatapackConfigForChartRequest);
+        }
+
+        const serverUrl = "http://localhost:3000";
+        const res = await fetch(`${serverUrl}/mcp/generate-settings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ datapacks: validatedDatapacks })
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Server error ${res.status}: ${text}`
+              }
+            ]
+          };
+        }
+
+        const settingsXml = await res.text();
+        return {
+          content: [
+            {
+              type: "text",
+              text: settingsXml,
+              mediaType: "application/xml"
+            }
+          ]
+        };
+      } catch (e) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error generating settings: ${String(e)}`
+            }
+          ]
+        };
+      }
+    }
+  );
+
   server.registerResource(
     "greeting",
     new ResourceTemplate("greeting://{name}", { list: undefined }),
