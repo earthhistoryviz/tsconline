@@ -41,44 +41,7 @@ async function generateBasicChart(page: Page) {
 test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
   await page.waitForTimeout(5000);
-
-  // Navigate to datapacks page
   await page.locator(".qsg-datapacks").click();
-  await page.waitForTimeout(1000);
-
-  // Clear any auto-loaded datapacks by clicking their selection circles
-  try {
-    // Target the specific selected datapack with checkmark (css-1oo4k8z indicates selected)
-    const selectedDatapackDiv = page.locator("div[class*='_cc_w61hf_'][class*='css-1oo4k8z']").first();
-
-    if (await selectedDatapackDiv.isVisible({ timeout: 2000 })) {
-      console.log("Found selected datapack, clicking to deselect...");
-      await selectedDatapackDiv.click();
-      await page.waitForTimeout(500);
-
-      // Confirm the deselection
-      const confirmButton = page.locator("text=Confirm Selection");
-      if (await confirmButton.isVisible({ timeout: 3000 })) {
-        console.log("Clicking Confirm Selection...");
-        await confirmButton.click();
-
-        // Wait for datapack processing to complete
-        await page
-          .locator("text=Loading Datapacks")
-          .waitFor({ state: "hidden", timeout: 5000 })
-          .catch(() => {
-            console.log("No loading indicator found");
-          });
-        await page.waitForTimeout(1000);
-        console.log("Datapack clearing completed");
-      }
-    } else {
-      console.log("No selected datapack found to clear");
-    }
-  } catch (error) {
-    console.log("Clear auto-loaded datapack failed:", error);
-  }
-
   await expect(page.locator("text=Africa Bight")).toBeVisible();
 });
 
