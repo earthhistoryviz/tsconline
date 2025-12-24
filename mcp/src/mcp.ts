@@ -2,6 +2,7 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import z from "zod";
 
 export const createMCPServer = () => {
+  console.log("Starting MCP server...");
   const server = new McpServer({
     name: "demo-server",
     version: "1.0.0",
@@ -19,9 +20,14 @@ export const createMCPServer = () => {
       description: "Add two numbers",
       inputSchema: { a: z.number(), b: z.number() }
     },
-    async ({ a, b }) => ({
-      content: [{ type: "text", text: String(a + b) }]
-    })
+    async ({ a, b }) => {
+      console.log(`MCP tool "add" invoked with`, { a, b });
+      const result = a + b;
+      console.log(`MCP tool "add" result:`, result);
+      return {
+        content: [{ type: "text", text: String(result) }]
+      };
+    }
   );
   server.registerTool(
     "subtract",

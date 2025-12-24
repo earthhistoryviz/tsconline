@@ -2,6 +2,7 @@
   "name": "tsconline-monorepo",
   "type": "module",
   "dependencies": {
+    "concurrently": "^8.2.2",
     "fastify": "^4.27.0"
   },
   "devDependencies": {
@@ -13,7 +14,6 @@
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.6.1",
     "@yarnpkg/sdks": "^3.0.0-rc.43",
-    "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-check-file": "^2.7.1",
@@ -41,9 +41,9 @@
     "start": "yarn workspace @tsconline/server start",
     "setup-files": "yarn workspace @tsconline/server run pull-supporting-files && yarn dev:config && yarn workspace @tsconline/server run init-translations && yarn workspace @tsconline/server run migrate-datapacks && yarn workspace @tsconline/server run pull-help",
     "dev:playwright": "yarn setup-files && concurrently \"NODE_ENV=test yarn start\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\"",
+    "dev": "yarn setup-files && concurrently \"yarn start\" \"yarn workspace @tsconline/mcp dev\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
+    "production": "concurrently \"yarn workspace @tsconline/server run production\" \"yarn workspace @tsconline/mcp start\"",
     "london-setup": "yarn workspace @tsconline/server run london",
-    "dev": "yarn setup-files && yarn london-setup && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
-    "production": "yarn workspace @tsconline/server run production",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
