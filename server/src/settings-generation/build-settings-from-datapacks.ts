@@ -22,7 +22,7 @@ type UnitColumnInfo = ColumnInfo & {
  * Merge multiple datapack column trees into a single root column
  * This follows the same logic as the frontend's set-datapack-config.ts
  */
-function mergeDatapackColumns(datapacks: Datapack[]): ColumnInfo {
+export function mergeDatapackColumns(datapacks: Datapack[]): ColumnInfo {
   if (datapacks.length === 0) {
     // Return default empty root
     return _.cloneDeep(defaultColumnRootConstant);
@@ -105,10 +105,17 @@ function mergeDatapackColumns(datapacks: Datapack[]): ColumnInfo {
 /**
  * Generate default chart settings based on datapack data
  */
-function generateDefaultChartSettings(datapacks: Datapack[]): ChartSettingsInfoTSC {
+export function generateDefaultChartSettings(datapacks: Datapack[]): ChartSettingsInfoTSC {
   const settings: ChartSettingsInfoTSC = _.cloneDeep(defaultChartSettingsInfoTSC);
 
   if (datapacks.length === 0) {
+    // No datapacks: provide sensible defaults so charts don't span 0–4600
+    const primaryUnit = "Ma";
+    settings.topAge.push({ source: "text", unit: primaryUnit, text: 0 });
+    settings.baseAge.push({ source: "text", unit: primaryUnit, text: 10 });
+    settings.unitsPerMY.push({ unit: primaryUnit, text: 2 * 30 });
+    settings.skipEmptyColumns.push({ unit: primaryUnit, text: true });
+    settings.variableColors = "UNESCO";
     return settings;
   }
 
@@ -117,23 +124,14 @@ function generateDefaultChartSettings(datapacks: Datapack[]): ChartSettingsInfoT
   let topAge: number | null = null;
   let baseAge: number | null = null;
   let primaryUnit = "Ma"; // default
-  let minAgeFromColumns = Number.POSITIVE_INFINITY;
-  let maxAgeFromColumns = Number.NEGATIVE_INFINITY;
+  // We no longer fall back to column ranges for defaults; AI or frontend sets ages
   let variableColors: string = "";
   const verticalScaleByUnit: Map<string, number> = new Map();
 
   for (const datapack of datapacks) {
     uniqueUnits.add(datapack.ageUnits);
 
-    // Track min/max ages from column ranges when they are valid
-    if (
-      datapack.columnInfo &&
-      datapack.columnInfo.minAge !== Number.MAX_VALUE &&
-      datapack.columnInfo.maxAge !== Number.MIN_VALUE
-    ) {
-      minAgeFromColumns = Math.min(minAgeFromColumns, datapack.columnInfo.minAge);
-      maxAgeFromColumns = Math.max(maxAgeFromColumns, datapack.columnInfo.maxAge);
-    }
+    // Do not derive defaults from column global ranges
 
     // Use the first datapack's ages and unit as primary when provided explicitly
     if (topAge === null && datapack.topAge !== undefined) {
@@ -159,42 +157,26 @@ function generateDefaultChartSettings(datapacks: Datapack[]): ChartSettingsInfoT
     }
   }
 
-  // If no explicit ages, fall back to column ranges when they are valid
-  if (topAge === null && minAgeFromColumns !== Number.POSITIVE_INFINITY) {
-    topAge = minAgeFromColumns;
-  }
-  if (baseAge === null && maxAgeFromColumns !== Number.NEGATIVE_INFINITY) {
-    baseAge = maxAgeFromColumns;
-  }
+  // If AI/datapacks didn't provide ages, default to 0–10 in primary unit
+  if (topAge === null || topAge === undefined) topAge = 0;
+  if (baseAge === null || baseAge === undefined) baseAge = 10;
 
-  // Add topAge and baseAge when known (use "text" to match preset format)
-  if (topAge !== null && topAge !== undefined) {
-    settings.topAge.push({
-      source: "text",
-      unit: primaryUnit,
-      text: topAge
-    });
-  }
-
-  if (baseAge !== null && baseAge !== undefined) {
-    settings.baseAge.push({
-      source: "text",
-      unit: primaryUnit,
-      text: baseAge
-    });
-  }
+  // Add top/base ages (use "text" to match preset format)
+  settings.topAge.push({ source: "text", unit: primaryUnit, text: topAge });
+  settings.baseAge.push({ source: "text", unit: primaryUnit, text: baseAge });
 
   // Set variableColors to datapack defaultChronostrat when available (UNESCO/USGS)
   if (variableColors) {
     settings.variableColors = variableColors;
   }
 
-  // Add unitsPerMY for each unique unit found, preferring verticalScale when provided
+  // Add unitsPerMY for each unique unit found (UI units → XML value = *30)
   for (const unit of uniqueUnits) {
-    const verticalScale = verticalScaleByUnit.get(unit);
+    const uiUnits = verticalScaleByUnit.get(unit) ?? 2;
+    // Store XML value to match frontend parse-settings behavior
     settings.unitsPerMY.push({
       unit: unit,
-      text: verticalScale ?? 20 // fallback to default 20 when verticalScale is absent
+      text: uiUnits * 30
     });
     // Match preset behavior: skip empty columns by default
     settings.skipEmptyColumns.push({ unit, text: true });

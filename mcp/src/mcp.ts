@@ -224,6 +224,126 @@ export const createMCPServer = () => {
     }
   );
 
+  server.registerTool(
+    "getSettingsSchema",
+    {
+      title: "Get Settings Schema",
+      description: "Get a simplified JSON schema showing available columns and settings for the selected datapacks. This is useful for understanding what can be configured before generating a chart.",
+      inputSchema: {
+        datapackTitles: z.array(z.string()).describe("Array of datapack titles to get settings schema for")
+      }
+    },
+    async ({ datapackTitles }) => {
+      try {
+        const serverUrl = "http://localhost:3000";
+        const res = await fetch(`${serverUrl}/mcp/get-settings-schema`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ datapackTitles })
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Server error ${res.status}: ${text}`
+              }
+            ]
+          };
+        }
+
+        const schema = await res.json();
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(schema, null, 2)
+            }
+          ]
+        };
+      } catch (e) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error getting settings schema: ${String(e)}`
+            }
+          ]
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "generateChartWithSchema",
+    {
+      title: "Generate Chart with Settings Schema",
+      description: "Generate a chart by providing datapack titles and a settings schema object (obtained from getSettingsSchema). Modify the schema to customize the chart appearance.",
+      inputSchema: {
+        datapackTitles: z.array(z.string()).describe("Array of datapack titles to use"),
+        settingsSchema: z.object({
+          columns: z.array(z.any()).describe("Array of column configurations"),
+          chartSettings: z.object({}).passthrough().describe("Chart-level settings")
+        }).passthrough(),
+        useCache: z.boolean().optional(),
+        isCrossPlot: z.boolean().optional()
+      }
+    },
+    async ({ datapackTitles, settingsSchema, useCache, isCrossPlot }) => {
+      try {
+        const serverUrl = "http://localhost:3000";
+        const res = await fetch(`${serverUrl}/mcp/generate-chart-with-schema`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            datapackTitles,
+            settingsSchema,
+            useCache: useCache ?? true,
+            isCrossPlot: isCrossPlot ?? false
+          })
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Server error ${res.status}: ${JSON.stringify(json)}`
+              }
+            ]
+          };
+        }
+
+        const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
+        const filePath = path.join("..", "server", chartPath);
+        const svg = await readFile(filePath, "utf8");
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: svg,
+              mediaType: "image/svg+xml"
+            }
+          ]
+        };
+      } catch (e) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error generating chart with schema: ${String(e)}`
+            }
+          ]
+        };
+      }
+    }
+  );
+
   server.registerResource(
     "greeting",
     new ResourceTemplate("greeting://{name}", { list: undefined }),
