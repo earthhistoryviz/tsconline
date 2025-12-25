@@ -1,67 +1,46 @@
 import {
   ColumnInfo,
-  DatapackConfigForChartRequest,
   Datapack,
   defaultChartSettingsInfoTSC,
   ChartSettingsInfoTSC,
   defaultColumnRootConstant,
-  ValidFontOptions,
   FontsInfo
 } from "@tsconline/shared";
-import { jsonToXml } from "./settings-to-xml.js";
 import _ from "lodash";
 
 /**
- * Type for tracking unit columns with their datapack identifiers
- */
-type UnitColumnInfo = ColumnInfo & {
-  datapackUniqueIdentifiers?: { title: string; isPublic: boolean }[];
-};
-
-/**
- * Merge multiple datapack column trees into a single root column
- * This follows the same logic as the frontend's set-datapack-config.ts
+ * Merge multiple datapack column trees into a single root column.
+ * Replicates frontend worker logic to ensure consistency.
  */
 export function mergeDatapackColumns(datapacks: Datapack[]): ColumnInfo {
   if (datapacks.length === 0) {
-    // Return default empty root
     return _.cloneDeep(defaultColumnRootConstant);
   }
 
-  // Start with the Chart Root structure
   const root: ColumnInfo = _.cloneDeep(defaultColumnRootConstant);
   root.name = "Chart Root";
   root.editName = "Chart Root";
   root.children = [];
-  root.enableTitle = false; // Chart Root should not draw title by default
-  
-  // Keep font inheritance as false for Chart Root (matching preset behavior)
+  root.enableTitle = false;
+
+  // Chart root fonts inheritable (matching frontend)
   for (const opt in root.fontsInfo) {
-    root.fontsInfo[opt as keyof FontsInfo].inheritable = false;
+    root.fontsInfo[opt as keyof FontsInfo].inheritable = true;
   }
 
-  // Group datapacks by their age units (same as frontend's unitMap)
-  const unitMap: Map<string, UnitColumnInfo> = new Map();
+  const unitMap: Map<string, ColumnInfo & { datapackUniqueIdentifiers?: { title: string; isPublic: boolean }[] }> =
+    new Map();
 
-  // Process each datapack
   for (const datapack of datapacks) {
     if (!datapack.columnInfo || datapack.columnInfo.children.length === 0) continue;
 
-    const ageUnits = datapack.ageUnits;
-
-    if (unitMap.has(ageUnits)) {
-      // This unit already exists, merge children (skip the ruler column which is first child)
-      const existingUnitColumnInfo = unitMap.get(ageUnits)!;
-      const newUnitChart = datapack.columnInfo;
-      
-      // Slice off the ruler column (first child) and add the rest
-      const columnsToAdd = _.cloneDeep(newUnitChart.children.slice(1));
+    if (unitMap.has(datapack.ageUnits)) {
+      const existingUnitColumnInfo = unitMap.get(datapack.ageUnits)!;
+      const columnsToAdd = _.cloneDeep(datapack.columnInfo.children.slice(1));
       for (const child of columnsToAdd) {
         child.parent = existingUnitColumnInfo.name;
       }
       existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
-      
-      // Track which datapacks contributed to this unit column
       if (existingUnitColumnInfo.datapackUniqueIdentifiers) {
         existingUnitColumnInfo.datapackUniqueIdentifiers.push({
           title: datapack.title,
@@ -69,33 +48,29 @@ export function mergeDatapackColumns(datapacks: Datapack[]): ColumnInfo {
         });
       }
     } else {
-      // First time seeing this unit, add the whole structure
-      const columnInfo = _.cloneDeep(datapack.columnInfo) as UnitColumnInfo;
+      const columnInfo = _.cloneDeep(datapack.columnInfo) as ColumnInfo & {
+        datapackUniqueIdentifiers?: { title: string; isPublic: boolean }[];
+      };
       columnInfo.parent = root.name;
-      columnInfo.datapackUniqueIdentifiers = [{
-        title: datapack.title,
-        isPublic: datapack.isPublic
-      }];
-      unitMap.set(ageUnits, columnInfo);
+      columnInfo.datapackUniqueIdentifiers = [
+        {
+          title: datapack.title,
+          isPublic: datapack.isPublic
+        }
+      ];
+      unitMap.set(datapack.ageUnits, columnInfo);
     }
   }
 
-  // Process the unit map to build the final structure
   for (const [unit, column] of unitMap) {
-    // Rename non-Ma units to avoid collisions
     if (unit.toLowerCase() !== "ma" && column.name === "Chart Title") {
       column.name = column.name + " in " + unit;
       column.editName = unit;
-      // Update parent references in children
       for (const child of column.children) {
         child.parent = column.name;
       }
     }
-    
-    // Merge font options from this unit column into root
     root.fontOptions = Array.from(new Set([...root.fontOptions, ...column.fontOptions]));
-    
-    // Add this unit column structure as a child of Chart Root
     root.children.push(column);
   }
 
@@ -183,26 +158,4 @@ export function generateDefaultChartSettings(datapacks: Datapack[]): ChartSettin
   }
 
   return settings;
-}
-
-/**
- * Main function: Build settings XML from datapacks
- * @param datapacks - Array of full Datapack objects (not just metadata)
- */
-export function buildSettingsFromDatapacks(datapacks: Datapack[]): string {
-    // console.log("Building settings from datapacks:", datapacks.map(dp => dp.title));
-    // console.log("datapacks details:", JSON.stringify(datapacks, null, 2));
-
-  // Merge columns from all datapacks
-  const columnRoot = mergeDatapackColumns(datapacks);
-//   console.log("Merged column root:", JSON.stringify(columnRoot, null, 2));
-
-  // Generate default settings
-  const chartSettings = generateDefaultChartSettings(datapacks);
-  console.log("Generated chart settings:", JSON.stringify(chartSettings, null, 2));
-
-  // Convert to XML
-  const settingsXml = jsonToXml(columnRoot, chartSettings);
-
-  return settingsXml;
 }

@@ -1,9 +1,4 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-  assertDatapackConfigForChartRequest,
-  type DatapackConfigForChartRequest,
-  type ChartRequest
-} from "@tsconline/shared";
 import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
@@ -52,8 +47,16 @@ export const createMCPServer = () => {
   server.registerTool(
     "listDatapacks",
     {
-      title: "List Datapacks",
-      description: "Fetch the current public and official datapacks from the main server",
+      title: "List Available Datapacks",
+      description: `Lists all available datapacks (geological timescales and data columns) that can be used to create charts.
+      
+Each datapack contains columns of geological/paleontological data. Common datapacks include:
+- GTS2020: Geological Time Scale 2020 with epochs, periods, eras
+- Paleobiology: Fossil occurrence and diversity data
+- Regional timescales: Africa, Europe, Asia, etc.
+- Specialty data: Sea level, climate, events, etc.
+
+Returns an array of datapack objects with 'title' and 'id' fields. Use the 'title' field when requesting schemas or generating charts.`,
       inputSchema: {}
     },
     async () => {
@@ -74,163 +77,54 @@ export const createMCPServer = () => {
   );
 
   server.registerTool(
-    "generateChart",
-    {
-      title: "Generate Chart",
-      description: "Send settings + datapack metadata to the main server to generate a chart",
-      inputSchema: {
-        settings: z.string(),
-        datapacks: z.array(
-          z
-            .object({
-              storedFileName: z.string(),
-              title: z.string(),
-              isPublic: z.boolean()
-            })
-            .passthrough()
-        ),
-        useCache: z.boolean().optional(),
-        isCrossPlot: z.boolean().optional()
-      }
-    },
-    async ({ settings, datapacks, useCache, isCrossPlot }) => {
-      try {
-        const validatedDatapacks: DatapackConfigForChartRequest[] = [];
-        for (const dp of datapacks) {
-          assertDatapackConfigForChartRequest(dp);
-          validatedDatapacks.push(dp as DatapackConfigForChartRequest);
-        }
-
-        const chartRequest: ChartRequest = {
-          settings,
-          datapacks: validatedDatapacks,
-          useCache: useCache ?? true,
-          isCrossPlot: isCrossPlot ?? false
-        };
-
-        const serverUrl = "http://localhost:3000"; // adjust if needed
-        const res = await fetch(`${serverUrl}/mcp/generate-chart`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(chartRequest)
-        });
-
-        const json = await res.json();
-
-        if (!res.ok) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Server error ${res.status}: ${JSON.stringify(json)}`
-              }
-            ]
-          };
-        }
-        console.log("Chart generation response:", json);
-        const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
-        console.log("chart path", path.join("..", "server", chartPath));
-        const filePath = path.join("..", "server", chartPath);
-        const svg = await readFile(filePath, "utf8"); // read SVG as text
-
-        // Return the raw SVG content (as text). If you prefer a data URI or base64,
-        // replace the returned object accordingly.
-        return {
-          content: [
-            {
-              type: "text",
-              text: svg,
-              mediaType: "image/svg+xml"
-            }
-          ]
-        };
-      } catch (e) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error generating chart: ${String(e)}`
-            }
-          ]
-        };
-      }
-    }
-  );
-
-  server.registerTool(
-    "generateSettings",
-    {
-      title: "Generate Settings",
-      description: "Generate TSC settings XML from datapack metadata. This builds a default settings file based on the selected datapacks.",
-      inputSchema: {
-        datapacks: z.array(
-          z
-            .object({
-              storedFileName: z.string(),
-              title: z.string(),
-              isPublic: z.boolean()
-            })
-            .passthrough()
-        )
-      }
-    },
-    async ({ datapacks }) => {
-      try {
-        const validatedDatapacks: DatapackConfigForChartRequest[] = [];
-        for (const dp of datapacks) {
-          assertDatapackConfigForChartRequest(dp);
-          validatedDatapacks.push(dp as DatapackConfigForChartRequest);
-        }
-
-        const serverUrl = "http://localhost:3000";
-        const res = await fetch(`${serverUrl}/mcp/generate-settings`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ datapacks: validatedDatapacks })
-        });
-
-        if (!res.ok) {
-          const text = await res.text();
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Server error ${res.status}: ${text}`
-              }
-            ]
-          };
-        }
-
-        const settingsXml = await res.text();
-        return {
-          content: [
-            {
-              type: "text",
-              text: settingsXml,
-              mediaType: "application/xml"
-            }
-          ]
-        };
-      } catch (e) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error generating settings: ${String(e)}`
-            }
-          ]
-        };
-      }
-    }
-  );
-
-  server.registerTool(
     "getSettingsSchema",
     {
-      title: "Get Settings Schema",
-      description: "Get a simplified JSON schema showing available columns and settings for the selected datapacks. This is useful for understanding what can be configured before generating a chart.",
+      title: "Get Chart Settings Schema",
+      description: `Retrieves a JSON schema showing all available columns and settings for the selected datapacks.
+      
+IMPORTANT: Always call this FIRST before generating a chart to see what's available and get the default configuration.
+
+The schema has two main sections:
+
+1. COLUMNS ARRAY: Controls which data columns appear in the chart
+   - Each column has:
+     * 'id': Unique identifier for the column
+     * 'name': Display name (what appears on the chart)
+     * 'type': Column type (e.g., "zone", "event", "sequence", "range", "chron")
+     * 'on': boolean - TRUE to show column, FALSE to hide it
+     * 'enableTitle': boolean - TRUE to show column name/header, FALSE to hide
+     * 'children': Nested sub-columns (can be turned on/off independently)
+
+2. CHART SETTINGS OBJECT: Global chart configuration
+   - 'topAge': Top of time range (younger age, in millions of years)
+   - 'baseAge': Bottom of time range (older age, in millions of years)
+   - 'unitsPerMY': Array of vertical scale settings by unit (e.g., [{unit: "Ma", value: 2}] means 2 pixels per million years)
+     * LARGER values = MORE STRETCHED vertically (chart is taller)
+     * SMALLER values = MORE COMPRESSED vertically (chart is shorter)
+     * Default is 2, typical range is 0.5 to 10
+   - 'skipEmptyColumns': Skip columns with no data in the time range
+   - 'variableColors': Color scheme for blocks ("rainbow", "modulated", "timescale", etc.)
+   - 'noIndentPattern': Don't indent chronostratigraphic subdivisions
+   - 'negativeChk': Enable negative ages (for future dates)
+   - 'doPopups': Enable hover tooltips
+   - 'enEventColBG': Show background in event columns
+   - 'enChartLegend': Show chart legend
+   - 'enPriority': Enable priority-based column ordering
+   - 'enHideBlockLable': Hide block labels/text
+
+USAGE EXAMPLES:
+- To turn a column ON: Set column.on = true
+- To turn a column OFF: Set column.on = false
+- To show column header: Set column.enableTitle = true
+- To change age range: Set baseAge = 10, topAge = 0 (shows 0-10 Ma)
+- To make chart taller: Increase unitsPerMY value (e.g., from 2 to 5)
+- To make chart shorter: Decrease unitsPerMY value (e.g., from 2 to 1)`,
       inputSchema: {
-        datapackTitles: z.array(z.string()).describe("Array of datapack titles to get settings schema for")
+        datapackTitles: z
+          .array(z.string())
+          .describe(
+            "Array of datapack titles to merge (e.g., ['GTS2020', 'Paleobiology']). Get available titles from listDatapacks tool."
+          )
       }
     },
     async ({ datapackTitles }) => {
@@ -279,16 +173,113 @@ export const createMCPServer = () => {
   server.registerTool(
     "generateChartWithSchema",
     {
-      title: "Generate Chart with Settings Schema",
-      description: "Generate a chart by providing datapack titles and a settings schema object (obtained from getSettingsSchema). Modify the schema to customize the chart appearance.",
+      title: "Generate Geological Time Scale Chart",
+      description: `Generates a geological timescale chart (SVG image) using the provided datapacks and customized settings schema.
+
+WORKFLOW:
+1. Call listDatapacks to see available datapacks
+2. Call getSettingsSchema with desired datapack titles to get the default schema
+3. Modify the schema JSON to customize the chart (turn columns on/off, change ages, adjust scale, etc.)
+4. Call this tool with the modified schema to generate the chart
+
+MODIFYING THE SCHEMA:
+
+COLUMN CONTROLS (in 'columns' array):
+- Turn column ON: Find the column by name and set "on": true
+- Turn column OFF: Find the column by name and set "on": false
+- Hide column title: Set "enableTitle": false
+- Show column title: Set "enableTitle": true
+- Work with nested columns: Navigate through "children" arrays to find sub-columns
+
+AGE RANGE (in 'chartSettings'):
+- Set time window: Modify "topAge" (younger) and "baseAge" (older)
+  Example: "topAge": 0, "baseAge": 10 shows 0-10 million years ago
+  Example: "topAge": 65, "baseAge": 250 shows Mesozoic Era (65-250 Ma)
+
+VERTICAL SCALE (in 'chartSettings.unitsPerMY'):
+- Controls chart height - how stretched/compressed the time axis is
+- Modify the "value" for the unit being used (usually "Ma")
+- LARGER value = TALLER chart (more stretched)
+- SMALLER value = SHORTER chart (more compressed)
+  Example: "value": 2 is default (2 pixels per million years)
+  Example: "value": 5 makes chart 2.5x taller
+  Example: "value": 1 makes chart 2x shorter
+
+APPEARANCE (boolean flags in 'chartSettings'):
+- "skipEmptyColumns": true/false - Hide columns with no data in range
+- "doPopups": true/false - Enable hover tooltips on blocks
+- "enChartLegend": true/false - Show/hide legend
+- "enEventColBG": true/false - Background color for event columns
+- "variableColors": Color scheme ("rainbow", "modulated", "timescale")
+
+COMMON REQUESTS:
+- "Make chart for 0-10 Ma": Set topAge: 0, baseAge: 10
+- "Turn on Africa column": Find column with name containing "Africa", set on: true
+- "Make chart twice as tall": Double the unitsPerMY value (e.g., 2 → 4)
+- "Hide all event columns": Find columns with type: "event", set on: false
+- "Show only GTS2020 stages": Turn off all columns except stage-related ones
+
+The tool returns the chart as an SVG image that can be displayed or saved.`,
       inputSchema: {
-        datapackTitles: z.array(z.string()).describe("Array of datapack titles to use"),
-        settingsSchema: z.object({
-          columns: z.array(z.any()).describe("Array of column configurations"),
-          chartSettings: z.object({}).passthrough().describe("Chart-level settings")
-        }).passthrough(),
-        useCache: z.boolean().optional(),
-        isCrossPlot: z.boolean().optional()
+        datapackTitles: z
+          .array(z.string())
+          .describe("Array of datapack titles to use (same as used in getSettingsSchema)"),
+        settingsSchema: z
+          .object({
+            columns: z
+              .array(
+                z
+                  .object({
+                    id: z.string(),
+                    name: z.string(),
+                    type: z.string(),
+                    on: z.boolean(),
+                    enableTitle: z.boolean(),
+                    children: z.array(z.any()).optional()
+                  })
+                  .passthrough()
+              )
+              .describe("Array of column configurations with on/off state, titles, and nested children"),
+            chartSettings: z
+              .object({
+                topAge: z.number().optional().describe("Top of time range (younger age) in millions of years"),
+                baseAge: z.number().optional().describe("Bottom of time range (older age) in millions of years"),
+                unitsPerMY: z
+                  .array(
+                    z.object({
+                      unit: z.string(),
+                      value: z.number()
+                    })
+                  )
+                  .describe(
+                    "Vertical scale: pixels per million years. LARGER = taller chart. Default is 2, typical range 0.5-10"
+                  ),
+                skipEmptyColumns: z
+                  .array(
+                    z.object({
+                      unit: z.string(),
+                      value: z.boolean()
+                    })
+                  )
+                  .optional(),
+                variableColors: z.string().optional().describe("Color scheme: rainbow, modulated, timescale, etc."),
+                noIndentPattern: z.boolean().optional(),
+                negativeChk: z.boolean().optional(),
+                doPopups: z.boolean().optional().describe("Enable hover tooltips"),
+                enEventColBG: z.boolean().optional(),
+                enChartLegend: z.boolean().optional().describe("Show chart legend"),
+                enPriority: z.boolean().optional(),
+                enHideBlockLable: z.boolean().optional()
+              })
+              .passthrough()
+              .describe("Chart-level settings: age range, vertical scale, colors, and display options")
+          })
+          .passthrough()
+          .describe(
+            "Complete settings schema (from getSettingsSchema) with your modifications applied to columns and chartSettings"
+          ),
+        useCache: z.boolean().optional().describe("Use cached chart if available (default: true)"),
+        isCrossPlot: z.boolean().optional().describe("Generate as cross-plot chart (default: false)")
       }
     },
     async ({ datapackTitles, settingsSchema, useCache, isCrossPlot }) => {

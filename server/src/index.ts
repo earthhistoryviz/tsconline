@@ -280,8 +280,6 @@ const moderateRateLimit = rateLimitConfig(20);
 const looseRateLimit = rateLimitConfig(30);
 
 server.get("/mcp/datapacks", looseRateLimit, mcpRoutes.mcpListDatapacks);
-server.post("/mcp/generate-chart", looseRateLimit, mcpRoutes.mcpGenerateChart);
-server.post("/mcp/generate-settings", looseRateLimit, mcpRoutes.mcpGenerateSettings);
 server.post("/mcp/get-settings-schema", looseRateLimit, mcpRoutes.mcpGetDatapackSettingsSchema);
 server.post("/mcp/generate-chart-with-schema", looseRateLimit, mcpRoutes.mcpGenerateChartWithSchema);
 

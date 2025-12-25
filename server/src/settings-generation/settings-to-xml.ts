@@ -37,10 +37,7 @@ import _ from "lodash";
  */
 function escapeHtmlChars(str: string, type: "text" | "attribute"): string {
   if (!str) return str;
-  let escaped = str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  let escaped = str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   if (type === "attribute") {
     escaped = escaped.replace(/"/g, "&quot;").replace(/'/g, "&apos;");
   }
@@ -70,14 +67,6 @@ function extractColumnType(text: string): string | undefined {
     return undefined;
   }
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
-}
-
-/**
- * Extract name from _id (e.g., "class datastore.EventColumn:Name" returns "Name")
- */
-function extractName(text: string): string {
-  if (text.indexOf(":") === -1) return text;
-  return text.substring(text.indexOf(":") + 1);
 }
 
 /**
@@ -128,9 +117,9 @@ function attachTscPrefixToName(name: string, columnDisplayType: string): string 
 /**
  * Generate XML for chart settings
  */
-export function generateSettingsXml(settings: any, indent: string): string {
+export function generateSettingsXml(settings: ChartSettingsInfoTSC, indent: string): string {
   let xml = "";
-  
+
   // Top age settings
   if (settings.topAge && Array.isArray(settings.topAge)) {
     for (const age of settings.topAge) {
@@ -140,7 +129,7 @@ export function generateSettingsXml(settings: any, indent: string): string {
       xml += `${indent}</setting>\n`;
     }
   }
-  
+
   // Base age settings
   if (settings.baseAge && Array.isArray(settings.baseAge)) {
     for (const age of settings.baseAge) {
@@ -150,21 +139,21 @@ export function generateSettingsXml(settings: any, indent: string): string {
       xml += `${indent}</setting>\n`;
     }
   }
-  
+
   // Units per MY
   if (settings.unitsPerMY && Array.isArray(settings.unitsPerMY)) {
     for (const unit of settings.unitsPerMY) {
       xml += `${indent}<setting name="unitsPerMY" unit="${unit.unit}">${unit.text}</setting>\n`;
     }
   }
-  
+
   // Skip empty columns
   if (settings.skipEmptyColumns && Array.isArray(settings.skipEmptyColumns)) {
     for (const skip of settings.skipEmptyColumns) {
       xml += `${indent}<setting name="skipEmptyColumns" unit="${skip.unit}">${skip.text}</setting>\n`;
     }
   }
-  
+
   // Other settings
   xml += `${indent}<setting name="variableColors">${settings.variableColors || ""}</setting>\n`;
   xml += `${indent}<setting name="noIndentPattern">${settings.noIndentPattern || false}</setting>\n`;
@@ -174,7 +163,7 @@ export function generateSettingsXml(settings: any, indent: string): string {
   xml += `${indent}<setting name="enChartLegend">${settings.enChartLegend || false}</setting>\n`;
   xml += `${indent}<setting name="enPriority">${settings.enPriority || false}</setting>\n`;
   xml += `${indent}<setting name="enHideBlockLable">${settings.enHideBlockLable || false}</setting>\n`;
-  
+
   return xml;
 }
 
@@ -183,10 +172,10 @@ export function generateSettingsXml(settings: any, indent: string): string {
  */
 export function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   if (!fontsInfo) return "";
-  
+
   const defInfo = JSON.parse(JSON.stringify(defaultFontsInfo));
   let xml = "";
-  
+
   for (const key in fontsInfo) {
     const fontTarget = fontsInfo[key as keyof FontsInfo];
     if (!fontTarget.on || JSON.stringify(fontTarget) === JSON.stringify(defInfo[key])) {
@@ -201,7 +190,7 @@ export function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string 
       xml += `</font>\n`;
     }
   }
-  
+
   return xml;
 }
 
@@ -210,7 +199,7 @@ export function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string 
  */
 export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInfoTSC {
   let column: ColumnInfoTSC = _.cloneDeep(defaultColumnBasicInfoTSC);
-  
+
   switch (state.columnDisplayType) {
     case "Event":
       assertEventSettings(state.columnSpecificSettings);
@@ -304,7 +293,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
   }
-  
+
   column._id = attachTscPrefixToName(state.name, state.columnDisplayType);
   column.title = escapeHtmlChars(state.editName, "text");
   column.isSelected = state.on;
@@ -324,11 +313,11 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.children = [];
   if (state.showAgeLabels) column.drawAgeLabel = state.showAgeLabels;
   if (state.showUncertaintyLabels) column.drawUncertaintyLabel = state.showUncertaintyLabels;
-  
+
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]!));
   }
-  
+
   return column;
 }
 
@@ -349,12 +338,12 @@ export function columnInfoToSettingsTSC(state: ColumnInfo): ChartInfoTSC {
  */
 export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
-  
+
   for (const key in column) {
     const keyValue = column[key as keyof ColumnInfoTSC];
-    
+
     if (key === "_id") continue;
-    
+
     if (key === "title") {
       let title = column[key];
       if (/^Age \d+ for .+$/.test(column[key])) {
@@ -436,20 +425,16 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
       xml += `${indent}<setting name="${key}">${keyValue}</setting>\n`;
     }
   }
-  
+
   return xml;
 }
 
 /**
  * Main function to convert ColumnInfo to XML settings
  */
-export function jsonToXml(
-  state: ColumnInfo,
-  settings: any = {},
-  version: string = "PRO8.1"
-): string {
+export function jsonToXml(state: ColumnInfo, settings: ChartSettingsInfoTSC, version: string = "PRO8.1"): string {
   const settingsTSC = columnInfoToSettingsTSC(state);
-  
+
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   xml += '    <settings version="1.0">\n';
@@ -459,6 +444,6 @@ export function jsonToXml(
   xml += columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
   xml += "    </column>\n";
   xml += "</TSCreator>";
-  
+
   return xml;
 }

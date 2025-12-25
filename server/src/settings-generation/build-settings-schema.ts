@@ -1,5 +1,4 @@
-import { Datapack, ColumnInfo, ChartSettingsInfoTSC, defaultChartSettingsInfoTSC } from "@tsconline/shared";
-import _ from "lodash";
+import { Datapack, ColumnInfo, ChartSettingsInfoTSC } from "@tsconline/shared";
 
 /**
  * Simplified column schema for AI to understand available columns
