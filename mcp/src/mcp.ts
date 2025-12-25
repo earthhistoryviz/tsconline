@@ -1,9 +1,4 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-  assertDatapackConfigForChartRequest,
-  type DatapackConfigForChartRequest,
-  type ChartRequest
-} from "@tsconline/shared";
 import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
