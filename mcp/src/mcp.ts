@@ -3,6 +3,43 @@ import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
 
+// Define recursive column schema for MCP validation
+const ColumnSchema: z.ZodTypeAny = z.lazy(() =>
+  z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      type: z.string(),
+      on: z.boolean(),
+      enableTitle: z.boolean(),
+      children: z.array(ColumnSchema).optional()
+    })
+    .passthrough()
+);
+
+// Define complete settings schema
+const SettingsSchema = z
+  .object({
+    columns: z.array(ColumnSchema),
+    chartSettings: z
+      .object({
+        topAge: z.number().optional(),
+        baseAge: z.number().optional(),
+        unitsPerMY: z.array(z.object({ unit: z.string(), value: z.number() })),
+        skipEmptyColumns: z.array(z.object({ unit: z.string(), value: z.boolean() })).optional(),
+        variableColors: z.string().optional(),
+        noIndentPattern: z.boolean().optional(),
+        negativeChk: z.boolean().optional(),
+        doPopups: z.boolean().optional(),
+        enEventColBG: z.boolean().optional(),
+        enChartLegend: z.boolean().optional(),
+        enPriority: z.boolean().optional(),
+        enHideBlockLable: z.boolean().optional()
+      })
+      .passthrough()
+  })
+  .passthrough();
+
 export const createMCPServer = () => {
   console.log("Starting MCP server...");
   const server = new McpServer({
@@ -224,60 +261,9 @@ The tool returns the chart as an SVG image that can be displayed or saved.`,
         datapackTitles: z
           .array(z.string())
           .describe("Array of datapack titles to use (same as used in getSettingsSchema)"),
-        settingsSchema: z
-          .object({
-            columns: z
-              .array(
-                z
-                  .object({
-                    id: z.string(),
-                    name: z.string(),
-                    type: z.string(),
-                    on: z.boolean(),
-                    enableTitle: z.boolean(),
-                    children: z.array(z.any()).optional()
-                  })
-                  .passthrough()
-              )
-              .describe("Array of column configurations with on/off state, titles, and nested children"),
-            chartSettings: z
-              .object({
-                topAge: z.number().optional().describe("Top of time range (younger age) in millions of years"),
-                baseAge: z.number().optional().describe("Bottom of time range (older age) in millions of years"),
-                unitsPerMY: z
-                  .array(
-                    z.object({
-                      unit: z.string(),
-                      value: z.number()
-                    })
-                  )
-                  .describe(
-                    "Vertical scale: pixels per million years. LARGER = taller chart. Default is 2, typical range 0.5-10"
-                  ),
-                skipEmptyColumns: z
-                  .array(
-                    z.object({
-                      unit: z.string(),
-                      value: z.boolean()
-                    })
-                  )
-                  .optional(),
-                variableColors: z.string().optional().describe("Color scheme: rainbow, modulated, timescale, etc."),
-                noIndentPattern: z.boolean().optional(),
-                negativeChk: z.boolean().optional(),
-                doPopups: z.boolean().optional().describe("Enable hover tooltips"),
-                enEventColBG: z.boolean().optional(),
-                enChartLegend: z.boolean().optional().describe("Show chart legend"),
-                enPriority: z.boolean().optional(),
-                enHideBlockLable: z.boolean().optional()
-              })
-              .passthrough()
-              .describe("Chart-level settings: age range, vertical scale, colors, and display options")
-          })
-          .passthrough()
-          .describe(
-            "Complete settings schema (from getSettingsSchema) with your modifications applied to columns and chartSettings"
-          ),
+        settingsSchema: SettingsSchema.describe(
+          "Complete settings schema (from getSettingsSchema) with your modifications applied to columns and chartSettings"
+        ),
         useCache: z.boolean().optional().describe("Use cached chart if available (default: true)"),
         isCrossPlot: z.boolean().optional().describe("Generate as cross-plot chart (default: false)")
       }
