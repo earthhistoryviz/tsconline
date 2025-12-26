@@ -292,7 +292,6 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
 
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
         const filePath = path.join("..", "server", chartPath);
-        const absolutePath = path.resolve(filePath);
         const svg = await readFile(filePath, "utf8");
 
         return {
