@@ -229,6 +229,11 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
       title: "Render Chart with Edits",
       description: `Generate a chart by sending only small edits (overrides + column toggles), not the full schema.
 
+  Output:
+  - Returns a direct Chart URL (HTTP link) to the generated SVG
+  - Also includes a local file resource when running locally
+  - Click the Chart URL to view the SVG inline in your browser
+
   Flow:
   1) If unsure what's available, call listDatapacks; to see ids, call listColumns (datapackTitles).
   2) Call renderChartWithEdits with:
@@ -283,16 +288,25 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
 
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
         const filePath = path.join("..", "server", chartPath);
+        const absolutePath = path.resolve(filePath);
         const svg = await readFile(filePath, "utf8");
+        const httpUrl = `${serverUrl}${chartPath.startsWith("/") ? "" : "/"}${chartPath}`;
 
         return {
           content: [
             {
               type: "text",
-              text: svg,
-              mediaType: "image/svg+xml"
-            }
-          ]
+              text: `Chart URL: ${process.env.APP_URL || "http://localhost:3000"}\n\nChart saved to: ${absolutePath}\n\nOpen the URL in a browser or the file in VS Code.`,
+            },
+            {
+              type: "resource",
+              resource: {
+                uri: `file://${absolutePath}`,
+                mimeType: "image/svg+xml",
+                text: svg,
+              },
+            },
+          ],
         };
       } catch (e) {
         return { content: [{ type: "text", text: `Error rendering chart with edits: ${String(e)}` }] };
