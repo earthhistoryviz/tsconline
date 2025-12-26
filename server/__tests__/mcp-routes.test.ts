@@ -8,13 +8,17 @@ vi.mock("../src/util.js", () => ({ extractMetadataFromDatapack: vi.fn() }));
 vi.mock("../src/chart-generation/generate-chart.js", () => ({ generateChart: vi.fn() }));
 vi.mock("../src/settings-generation/unified-chart-generation.js", () => ({
   getDatapackSettingsSchema: vi.fn(),
-  generateChartWithSchema: vi.fn()
+  generateChartWithSchema: vi.fn(),
+  generateChartWithEdits: vi.fn(),
+  listColumns: vi.fn()
 }));
 
 import {
   mcpListDatapacks,
   mcpGetDatapackSettingsSchema,
-  mcpGenerateChartWithSchema
+  mcpGenerateChartWithSchema,
+  mcpListColumns,
+  mcpRenderChartWithEdits
 } from "../src/routes/mcp-routes.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks } from "../src/user/user-handler.js";
@@ -22,7 +26,9 @@ import { extractMetadataFromDatapack } from "../src/util.js";
 import { generateChart } from "../src/chart-generation/generate-chart.js";
 import {
   getDatapackSettingsSchema,
-  generateChartWithSchema
+  generateChartWithSchema,
+  generateChartWithEdits,
+  listColumns
 } from "../src/settings-generation/unified-chart-generation.js";
 
 beforeEach(() => {
@@ -343,5 +349,159 @@ describe("mcpGenerateChartWithSchema", () => {
 
     expect(reply.status).toHaveBeenCalledWith(500);
     expect(reply.send).toHaveBeenCalledWith({ error: "Error: Chart generation failed" });
+  });
+});
+
+describe("mcpListColumns", () => {
+  it("returns flattened columns for valid datapacks", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip" }];
+    const mockColumns = [{ id: "c1", name: "Col", path: "Col", on: true, enableTitle: true, type: "zone" }];
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockColumns);
+
+    const req = { body: { datapackTitles: ["GTS2020"] } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(listColumns).toHaveBeenCalledWith(mockDatapacks);
+    expect(reply.send).toHaveBeenCalledWith(mockColumns);
+  });
+
+  it("returns 400 when datapackTitles is missing", async () => {
+    const req = { body: {} } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 404 when no matching datapacks found", async () => {
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+
+    const req = { body: { datapackTitles: ["none"] } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(404);
+    expect(reply.send).toHaveBeenCalledWith({ error: "No matching datapacks found" });
+  });
+
+  it("returns 500 when listColumns throws", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip" }];
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (listColumns as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
+      throw new Error("fail");
+    });
+
+    const req = { body: { datapackTitles: ["GTS2020"] } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(500);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Error: fail" });
+  });
+});
+
+describe("mcpRenderChartWithEdits", () => {
+  it("generates chart with overrides and column toggles", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
+    const mockSettingsXml = "<settings/>";
+    const mockResult = { chartpath: "public/charts/abc/chart.svg" };
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockSettingsXml);
+    (generateChart as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      async (_chartRequest: unknown, onProgress?: (p: unknown) => void) => {
+        if (onProgress) onProgress({ percentage: 50 });
+        return mockResult;
+      }
+    );
+
+    const req = {
+      body: {
+        datapackTitles: ["GTS2020"],
+        overrides: { topAge: 0, baseAge: 10 },
+        columnToggles: { off: ["stage-id"] }
+      }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(generateChartWithEdits).toHaveBeenCalledWith(
+      mockDatapacks,
+      { topAge: 0, baseAge: 10 },
+      { off: ["stage-id"] }
+    );
+    expect(generateChart).toHaveBeenCalled();
+    expect(reply.send).toHaveBeenCalledWith(mockResult);
+  });
+
+  it("returns 400 when datapackTitles is missing", async () => {
+    const req = { body: { overrides: {}, columnToggles: {} } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 404 when no matching datapacks found", async () => {
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+
+    const req = { body: { datapackTitles: ["none"], overrides: {}, columnToggles: {} } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(404);
+    expect(reply.send).toHaveBeenCalledWith({ error: "No matching datapacks found" });
+  });
+
+  it("returns 500 when generateChartWithEdits throws", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip" }];
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("fail edits"));
+
+    const req = {
+      body: { datapackTitles: ["GTS2020"], overrides: {}, columnToggles: {} }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(500);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Error: fail edits" });
+  });
+
+  it("returns 500 when generateChart throws", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("<settings/>");
+    (generateChart as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("fail chart"));
+
+    const req = {
+      body: { datapackTitles: ["GTS2020"], overrides: {}, columnToggles: {} }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(500);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Error: fail chart" });
   });
 });
