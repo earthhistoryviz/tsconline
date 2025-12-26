@@ -290,23 +290,22 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
         const filePath = path.join("..", "server", chartPath);
         const absolutePath = path.resolve(filePath);
         const svg = await readFile(filePath, "utf8");
-        const httpUrl = `${serverUrl}${chartPath.startsWith("/") ? "" : "/"}${chartPath}`;
 
         return {
           content: [
             {
               type: "text",
-              text: `Chart URL: ${process.env.APP_URL || "http://localhost:3000"}\n\nChart saved to: ${absolutePath}\n\nOpen the URL in a browser or the file in VS Code.`,
+              text: `Chart URL: ${process.env.APP_URL || "http://localhost:3000"}\n\nChart saved to: ${absolutePath}\n\nOpen the URL in a browser or the file in VS Code.`
             },
             {
               type: "resource",
               resource: {
                 uri: `file://${absolutePath}`,
                 mimeType: "image/svg+xml",
-                text: svg,
-              },
-            },
-          ],
+                text: svg
+              }
+            }
+          ]
         };
       } catch (e) {
         return { content: [{ type: "text", text: `Error rendering chart with edits: ${String(e)}` }] };
