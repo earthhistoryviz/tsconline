@@ -177,6 +177,18 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
     }
   );
 
+  function isRecord(v: unknown): v is Record<string, unknown> {
+    return typeof v === "object" && v !== null;
+  }
+
+  const datapackTitlesSchema = z.preprocess((val: unknown) => {
+    if (Array.isArray(val)) return val;
+    if (isRecord(val) && "datapackTitles" in val && Array.isArray(val.datapackTitles)) {
+      return val.datapackTitles;
+    }
+    return val;
+  }, z.array(z.string()));
+
   const overridesSchema = z
     .object({
       topAge: z.number().optional(),
@@ -201,6 +213,16 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
     })
     .passthrough();
 
+  const renderChartArgsSchema = z.object({
+    datapackTitles: datapackTitlesSchema,
+    overrides: overridesSchema.optional(),
+    columnToggles: columnToggleSchema.optional(),
+    useCache: z.boolean().optional(),
+    isCrossPlot: z.boolean().optional()
+  });
+
+  type RenderChartArgs = z.infer<typeof renderChartArgsSchema>;
+
   server.registerTool(
     "renderChartWithEdits",
     {
@@ -223,16 +245,28 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
   - unitsPerMY (vertical scale): number or array [{unit:"Ma", value:4}]
   - skipEmptyColumns, variableColors, noIndentPattern, negativeChk, doPopups, enEventColBG, enChartLegend, enPriority, enHideBlockLable
 
-  Validation: 0 <= topAge < baseAge <= 4600; unitsPerMY 0-50. Only allowed fields are applied.`,
-      inputSchema: {
-        datapackTitles: z.array(z.string()).describe("Array of datapack titles to use"),
-        overrides: overridesSchema.describe("Chart settings overrides (small payload)"),
-        columnToggles: columnToggleSchema.describe("Columns to turn on/off by id (ids are unique)"),
-        useCache: z.boolean().optional(),
-        isCrossPlot: z.boolean().optional()
-      }
+  Validation: 0 <= topAge < baseAge <= 4600; unitsPerMY 0-50. Only allowed fields are applied.
+  
+  Here's an example call:
+  {
+    "datapackTitles": ["Africa Bight"],
+    "overrides": {
+      "topAge": 0,
+      "baseAge": 65,
+      "unitsPerMY": [{"unit":"Ma","value":2}]
     },
-    async ({ datapackTitles, overrides = {}, columnToggles = {}, useCache, isCrossPlot }) => {
+    "columnToggles": {
+      "on": [],
+      "off": ["Nigeria Coast"]
+    },
+    "useCache": true,
+    "isCrossPlot": false
+  }
+  `,
+      inputSchema: renderChartArgsSchema.shape
+    },
+    async (args: RenderChartArgs) => {
+      const { datapackTitles, overrides = {}, columnToggles = {}, useCache, isCrossPlot } = args;
       try {
         const serverUrl = "http://localhost:3000";
         const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
