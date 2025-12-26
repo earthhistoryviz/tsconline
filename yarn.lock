@@ -2713,6 +2713,7 @@ __metadata:
     "@types/ws": "npm:^8.18.1"
     chalk: "npm:^5.4.1"
     concurrently: "npm:^9.2.1"
+    dotenv: "npm:^17.2.3"
     fastify: "npm:4.27.0"
     node-fetch: "npm:^3.3.2"
     nodemon: "npm:^3.1.10"
@@ -6166,6 +6167,13 @@ __metadata:
   version: 16.4.5
   resolution: "dotenv@npm:16.4.5"
   checksum: 55a3134601115194ae0f924e54473459ed0d9fc340ae610b676e248cca45aa7c680d86365318ea964e6da4e2ea80c4514c1adab5adb43d6867fb57ff068f95c8
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^17.2.3":
+  version: 17.2.3
+  resolution: "dotenv@npm:17.2.3"
+  checksum: f8b78626ebfff6e44420f634773375c9651808b3e1a33df6d4cc19120968eea53e100f59f04ec35f2a20b2beb334b6aba4f24040b2f8ad61773f158ac042a636
   languageName: node
   linkType: hard
 

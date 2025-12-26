@@ -11,6 +11,7 @@
     "@modelcontextprotocol/sdk": "^1.17.0",
     "@tsconline/shared": "1.0.0",
     "chalk": "^5.4.1",
+    "dotenv": "^17.2.3",
     "fastify": "4.27.0",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.10",

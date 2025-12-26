@@ -2,6 +2,10 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
+import "dotenv/config";
+
+const domain = process.env.DOMAIN ?? "http://localhost:3000";
+const serverUrl = domain.startsWith("http") ? domain : `https://${domain}`;
 
 export const createMCPServer = () => {
   console.log("Starting MCP server...");
@@ -61,7 +65,6 @@ Returns an array of datapack objects with 'title' and 'id' fields. Use the 'titl
     },
     async () => {
       try {
-        const serverUrl = "http://localhost:3000";
         const headers: Record<string, string> = { "Content-Type": "application/json" };
         const res = await fetch(`${serverUrl}/mcp/datapacks`, { method: "GET", headers });
         if (!res.ok) {
@@ -267,6 +270,7 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
     "useCache": true,
     "isCrossPlot": false
   }
+  you want useCache to be true always
   `,
       inputSchema: renderChartArgsSchema.shape
     },
@@ -295,12 +299,12 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
           content: [
             {
               type: "text",
-              text: `Chart URL: ${process.env.APP_URL || "http://localhost:3000"}\n\nChart saved to: ${absolutePath}\n\nOpen the URL in a browser or the file in VS Code.`
+              text: `Chart URL: ${serverUrl}${chartPath}`
             },
             {
               type: "resource",
               resource: {
-                uri: `file://${absolutePath}`,
+                uri: `${serverUrl}${chartPath}`,
                 mimeType: "image/svg+xml",
                 text: svg
               }
