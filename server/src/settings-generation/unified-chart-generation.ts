@@ -185,8 +185,6 @@ export async function generateChartWithEdits(
 
   const schema = await getDatapackSettingsSchema(datapacks);
 
-  console.log("Initial schema:", JSON.stringify(schema, null, 2));
-
   if (normalizedToggles.on?.length || normalizedToggles.off?.length) {
     applyTogglesToColumns(schema.columns, normalizedToggles);
   }

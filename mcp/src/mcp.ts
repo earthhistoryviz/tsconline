@@ -109,7 +109,6 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
     },
     async ({ datapackTitles }) => {
       try {
-        const serverUrl = "http://localhost:3000";
         const res = await fetch(`${serverUrl}/mcp/get-settings-schema`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -164,7 +163,6 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
     },
     async ({ datapackTitles }) => {
       try {
-        const serverUrl = "http://localhost:3000";
         const res = await fetch(`${serverUrl}/mcp/list-columns`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -281,7 +279,6 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
     async (args: RenderChartArgs) => {
       const { datapackTitles, overrides = {}, columnToggles = {}, useCache, isCrossPlot } = args;
       try {
-        const serverUrl = "http://localhost:3000";
         const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
