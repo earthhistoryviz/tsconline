@@ -68,6 +68,17 @@ declare global {
 
 export async function executeRecaptcha(action: string): Promise<string> {
   try {
+    // If grecaptcha isn't available yet, attempt to load it.
+    if (!window.grecaptcha || typeof window.grecaptcha.execute !== "function") {
+      try {
+        // loadRecaptcha appends the script and waits for ready()
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        await loadRecaptcha();
+      } catch (e) {
+        console.error("reCAPTCHA load failed:", e);
+        return "";
+      }
+    }
     const token = await window.grecaptcha.execute("6LegnOApAAAAACIFXyvL_6_ejS2CHnt3rRzkDGL2", { action });
     return token;
   } catch (error) {

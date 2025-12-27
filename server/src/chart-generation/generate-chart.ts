@@ -26,7 +26,7 @@ export async function generateChart(
   uuid?: string
 ) {
   const { useCache, isCrossPlot, settings } = chartRequest;
-  const hash = md5(isCrossPlot + settings + chartRequest.datapacks.join(","));
+  const hash = md5(isCrossPlot + settings + JSON.stringify(chartRequest.datapacks));
   const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
   const isInWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
   const chartDir = path.join(assetconfigs.chartsDirectory, hash);
