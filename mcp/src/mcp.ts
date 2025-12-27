@@ -2,8 +2,12 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
-import "dotenv/config";
+import dotenv from "dotenv";
 
+// We use the .env file from server cause mcp is a semi-lazy-parasite of server
+dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true });
+
+// makes sure the return link for the AI is correct (pr preview, local, dev, etc...)
 const domain = process.env.DOMAIN ?? "http://localhost:3000";
 const serverUrl = domain.startsWith("http") ? domain : `https://${domain}`;
 
