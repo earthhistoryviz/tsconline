@@ -11,6 +11,65 @@ dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: t
 const domain = process.env.DOMAIN ?? "http://localhost:3000";
 const serverUrl = domain.startsWith("http") ? domain : `https://${domain}`;
 
+// Chart state management - tracks current chart configuration
+interface ChartState {
+  datapackTitles: string[];
+  overrides: Record<string, unknown>;
+  columnToggles: { on?: string[]; off?: string[] };
+  lastChartPath?: string;
+  lastModified?: Date;
+}
+
+let currentChartState: ChartState = {
+  datapackTitles: [],
+  overrides: {},
+  columnToggles: {}
+};
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+const datapackTitlesSchema = z.preprocess((val: unknown) => {
+  if (Array.isArray(val)) return val;
+  if (isRecord(val) && "datapackTitles" in val && Array.isArray(val.datapackTitles)) {
+    return val.datapackTitles;
+  }
+  return val;
+}, z.array(z.string()));
+
+const overridesSchema = z
+  .object({
+    topAge: z.number().optional(),
+    baseAge: z.number().optional(),
+    unitsPerMY: z.union([z.number(), z.array(z.object({ unit: z.string(), value: z.number() }))]).optional(),
+    skipEmptyColumns: z.boolean().optional(),
+    variableColors: z.string().optional(),
+    noIndentPattern: z.boolean().optional(),
+    negativeChk: z.boolean().optional(),
+    doPopups: z.boolean().optional(),
+    enEventColBG: z.boolean().optional(),
+    enChartLegend: z.boolean().optional(),
+    enPriority: z.boolean().optional(),
+    enHideBlockLable: z.boolean().optional()
+  })
+  .passthrough();
+
+const columnToggleSchema = z
+  .object({
+    on: z.array(z.string()).optional(),
+    off: z.array(z.string()).optional()
+  })
+  .passthrough();
+
+const updateChartArgsSchema = z.object({
+  datapackTitles: datapackTitlesSchema.optional(),
+  overrides: overridesSchema.optional(),
+  columnToggles: columnToggleSchema.optional(),
+  useCache: z.boolean().optional(),
+  isCrossPlot: z.boolean().optional()
+});
+
 export const createMCPServer = () => {
   console.log("Starting MCP server...");
   const server = new McpServer({
@@ -23,32 +82,224 @@ export const createMCPServer = () => {
       tools: { listChanged: true }
     }
   });
+
+  // Tool: Get current chart state
   server.registerTool(
-    "add",
+    "getCurrentChartState",
     {
-      title: "Addition Tool",
-      description: "Add two numbers",
-      inputSchema: { a: z.number(), b: z.number() }
+      title: "Get Current Chart State",
+      description: `What it does: returns the server's current chart configuration (datapacks, merged overrides, column toggles, last chart path/time).
+
+    When to use:
+    - Before incremental changes (see what's set)
+    - After updateChartState (verify changes)
+    - When debugging why a chart looks a certain way
+
+    Input: {}
+    Example output shape:
+    {
+      "datapackTitles": ["Africa Bight"],
+      "overrides": { "topAge": 0, "baseAge": 65 },
+      "columnToggles": { "off": ["nigeria coast"], "on": [] },
+      "lastChartPath": "/charts/...",
+      "lastModified": "..."
+    }`,
+      inputSchema: {}
     },
-    async ({ a, b }) => {
-      console.log(`MCP tool "add" invoked with`, { a, b });
-      const result = a + b;
-      console.log(`MCP tool "add" result:`, result);
+    async () => {
+      if (!currentChartState) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "No chart state set. Use updateChartState to create your first chart."
+            }
+          ]
+        };
+      }
+
       return {
-        content: [{ type: "text", text: String(result) }]
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(currentChartState, null, 2)
+          }
+        ]
       };
     }
   );
+
+  // Tool: Reset chart state
   server.registerTool(
-    "subtract",
+    "resetChartState",
     {
-      title: "Subtraction Tool",
-      description: "Subtract two numbers",
-      inputSchema: { a: z.number(), b: z.number() }
+      title: "Reset Chart State",
+      description: `What it does: clears the server's chart state so the next build starts fresh.
+
+    When to use:
+    - Starting a brand new chart setup
+    - State feels confusing; you want a clean slate
+
+    Input: {}`,
+      inputSchema: {}
     },
-    async ({ a, b }) => ({
-      content: [{ type: "text", text: String(a - b) }]
-    })
+    async () => {
+      currentChartState = {
+        datapackTitles: [],
+        overrides: {},
+        columnToggles: {}
+      };
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Chart state cleared. Ready for new configuration."
+          }
+        ]
+      };
+    }
+  );
+
+  // Tool: Update/Generate chart
+  server.registerTool(
+    "updateChartState",
+    {
+      title: "Update/Generate Chart",
+      description: `What it does: merges into the chart state and triggers chart render. Returns the generated chart SVG and updated state.
+
+CRITICAL REQUIREMENT: Every call MUST include datapackTitles (array, non-empty). Partial updates are allowed for overrides and columnToggles, but datapacks cannot be omitted.
+
+When to use:
+- First chart or changing datapacks: provide datapackTitles (required).
+- Adjust time/settings: provide overrides (object, optional). Only known keys have guaranteed effect; unknown keys are accepted but may be ignored by the renderer.
+- Toggle columns: provide columnToggles with on/off arrays (optional). Prefer column ids from listColumns; names may work but ids are safer. Case-insensitive; exclusive on/off (adding to off removes from on).
+- Debugging: always set useCache to true
+
+Payload shape:
+{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean }
+
+Important notes:
+- Do NOT wrap payload twice. In MCP Inspector's per-field input, enter {...} directly, not { overrides: {...} }.
+- Unknown override keys are allowed by the schema but may be silently ignored by the renderer.
+- Only these override keys are officially supported: topAge, baseAge, unitsPerMY, skipEmptyColumns, variableColors, noIndentPattern, negativeChk, doPopups, enEventColBG, enChartLegend, enPriority, enHideBlockLable.
+
+Example 1 (minimal):
+{ "datapackTitles": ["Africa Bight"] }
+
+Example 2 (override topAge, baseAge, and vertical scale):
+{
+  "datapackTitles": ["GTS2020"],
+  "overrides": { "topAge": 0, "baseAge": 100, "unitsPerMY": 2 },
+  "useCache": true
+}
+
+Example 3 (toggle columns by id, change overrides):
+{
+  "datapackTitles": ["GTS2020"],
+  "overrides": { "topAge": 5, "baseAge": 150 },
+  "columnToggles": { "on": ["column-id-1"], "off": ["column-id-2"] },
+  "useCache": true
+}
+
+Remember: datapack settings will persist across calls until resetChartState is used. If a column is toggled off, it stays off until explicitly toggled on again. Same with toggling it on.
+The point is you only have to include the changes you want to make; the rest of the state is preserved automatically.
+`,
+      inputSchema: updateChartArgsSchema.shape
+    },
+    async (args) => {
+      // If no state exists and no datapackTitles provided, error
+      if (!currentChartState && !args.datapackTitles) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "First chart requires datapackTitles. Example: { datapackTitles: ['Africa Bight'], overrides: {}, columnToggles: {} }"
+            }
+          ]
+        };
+      }
+
+      if (!args.datapackTitles) {
+        return { content: [{ type: "text", text: `Error: datapackTitles is required for updating the chart state.` }] };
+      }
+
+      // Merge args into current state
+      currentChartState.datapackTitles = args.datapackTitles;
+
+      currentChartState.overrides = {
+        ...currentChartState.overrides,
+        ...(args.overrides ?? {})
+      };
+
+      const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
+      const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
+
+      const currentOff = new Set((currentChartState.columnToggles.off ?? []).map((id) => id.toLowerCase()));
+      const currentOn = new Set((currentChartState.columnToggles.on ?? []).map((id) => id.toLowerCase()));
+
+      for (const id of incomingOff) {
+        currentOn.delete(id); // Exclusive enforcement
+        currentOff.add(id);
+      }
+      for (const id of incomingOn) {
+        currentOff.delete(id); // Exclusive enforcement
+        currentOn.add(id);
+      }
+
+      currentChartState.columnToggles.off = Array.from(currentOff);
+      currentChartState.columnToggles.on = Array.from(currentOn);
+
+      // Generate chart with current state
+      try {
+        const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            datapackTitles: currentChartState.datapackTitles,
+            overrides: currentChartState.overrides,
+            columnToggles: currentChartState.columnToggles,
+            useCache: args.useCache ?? true,
+            isCrossPlot: args.isCrossPlot ?? false
+          })
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+          return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
+        }
+
+        const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
+        const filePath = path.join("..", "server", chartPath);
+        const svg = await readFile(filePath, "utf8");
+
+        const svgBase64 = Buffer.from(svg).toString("base64");
+        const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
+
+        // Update state with new chart path
+        currentChartState.lastChartPath = chartPath;
+        currentChartState.lastModified = new Date();
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
+            },
+            {
+              type: "resource",
+              resource: {
+                uri: dataUri,
+                mimeType: "image/svg+xml",
+                text: svg
+              }
+            }
+          ]
+        };
+      } catch (e) {
+        return { content: [{ type: "text", text: `Error generating chart: ${String(e)}` }] };
+      }
+    }
   );
 
   // Tool: list datapacks from the main server's /mcp/datapacks endpoint.
@@ -56,15 +307,16 @@ export const createMCPServer = () => {
     "listDatapacks",
     {
       title: "List Available Datapacks",
-      description: `Lists all available datapacks (geological timescales and data columns) that can be used to create charts.
-      
-Each datapack contains columns of geological/paleontological data. Common datapacks include:
-- GTS2020: Geological Time Scale 2020 with epochs, periods, eras
-- Paleobiology: Fossil occurrence and diversity data
-- Regional timescales: Africa, Europe, Asia, etc.
-- Specialty data: Sea level, climate, events, etc.
+      description: `What it does: lists datapacks you can use when building a chart.
 
-Returns an array of datapack objects with 'title' and 'id' fields. Use the 'title' field when requesting schemas or generating charts.`,
+    When to use:
+    - First step before selecting datapacks
+    - Need to confirm titles/ids available
+
+    Output: array of objects with at least { title, id }. Use title for later calls.
+
+    Input: {}
+    - Do not wrap payload twice (no nested { input: {...} }).`,
       inputSchema: {}
     },
     async () => {
@@ -87,18 +339,18 @@ Returns an array of datapack objects with 'title' and 'id' fields. Use the 'titl
     "getSettingsSchema",
     {
       title: "Get Chart Settings Schema",
-      description: `Optional helper to view the full default schema (columns + chartSettings) for selected datapacks. For normal use, prefer the lightweight flow: listDatapacks/listColumns -> renderChartWithEdits. Use this only when you need to inspect every field or debug defaults.
+      description: `What it does: returns the merged default schema (columns + chartSettings) for the given datapacks. Heavy call; usually not needed.
 
-Contents:
-1) columns[]: id (unique), name, type, on, enableTitle, children
-2) chartSettings: topAge, baseAge, unitsPerMY, skipEmptyColumns, variableColors, noIndentPattern, negativeChk, doPopups, enEventColBG, enChartLegend, enPriority, enHideBlockLable
+    When to use:
+    - Need to audit every field/default
+    - Investigating mismatches between defaults and overrides
+    - Want nested columns tree, not just flat ids
 
-Typical reasons to call:
-- You want to audit default visibility/ages before editing.
-- You need to see all available columns (including nesting) beyond the flat list.
-- You are debugging a mismatch between defaults and overrides.
+    Input: { datapackTitles: string[] }
+    - Titles must exist (see listDatapacks)
+    - Do not wrap payload twice (no nested { input: {...} })
 
-Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> renderChartWithEdits (overrides + columnToggles).`,
+    Normal flow: listDatapacks -> listColumns (for ids) -> updateChartState (with overrides/columnToggles).`,
       inputSchema: {
         datapackTitles: z
           .array(z.string())
@@ -153,8 +405,19 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
     "listColumns",
     {
       title: "List Columns",
-      description:
-        "Returns a flat list of columns (id, name, path, on, enableTitle, type) for the selected datapacks. Use this to grab the unique id before calling renderChartWithEdits. Example: columnToggles: { off: ['africa-bight-id'] }.",
+      description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
+
+When to use:
+- After picking datapacks, to fetch column ids for toggling in updateChartState.
+- Need a lightweight view (id, name, path, on, enableTitle, type).
+
+Prefer column ids (the id field) when toggling. Names may work if they match an id, but ids are the safe, guaranteed choice.
+
+Input: { datapackTitles: string[] }
+- Titles must exist (see listDatapacks)
+- Do not wrap payload twice (no nested { input: {...} })
+
+Example: { "datapackTitles": ["GTS2020"] }`,
       inputSchema: {
         datapackTitles: z
           .array(z.string())
@@ -178,141 +441,6 @@ Normal edit path (recommended): listDatapacks -> listColumns (to get ids) -> ren
         return { content: [{ type: "text", text: JSON.stringify(json, null, 2) }] };
       } catch (e) {
         return { content: [{ type: "text", text: `Error listing columns: ${String(e)}` }] };
-      }
-    }
-  );
-
-  function isRecord(v: unknown): v is Record<string, unknown> {
-    return typeof v === "object" && v !== null;
-  }
-
-  const datapackTitlesSchema = z.preprocess((val: unknown) => {
-    if (Array.isArray(val)) return val;
-    if (isRecord(val) && "datapackTitles" in val && Array.isArray(val.datapackTitles)) {
-      return val.datapackTitles;
-    }
-    return val;
-  }, z.array(z.string()));
-
-  const overridesSchema = z
-    .object({
-      topAge: z.number().optional(),
-      baseAge: z.number().optional(),
-      unitsPerMY: z.union([z.number(), z.array(z.object({ unit: z.string(), value: z.number() }))]).optional(),
-      skipEmptyColumns: z.boolean().optional(),
-      variableColors: z.string().optional(),
-      noIndentPattern: z.boolean().optional(),
-      negativeChk: z.boolean().optional(),
-      doPopups: z.boolean().optional(),
-      enEventColBG: z.boolean().optional(),
-      enChartLegend: z.boolean().optional(),
-      enPriority: z.boolean().optional(),
-      enHideBlockLable: z.boolean().optional()
-    })
-    .passthrough();
-
-  const columnToggleSchema = z
-    .object({
-      on: z.array(z.string()).optional(),
-      off: z.array(z.string()).optional()
-    })
-    .passthrough();
-
-  const renderChartArgsSchema = z.object({
-    datapackTitles: datapackTitlesSchema,
-    overrides: overridesSchema.optional(),
-    columnToggles: columnToggleSchema.optional(),
-    useCache: z.boolean().optional(),
-    isCrossPlot: z.boolean().optional()
-  });
-
-  type RenderChartArgs = z.infer<typeof renderChartArgsSchema>;
-
-  server.registerTool(
-    "renderChartWithEdits",
-    {
-      title: "Render Chart with Edits",
-      description: `Generate a chart by sending only small edits (overrides + column toggles), not the full schema.
-
-  Output:
-  - Returns a direct Chart URL (HTTP link) to the generated SVG
-  - Also includes a local file resource when running locally
-  - Click the Chart URL to view the SVG inline in your browser
-
-  Flow:
-  1) If unsure what's available, call listDatapacks; to see ids, call listColumns (datapackTitles).
-  2) Call renderChartWithEdits with:
-     - overrides: chartSettings fields you want to change
-     - columnToggles: ids to turn on/off (ids are unique)
-
-  Examples:
-  - Default Africa Bight as-is: overrides: {}, columnToggles: {}
-  - Change ages + hide one column: overrides: { topAge: 0, baseAge: 65 }, columnToggles: { off: ["africa-bight-id"] }
-  - Turn a column on: columnToggles: { on: ["gts2020-stages"] }
-
-  Overrides (chartSettings):
-  - topAge/baseAge (Ma)
-  - unitsPerMY (vertical scale): number or array [{unit:"Ma", value:4}]
-  - skipEmptyColumns, variableColors, noIndentPattern, negativeChk, doPopups, enEventColBG, enChartLegend, enPriority, enHideBlockLable
-
-  Validation: 0 <= topAge < baseAge <= 4600; unitsPerMY 0-50. Only allowed fields are applied.
-  
-  Here's an example call:
-  {
-    "datapackTitles": ["Africa Bight"],
-    "overrides": {
-      "topAge": 0,
-      "baseAge": 65,
-      "unitsPerMY": [{"unit":"Ma","value":2}]
-    },
-    "columnToggles": {
-      "on": [],
-      "off": ["Nigeria Coast"]
-    },
-    "useCache": true,
-    "isCrossPlot": false
-  }
-  you want useCache to be true always
-  `,
-      inputSchema: renderChartArgsSchema.shape
-    },
-    async (args: RenderChartArgs) => {
-      const { datapackTitles, overrides = {}, columnToggles = {}, useCache, isCrossPlot } = args;
-      try {
-        const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ datapackTitles, overrides, columnToggles, useCache, isCrossPlot })
-        });
-
-        const json = await res.json();
-
-        if (!res.ok) {
-          return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
-        }
-
-        const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
-        const filePath = path.join("..", "server", chartPath);
-        const svg = await readFile(filePath, "utf8");
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Chart URL: ${serverUrl}${chartPath}`
-            },
-            {
-              type: "resource",
-              resource: {
-                uri: `${serverUrl}${chartPath}`,
-                mimeType: "image/svg+xml",
-                text: svg
-              }
-            }
-          ]
-        };
-      } catch (e) {
-        return { content: [{ type: "text", text: `Error rendering chart with edits: ${String(e)}` }] };
       }
     }
   );

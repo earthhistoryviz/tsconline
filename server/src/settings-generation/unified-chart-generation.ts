@@ -116,9 +116,9 @@ function applyOverrides(schema: SettingsSchema, overrides: SchemaOverrides) {
     if (typeof overrides.unitsPerMY === "number") {
       chartSettings.unitsPerMY = chartSettings.unitsPerMY.map((u) => ({ ...u, value: overrides.unitsPerMY as number }));
     } else {
-      const map = new Map(overrides.unitsPerMY.map((u) => [u.unit, u.value]));
+      const map = new Map(overrides.unitsPerMY.map((u) => [u.unit.toLowerCase(), u.value]));
       chartSettings.unitsPerMY = chartSettings.unitsPerMY.map((u) =>
-        map.has(u.unit) ? { ...u, value: map.get(u.unit) ?? u.value } : u
+        map.has(u.unit.toLowerCase()) ? { ...u, value: map.get(u.unit.toLowerCase()) ?? u.value } : u
       );
     }
   }
