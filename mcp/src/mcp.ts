@@ -217,18 +217,15 @@ The point is you only have to include the changes you want to make; the rest of 
 
 AUTO-DISPLAY REQUIREMENT (default behavior):
 After every successful updateChartState call, the assistant MUST immediately display the generated chart inline in the conversation.
-Use the returned URL if present; otherwise construct the URL from lastChartPath as:
-https://pr-preview.geolex.org{lastChartPath}
 
-The assistant MUST include an inline image embed using HTML <img> (preferred).
+This is an example for how to display it in Markdown with an embedded image:
 
-Preferred embed (HTML):
+This is just an example of a chart, replace the URL with the actual returned chart url.
+![Chart](https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg)
 
-<img
-  src="{chart_url}"
-  alt="{datapackTitles joined} chart"
-  style="width:100%; max-width:900px; border:1px solid #ccc;"
-/>
+so ![Chart](<INSERT_RETURNED_CHART_URL_HERE>)
+
+The assistant MUST embed the chart image using the returned chart URL in a Markdown image tag as shown above.
 
 The assistant SHOULD still provide the direct URL as plain text under the embed.
 `,
