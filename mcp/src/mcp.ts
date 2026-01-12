@@ -168,6 +168,8 @@ export const createMCPServer = () => {
       description: `What it does: merges into the chart state and triggers chart render. Returns the generated chart SVG and updated state.
 
 CRITICAL REQUIREMENT: Every call MUST include datapackTitles (array, non-empty). Partial updates are allowed for overrides and columnToggles, but datapacks cannot be omitted.
+A good workflow is to try to use the datapackTitles given to you (or what you assume the user wants). And should chart generation fail, you can always call listDatapacks to see available options.
+If you are suspicious of a given chart name or are unsure which datapacks to use, first call listDatapacks to see available options. Try to best align with existing + expected datapacks.
 
 When to use:
 - First chart or changing datapacks: provide datapackTitles (required).
@@ -175,15 +177,22 @@ When to use:
 - Toggle columns: provide columnToggles with on/off arrays (optional). Prefer column ids from listColumns; names may work but ids are safer. Case-insensitive; exclusive on/off (adding to off removes from on).
 - Debugging: always set useCache to true
 
-Payload shape:
+Payload shape (ALWAYS FOLLOWS THIS SHAPE):
 { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean }
+
+This tool does NOT accept chart geometry/axes/series. Do not send xAxis/yAxis/series/title. Use datapacks + overrides + column toggles only.
 
 Important notes:
 - Do NOT wrap payload twice. In MCP Inspector's per-field input, enter {...} directly, not { overrides: {...} }.
 - Unknown override keys are allowed by the schema but may be silently ignored by the renderer.
 - Only these override keys are officially supported: topAge, baseAge, unitsPerMY, skipEmptyColumns, variableColors, noIndentPattern, negativeChk, doPopups, enEventColBG, enChartLegend, enPriority, enHideBlockLable.
 
-Example 1 (minimal):
+useCache behavior: it should ALWAYS be true for predictable results, no matter what. Setting to false may yield unexpected charts due to caching logic.
+
+Don't invent chart structure from thin air; always build incrementally from existing state. The only exception is the first call after resetChartState, which starts fresh.
+Follow these patterns ALWAYS (don't invent stuff):
+
+Example 1 (minimal/default/basic):
 { "datapackTitles": ["Africa Bight"] }
 
 Example 2 (override topAge, baseAge, and vertical scale):
@@ -201,8 +210,27 @@ Example 3 (toggle columns by id, change overrides):
   "useCache": true
 }
 
+These are just examples for changing datapacks, overrides, and column toggles. You can mix and match as needed.
+
 Remember: datapack settings will persist across calls until resetChartState is used. If a column is toggled off, it stays off until explicitly toggled on again. Same with toggling it on.
 The point is you only have to include the changes you want to make; the rest of the state is preserved automatically.
+
+AUTO-DISPLAY REQUIREMENT (default behavior):
+After every successful updateChartState call, the assistant MUST immediately display the generated chart inline in the conversation.
+Use the returned URL if present; otherwise construct the URL from lastChartPath as:
+https://pr-preview.geolex.org{lastChartPath}
+
+The assistant MUST include an inline image embed using HTML <img> (preferred).
+
+Preferred embed (HTML):
+
+<img
+  src="{chart_url}"
+  alt="{datapackTitles joined} chart"
+  style="width:100%; max-width:900px; border:1px solid #ccc;"
+/>
+
+The assistant SHOULD still provide the direct URL as plain text under the embed.
 `,
       inputSchema: updateChartArgsSchema.shape
     },
