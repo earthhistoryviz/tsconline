@@ -304,8 +304,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           return {
             content: [
               {
-          type: "text",
-          text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}`
+                type: "text",
+                text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}`
               }
             ]
           };
