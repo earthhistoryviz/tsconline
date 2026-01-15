@@ -88,9 +88,12 @@ describe("mcpListDatapacks", () => {
     });
 
     const req = {} as unknown as FastifyRequest;
-    const reply = { send: vi.fn() } as unknown as FastifyReply;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
 
-    await expect(mcpListDatapacks(req, reply)).rejects.toThrow("bad metadata");
+    await mcpListDatapacks(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(500);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Error: bad metadata" });
   });
 });
 
