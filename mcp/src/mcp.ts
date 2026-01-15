@@ -293,12 +293,23 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         if (!res.ok) {
           return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
         }
-
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
         const filePath = path.join("..", "server", chartPath);
         const svg = await readFile(filePath, "utf8");
 
-        const svgBase64 = Buffer.from(svg).toString("base64");
+        let svgBase64: string;
+        try {
+          svgBase64 = Buffer.from(svg).toString("base64");
+        } catch (e) {
+          return {
+            content: [
+              {
+          type: "text",
+          text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}`
+              }
+            ]
+          };
+        }
         const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
         // Update state with new chart path

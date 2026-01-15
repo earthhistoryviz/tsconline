@@ -18,11 +18,15 @@ import { SettingsSchema } from "../settings-generation/build-settings-schema.js"
  * MCP route: list datapacks (public + official)
  */
 export async function mcpListDatapacks(_request: FastifyRequest, reply: FastifyReply) {
-  const publicDatapacks = await loadPublicUserDatapacks();
-  const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
-  const combined = [...publicDatapacks, ...officialDatapacks];
-  const datapackMetadata: DatapackMetadata[] = combined.map((dp) => extractMetadataFromDatapack(dp));
-  reply.send(datapackMetadata);
+  try {
+    const publicDatapacks = await loadPublicUserDatapacks();
+    const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
+    const combined = [...publicDatapacks, ...officialDatapacks];
+    const datapackMetadata: DatapackMetadata[] = combined.map((dp) => extractMetadataFromDatapack(dp));
+    reply.send(datapackMetadata);
+  } catch (err) {
+    reply.status(500).send({ error: String(err) });
+  }
 }
 
 /**
