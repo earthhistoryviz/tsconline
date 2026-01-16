@@ -171,6 +171,7 @@ export type State = {
   snackbars: SnackbarInfo[];
   presetColors: string[];
   isProcessingDatapacks: boolean;
+  isInitializing: boolean;
   unsavedDatapackConfig: DatapackConfigForChartRequest[];
   guides: {
     isQSGOpen: boolean;
@@ -348,6 +349,7 @@ export const state = observable<State>({
   presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
   snackbars: [],
   isProcessingDatapacks: false,
+  isInitializing: true,
   unsavedDatapackConfig: [],
   guides: {
     isQSGOpen: false,
