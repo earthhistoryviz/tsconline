@@ -29,15 +29,11 @@ jobs:
             PREVIEW_DIR="/home/aaron/tsconline/pr-preview-${PR_ID}"
             if [ -d "$PREVIEW_DIR" ]; then
               cd $PREVIEW_DIR
-              CONTAINER_NAME="pr-preview-${PR_ID}_pr-preview-run_1"
-              if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
-                echo "Container is running. Stopping and removing..."
-                docker-compose -f docker-compose-preview.yml down --remove-orphans --volumes --rmi all
-              else
-                echo "Container is not running. Proceeding with cleanup..."
-              fi
+              echo "Stopping and removing containers for PR preview ${PR_ID}..."
+              docker-compose -f docker-compose-preview.yml down --remove-orphans --volumes --rmi all || true
               cd ..
               sudo rm -rf $PREVIEW_DIR
+              echo "Successfully cleaned up PR preview ${PR_ID}"
             else
               echo "Directory $PREVIEW_DIR does not exist. Skipping cleanup."
             fi
