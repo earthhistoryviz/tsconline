@@ -668,7 +668,7 @@ export const processDatapackConfig = action(
         };
       });
     } catch (e) {
-      console.error(e);
+      console.error("DatapackConfigFail: ", e);
       if (!silent) {
         setIsProcessingDatapacks(false);
       }

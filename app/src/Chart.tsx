@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
 import { CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -36,6 +36,8 @@ import { usePreviousLocation } from "./providers/PreviousLocationProvider";
 import { formatDate, purifyChartContent } from "./state/non-action-util";
 import { ChartHistoryMetadata } from "@tsconline/shared";
 import Color from "color";
+import { DatapackConfigForChartRequest, DatapackType } from "@tsconline/shared";
+import { toJS } from "mobx";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -56,6 +58,75 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
+  const navigate = useNavigate();
+
+
+
+  //check seralized URL params for a given chart state from MCP
+  // Right now, gets a public datapack title only. Then needs to create a DatapackConfigForChartRequest from that title, somehow getting the stored file name.
+  useEffect(() => {
+
+    let mounted = true;
+    (async () => {
+      console.log("On chart mount, checking URL params for chart state...");
+      const urlParams = new URLSearchParams(window.location.search);
+      //check if params exist
+      if (!urlParams.toString()) {
+        console.log("No URL Params found.");
+        return
+      }
+
+      console.log("URL Params:", urlParams.toString());
+
+
+      //convert base64 to JSON
+      const chartStateParam = urlParams.get("mcpChartState");
+      if (!chartStateParam) {
+        console.log("No chartState param found in URL.");
+        return;
+      }
+      let parsedState = null;
+      try {
+        const decodedState = atob(chartStateParam);
+        parsedState = JSON.parse(decodedState);
+        console.log("Parsed chart state from URL:", parsedState);
+      }
+      catch (error) {
+        console.error("Error parsing chartState from URL:", error);
+      }
+
+      const dataPacksTitles = parsedState.dataPacks;
+      if (dataPacksTitles && dataPacksTitles.length > 0) {
+        console.log("Applying datapacks from URL with dataPacks:", dataPacksTitles);
+        // actions.setChartTabState(state.chartTab.state, {dataPacks: dataPacks});
+      }
+
+      //construct DatapackConfigForChartRequest from titles of type DatapackConfigForChartRequest
+
+      //hardcode datapackType as offical for now
+      const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
+        title,
+        isPublic: true,
+        storedFileName: "TSC2020_InternalDatapack_encrypted_13Feb2021.txt" // hardcoded
+        ,type: "official"
+      }));
+
+
+      console.log("Constructed datapackConfigs from titles:", datapackConfigs);
+      await actions.processDatapackConfig(datapackConfigs);
+      // actions.initiateChartGeneration(navigate, "/charts");
+
+
+
+      console.log("Finished processing URL params for chart state.");
+      console.log("state.config.datapacks:", toJS(state.config?.datapacks));
+    })();
+    return () => {
+      mounted = false;
+    };
+
+  }, []);
+
   const isCrossPlot = useLocation().pathname === "/crossplot";
   const step = 0.1;
   const minScale = 0.1;
@@ -259,6 +330,8 @@ export const ChartTab: React.FC = observer(() => {
   const navigate = useNavigate();
   const previousLocation = usePreviousLocation();
   const from = query.get("from");
+
+
   // see if the previous route/location was crossplot
   // we use two different ways, to make sure that we can try to be hyper accurate about the last location
   const isLastLocationCrossPlot = from === "crossplot" || previousLocation === "/crossplot";

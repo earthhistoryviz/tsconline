@@ -20,6 +20,7 @@ import { getDatapackFromArray, purifyChartContent } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
 import { fetchUserHistoryMetadata } from "./user-actions";
 import { backendUrl } from "../../util/constant";
+import { toJS } from "mobx";
 
 export const handlePopupResponse = action(
   "handlePopupResponse",
@@ -173,6 +174,7 @@ export const compileChartRequest = action(
           useCache: state.useCache,
           isCrossPlot: false
         };
+
       } catch (e) {
         console.error(e);
         generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
