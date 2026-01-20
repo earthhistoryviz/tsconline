@@ -4,6 +4,7 @@ import { NavBar } from "./NavBar";
 import { Home } from "./Home";
 import { Settings } from "./Settings";
 import { ChartTab } from "./Chart";
+import { ChartPreview } from "./ChartPreview";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { ddeDarkTheme, ddeLightTheme, originalDarkTheme, originalLightTheme } from "./theme";
@@ -25,7 +26,7 @@ import { Admin } from "./admin/Admin";
 import { GenerateExternalChart } from "./GenerateExternalChart";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { toJS } from "mobx";
+import { reaction, toJS } from "mobx";
 import { useTranslation } from "react-i18next";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
 import { Presets } from "./Presets";
@@ -58,6 +59,47 @@ export default observer(function App() {
       cleanup();
     };
   }, []);
+
+  useEffect(() => {
+    const channel = new BroadcastChannel("tsconline-chart");
+    const sendSnapshot = (snapObj: object) => {
+      try {
+        const payload = JSON.stringify(snapObj);
+        channel.postMessage({ type: "snapshot", payload });
+        // write to localStorage as a storage-event fallback (add ts to force change)
+        localStorage.setItem("chartPreview", payload);
+        localStorage.setItem("chartPreview_ts", String(Date.now()));
+      } catch (err) {
+        console.error("broadcast snapshot failed", err);
+      }
+    };
+
+    // send initial snapshot
+    reaction(
+      () => toJS(state.chartTab.state),
+      (snap) => {
+        sendSnapshot(snap);
+      },
+      { delay: 50 } // debounce small bursts
+    );
+
+    // listen for explicit requests from preview windows
+    channel.onmessage = (ev) => {
+      try {
+        const msg = ev.data;
+        if (msg?.type === "request") {
+          sendSnapshot(state.chartTab.state);
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    };
+
+    return () => {
+      channel.close();
+    };
+  }, [state.chartTab.state]);
+
   const getQsg = () => {
     switch (i18n.language) {
       case "en":
@@ -145,11 +187,12 @@ export default observer(function App() {
         <ThemeProvider theme={theme}>
           <PreviousLocationProvider>
             <CssBaseline />
-            {location.pathname != "/verify" && <NavBar />}
+            {location.pathname != "/verify" && location.pathname != "/chart/preview" && <NavBar />}
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/chart" element={<ChartTab />} />
+              <Route path="/chart/preview" element={<ChartPreview />} />
               <Route path="/help/*" element={<Help />} />
               <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
