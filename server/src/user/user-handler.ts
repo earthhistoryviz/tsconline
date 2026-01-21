@@ -1,5 +1,5 @@
-import { access, readFile, rename, rm, writeFile } from "fs/promises";
-import path from "path";
+import { access, readFile, readdir, rename, rm, writeFile } from "fs/promises";
+import path, { join } from "path";
 import {
   CACHED_USER_DATAPACK_FILENAME,
   DATAPACK_PROFILE_PICTURE_FILENAME,
@@ -33,6 +33,7 @@ import { findUser } from "../database.js";
 import { OperationResult, User } from "../types.js";
 import { getTemporaryFilepath, uploadFileToFileSystem } from "../upload-handlers.js";
 import { createZipFile } from "../file-handlers/general-file-handler-requests.js";
+import { tmpdir } from "os";
 
 /**
  * looks for a specific datapack in all the user directories
@@ -460,3 +461,69 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
   const newZipFile = await createZipFile(newZipFilePath, filesDir);
   return newZipFile;
 };
+export async function processMultipartPartsForAttachedDatapackFilesEditUpload(
+  uuid: string,
+  datapackTitle: string,
+  isPublic: boolean,
+  parts: AsyncIterableIterator<Multipart>
+): Promise<{ pdfFields: { [fileName: string]: string } } | OperationResult> {
+  async function cleanupTempFiles() {
+    for (const pdfPath of Object.values(pdfFields)) {
+      await rm(pdfPath, { force: true });
+    }
+    return;
+  }
+  const pdfFields: Record<string, string> = {};
+
+  // process the multipart form data
+  for await (const part of parts) {
+    if (part.type === "file") {
+      // newFiles[] is the fieldname for the uploaded files
+      if (part.fieldname === "newFiles[]") {
+        if (!checkFileTypeIsPDF(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack pdf file" };
+        }
+
+        // create a temporary file path for the uploaded file
+        const filePath = join(tmpdir(), part.filename);
+        pdfFields[part.filename] = filePath;
+
+        const { code, message } = await uploadFileToFileSystem(part, filePath);
+
+        // if the upload failed, clean up the temp files and return an error
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      }
+    }
+  }
+  return { pdfFields };
+}
+
+export async function removeAttachedDatapackFile(
+  uuid: string,
+  datapackTitle: string,
+  fileName: string
+): Promise<number> {
+  // find datapack folder
+  const datapackFolder = await fetchUserDatapackDirectory(uuid, datapackTitle);
+
+  // find the files directory and then remove file. after, check number of files remaining
+  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
+
+  try {
+    const deleteFileDir = path.join(filesDir, fileName);
+    await rm(deleteFileDir);
+    const numFilesRemaining = (await readdir(filesDir)).length;
+
+    // delete outdated zip
+    const zipfile = getDatapackZipFilePath(uuid, datapackTitle);
+    await rm(zipfile, { force: true });
+    return numFilesRemaining;
+  } catch (e) {
+    console.error(`Error deleting attached file ${fileName} from datapack ${datapackFolder} with error ${e}`);
+    throw e;
+  }
+}
