@@ -33,9 +33,26 @@ export function prependDualColCompColumnName(text: string): string {
  * @param userBaseAge
  * @returns
  */
-export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, userTopAge: number, userBaseAge: number) {
+export function checkIfDataIsInRange(
+  minDataAge: number,
+  maxDataAge: number,
+  userTopAge: number,
+  userBaseAge: number,
+  isNegativeUnits: boolean
+) {
+  // support negative units: negate top and base ages and switch min/maxes before checking
+  if (isNegativeUnits) {
+    userBaseAge = -userBaseAge;
+    userTopAge = -userTopAge;
+    const temp: number = -minDataAge;
+    minDataAge = -maxDataAge;
+    maxDataAge = temp;
+  }
+
   if (userBaseAge <= userTopAge) {
-    return false;
+    if (!isNegativeUnits) {
+      return false;
+    }
   }
 
   // once we finish datapack parsing we should not have any at 99999 and -99999

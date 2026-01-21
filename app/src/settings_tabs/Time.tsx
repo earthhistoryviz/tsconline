@@ -30,6 +30,7 @@ export const Time = observer(function Time() {
   function checkAgeRange() {
     return state.settings.timeSettings[units].topStageAge > state.settings.timeSettings[units].baseStageAge;
   }
+
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
