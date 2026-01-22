@@ -41,8 +41,15 @@ const members = [
     name: "Paolo Gumasing",
     role: "Team Lead",
     homeTown: "Lafayette, IN",
-    timeWorked: "2023 - Present",
+    timeWorked: "2023 - 2025",
     proPic: "PaoloGumasing.jpeg"
+  },
+  {
+    name: "Ellis Selznick",
+    role: "Team Lead",
+    homeTown: "Tucson, AZ",
+    timeWorked: "2024 - Present",
+    proPic: "EllisSelznick.jpg"
   },
   {
     name: "Jay Lee",
@@ -62,21 +69,21 @@ const members = [
     name: "Aditya Sivathanu",
     role: "Member",
     homeTown: "West Lafayette, IN",
-    timeWorked: "2023 - Present",
+    timeWorked: "2023 - 2025",
     proPic: "AdityaSivathanu.jpg"
   },
   {
     name: "Leyton Bostre",
     role: "Member",
     homeTown: "Long Beach, CA",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024 - 2025",
     proPic: "LeytonBostre.jpg"
   },
   {
     name: "Jiaqing Li (Jacqui)",
     role: "Member",
     homeTown: "Wuhan, China",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024 - 2025",
     proPic: "JacquiLi.jpeg"
   },
   {
@@ -97,7 +104,7 @@ const members = [
     name: "Rebecca Rupp",
     role: "Member",
     homeTown: "Houston, Texas",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024",
     proPic: "RebeccaRupp.png"
   },
   {
@@ -111,29 +118,29 @@ const members = [
     name: "Kevin Chang",
     role: "Member",
     homeTown: "West Lafayette, IN",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024 - 2025",
     proPic: "KevinChang.jpg"
   },
   {
     name: "Samyukta Balaji",
     role: "Member",
     homeTown: "Sacramento, California",
-    timeWorked: "2024-Present",
+    timeWorked: "2024 - Present",
     proPic: "SamyuktaBalaji.png"
   },
   {
     name: "Michael Knaack",
     role: "Member",
     homeTown: "Denville, NJ",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024",
     proPic: "MichaelPic.jpg"
   },
   {
-    name: "Ellis Selznick",
+    name: "Neel Patel",
     role: "Member",
-    homeTown: "Tucson, AZ",
-    timeWorked: "2024 - Present",
-    proPic: "EllisSelznick.jpg"
+    homeTown: "Hillsborough, NJ",
+    timeWorked: "2025 - Present",
+    proPic: "NeelPatel.jpg"
   }
 ];
 
