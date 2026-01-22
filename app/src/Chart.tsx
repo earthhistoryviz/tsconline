@@ -68,7 +68,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
     //url for testing: http://localhost:5173/chart?mcpChartState=eyJkYXRhUGFja3MiOiBbIlRpbWVTY2FsZSBDcmVhdG9yIEludGVybmFsIERhdGFwYWNrIl19 
 
-    
+
     let mounted = true;
     (async () => {
       console.log("On chart mount, checking URL params for chart state...");
@@ -134,9 +134,10 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
       const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
         title,
         isPublic: true,
-        storedFileName: "TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
+        storedFileName: actions.getStoredFileName(title),
         type: "official"
       }));
+
 
       // We need to select a datapack and push it to state.datapack for the configs to process. 
 

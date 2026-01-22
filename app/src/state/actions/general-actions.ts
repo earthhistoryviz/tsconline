@@ -969,6 +969,19 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
   return image;
 });
 
+
+export const getStoredFileName = action("getStoredFileName", async (datapackTitle: string) => {
+  // gets the stored file name for a datapack title that exists in state.datapack
+  const datapack = state.datapacks.find((dp) => dp.title === datapackTitle);
+  if (!datapack) {
+    throw new Error("Datapack not found");
+  }
+  return datapack.storedFileName;
+});
+
+
+
+
 export async function getRecaptchaToken(token: string) {
   try {
     const recaptchaToken = await executeRecaptcha(token);
