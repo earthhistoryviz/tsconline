@@ -141,6 +141,13 @@ const members = [
     homeTown: "Hillsborough, NJ",
     timeWorked: "2025 - Present",
     proPic: "NeelPatel.jpg"
+  },
+  {
+    name: "Ji Bing Ni",
+    role: "Member",
+    homeTown: "Indianapolis, IN",
+    timeWorked: "2025 - Present",
+    proPic: "JiBingNi.png"
   }
 ];
 
