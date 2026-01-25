@@ -8,7 +8,10 @@ import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FileSaver from "file-saver";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
@@ -208,6 +211,64 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       </CustomTooltip>
     );
   };
+  const NewWindowButton = () => {
+    return (
+      <CustomTooltip title="New Window">
+        <StyledIconButton
+          className="new-window-button"
+          onClick={() => {
+            openPreview();
+          }}>
+          <OpenInNewIcon />
+        </StyledIconButton>
+      </CustomTooltip>
+    );
+  };
+
+  const openPreview = () => {
+    const { chartContent, madeChart } = chartTabState;
+    const snapshot = {
+      chartContent: chartContent,
+      madeChart: madeChart,
+      chartTimelineEnabled: chartTabState.chartTimelineEnabled,
+      chartZoomSettings: chartTabState.chartZoomSettings
+    };
+    try {
+      localStorage.setItem("chartPreview", JSON.stringify(snapshot));
+      window.open("/chart/preview", "_blank");
+    } catch (err) {
+      actions.pushSnackbar("Unable to open preview", "warning");
+      console.error("Failed to open preview", err);
+    }
+  };
+
+  const LockButton = () => {
+    const { state, actions } = useContext(context);
+    const isLocked = state.chartTab.previewLocked;
+    return (
+      <div>
+        <CustomTooltip
+          title={
+            <>
+              {isLocked ? "Unlock graph to allow changes from main window" : "Lock graph from main window"}
+              <br />
+              (prevents changes from main window)
+            </>
+          }>
+          <StyledIconButton
+            className="lock-button"
+            onClick={() => {
+              actions.setChartTab({
+                ...state.chartTab,
+                previewLocked: !state.chartTab.previewLocked
+              });
+            }}>
+            {isLocked ? <LockOutlinedIcon /> : <LockOpenIcon />}
+          </StyledIconButton>
+        </CustomTooltip>
+      </div>
+    );
+  };
 
   const HelpButton = () => {
     return (
@@ -237,6 +298,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
+        {location.pathname == "/chart" && <NewWindowButton />}
         {(actionChartOptions || []).map(({ icon, label, onClick }) => {
           return (
             <Box key={label}>
@@ -259,6 +321,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <DownloadButton svgRef={svgRef} altSaveOptions={altSaveOptions} />
       </div>
       <div className="flex-row" ref={helpRef}>
+        {location.pathname == "/chart/preview" && <LockButton />}
         <HelpButton />
       </div>
     </div>
