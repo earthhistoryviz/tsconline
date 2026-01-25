@@ -41,7 +41,6 @@ import { ChartHistoryMetadata,
 import Color from "color";
 import { toJS } from "mobx";
 import { fetcher } from "./util";
-import {setChartTabState} from "./state/actions/general-actions";
 
 
 
@@ -157,24 +156,40 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           assertCachedChartResponseInfo(cachedChartInfo);
           console.log("Fetched cached chart info from server:", cachedChartInfo);
 
-          const content = await (await fetcher(cachedChartInfo.chartpath)).text();
 
-        
-        // await actions.processDatapackConfig(toJS(datapackConfigs));
-        setChartTabState(state.chartTab.state, {
-          chartContent: content,
-          chartHash: cachedChartInfo.hash,
-          madeChart: true,
-        });
+          const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
+          console.log("Fetched settings XML:", fetchedSettings);
+          console.log("chart settings", toJS(state.settings));
+          if (fetchedSettings) {
+            actions.applySettings(fetchedSettings);
+          } else {
+            console.error("Failed to fetch settings file for cached chart.");
+          }
+
+
 
         //we need to first using charthash, send a request to get a cached chart and its settings. 
+
+          await actions.processDatapackConfig(datapackConfigs, { settings: cachedChartInfo.settingspath });
+
+          console.log("chart settings after DP process", toJS(state.settings));
+
+
+
+          const content = await (await fetcher(cachedChartInfo.chartpath)).text();
+          actions.setChartTabState(state.chartTab.state, {
+              chartContent: content,
+              chartHash: cachedChartInfo.hash,
+              madeChart: true,
+            });
 
         //then we can call a function to load the settings file 
 
         //then we can set the chart tabstate to have the chart contents
 
         console.log("Finished processing URL params for chart state.");
-        // console.log("state.config.datapacks:", toJS(state.config?.datapacks));
+        console.log("state.config.datapacks:", toJS(state.config?.datapacks));
+        console.log("state.datapacks:", toJS(state.datapacks));
 
         }
       }

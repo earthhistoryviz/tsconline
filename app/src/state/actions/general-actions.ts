@@ -723,7 +723,7 @@ export const setDatapackConfig = action(
   }
 );
 
-const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | null> => {
+export const fetchSettingsXML = action("fetchSettingsXML", async (settingsPath: string): Promise<ChartInfoTSC | null> => {
   const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
     method: "GET"
   });
@@ -743,7 +743,7 @@ const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | nu
     displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
   }
   return null;
-};
+});
 
 /**
  * Removes cache in public dir on server
