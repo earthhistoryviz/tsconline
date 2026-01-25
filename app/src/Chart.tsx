@@ -34,10 +34,14 @@ import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
 import { formatDate, purifyChartContent } from "./state/non-action-util";
-import { ChartHistoryMetadata, DatapackUniqueIdentifier } from "@tsconline/shared";
+import { ChartHistoryMetadata, 
+  DatapackConfigForChartRequest, 
+  assertMCPLinkParams, 
+  assertCachedChartResponseInfo } from "@tsconline/shared";
 import Color from "color";
-import { DatapackConfigForChartRequest, DatapackType } from "@tsconline/shared";
 import { toJS } from "mobx";
+import { fetcher } from "./util";
+
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -60,98 +64,118 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
   const navigate = useNavigate();
 
-
-
   //check seralized URL params for a given chart state from MCP
   // Right now, gets a public datapack title only. Then needs to create a DatapackConfigForChartRequest from that title, somehow getting the stored file name.
   useEffect(() => {
 
-    //url for testing: http://localhost:5173/chart?mcpChartState=eyJkYXRhUGFja3MiOiBbIlRpbWVTY2FsZSBDcmVhdG9yIEludGVybmFsIERhdGFwYWNrIl19 
+    //url for testing: http://localhost:5173/chart?mcpChartState=eyJkYXRhcGFja3MiOiBbIkFmcmljYSBCaWdodCJdLCAiY2hhcnRIYXNoIjogIjJhZTMxYWI5MjA0ZWY2MzRhNjcwZjRkMjdjZDRjYTk4In0=
 
 
     let mounted = true;
     (async () => {
-      console.log("On chart mount, checking URL params for chart state...");
-      console.log("datapack list", toJS(state.datapacks));
-      console.log("datapack list len", toJS(state.datapacks.length));
-      const urlParams = new URLSearchParams(window.location.search);
-      //check if params exist
-      if (!urlParams.toString()) {
-        return
-      }
+      // console.log("On chart mount, checking URL params for chart state...");
+      // console.log("datapack list", toJS(state.datapacks));
+      // console.log("datapack list len", toJS(state.datapacks.length));
+      try{
 
-
-      //convert base64 to JSON
-      const chartStateParam = urlParams.get("mcpChartState");
-      if (!chartStateParam) {
-        return;
-      }
-      let parsedState = null;
-      try {
-        const decodedState = atob(chartStateParam);
-        parsedState = JSON.parse(decodedState);
-      }
-      catch (error) {
-        console.error("Error parsing chartState from URL:", error);
-      }
-
-      const dataPacksTitles = parsedState.dataPacks;
-      if (!dataPacksTitles || dataPacksTitles.length === 0) {
-        // no datapacks to process
-        return;
-      }
-      //construct DatapackConfigForChartRequest from titles of type DatapackConfigForChartRequest
-
-      //Steps to getting datapacks
-      // 1. populate a fetch param for datapacks
-
-      const controller = new AbortController();
-
-
-      // 2. send a fetch const fetchedDatapack = await actions.fetchDatapack(metadata, { signal: controller.signal });
-
-      for (const title of dataPacksTitles) {
+        const urlParams = new URLSearchParams(window.location.search);
+        //check if params exist
+        if (!urlParams.toString()) {
+          return
+        }
+        //convert base64 to JSON
+        const chartStateParam = urlParams.get("mcpChartState");
+        if (!chartStateParam) {
+          return;
+        }
+        let parsedState = null;
         try {
-          console.log("Fetching datapack for title:", title);
-          const fetchedDatapack = await actions.fetchDatapack({ title, type: "official", isPublic: true }, { signal: controller.signal });
-          if (fetchedDatapack) {
-            actions.addDatapack(fetchedDatapack);
-            // may need to figure some way to populate state.datapackMetadata here as well
-          } else {
-            console.error("Failed to fetch datapack for title:", title);
-          } 
-        } catch (error) {
-          console.error("Error fetching datapack for title:", title, error);
+          const decodedState = atob(chartStateParam);
+          parsedState = JSON.parse(decodedState);
+        }
+        catch (error) {
+          console.error("Error parsing chartState from URL:", error);
+        }
+
+        assertMCPLinkParams(parsedState);
+        const dataPacksTitles = parsedState.datapacks;
+        const chartHash = parsedState.chartHash;
+
+        if (!dataPacksTitles || dataPacksTitles.length === 0) {
+          throw new Error("No datapacks specified in MCP link");
+        }
+        //construct DatapackConfigForChartRequest from titles of type DatapackConfigForChartRequest
+
+        //Steps to getting datapacks
+        // 1. populate a fetch param for datapacks
+
+        const controller = new AbortController();
+
+        // 2. send a fetch const fetchedDatapack = await actions.fetchDatapack(metadata, { signal: controller.signal });
+
+        for (const title of dataPacksTitles) {
+          try {
+            console.log("Fetching datapack for title:", title);
+            const fetchedDatapack = await actions.fetchDatapack({ title, type: "official", isPublic: true }, { signal: controller.signal });
+            if (fetchedDatapack) {
+              actions.addDatapack(fetchedDatapack);
+              // may need to figure some way to populate state.datapackMetadata here as well
+            } else {
+              console.error("Failed to fetch datapack for title:", title);
+            } 
+          } catch (error) {
+            console.error("Error fetching datapack for title:", title, error);
+          }
+        }
+
+        //3. now should be able to construct the datapack config from titles and send to processDatapackConfig
+
+        console.log("datapack state after fetch:", toJS(state.datapacks));
+
+        //hardcode datapackType as offical for now
+        const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
+          title,
+          isPublic: true,
+          storedFileName: actions.getStoredFileName(title),
+          type: "official"
+        }));
+
+
+        // We need to select a datapack and push it to state.datapack for the configs to process. 
+
+        console.log("Constructed datapackConfigs from titles:", datapackConfigs);
+        const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
+        console.log("route for fetching cached chart:", route);
+        const response = await fetcher(route, {
+          method: "GET",
+          credentials: "include"
+        }
+        );
+        console.log("Fetched cached chart response from server:", response.status);
+        if (response.ok) {
+          const cachedChartInfo = await response.json();
+          assertCachedChartResponseInfo(cachedChartInfo);
+          console.log("Fetched cached chart info from server:", cachedChartInfo);
+
+        // await actions.processDatapackConfig(toJS(datapackConfigs));
+        // actions.initiateChartGeneration(navigate, "/charts");
+
+        //we need to first using charthash, send a request to get a cached chart and its settings. 
+
+        //then we can call a function to load the settings file 
+
+        //then we can set the chart tabstate to have the chart contents
+
+        console.log("Finished processing URL params for chart state.");
+        // console.log("state.config.datapacks:", toJS(state.config?.datapacks));
+
         }
       }
+      catch(e: any){
+        console.error("Error processing MCP link params:", e.message);
+        return;
+      }
 
-      //3. now should be able to construct the datapack config from titles and send to processDatapackConfig
-
-      console.log("datapack state after fetch:", toJS(state.datapacks));
-
-
-      //hardcode datapackType as offical for now
-      const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
-        title,
-        isPublic: true,
-        storedFileName: actions.getStoredFileName(title),
-        type: "official"
-      }));
-
-
-      // We need to select a datapack and push it to state.datapack for the configs to process. 
-
-      console.log("Constructed datapackConfigs from titles:", datapackConfigs);
-
-
-
-      await actions.processDatapackConfig(toJS(datapackConfigs));
-      actions.initiateChartGeneration(navigate, "/charts");
-
-
-
-      console.log("Finished processing URL params for chart state.");
-      console.log("state.config.datapacks:", toJS(state.config?.datapacks));
     })();
     return () => {
       mounted = false;
