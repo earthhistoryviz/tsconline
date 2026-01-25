@@ -41,6 +41,8 @@ import { ChartHistoryMetadata,
 import Color from "color";
 import { toJS } from "mobx";
 import { fetcher } from "./util";
+import {setChartTabState} from "./state/actions/general-actions";
+
 
 
 export const ChartContext = createContext<ChartContextType>({
@@ -73,9 +75,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
     let mounted = true;
     (async () => {
-      // console.log("On chart mount, checking URL params for chart state...");
-      // console.log("datapack list", toJS(state.datapacks));
-      // console.log("datapack list len", toJS(state.datapacks.length));
+
       try{
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -157,8 +157,15 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           assertCachedChartResponseInfo(cachedChartInfo);
           console.log("Fetched cached chart info from server:", cachedChartInfo);
 
+          const content = await (await fetcher(cachedChartInfo.chartpath)).text();
+
+        
         // await actions.processDatapackConfig(toJS(datapackConfigs));
-        // actions.initiateChartGeneration(navigate, "/charts");
+        setChartTabState(state.chartTab.state, {
+          chartContent: content,
+          chartHash: cachedChartInfo.hash,
+          madeChart: true,
+        });
 
         //we need to first using charthash, send a request to get a cached chart and its settings. 
 
