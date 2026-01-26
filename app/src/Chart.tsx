@@ -33,7 +33,7 @@ import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
-import { formatDate, purifyChartContent } from "./state/non-action-util";
+import { formatDate, purifyChartContent, getMetadataFromArray} from "./state/non-action-util";
 import { ChartHistoryMetadata, 
   DatapackConfigForChartRequest, 
   assertMCPLinkParams, 
@@ -132,6 +132,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         console.log("datapack state after fetch:", toJS(state.datapacks));
 
         //hardcode datapackType as offical for now
+        //fix MCP to send type as well to construct datapack metadata properly
         const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
           title,
           isPublic: true,
@@ -144,7 +145,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
         console.log("Constructed datapackConfigs from titles:", datapackConfigs);
         const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
-        console.log("route for fetching cached chart:", route);
         const response = await fetcher(route, {
           method: "GET",
           credentials: "include"
@@ -162,13 +162,17 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           console.log("chart settings", toJS(state.settings));
           if (fetchedSettings) {
             actions.applySettings(fetchedSettings);
+            // Sync prevSettings with current settings so popups and other settings are properly enabled
+            state.prevSettings = JSON.parse(JSON.stringify(state.settings));
           } else {
             console.error("Failed to fetch settings file for cached chart.");
           }
 
 
 
-        //we need to first using charthash, send a request to get a cached chart and its settings. 
+          //we need to first using charthash, send a request to get a cached chart and its settings. 
+
+          console.log("Processing datapack config with settings path:", datapackConfigs);
 
           await actions.processDatapackConfig(datapackConfigs, { settings: cachedChartInfo.settingspath });
 
@@ -178,7 +182,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
           const content = await (await fetcher(cachedChartInfo.chartpath)).text();
           actions.setChartTabState(state.chartTab.state, {
-              chartContent: content,
+              chartContent: purifyChartContent(content),
               chartHash: cachedChartInfo.hash,
               madeChart: true,
             });
@@ -186,8 +190,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         //then we can call a function to load the settings file 
 
         //then we can set the chart tabstate to have the chart contents
-
-        console.log("Finished processing URL params for chart state.");
+        // console.log("Finished processing URL params for chart state.");
         console.log("state.config.datapacks:", toJS(state.config?.datapacks));
         console.log("state.datapacks:", toJS(state.datapacks));
 
