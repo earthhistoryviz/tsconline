@@ -141,6 +141,13 @@ const members = [
     homeTown: "Hillsborough, NJ",
     timeWorked: "2025 - Present",
     proPic: "NeelPatel.jpg"
+  },
+  {
+    name: "Asvin Sivathanu",
+    role: "Member",
+    homeTown: "West Lafayette, IN",
+    timeWorked: "2026",
+    proPic: "AsvinSivathanu.jpg"
   }
 ];
 
