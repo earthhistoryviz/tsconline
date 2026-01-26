@@ -3,6 +3,7 @@ import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
 import dotenv from "dotenv";
+import { MCPLinkParams } from "@tsconline/shared";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true });
@@ -10,6 +11,9 @@ dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: t
 // makes sure the return link for the AI is correct (pr preview, local, dev, etc...)
 const domain = process.env.DOMAIN ?? "http://localhost:3000";
 const serverUrl = domain.startsWith("http") ? domain : `https://${domain}`;
+//app runs on 
+const appDomain = process.env.APP_DOMAIN ?? "http://localhost:5173";
+const appUrl = appDomain.startsWith("http") ? appDomain : `https://${appDomain}`;
 
 // Chart state management - tracks current chart configuration
 interface ChartState {
@@ -316,11 +320,30 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         currentChartState.lastChartPath = chartPath;
         currentChartState.lastModified = new Date();
 
+        //extract the chart hash from the chartPath
+        // example chartPath: public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg
+        // we want to extract b3427e1d4e367edd668b65695e4df0f4
+        // split by /
+        const pathParts = chartPath.split("/");
+        const chartHash = pathParts.length >= 4 ? pathParts[3] : "";
+
+        const mcpLinkObj: MCPLinkParams = {
+          datapacks: currentChartState.datapackTitles,
+          chartHash: chartHash
+        };
+
+        console.log("Generated MCP link object:", mcpLinkObj);
+
+        const mcpLinkJson = JSON.stringify(mcpLinkObj);
+        const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
+        const mcpToolUrl = `${appUrl}/chart?mcpChartState=${mcpLinkBase64}`;
+
         return {
           content: [
             {
               type: "text",
-              text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
+              text: `Chart generated!\n\nURL: ${mcpToolUrl}
+              \n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
             },
             {
               type: "resource",
