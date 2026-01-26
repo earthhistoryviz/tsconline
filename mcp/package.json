@@ -21,7 +21,7 @@
     "build": "tsc -b",
     "dev": "concurrently \"tsc -b -w\" \"yarn start\"",
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch dist/index.js",
-    "test-mcp": "node ./dist/test-mcp-server.js",
+    "test-mcp": "node ./dist/index.js",
     "test-client": "node ./dist/client.js",
     "inspector": "npx @modelcontextprotocol/inspector"
   },
