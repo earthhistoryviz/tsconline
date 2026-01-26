@@ -155,6 +155,13 @@ const members = [
     homeTown: "Indianapolis, IN",
     timeWorked: "2025 - Present",
     proPic: "JiBingNi.png"
+  },
+  {
+    name: "Paul Rickert",
+    role: "Member",
+    homeTown: "West Lafayette, IN",
+    timeWorked: "2026 - Present",
+    proPic: "PaulRickert.jpg"
   }
 ];
 
