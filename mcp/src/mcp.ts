@@ -3,11 +3,31 @@ import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
 import dotenv from "dotenv";
+import { randomUUID } from "crypto";
+import type { SharedUser } from "@tsconline/shared";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true, quiet: true });
 
 const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
+
+export const sessionIds = new Map<string, { sessionId: string; expiresAt: number }>();
+export const mcpUserInfo = new Map<string, SharedUser>();
+
+const TOKEN_TTL_MS = 1 * 60 * 1000; // 1 minute
+
+// Cleanup expired tokens every minute
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, entry] of sessionIds.entries()) {
+    if (entry.expiresAt <= now) {
+      sessionIds.delete(token);
+      console.log("Current sessionIds map:", sessionIds);
+      console.log(`Expired token cleaned up: ${token}`);
+      console.log("Current sessionIds map:", sessionIds);
+    }
+  }
+}, 60 * 1000).unref?.();
 
 // Chart state management - tracks current chart configuration
 interface ChartState {
@@ -476,6 +496,97 @@ Example: { "datapackTitles": ["GTS2020"] }`,
       }
     }
   );
+
+  server.registerTool(
+    "login",
+    {
+      title: "Login",
+      description: `What it does: generate a login link to provide to the user for authentication.
+
+When to use:
+- Initial step to authenticate the user
+- Obtain a login URL to present to the user
+- The token might expire in a minute but only tell the user that if they say the link didn't work or if they generate another
+
+Input: {}
+- Do not wrap payload twice (no nested { input: {...} })`,
+      inputSchema: {}
+    },
+    async (_, session) => {
+      try {
+        const token = randomUUID();
+
+        // Delete any old token that points to this same sessionId
+        const oldToken = Array.from(sessionIds.entries()).find(([, v]) => v.sessionId === session.sessionId)?.[0];
+        if (oldToken) {
+          sessionIds.delete(oldToken);
+        }
+
+        const loginUrl = `${serverUrl}/login?mcp_token=${token}`;
+        sessionIds.set(token, {
+          sessionId: session.sessionId ?? token,
+          expiresAt: Date.now() + TOKEN_TTL_MS
+        });
+        console.log("Created login URL:", loginUrl);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Login URL: ${loginUrl}`
+            }
+          ]
+        };
+      } catch (e) {
+        return { content: [{ type: "text", text: `Error logging in: ${String(e)}` }] };
+      }
+    }
+  )
+
+  server.registerTool(
+    "whoami",
+    {
+      title: "Who Am I? Am I logged in?",
+      description: `What it does: returns complete user information if logged in.
+
+When to use:
+- Check if user is authenticated
+- Get user details (username, email, admin status, etc.)
+- Verify user permissions
+
+Input: {}
+- Do not wrap payload twice (no nested { input: {...} }).`,
+      inputSchema: {}
+    },
+    async (_, session) => {
+      try {
+        console.log("session.sessionId:", session.sessionId);
+        console.log("sessionId map:", sessionIds);
+        console.log("mcpUserInfo map:", mcpUserInfo);
+        if (mcpUserInfo.has(session.sessionId ?? "")) {
+          const userInfo = mcpUserInfo.get(session.sessionId ?? "")!;
+          return {
+            content: [
+              {
+                type: "text",
+                text: `You are logged in!\n\nUser Information:\n${JSON.stringify(userInfo, null, 2)}`
+              }
+            ]
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `You are not logged in. Please use the login tool to authenticate.`
+              }
+            ]
+          };
+        }
+      } catch (e) {
+        return { content: [{ type: "text", text: `Error checking user info: ${String(e)}` }] };
+      }
+    }
+  )
 
   server.registerResource(
     "greeting",

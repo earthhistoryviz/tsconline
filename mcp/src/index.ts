@@ -8,10 +8,11 @@ import { shutdown } from "./shutdown.js";
 
 const mcpServer = fastify({ logger: false, trustProxy: true });
 
+// Your preferred plugin setup lives here
 await mcpServer.register(rateLimit, {
   max: 200,
   timeWindow: "1 minute",
-  keyGenerator: (req) => (req.headers["mcp-session-id"] as string | undefined) ?? req.ip
+  keyGenerator: (req) => (req.headers["mcp-session-id"] as string | undefined) ?? req.ip,
 });
 
 await mcpServer.register(cors, {
@@ -44,9 +45,11 @@ try {
   process.exit(1);
 }
 
+// Graceful shutdown
 process.once("SIGINT", () => shutdown(mcpServer, "SIGINT"));
 process.once("SIGTERM", () => shutdown(mcpServer, "SIGTERM"));
 
+// nodemon restart support
 process.once("SIGUSR2", async () => {
   await shutdown(mcpServer, "SIGUSR2", { exitOnComplete: false });
   process.kill(process.pid, "SIGUSR2");
