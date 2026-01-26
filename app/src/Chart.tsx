@@ -64,27 +64,34 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
   const navigate = useNavigate();
+  const isLoadingCachedChart = useRef(false); // Track if we're loading from a cached chart URL
 
   //check seralized URL params for a given chart state from MCP
   // Right now, gets a public datapack title only. Then needs to create a DatapackConfigForChartRequest from that title, somehow getting the stored file name.
   useEffect(() => {
 
-    //url for testing: http://localhost:5173/chart?mcpChartState=eyJkYXRhcGFja3MiOiBbIkFmcmljYSBCaWdodCJdLCAiY2hhcnRIYXNoIjogIjJhZTMxYWI5MjA0ZWY2MzRhNjcwZjRkMjdjZDRjYTk4In0=
+    //url for testing: http://localhost:5173/chart?mcpChartState=eyJkYXRhcGFja3MiOiBbIkFmcmljYSBCaWdodCIsICJBdXN0cmFsaWEiXSwgImNoYXJ0SGFzaCI6ICI0MjQ4MTNhNzdmZDYzMjM2Zjc3NDc0OWU5OWZjNjcxZiJ9Cgo=
 
 
     let mounted = true;
     (async () => {
 
+      
       try{
+        isLoadingCachedChart.current = true; // Mark that we're loading from cached chart URL
+        
+        console.log("Processing MCP link params for cached chart...");
 
         const urlParams = new URLSearchParams(window.location.search);
         //check if params exist
         if (!urlParams.toString()) {
+          console.log("No URL parameters found.");
           return
         }
         //convert base64 to JSON
         const chartStateParam = urlParams.get("mcpChartState");
         if (!chartStateParam) {
+          console.log("No mcpChartState parameter found in URL.");
           return;
         }
         let parsedState = null;
@@ -94,6 +101,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         }
         catch (error) {
           console.error("Error parsing chartState from URL:", error);
+          return;
         }
 
         assertMCPLinkParams(parsedState);
@@ -103,6 +111,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         if (!dataPacksTitles || dataPacksTitles.length === 0) {
           throw new Error("No datapacks specified in MCP link");
         }
+        
         //construct DatapackConfigForChartRequest from titles of type DatapackConfigForChartRequest
 
         //Steps to getting datapacks
@@ -185,6 +194,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
               chartContent: purifyChartContent(content),
               chartHash: cachedChartInfo.hash,
               madeChart: true,
+              matchesSettings: true, // Ensure matchesSettings is true since settings and datapacks are now in sync
             });
 
         //then we can call a function to load the settings file 
@@ -199,6 +209,9 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
       catch(e: any){
         console.error("Error processing MCP link params:", e.message);
         return;
+      }
+      finally {
+        isLoadingCachedChart.current = false; // Reset flag after loading completes
       }
 
     })();
@@ -216,6 +229,9 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const { scale, zoomFitScale, zoomFitMidCoord, zoomFitMidCoordIsX, enableScrollZoom } = chartZoomSettings;
 
   useEffect(() => {
+    // Don't show snackbar if we're loading from a cached chart URL on initial load
+    if (isLoadingCachedChart.current) return;
+    
     if (!matchesSettings && !triggeredDifferentSettings.current) {
       triggeredDifferentSettings.current = true;
       actions.pushSnackbar("Chart settings are different from the displayed chart.", "warning");
