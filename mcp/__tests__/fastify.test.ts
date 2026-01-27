@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { EventEmitter } from "node:events";
 import type { FastifyInstance } from "fastify";
 
+import type { SharedUser } from "@tsconline/shared";
 import { registerMCPRoutes } from "../src/fastify";
 
 // ---- Mocks ----
@@ -186,6 +187,7 @@ function makeReq(opts?: Partial<TestReq>): TestReq {
   };
 }
 
+const makeSharedUser = (overrides: Partial<SharedUser> = {}): SharedUser => ({ ...overrides }) as SharedUser;
 const LEGACY_SESSION_ID = "legacy-test-session";
 
 // ---- Tests ----
@@ -200,7 +202,7 @@ afterEach(() => {
 });
 
 describe("registerMCPRoutes", () => {
-  it("registers /sse/ping and returns pong", async () => {
+  it("registers /ping and returns pong", async () => {
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance);
 
@@ -530,8 +532,49 @@ describe("registerMCPRoutes", () => {
     });
   });
 
+  describe("/mcp/user-info", () => {
+    it("invalid or expired token => 400 and deletes token if present", async () => {
+      const { sessionIds } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      sessionIds.set("t1", { sessionId: LEGACY_SESSION_ID, expiresAt: Date.now() - 1 });
+
+      const handler = app.find("POST", "/mcp/user-info");
+      const reply = makeReply();
+      await handler(makeReq({ body: { token: "t1", userInfo: makeSharedUser() } }), reply);
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toEqual({ error: "Invalid or expired token" });
+      expect(sessionIds.has("t1")).toBe(false);
+    });
+
+    it("valid token => maps mcpUserInfo and token is single-use", async () => {
+      const { sessionIds, mcpUserInfo } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      sessionIds.set("t2", { sessionId: "streamable-uuid-1", expiresAt: Date.now() + 60_000 });
+
+      const handler = app.find("POST", "/mcp/user-info");
+      const reply = makeReply();
+      const userInfo = makeSharedUser();
+
+      await handler(makeReq({ body: { token: "t2", userInfo } }), reply);
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ ok: true });
+      expect(mcpUserInfo.get("streamable-uuid-1")).toEqual(userInfo);
+      expect(sessionIds.has("t2")).toBe(false);
+    });
+  });
+
   it("cleanup timer reaps expired sessions (streamable + legacy) and onClose cleans everything", async () => {
     vi.useFakeTimers();
+
+    const { mcpUserInfo } = await import("../src/mcp.js");
 
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance, {
@@ -549,11 +592,17 @@ describe("registerMCPRoutes", () => {
     const sseReply = makeReply();
     await sse(makeReq({ raw: new EventEmitter() }), sseReply);
 
+    // Pretend there is user info to be removed on legacy expiry
+    mcpUserInfo.set(LEGACY_SESSION_ID, makeSharedUser());
+
     // advance beyond TTL and run the 10s cleanup interval
     vi.advanceTimersByTime(20_000);
 
     // legacy response should have been destroyed by TTL reap
     expect(sseReply.raw.destroy).toHaveBeenCalled();
+
+    // also removes mcpUserInfo for that legacy sid
+    expect(mcpUserInfo.has(LEGACY_SESSION_ID)).toBe(false);
 
     // now simulate app.close() onClose hook cleanup
     await app.runOnClose();

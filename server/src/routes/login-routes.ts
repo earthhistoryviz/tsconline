@@ -543,14 +543,14 @@ export const sendForgotPasswordEmail = async function sendForgotPasswordEmail(
 };
 
 export const resendVerificationEmail = async function resendVerificationEmail(
-  request: FastifyRequest<{ Body: { email: string; recaptchaToken: string } }>,
+  request: FastifyRequest<{ Body: { email: string; recaptchaToken: string; mcpToken?: string } }>,
   reply: FastifyReply
 ) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
-  const { email, recaptchaToken } = request.body;
+  const { email, recaptchaToken, mcpToken } = request.body;
   if (!email || !validator.isEmail(email) || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
@@ -593,7 +593,11 @@ export const resendVerificationEmail = async function resendVerificationEmail(
       preHeader: "Just one more step to get started!",
       title: "Welcome to TSC Online!",
       message: emailText,
-      link: emailVerified ? undefined : `${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`,
+      link: emailVerified
+        ? undefined
+        : `${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}${
+            mcpToken ? `&mcp_token=${encodeURIComponent(mcpToken)}` : ""
+          }`,
       buttonText: emailVerified ? undefined : "Verify Your Email Now",
       action: "Email Verification"
     };
@@ -643,14 +647,16 @@ export const verifyEmail = async function verifyEmail(
 };
 
 export const signup = async function signup(
-  request: FastifyRequest<{ Body: { username: string; password: string; email: string; recaptchaToken: string } }>,
+  request: FastifyRequest<{
+    Body: { username: string; password: string; email: string; recaptchaToken: string; mcpToken?: string };
+  }>,
   reply: FastifyReply
 ) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
-  const { username, password, email, recaptchaToken } = request.body;
+  const { username, password, email, recaptchaToken, mcpToken } = request.body;
   if (!username || !password || !email || !validator.isEmail(email) || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
@@ -692,7 +698,9 @@ export const signup = async function signup(
       preHeader: "Just one more step to get started!",
       title: "Welcome to TSC Online, " + username + "!",
       message: `Welcome to TSC Online, <strong>${username}</strong>! We're excited to have you join our community. Please verify your email to activate your account and start exploring our features. Click on the button below to verify your email.`,
-      link: `${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`,
+      link: `${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}${
+        mcpToken ? `&mcp_token=${encodeURIComponent(mcpToken)}` : ""
+      }`,
       buttonText: "Verify Your Email",
       action: "Email Verification"
     };
