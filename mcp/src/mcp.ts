@@ -13,8 +13,8 @@ dotenv.config({
   quiet: true
 });
 
-const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
-const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:5173`;
+const serverUrl = process.env.APP_URL ?? `http://localhost:3000`;
+const frontendUrl = process.env.FRONTEND_URL ?? `http://localhost:5173`;
 
 export const sessionIds = new Map<string, { sessionId: string; expiresAt: number }>();
 export const mcpUserInfo = new Map<string, SharedUser>();
@@ -22,17 +22,14 @@ export const mcpUserInfo = new Map<string, SharedUser>();
 const TOKEN_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
 // Cleanup expired tokens every 2 minutes
-export const cleanupInterval = setInterval(
-  () => {
-    const now = Date.now();
-    for (const [token, entry] of sessionIds.entries()) {
-      if (entry.expiresAt <= now) {
-        sessionIds.delete(token);
-      }
+export const cleanupInterval = setInterval(() => {
+  const now = Date.now();
+  for (const [token, entry] of sessionIds.entries()) {
+    if (entry.expiresAt <= now) {
+      sessionIds.delete(token);
     }
-  },
-  2 * 60 * 1000
-).unref?.();
+  }
+}, 2 * 60 * 1000).unref?.();
 
 // Chart state management - tracks current chart configuration
 interface ChartState {
