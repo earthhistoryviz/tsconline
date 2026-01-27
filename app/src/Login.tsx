@@ -84,7 +84,7 @@ export const Login: React.FC = observer(() => {
           try {
             // Avoid sending large history payloads; MCP only needs identity/role info
             const userInfo = { ...state.user, historyEntries: [] };
-            const resp = await fetch(`http://localhost:3001/mcp/user-info`, {
+            await fetch(`http://localhost:3001/mcp/user-info`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"

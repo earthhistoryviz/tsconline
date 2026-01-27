@@ -22,14 +22,17 @@ export const mcpUserInfo = new Map<string, SharedUser>();
 const TOKEN_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
 // Cleanup expired tokens every 2 minutes
-export const cleanupInterval = setInterval(() => {
-  const now = Date.now();
-  for (const [token, entry] of sessionIds.entries()) {
-    if (entry.expiresAt <= now) {
-      sessionIds.delete(token);
+export const cleanupInterval = setInterval(
+  () => {
+    const now = Date.now();
+    for (const [token, entry] of sessionIds.entries()) {
+      if (entry.expiresAt <= now) {
+        sessionIds.delete(token);
+      }
     }
-  }
-}, 2 * 60 * 1000).unref?.();
+  },
+  2 * 60 * 1000
+).unref?.();
 
 // Chart state management - tracks current chart configuration
 interface ChartState {
