@@ -12,19 +12,15 @@ export interface ShutdownOptions {
  * is done in fastify.ts via app.addHook("onClose", ...).
  *
  * IMPORTANT: This function does NOT register process signal handlers.
- * Do that in index.ts and call this function.
+ * Does that in index.ts and call this function.
  */
-export async function shutdown(
-  app: FastifyInstance,
-  signal: string,
-  opts: ShutdownOptions = {}
-) {
+export async function shutdown(app: FastifyInstance, signal: string, opts: ShutdownOptions = {}) {
   const { timeoutMs = 5000, exitOnComplete = true } = opts;
 
   // Prevent double shutdown attempts
-  const anyApp = app as any;
-  if (anyApp.__isShuttingDown) return;
-  anyApp.__isShuttingDown = true;
+  const appWithShutdownFlag = app as FastifyInstance & { __isShuttingDown?: boolean };
+  if (appWithShutdownFlag.__isShuttingDown) return;
+  appWithShutdownFlag.__isShuttingDown = true;
 
   app.log.info({ signal }, "Shutting down...");
 

@@ -21,6 +21,7 @@ export const AccountVerify: React.FC = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get("token");
+  const mcpToken = searchParams.get("mcp_token");
   const { actions } = useContext(context);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(token === null ? "Send a verification email." : "Verifying account...");
@@ -61,6 +62,18 @@ export const AccountVerify: React.FC = () => {
           actions.removeAllErrors();
           actions.pushSnackbar("Account verified, redirecting...", "success");
           setMessage("Your account has been verified. Thank you!");
+          if (mcpToken) {
+            try {
+              const userInfo = { ...state.user, historyEntries: [] };
+              await fetch(`http://localhost:3001/mcp/user-info`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: mcpToken, userInfo })
+              });
+            } catch (e) {
+              console.error("Failed to send user info to MCP", e);
+            }
+          }
           setTimeout(() => navigate("/"), 2000);
         }
       } else {
@@ -126,7 +139,7 @@ export const AccountVerify: React.FC = () => {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email, recaptchaToken })
+        body: JSON.stringify({ email, recaptchaToken, ...(mcpToken ? { mcpToken } : {}) })
       });
       if (response.ok) {
         actions.removeAllErrors();

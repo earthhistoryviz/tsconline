@@ -24,8 +24,17 @@ import { useTranslation } from "react-i18next";
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
   const [loading, setLoading] = useState(false);
+  const [mcpToken, setMcpToken] = useState<string | null>(null);
   const theme = useTheme();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("mcp_token");
+    if (token) {
+      setMcpToken(token);
+    }
+  }, []);
 
   interface Form {
     username: FormDataEntryValue | null;
@@ -69,7 +78,26 @@ export const Login: React.FC = observer(() => {
         body: JSON.stringify(body)
       });
       if (response.ok) {
+        // mcp login verification
         await actions.sessionCheck();
+        if (mcpToken) {
+          try {
+            // Avoid sending large history payloads; MCP only needs identity/role info
+            const userInfo = { ...state.user, historyEntries: [] };
+            const resp = await fetch(`http://localhost:3001/mcp/user-info`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                token: mcpToken,
+                userInfo
+              })
+            });
+          } catch (e) {
+            console.error("Failed to send user info to MCP", e);
+          }
+        }
         if (!state.isLoggedIn) {
           displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
         } else {
@@ -179,7 +207,7 @@ export const Login: React.FC = observer(() => {
                 <Link href="/forgot-password">{t("login.forgot-password")}</Link>
               </Grid>
               <Grid item>
-                <Link href="/signup">{t("login.signup")}</Link>
+                <Link href={`/signup${mcpToken ? `?mcp_token=${mcpToken}` : ""}`}>{t("login.signup")}</Link>
               </Grid>
             </Grid>
             <Box className="divider-box">
