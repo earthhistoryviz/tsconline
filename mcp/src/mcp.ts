@@ -7,27 +7,29 @@ import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
-dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true, quiet: true });
+dotenv.config({
+  path: path.resolve(process.cwd(), "../server/.env"),
+  override: true,
+  quiet: true
+});
 
-const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
+const serverUrl = process.env.APP_URL ?? `http://localhost:3000`;
+const frontendUrl = process.env.FRONTEND_URL ?? `http://localhost:5173`;
 
 export const sessionIds = new Map<string, { sessionId: string; expiresAt: number }>();
 export const mcpUserInfo = new Map<string, SharedUser>();
 
-const TOKEN_TTL_MS = 1 * 60 * 1000; // 1 minute
+const TOKEN_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
-// Cleanup expired tokens every minute
-setInterval(() => {
+// Cleanup expired tokens every 2 minutes
+export const cleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [token, entry] of sessionIds.entries()) {
     if (entry.expiresAt <= now) {
       sessionIds.delete(token);
-      console.log("Current sessionIds map:", sessionIds);
-      console.log(`Expired token cleaned up: ${token}`);
-      console.log("Current sessionIds map:", sessionIds);
     }
   }
-}, 60 * 1000).unref?.();
+}, 2 * 60 * 1000).unref?.();
 
 // Chart state management - tracks current chart configuration
 interface ChartState {
@@ -522,7 +524,7 @@ Input: {}
           sessionIds.delete(oldToken);
         }
 
-        const loginUrl = `${serverUrl}/login?mcp_token=${token}`;
+        const loginUrl = `${frontendUrl}/login?mcp_token=${token}`;
         sessionIds.set(token, {
           sessionId: session.sessionId ?? token,
           expiresAt: Date.now() + TOKEN_TTL_MS
@@ -540,7 +542,7 @@ Input: {}
         return { content: [{ type: "text", text: `Error logging in: ${String(e)}` }] };
       }
     }
-  )
+  );
 
   server.registerTool(
     "whoami",
@@ -586,7 +588,7 @@ Input: {}
         return { content: [{ type: "text", text: `Error checking user info: ${String(e)}` }] };
       }
     }
-  )
+  );
 
   server.registerResource(
     "greeting",

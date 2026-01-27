@@ -6,18 +6,21 @@ type Transports =
   | Record<string, StreamableHTTPServerTransport>
   | { streamable: Record<string, StreamableHTTPServerTransport>; sse?: Record<string, SSEServerTransport> };
 
-export const shutdown = async (fastify: FastifyInstance, transports: Transports) => {
-  const shutdownTransports = async () => {
-    console.log(chalk.cyan("Shutting down MCP server..."));
+/**
+ * Gracefully shuts down Fastify.
+ * Assumes resource cleanup (closing transports, destroying SSE sockets, clearing timers)
+ * is done in fastify.ts via app.addHook("onClose", ...).
+ *
+ * IMPORTANT: This function does NOT register process signal handlers.
+ * Does that in index.ts and call this function.
+ */
+export async function shutdown(app: FastifyInstance, signal: string, opts: ShutdownOptions = {}) {
+  const { timeoutMs = 5000, exitOnComplete = true } = opts;
 
-    // normalize shape safely without using `any`
-    const isNestedTransports = (
-      t: Transports
-    ): t is { streamable: Record<string, StreamableHTTPServerTransport>; sse?: Record<string, SSEServerTransport> } => {
-      if (typeof t !== "object" || t === null) return false;
-      const rec = t as unknown as Record<string, unknown>;
-      return rec.streamable !== undefined && typeof rec.streamable === "object";
-    };
+  // Prevent double shutdown attempts
+  const appWithShutdownFlag = app as FastifyInstance & { __isShuttingDown?: boolean };
+  if (appWithShutdownFlag.__isShuttingDown) return;
+  appWithShutdownFlag.__isShuttingDown = true;
 
     const normalized: {
       streamable: Record<string, StreamableHTTPServerTransport>;
