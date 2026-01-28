@@ -65,7 +65,7 @@ export const AccountVerify: React.FC = () => {
           if (mcpToken) {
             try {
               const userInfo = { ...state.user, historyEntries: [] };
-              await fetch(`http://localhost:3001/mcp/user-info`, {
+              await fetcher("/mcp/user-info", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ token: mcpToken, userInfo })

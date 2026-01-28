@@ -171,10 +171,10 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
   });
 
   // SSE
-  app.get("/sse", async (_req, reply) => {
+  app.get("/mcp/sse", async (_req, reply) => {
     reply.raw.setTimeout(0);
 
-    const transport = new SSEServerTransport("/messages", reply.raw);
+    const transport = new SSEServerTransport("/mcp/messages", reply.raw);
 
     const server = createMCPServer();
     legacyServers.set(transport.sessionId, server);
@@ -227,7 +227,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     await server.connect(transport);
   });
 
-  app.post("/messages", async (req, reply) => {
+  app.post("/mcp/messages", async (req, reply) => {
     const q = req.query as Record<string, unknown>;
     const sessionId = typeof q.sessionId === "string" ? q.sessionId : undefined;
 
@@ -262,7 +262,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
   });
 
   if (enableHealth) {
-    app.get("/health", async (_req, reply) => {
+    app.get("/mcp/health", async (_req, reply) => {
       reply.send({
         ok: true,
         streamableSessions: streamableSessions.size,
@@ -271,7 +271,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     });
   }
 
-  app.get("/ping", async (_req, reply) => {
+  app.get("/mcp/ping", async (_req, reply) => {
     reply.send("pong");
   });
 

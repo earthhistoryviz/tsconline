@@ -13,8 +13,8 @@ dotenv.config({
   quiet: true
 });
 
-const serverUrl = process.env.APP_URL ?? `http://localhost:3000`;
-const frontendUrl = process.env.FRONTEND_URL ?? `http://localhost:5173`;
+const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
+const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:5173`;
 
 export const sessionIds = new Map<string, { sessionId: string; expiresAt: number }>();
 export const mcpUserInfo = new Map<string, SharedUser>();
