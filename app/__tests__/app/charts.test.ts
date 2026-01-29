@@ -303,10 +303,7 @@ test("check if new window button works", async ({ page, context }) => {
   await newPage.close();
 });
 
-
 //generate a test with MCPlink state in the window params
-
-
 
 test("check sync of preview with window", async ({ page, context }) => {
   await generateBasicChart(page);
@@ -451,7 +448,6 @@ test("load cached chart from MCP link state in window params", async ({ page }) 
       await route.abort();
     }
   });
-
 
   // Navigate to chart page with MCP link params
   await page.goto(`http://localhost:5173/chart?mcpChartState=${encodedState}`);

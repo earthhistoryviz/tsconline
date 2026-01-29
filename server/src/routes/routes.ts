@@ -21,7 +21,6 @@ import "dotenv/config";
 import { waitForSVGReady } from "../chart-generation/generate-chart-helpers.js";
 import type { WebSocket } from "ws";
 import { generateChart, ChartGenerationError, findCachedChart } from "../chart-generation/generate-chart.js";
-import { find } from "lodash";
 
 export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();
@@ -252,18 +251,13 @@ export const fetchCachedFilePaths = async function fetchCachedFilePaths(
   reply: FastifyReply
 ) {
   try {
-    let { chartHash } = request.params;
+    const { chartHash } = request.params;
 
-    const { chartpath, hash, settingsFile } = await findCachedChart(
-      { hash: chartHash },
-      request.session.get("uuid")
-    );
+    const { chartpath, hash, settingsFile } = await findCachedChart({ hash: chartHash });
 
     reply.status(200).send({ chartpath: chartpath, hash: hash, settingspath: settingsFile });
     return;
-
-  }
-  catch (e) {
+  } catch (e) {
     if (e instanceof ChartGenerationError && e.errorCode === 404) {
       reply.status(404).send({ error: "Cached chart not found" });
       return;
@@ -273,7 +267,6 @@ export const fetchCachedFilePaths = async function fetchCachedFilePaths(
     return;
   }
 };
-
 
 // Serve timescale data endpoint
 export const fetchTimescale = async function (_request: FastifyRequest, reply: FastifyReply) {

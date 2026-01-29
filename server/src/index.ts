@@ -358,7 +358,6 @@ server.get("/chart", { websocket: true }, routes.handleChartGeneration);
 // keeping this route non-user based for now
 server.get<{ Params: { chartHash: string } }>("/cached-chart/:chartHash", strictRateLimit, routes.fetchCachedFilePaths);
 
-
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);
 

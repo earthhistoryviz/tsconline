@@ -123,12 +123,8 @@ export async function generateChart(
   return { chartpath: chartUrlPath, hash: hash };
 }
 
-export async function findCachedChart(
-  chartRequest: CachedChartRequest,
-  uuid?: string
-) {
-  try{
-
+export async function findCachedChart(chartRequest: CachedChartRequest) {
+  try {
     const hash = chartRequest.hash;
     // const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
     const chartDir = path.join(assetconfigs.chartsDirectory, hash);

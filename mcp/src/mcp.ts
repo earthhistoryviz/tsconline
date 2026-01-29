@@ -11,7 +11,7 @@ dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: t
 // makes sure the return link for the AI is correct (pr preview, local, dev, etc...)
 const domain = process.env.DOMAIN ?? "http://localhost:3000";
 const serverUrl = domain.startsWith("http") ? domain : `https://${domain}`;
-//app runs on 
+//app runs on
 const appDomain = process.env.APP_DOMAIN ?? "http://localhost:5173";
 const appUrl = appDomain.startsWith("http") ? appDomain : `https://${appDomain}`;
 

@@ -88,9 +88,9 @@ describe("mcpListDatapacks", () => {
     });
 
     const req = {} as unknown as FastifyRequest;
-    const reply = { 
-      send: vi.fn(), 
-      status: vi.fn().mockReturnThis() 
+    const reply = {
+      send: vi.fn(),
+      status: vi.fn().mockReturnThis()
     } as unknown as FastifyReply;
 
     await mcpListDatapacks(req, reply);

@@ -428,7 +428,7 @@ describe("fetchCachedFilePaths", () => {
       hash: mockChartHash,
       settingspath: `charts/${mockChartHash}/settings.tsc`
     });
-    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash }, uuid);
+    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash });
   });
 
   it("returns 404 when cached chart not found", async () => {
@@ -486,51 +486,11 @@ describe("fetchCachedFilePaths", () => {
       settingsFile: `charts/${mockChartHash}/settings.tsc`
     });
 
-    const testUuid = "different-uuid-456";
     await app.inject({
-      method: "GET",
-      url: `/cached-chart/${encodeURIComponent(mockChartHash)}`,
-      headers: {
-        "mock-uuid": testUuid
-      }
-    });
-
-    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash }, testUuid);
-  });
-
-  it("handles undefined uuid from session", async () => {
-    findCachedChartSpy.mockResolvedValueOnce({
-      chartpath: `/charts/${mockChartHash}/chart.svg`,
-      hash: mockChartHash,
-      settingsFile: `charts/${mockChartHash}/settings.tsc`
-    });
-
-    const res = await app.inject({
       method: "GET",
       url: `/cached-chart/${encodeURIComponent(mockChartHash)}`
     });
 
-    expect(res.statusCode).toBe(200);
-    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash }, undefined);
-  });
-
-  it("correctly encodes special characters in chart hash", async () => {
-    const specialHash = "hash-with-special@chars#123";
-    findCachedChartSpy.mockResolvedValueOnce({
-      chartpath: `/charts/${specialHash}/chart.svg`,
-      hash: specialHash,
-      settingsFile: `charts/${specialHash}/settings.tsc`
-    });
-
-    const res = await app.inject({
-      method: "GET",
-      url: `/cached-chart/${encodeURIComponent(specialHash)}`,
-      headers: {
-        "mock-uuid": uuid
-      }
-    });
-
-    expect(res.statusCode).toBe(200);
-    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: specialHash }, uuid);
+    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash });
   });
 });

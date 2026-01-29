@@ -723,27 +723,34 @@ export const setDatapackConfig = action(
   }
 );
 
-export const fetchSettingsXML = action("fetchSettingsXML", async (settingsPath: string): Promise<ChartInfoTSC | null> => {
-  const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
-    method: "GET"
-  });
-  let settingsXml;
-  try {
-    settingsXml = await res.text();
-  } catch (e) {
-    //couldn't get settings from server
-    displayServerError(null, ErrorCodes.INVALID_SETTINGS_RESPONSE, ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]);
+export const fetchSettingsXML = action(
+  "fetchSettingsXML",
+  async (settingsPath: string): Promise<ChartInfoTSC | null> => {
+    const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
+      method: "GET"
+    });
+    let settingsXml;
+    try {
+      settingsXml = await res.text();
+    } catch (e) {
+      //couldn't get settings from server
+      displayServerError(
+        null,
+        ErrorCodes.INVALID_SETTINGS_RESPONSE,
+        ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]
+      );
+      return null;
+    }
+    try {
+      const settingsJson = xmlToJson(settingsXml);
+      return settingsJson;
+    } catch (e) {
+      //couldn't parse settings
+      displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
+    }
     return null;
   }
-  try {
-    const settingsJson = xmlToJson(settingsXml);
-    return settingsJson;
-  } catch (e) {
-    //couldn't parse settings
-    displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
-  }
-  return null;
-});
+);
 
 /**
  * Removes cache in public dir on server
@@ -969,9 +976,7 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
   return image;
 });
 
-
-export const getStoredFileName = action("getStoredFileName",
-  (datapackTitle: string) => {
+export const getStoredFileName = action("getStoredFileName", (datapackTitle: string) => {
   // gets the stored file name for a datapack title that exists in state.datapack
   const datapack = state.datapacks.find((dp) => dp.title === datapackTitle);
   if (!datapack) {
@@ -979,9 +984,6 @@ export const getStoredFileName = action("getStoredFileName",
   }
   return datapack.storedFileName;
 });
-
-
-
 
 export async function getRecaptchaToken(token: string) {
   try {
