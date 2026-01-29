@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import * as chartGenerationHelpers from "../src/chart-generation/generate-chart-helpers";
-import { generateChart } from "../src/chart-generation/generate-chart";
+import { generateChart, ChartGenerationError, findCachedChart } from "../src/chart-generation/generate-chart";
 import * as metadata from "../src/file-metadata-handler";
 import * as chartHistory from "../src/user/chart-history";
 import * as database from "../src/database";
@@ -331,5 +331,60 @@ describe("generateChart", () => {
 
     expect(deleteUserDatapackSpy).toHaveBeenCalledWith("temp", "/temp/path");
     expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to delete temporary datapack"));
+  });
+});
+
+describe("findCachedChart", () => {
+  const chartHash = "6b97f03fc4c88d703d251030dd15b9ce";
+  const uuid = "test-uuid";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns cached chart with settings file path when cache hit", async () => {
+    vi.spyOn(chartGenerationHelpers, "checkForCacheHit").mockResolvedValueOnce({
+      chartpath: `/charts/${chartHash}/chart.svg`,
+      hash: chartHash
+    });
+
+    const result = await findCachedChart({ hash: chartHash }, uuid);
+
+    expect(result).toEqual({
+      chartpath: `/charts/${chartHash}/chart.svg`,
+      hash: chartHash,
+      settingsFile: `charts/${chartHash}/settings.tsc`
+    });
+  });
+
+  it("throws ChartGenerationError with 404 code when cached chart not found", async () => {
+    vi.spyOn(chartGenerationHelpers, "checkForCacheHit").mockResolvedValueOnce(null);
+
+    await expect(findCachedChart({ hash: chartHash }, uuid)).rejects.toMatchObject({
+      message: "Cached chart not found",
+      errorCode: 404
+    });
+  });
+
+  it("works without uuid parameter", async () => {
+    vi.spyOn(chartGenerationHelpers, "checkForCacheHit").mockResolvedValueOnce({
+      chartpath: `/charts/${chartHash}/chart.svg`,
+      hash: chartHash
+    });
+
+    const result = await findCachedChart({ hash: chartHash });
+
+    expect(result).toEqual({
+      chartpath: `/charts/${chartHash}/chart.svg`,
+      hash: chartHash,
+      settingsFile: `charts/${chartHash}/settings.tsc`
+    });
+  });
+
+  it("converts non-ChartGenerationError to Error", async () => {
+    const error = new Error("Unexpected file system error");
+    vi.spyOn(chartGenerationHelpers, "checkForCacheHit").mockRejectedValueOnce(error);
+    await expect(findCachedChart({ hash: chartHash }, uuid)).rejects.toThrow("Error while finding cached chart");
+
   });
 });

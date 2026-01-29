@@ -127,21 +127,28 @@ export async function findCachedChart(
   chartRequest: CachedChartRequest,
   uuid?: string
 ) {
-  const hash = chartRequest.hash;
-  const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
-  const chartDir = path.join(assetconfigs.chartsDirectory, hash);
-  const chartFile = path.join(chartDir, "chart.svg");
-  const settingsFile = path.join(chartDir, "settings.tsc");
-  const chartUrlPath = `/${assetconfigs.chartsDirectory}/${hash}/chart.svg`;
-  const useCache = true;
-  const isCrossPlot = false; // only used for charts for now
+  try{
 
+    const hash = chartRequest.hash;
+    // const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
+    const chartDir = path.join(assetconfigs.chartsDirectory, hash);
+    const chartFile = path.join(chartDir, "chart.svg");
+    const settingsFile = path.join(chartDir, "settings.tsc");
+    const chartUrlPath = `/${assetconfigs.chartsDirectory}/${hash}/chart.svg`;
+    const useCache = true;
+    // const isCrossPlot = false; // only used for charts for now
 
-  const cached = await checkForCacheHit(chartFile, useCache, chartUrlPath, hash);
-  if (cached) {
-    //i want to to send a json of {chartpath, hash, settingsFile
-    return { chartpath: cached.chartpath, hash: cached.hash, settingsFile };
-  } else {
-    throw new ChartGenerationError("Cached chart not found", 404);
+    const cached = await checkForCacheHit(chartFile, useCache, chartUrlPath, hash);
+    if (cached) {
+      return { chartpath: cached.chartpath, hash: cached.hash, settingsFile };
+    } else {
+      throw new ChartGenerationError("Cached chart not found", 404);
+    }
+  } catch (error) {
+    if (error instanceof ChartGenerationError) {
+      throw error;
+    } else {
+      throw new Error("Error while finding cached chart");
+    }
   }
 }

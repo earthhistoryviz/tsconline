@@ -252,7 +252,6 @@ export const fetchCachedFilePaths = async function fetchCachedFilePaths(
   reply: FastifyReply
 ) {
   try {
-    console.log("Received request for cached chart with hash:", request.params.chartHash);
     let { chartHash } = request.params;
 
     const { chartpath, hash, settingsFile } = await findCachedChart(
@@ -263,7 +262,12 @@ export const fetchCachedFilePaths = async function fetchCachedFilePaths(
     reply.status(200).send({ chartpath: chartpath, hash: hash, settingspath: settingsFile });
     return;
 
-  } catch (e) {
+  }
+  catch (e) {
+    if (e instanceof ChartGenerationError && e.errorCode === 404) {
+      reply.status(404).send({ error: "Cached chart not found" });
+      return;
+    }
     const errorMessage = e instanceof Error ? e.message : String(e);
     reply.status(500).send({ error: errorMessage });
     return;

@@ -41,6 +41,8 @@ import { ChartHistoryMetadata,
 import Color from "color";
 import { toJS } from "mobx";
 import { fetcher } from "./util";
+import { displayServerError } from "./state/actions/util-actions";
+import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 
 
 
@@ -69,31 +71,26 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   //check seralized URL params for a given chart state from MCP
   // Right now, gets a public datapack title only. Then needs to create a DatapackConfigForChartRequest from that title, somehow getting the stored file name.
   useEffect(() => {
-
-    //url for testing: http://localhost:5173/chart?mcpChartState=eyJkYXRhcGFja3MiOiBbIkFmcmljYSBCaWdodCIsICJBdXN0cmFsaWEiXSwgImNoYXJ0SGFzaCI6ICI0MjQ4MTNhNzdmZDYzMjM2Zjc3NDc0OWU5OWZjNjcxZiJ9Cgo=
-
-
     let mounted = true;
     (async () => {
-
-      
       try{
-        isLoadingCachedChart.current = true; // Mark that we're loading from cached chart URL
+        if (!mounted) return;
         
+        isLoadingCachedChart.current = true;
         console.log("Processing MCP link params for cached chart...");
 
         const urlParams = new URLSearchParams(window.location.search);
-        //check if params exist
         if (!urlParams.toString()) {
           console.log("No URL parameters found.");
           return
         }
-        //convert base64 to JSON
+        
         const chartStateParam = urlParams.get("mcpChartState");
         if (!chartStateParam) {
           console.log("No mcpChartState parameter found in URL.");
           return;
         }
+        
         let parsedState = null;
         try {
           const decodedState = atob(chartStateParam);
@@ -111,23 +108,17 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         if (!dataPacksTitles || dataPacksTitles.length === 0) {
           throw new Error("No datapacks specified in MCP link");
         }
-        
-        //construct DatapackConfigForChartRequest from titles of type DatapackConfigForChartRequest
-
-        //Steps to getting datapacks
-        // 1. populate a fetch param for datapacks
 
         const controller = new AbortController();
 
-        // 2. send a fetch const fetchedDatapack = await actions.fetchDatapack(metadata, { signal: controller.signal });
-
         for (const title of dataPacksTitles) {
+          if (!mounted) return;
+          
           try {
             console.log("Fetching datapack for title:", title);
             const fetchedDatapack = await actions.fetchDatapack({ title, type: "official", isPublic: true }, { signal: controller.signal });
             if (fetchedDatapack) {
               actions.addDatapack(fetchedDatapack);
-              // may need to figure some way to populate state.datapackMetadata here as well
             } else {
               console.error("Failed to fetch datapack for title:", title);
             } 
@@ -136,12 +127,8 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           }
         }
 
-        //3. now should be able to construct the datapack config from titles and send to processDatapackConfig
-
         console.log("datapack state after fetch:", toJS(state.datapacks));
 
-        //hardcode datapackType as offical for now
-        //fix MCP to send type as well to construct datapack metadata properly
         const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
           title,
           isPublic: true,
@@ -149,61 +136,52 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           type: "official"
         }));
 
-
-        // We need to select a datapack and push it to state.datapack for the configs to process. 
-
         console.log("Constructed datapackConfigs from titles:", datapackConfigs);
         const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
         const response = await fetcher(route, {
           method: "GET",
           credentials: "include"
-        }
-        );
+        });
+        
         console.log("Fetched cached chart response from server:", response.status);
         if (response.ok) {
+          if (!mounted) return;
+          
           const cachedChartInfo = await response.json();
           assertCachedChartResponseInfo(cachedChartInfo);
           console.log("Fetched cached chart info from server:", cachedChartInfo);
 
-
           const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
           console.log("Fetched settings XML:", fetchedSettings);
-          console.log("chart settings", toJS(state.settings));
+          
           if (fetchedSettings) {
             actions.applySettings(fetchedSettings);
-            // Sync prevSettings with current settings so popups and other settings are properly enabled
             state.prevSettings = JSON.parse(JSON.stringify(state.settings));
           } else {
             console.error("Failed to fetch settings file for cached chart.");
           }
 
-
-
-          //we need to first using charthash, send a request to get a cached chart and its settings. 
-
           console.log("Processing datapack config with settings path:", datapackConfigs);
-
           await actions.processDatapackConfig(datapackConfigs, { settings: cachedChartInfo.settingspath });
 
           console.log("chart settings after DP process", toJS(state.settings));
 
-
-
+          if (!mounted) return;
+          
           const content = await (await fetcher(cachedChartInfo.chartpath)).text();
           actions.setChartTabState(state.chartTab.state, {
               chartContent: purifyChartContent(content),
               chartHash: cachedChartInfo.hash,
               madeChart: true,
-              matchesSettings: true, // Ensure matchesSettings is true since settings and datapacks are now in sync
+              matchesSettings: true,
             });
 
-        //then we can call a function to load the settings file 
+          console.log("state.config.datapacks:", toJS(state.config?.datapacks));
+          console.log("state.datapacks:", toJS(state.datapacks));
 
-        //then we can set the chart tabstate to have the chart contents
-        // console.log("Finished processing URL params for chart state.");
-        console.log("state.config.datapacks:", toJS(state.config?.datapacks));
-        console.log("state.datapacks:", toJS(state.datapacks));
-
+        } else if (response.status === 404) {
+          displayServerError(response, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
+          return;
         }
       }
       catch(e: any){
@@ -211,10 +189,11 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         return;
       }
       finally {
-        isLoadingCachedChart.current = false; // Reset flag after loading completes
+        isLoadingCachedChart.current = false;
       }
 
     })();
+    
     return () => {
       mounted = false;
     };
