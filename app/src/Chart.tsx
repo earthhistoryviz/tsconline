@@ -127,7 +127,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           }
         }
 
-        console.log("datapack state after fetch:", toJS(state.datapacks));
 
         const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
           title,
@@ -136,35 +135,26 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           type: "official"
         }));
 
-        console.log("Constructed datapackConfigs from titles:", datapackConfigs);
         const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
         const response = await fetcher(route, {
           method: "GET",
           credentials: "include"
         });
-        
-        console.log("Fetched cached chart response from server:", response.status);
+      
         if (response.ok) {
           if (!mounted) return;
           
           const cachedChartInfo = await response.json();
           assertCachedChartResponseInfo(cachedChartInfo);
-          console.log("Fetched cached chart info from server:", cachedChartInfo);
 
           const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
-          console.log("Fetched settings XML:", fetchedSettings);
           
           if (fetchedSettings) {
             actions.applySettings(fetchedSettings);
             state.prevSettings = JSON.parse(JSON.stringify(state.settings));
-          } else {
-            console.error("Failed to fetch settings file for cached chart.");
-          }
+          } 
 
-          console.log("Processing datapack config with settings path:", datapackConfigs);
-          await actions.processDatapackConfig(datapackConfigs, { settings: cachedChartInfo.settingspath });
-
-          console.log("chart settings after DP process", toJS(state.settings));
+          await actions.processDatapackConfig(datapackConfigs, { settings: cachedChartInfo.settingspath, silent: true });
 
           if (!mounted) return;
           
@@ -176,8 +166,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
               matchesSettings: true,
             });
 
-          console.log("state.config.datapacks:", toJS(state.config?.datapacks));
-          console.log("state.datapacks:", toJS(state.datapacks));
 
         } else if (response.status === 404) {
           displayServerError(response, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);

@@ -303,7 +303,11 @@ test("check if new window button works", async ({ page, context }) => {
   await newPage.close();
 });
 
-//add a test if the updates work
+
+//generate a test with MCPlink state in the window params
+
+
+
 test("check sync of preview with window", async ({ page, context }) => {
   await generateBasicChart(page);
   const newWindowButton = await page.locator(".new-window-button");
@@ -377,3 +381,108 @@ test("test locking of preview window", async ({ page, context }) => {
   await newPage.locator(".lock-button").click();
   await expect(newPage.locator("text=Greater NW Shelf")).toBeVisible({ timeout: 10000 });
 });
+
+test("load cached chart from MCP link state in window params", async ({ page }) => {
+  const testChartHash = "mocked-chart-hash";
+  const testChartContent = await fs.readFile(path.resolve(dirname, "charts.test.ts-snapshots", "chart.svg"), "utf-8");
+
+  // Create MCP link state with Africa Bight datapack and the test chart hash
+  const mcpLinkState = {
+    datapacks: ["Africa Bight"],
+    chartHash: testChartHash
+  };
+
+  // Encode the state to base64
+  const encodedState = btoa(JSON.stringify(mcpLinkState));
+
+  // Mock the cached-chart API endpoint
+  await page.route(`**/cached-chart/${testChartHash}`, (route) => {
+    route.abort("blockedbyextension");
+  });
+
+  // Intercept and mock the chart fetch requests
+  await page.route(`**/charts/${testChartHash}/chart.svg`, (route) => {
+    route.abort("blockedbyextension");
+  });
+
+  // Mock the API responses for cached chart metadata and chart content
+  await page.route(`**/cached-chart/**`, async (route) => {
+    if (route.request().url().includes(testChartHash)) {
+      await route.fulfill({
+        status: 200,
+        body: JSON.stringify({
+          chartpath: `/charts/${testChartHash}/chart.svg`,
+          hash: testChartHash,
+          settingspath: `charts/${testChartHash}/settings.tsc`
+        })
+      });
+    } else {
+      await route.abort();
+    }
+  });
+
+  // Mock the SVG chart fetch
+  await page.route(`**/charts/**/*.svg`, async (route) => {
+    if (route.request().url().includes(testChartHash)) {
+      await route.fulfill({
+        status: 200,
+        body: testChartContent,
+        contentType: "image/svg+xml"
+      });
+    } else {
+      await route.continue();
+    }
+  });
+  // mock the fetchSettings API call
+
+  await page.route(`**/settingsXml/**`, async (route) => {
+    if (route.request().url().includes(testChartHash)) {
+      const settingsContent = await fs.readFile(
+        path.resolve(dirname, "charts.test.ts-snapshots", "basicSettings.tsc"),
+        "utf-8"
+      );
+
+      await route.fulfill({
+        status: 200,
+        body: settingsContent,
+        contentType: "application/xml"
+      });
+    } else {
+      await route.abort();
+    }
+  });
+
+
+  // Navigate to chart page with MCP link params
+  await page.goto(`http://localhost:5173/chart?mcpChartState=${encodedState}`);
+
+  // Wait for the page to load
+  await page.waitForTimeout(7000);
+
+  //if confirm datapack selection button appears, click it
+  const confirmButton = page.locator("id=confirm-datapack-selection");
+
+  //wait for 5 seconds to allow chart to load
+  await page.waitForTimeout(5000);
+
+  if (await confirmButton.isVisible({ timeout: 3000 })) {
+    await confirmButton.click();
+    await page.waitForTimeout(2000);
+  }
+
+  // Verify that the chart content is loaded and displayed
+  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 15000 });
+
+  //expect no error message about wrong settings. Error will be a snackbar with text "Invalid settings response received from server. Please try again later."
+  const errorMessage = page.locator("text=Invalid settings response received from server. Please try again later.");
+  await expect(errorMessage).toBeHidden();
+
+  // Verify the SVG chart is rendered
+  const chartSvg = page.locator(".react-transform-component svg");
+  await expect(chartSvg).toBeVisible();
+
+  // Verify key chart elements are present
+  await expect(chartSvg.locator("text=9")).toBeVisible();
+});
+
+//future PR test that popoff preview works with MCP link
