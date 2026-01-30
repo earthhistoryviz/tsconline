@@ -252,6 +252,12 @@ export const fetchCachedFilePaths = async function fetchCachedFilePaths(
 ) {
   try {
     const { chartHash } = request.params;
+    
+    // sanatize chartHash
+    if (!/^[a-f0-9]{64}$/.test(chartHash)) {
+      reply.status(400).send({ error: "Invalid chart hash" });
+      return;
+    }
 
     const { chartpath, hash, settingsFile } = await findCachedChart({ hash: chartHash });
 
