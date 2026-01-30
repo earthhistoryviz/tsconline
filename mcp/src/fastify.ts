@@ -7,7 +7,9 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
-import { createMCPServer } from "./mcp.js";
+import { createMCPServer, sessionIds, mcpUserInfo } from "./mcp.js";
+
+import { SharedUser } from "@tsconline/shared";
 
 export interface MCPRoutesOptions {
   streamableTtlMs?: number; // default 15m
@@ -62,6 +64,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
         legacySSESessions.delete(sid);
         legacyServers.delete(sid);
         // Clean up associated user info when session expires (see mcp tools)
+        mcpUserInfo.delete(sid);
 
         const res = legacySSEResponses.get(sid);
         legacySSEResponses.delete(sid);
@@ -168,10 +171,10 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
   });
 
   // SSE
-  app.get("/sse", async (_req, reply) => {
+  app.get("/mcp/sse", async (_req, reply) => {
     reply.raw.setTimeout(0);
 
-    const transport = new SSEServerTransport("/messages", reply.raw);
+    const transport = new SSEServerTransport("/mcp/messages", reply.raw);
 
     const server = createMCPServer();
     legacyServers.set(transport.sessionId, server);
@@ -224,7 +227,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     await server.connect(transport);
   });
 
-  app.post("/messages", async (req, reply) => {
+  app.post("/mcp/messages", async (req, reply) => {
     const q = req.query as Record<string, unknown>;
     const sessionId = typeof q.sessionId === "string" ? q.sessionId : undefined;
 
@@ -243,8 +246,23 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     await transport.handlePostMessage(req.raw, reply.raw, req.body as unknown);
   });
 
+  app.post("/mcp/user-info", async (req, reply) => {
+    const { token, userInfo } = req.body as { token: string; userInfo: SharedUser };
+    const entry = sessionIds.get(token);
+
+    if (!entry || entry.expiresAt < Date.now()) {
+      if (entry) sessionIds.delete(token);
+      reply.code(400).send({ error: "Invalid or expired token" });
+      return;
+    }
+
+    mcpUserInfo.set(entry.sessionId, userInfo);
+    sessionIds.delete(token);
+    reply.code(200).send({ ok: true });
+  });
+
   if (enableHealth) {
-    app.get("/health", async (_req, reply) => {
+    app.get("/mcp/health", async (_req, reply) => {
       reply.send({
         ok: true,
         streamableSessions: streamableSessions.size,
@@ -253,7 +271,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     });
   }
 
-  app.get("/ping", async (_req, reply) => {
+  app.get("/mcp/ping", async (_req, reply) => {
     reply.send("pong");
   });
 

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { EventEmitter } from "node:events";
 import type { FastifyInstance } from "fastify";
 
+import type { SharedUser } from "@tsconline/shared";
 import { registerMCPRoutes } from "../src/fastify";
 
 // ---- Mocks ----
@@ -186,6 +187,7 @@ function makeReq(opts?: Partial<TestReq>): TestReq {
   };
 }
 
+const makeSharedUser = (overrides: Partial<SharedUser> = {}): SharedUser => ({ ...overrides }) as SharedUser;
 const LEGACY_SESSION_ID = "legacy-test-session";
 
 // ---- Tests ----
@@ -200,11 +202,11 @@ afterEach(() => {
 });
 
 describe("registerMCPRoutes", () => {
-  it("registers /sse/ping and returns pong", async () => {
+  it("registers /mcp/ping and returns pong", async () => {
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance);
 
-    const handler = app.find("GET", "/ping");
+    const handler = app.find("GET", "/mcp/ping");
     const reply = makeReply();
     await handler(makeReq(), reply);
 
@@ -215,7 +217,7 @@ describe("registerMCPRoutes", () => {
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance);
 
-    const handler = app.find("GET", "/health");
+    const handler = app.find("GET", "/mcp/health");
     const reply = makeReply();
     await handler(makeReq(), reply);
 
@@ -226,7 +228,7 @@ describe("registerMCPRoutes", () => {
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance, { enableHealth: false });
 
-    expect(() => app.find("GET", "/health")).toThrow(/Route not found/);
+    expect(() => app.find("GET", "/mcp/health")).toThrow(/Route not found/);
   });
 
   describe("/mcp streamable http", () => {
@@ -387,8 +389,8 @@ describe("registerMCPRoutes", () => {
     });
   });
 
-  describe("legacy SSE + /messages", () => {
-    it("GET /sse: creates SSE session, starts keepalive, registers cleanup handlers, connects server", async () => {
+  describe("legacy SSE + /mcp/messages", () => {
+    it("GET /mcp/sse: creates SSE session, starts keepalive, registers cleanup handlers, connects server", async () => {
       vi.useFakeTimers();
 
       const { createMCPServer } = await import("../src/mcp.js");
@@ -396,7 +398,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance, { legacyKeepAliveMs: 10 });
 
-      const sse = app.find("GET", "/sse");
+      const sse = app.find("GET", "/mcp/sse");
       const reply = makeReply();
       const req = makeReq({ raw: new EventEmitter() });
 
@@ -413,11 +415,11 @@ describe("registerMCPRoutes", () => {
       expect(reply.raw.write).toHaveBeenCalled();
     });
 
-    it("POST /messages: missing sessionId => 400", async () => {
+    it("POST /mcp/messages: missing sessionId => 400", async () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const handler = app.find("POST", "/messages");
+      const handler = app.find("POST", "/mcp/messages");
       const reply = makeReply();
       await handler(makeReq({ query: {} }), reply);
 
@@ -425,11 +427,11 @@ describe("registerMCPRoutes", () => {
       expect(reply.payload).toBe("Missing sessionId");
     });
 
-    it("POST /messages: session not found => 404", async () => {
+    it("POST /mcp/messages: session not found => 404", async () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const handler = app.find("POST", "/messages");
+      const handler = app.find("POST", "/mcp/messages");
       const reply = makeReply();
       await handler(makeReq({ query: { sessionId: "legacy-404" } }), reply);
 
@@ -437,18 +439,18 @@ describe("registerMCPRoutes", () => {
       expect(reply.payload).toBe("Session not found");
     });
 
-    it("POST /messages: routes to transport.handlePostMessage when session exists", async () => {
+    it("POST /mcp/messages: routes to transport.handlePostMessage when session exists", async () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
       // Create SSE session so legacy transport exists
-      const sse = app.find("GET", "/sse");
+      const sse = app.find("GET", "/mcp/sse");
       const sseReply = makeReply();
       const sseReq = makeReq({ raw: new EventEmitter() });
       await sse(sseReq, sseReply);
 
       // First SSE transport mock uses sessionId legacy-test-session
-      const handler = app.find("POST", "/messages");
+      const handler = app.find("POST", "/mcp/messages");
       const reply = makeReply();
       await handler(makeReq({ query: { sessionId: LEGACY_SESSION_ID }, body: { hi: 1 } }), reply);
 
@@ -456,13 +458,13 @@ describe("registerMCPRoutes", () => {
       expect(reply.statusCode).toBe(200);
     });
 
-    it("GET /sse: keepAlive stops when socket is destroyed (covers destroyed/writableEnded branch)", async () => {
+    it("GET /mcp/sse: keepAlive stops when socket is destroyed (covers destroyed/writableEnded branch)", async () => {
       vi.useFakeTimers();
 
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance, { legacyKeepAliveMs: 10 });
 
-      const sse = app.find("GET", "/sse");
+      const sse = app.find("GET", "/mcp/sse");
       const reply = makeReply();
       const req = makeReq({ raw: new EventEmitter() });
 
@@ -476,13 +478,13 @@ describe("registerMCPRoutes", () => {
       expect(reply.raw.write).not.toHaveBeenCalled();
     });
 
-    it("GET /sse: cleanup handles errors from clearInterval and destroy (covers warn branches)", async () => {
+    it("GET /mcp/sse: cleanup handles errors from clearInterval and destroy (covers warn branches)", async () => {
       vi.useFakeTimers();
 
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance, { legacyKeepAliveMs: 10 });
 
-      const sse = app.find("GET", "/sse");
+      const sse = app.find("GET", "/mcp/sse");
       const reply = makeReply();
       const req = makeReq({ raw: new EventEmitter() });
 
@@ -509,11 +511,11 @@ describe("registerMCPRoutes", () => {
       }
     });
 
-    it("GET /sse: logs warning if abort handler registration throws", async () => {
+    it("GET /mcp/sse: logs warning if abort handler registration throws", async () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const sse = app.find("GET", "/sse");
+      const sse = app.find("GET", "/mcp/sse");
       const reply = makeReply();
 
       const badReq = makeReq({
@@ -530,8 +532,49 @@ describe("registerMCPRoutes", () => {
     });
   });
 
+  describe("/mcp/user-info", () => {
+    it("invalid or expired token => 400 and deletes token if present", async () => {
+      const { sessionIds } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      sessionIds.set("t1", { sessionId: LEGACY_SESSION_ID, expiresAt: Date.now() - 1 });
+
+      const handler = app.find("POST", "/mcp/user-info");
+      const reply = makeReply();
+      await handler(makeReq({ body: { token: "t1", userInfo: makeSharedUser() } }), reply);
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toEqual({ error: "Invalid or expired token" });
+      expect(sessionIds.has("t1")).toBe(false);
+    });
+
+    it("valid token => maps mcpUserInfo and token is single-use", async () => {
+      const { sessionIds, mcpUserInfo } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      sessionIds.set("t2", { sessionId: "streamable-uuid-1", expiresAt: Date.now() + 60_000 });
+
+      const handler = app.find("POST", "/mcp/user-info");
+      const reply = makeReply();
+      const userInfo = makeSharedUser();
+
+      await handler(makeReq({ body: { token: "t2", userInfo } }), reply);
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ ok: true });
+      expect(mcpUserInfo.get("streamable-uuid-1")).toEqual(userInfo);
+      expect(sessionIds.has("t2")).toBe(false);
+    });
+  });
+
   it("cleanup timer reaps expired sessions (streamable + legacy) and onClose cleans everything", async () => {
     vi.useFakeTimers();
+
+    const { mcpUserInfo } = await import("../src/mcp.js");
 
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance, {
@@ -545,15 +588,21 @@ describe("registerMCPRoutes", () => {
     await postMcp(makeReq({ body: { method: "initialize" } }), makeReply());
 
     // create legacy sse session
-    const sse = app.find("GET", "/sse");
+    const sse = app.find("GET", "/mcp/sse");
     const sseReply = makeReply();
     await sse(makeReq({ raw: new EventEmitter() }), sseReply);
+
+    // Pretend there is user info to be removed on legacy expiry
+    mcpUserInfo.set(LEGACY_SESSION_ID, makeSharedUser());
 
     // advance beyond TTL and run the 10s cleanup interval
     vi.advanceTimersByTime(20_000);
 
     // legacy response should have been destroyed by TTL reap
     expect(sseReply.raw.destroy).toHaveBeenCalled();
+
+    // also removes mcpUserInfo for that legacy sid
+    expect(mcpUserInfo.has(LEGACY_SESSION_ID)).toBe(false);
 
     // now simulate app.close() onClose hook cleanup
     await app.runOnClose();
@@ -566,7 +615,7 @@ describe("registerMCPRoutes", () => {
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance);
 
-    const sse = app.find("GET", "/sse");
+    const sse = app.find("GET", "/mcp/sse");
     const reply = makeReply();
     await sse(makeReq({ raw: new EventEmitter() }), reply);
 
