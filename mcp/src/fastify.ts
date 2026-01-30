@@ -1,140 +1,281 @@
+// fastify.ts
+import type { FastifyInstance } from "fastify";
+import type { ServerResponse } from "node:http";
+import { randomUUID } from "node:crypto";
+
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { randomUUID } from "node:crypto";
-import { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
-import chalk from "chalk";
+
 import { createMCPServer } from "./mcp.js";
-import { shutdown } from "./shutdown.js";
-export const transports: {
-  streamable: Record<string, StreamableHTTPServerTransport>;
-  sse: Record<string, SSEServerTransport>;
-} = {
-  streamable: {},
-  sse: {}
-};
-// Export a thin alias so tests can spy/mock the initialize check if needed.
-export const isInitialize = isInitializeRequest;
-interface MCPServerOptions {
-  mcpServer: typeof createMCPServer.prototype.return;
+
+export interface MCPRoutesOptions {
+  streamableTtlMs?: number; // default 15m
+  legacySseTtlMs?: number; // default 10m
+  legacyKeepAliveMs?: number; // default 15s
+  enableHealth?: boolean; // default true
 }
-export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
-  fastify: FastifyInstance,
-  opts: MCPServerOptions
-) => {
-  fastify.post("/mcp", async (request, reply) => {
-    const { mcpServer } = opts;
-    const sessionId = request.headers["mcp-session-id"] as string | undefined;
 
-    const body = request.body;
+/**
+ * Registers MCP routes + in-memory session handling on an existing FastifyInstance.
+ */
+export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions = {}) {
+  const {
+    streamableTtlMs = 15 * 60 * 1000,
+    legacySseTtlMs = 10 * 60 * 1000,
+    legacyKeepAliveMs = 15_000,
+    enableHealth = true
+  } = opts;
 
-    let transport: StreamableHTTPServerTransport;
+  // Session stores - one MCP server instance per transport/session
+  const streamableSessions = new Map<string, StreamableHTTPServerTransport>();
+  const streamableServers = new Map<string, ReturnType<typeof createMCPServer>>();
+  const legacySSESessions = new Map<string, SSEServerTransport>();
+  const legacyServers = new Map<string, ReturnType<typeof createMCPServer>>();
 
-    if (sessionId && transports.streamable[sessionId]) {
-      transport = transports.streamable[sessionId]!;
-    } else if (!sessionId && isInitializeRequest(body)) {
-      // Create new session
-      transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        onsessioninitialized: (id) => {
-          transports.streamable[id] = transport;
+  // Track raw SSE responses so TTL can hard-close sockets
+  const legacySSEResponses = new Map<string, ServerResponse>();
+
+  // Activity tracking for TTL
+  const streamableLastSeen = new Map<string, number>();
+  const legacyLastActivity = new Map<string, number>();
+
+  const touchStreamable = (sid: string) => streamableLastSeen.set(sid, Date.now());
+  const touchLegacy = (sid: string) => legacyLastActivity.set(sid, Date.now());
+
+  const cleanupTimer = setInterval(() => {
+    const now = Date.now();
+
+    for (const [sid, ts] of streamableLastSeen) {
+      if (now - ts > streamableTtlMs) {
+        streamableLastSeen.delete(sid);
+        const t = streamableSessions.get(sid);
+        streamableSessions.delete(sid);
+        streamableServers.delete(sid);
+        t?.close().catch(() => {});
+      }
+    }
+
+    for (const [sid, ts] of legacyLastActivity) {
+      if (now - ts > legacySseTtlMs) {
+        legacyLastActivity.delete(sid);
+        legacySSESessions.delete(sid);
+        legacyServers.delete(sid);
+        // Clean up associated user info when session expires (see mcp tools)
+
+        const res = legacySSEResponses.get(sid);
+        legacySSEResponses.delete(sid);
+
+        try {
+          res?.destroy();
+        } catch (err) {
+          console.warn(`Failed to destroy SSE response for expired session ${sid}:`, err);
         }
-      });
+      }
+    }
+  }, 10_000);
+  cleanupTimer.unref();
 
-      transport.onclose = () => {
-        if (transport.sessionId) delete transports.streamable[transport.sessionId];
-      };
+  // STREAMABLE HTTP
+  app.post("/mcp", async (req, reply) => {
+    const sessionId = req.headers["mcp-session-id"] as string | undefined;
+    const body = req.body as unknown;
 
-      try {
-        await mcpServer.connect(transport);
-      } catch (err) {
-        request.log.error("Failed to connect MCP server:", err);
-        reply.status(500).send({ error: "Internal server error" });
+    if (sessionId) {
+      const transport = streamableSessions.get(sessionId);
+      if (!transport) {
+        reply.code(404).send({ error: "Session not found" });
         return;
       }
-    } else {
-      reply.status(400).send({
+      touchStreamable(sessionId);
+      await transport.handleRequest(req.raw, reply.raw, body);
+      return;
+    }
+
+    if (!isInitializeRequest(body)) {
+      reply.code(400).send({
         jsonrpc: "2.0",
         id: null,
-        error: {
-          code: -32000,
-          message: "Bad Request: Invalid session or missing initialize"
-        }
+        error: { code: -32000, message: "Missing Mcp-Session-Id or initialize request" }
       });
       return;
     }
 
-    reply.raw.setHeader("Content-Type", "text/event-stream");
-    await transport.handleRequest(request.raw, reply.raw, body);
-  });
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+      onsessioninitialized: (id) => {
+        streamableSessions.set(id, transport);
+        touchStreamable(id);
 
-  fastify.get("/mcp", async (request, reply) => {
-    const sessionId = request.headers["mcp-session-id"] as string | undefined;
-    const transport = sessionId && transports.streamable[sessionId];
-
-    if (!transport) {
-      reply.status(400).send("Invalid or missing session ID");
-      return;
-    }
-
-    reply.raw.setHeader("Content-Type", "text/event-stream");
-    await transport.handleRequest(request.raw, reply.raw);
-  });
-
-  fastify.delete("/mcp", async (request: FastifyRequest, reply: FastifyReply) => {
-    const sessionId = request.headers["mcp-session-id"] as string | undefined;
-    const transport = sessionId && transports.streamable[sessionId];
-
-    if (!transport) {
-      reply.status(400).send("Invalid or missing session ID");
-      return;
-    }
-
-    await transport.handleRequest(request.raw, reply.raw);
-    await transport.close();
-    console.log(chalk.yellow("Session closed:", sessionId));
-  });
-
-  // Legacy SSE endpoint for older clients
-  fastify.get("/sse", async (request, reply) => {
-    const { mcpServer } = opts;
-
-    // Create SSE transport for legacy clients
-    const transport = new SSEServerTransport("/messages", reply.raw);
-    transports.sse[transport.sessionId] = transport;
-
-    reply.raw.on("close", () => {
-      delete transports.sse[transport.sessionId];
+        const server = createMCPServer();
+        streamableServers.set(id, server);
+        void server.connect(transport);
+      }
     });
 
-    try {
-      await mcpServer.connect(transport);
-    } catch (err) {
-      request.log.error("Failed to connect MCP server for SSE transport:", err);
-      reply.status(500).send({ error: "Internal server error" });
-      return;
-    }
+    transport.onclose = () => {
+      const sid = transport.sessionId;
+      if (sid) {
+        touchStreamable(sid);
+        streamableServers.delete(sid);
+      }
+    };
+
+    await transport.handleRequest(req.raw, reply.raw, body);
   });
 
-  // Legacy message endpoint for older clients to POST messages
-  fastify.post("/messages", async (request, reply) => {
-    const q = request.query;
-    let sessionId: string | undefined;
-    if (typeof q === "object" && q !== null) {
-      const s = (q as Record<string, unknown>)["sessionId"];
-      if (typeof s === "string") sessionId = s;
-    }
+  app.get("/mcp", async (req, reply) => {
+    const sessionId = req.headers["mcp-session-id"] as string | undefined;
     if (!sessionId) {
-      reply.status(400).send("Missing sessionId");
+      reply.code(400).send("Missing Mcp-Session-Id");
       return;
     }
-    const transport = transports.sse[sessionId];
-    if (transport) {
-      await transport.handlePostMessage(request.raw, reply.raw, request.body);
-    } else {
-      reply.status(400).send("No transport found for sessionId");
+
+    const transport = streamableSessions.get(sessionId);
+    if (!transport) {
+      reply.code(404).send("Session not found");
+      return;
     }
+
+    touchStreamable(sessionId);
+
+    reply.raw.setHeader("Cache-Control", "no-cache, no-transform");
+    reply.raw.setHeader("Connection", "keep-alive");
+    reply.raw.setHeader("X-Accel-Buffering", "no");
+
+    await transport.handleRequest(req.raw, reply.raw);
   });
-  // make sure to handle server shutdown
-  await shutdown(fastify, transports);
-};
+
+  app.delete("/mcp", async (req, reply) => {
+    const sessionId = req.headers["mcp-session-id"] as string | undefined;
+    if (!sessionId) {
+      reply.code(400).send("Missing Mcp-Session-Id");
+      return;
+    }
+
+    const transport = streamableSessions.get(sessionId);
+    if (!transport) {
+      reply.code(404).send("Session not found");
+      return;
+    }
+
+    streamableSessions.delete(sessionId);
+    streamableLastSeen.delete(sessionId);
+    streamableServers.delete(sessionId);
+
+    await transport.close().catch(() => {});
+    reply.code(204).send();
+  });
+
+  // SSE
+  app.get("/sse", async (_req, reply) => {
+    reply.raw.setTimeout(0);
+
+    const transport = new SSEServerTransport("/messages", reply.raw);
+
+    const server = createMCPServer();
+    legacyServers.set(transport.sessionId, server);
+
+    legacySSESessions.set(transport.sessionId, transport);
+    legacySSEResponses.set(transport.sessionId, reply.raw);
+    touchLegacy(transport.sessionId);
+
+    // Sends keep alives bc sse is outdated :D
+    const keepAlive = setInterval(() => {
+      try {
+        const rawReply = reply.raw as unknown as { destroyed?: boolean; writableEnded?: boolean };
+        if (rawReply.destroyed || rawReply.writableEnded) {
+          clearInterval(keepAlive);
+          return;
+        }
+        reply.raw.write(`: ping ${Date.now()}\n\n`);
+      } catch {
+        clearInterval(keepAlive);
+      }
+    }, legacyKeepAliveMs);
+
+    const cleanup = () => {
+      try {
+        clearInterval(keepAlive);
+      } catch (err) {
+        console.warn("Failed to clear keep-alive interval:", err);
+      }
+      try {
+        reply.raw.destroy();
+      } catch (err) {
+        console.warn("Failed to destroy raw reply:", err);
+      }
+      legacySSESessions.delete(transport.sessionId);
+      legacySSEResponses.delete(transport.sessionId);
+      legacyLastActivity.delete(transport.sessionId);
+      legacyServers.delete(transport.sessionId);
+    };
+
+    // Clean up on socket close/error or client abort (this can mess up when deving w wsl so keep this)
+    reply.raw.on("close", cleanup);
+    reply.raw.on("error", cleanup);
+    try {
+      const rawReq = _req as unknown as { raw?: { on?: (event: string, handler: () => void) => void } };
+      rawReq.raw?.on?.("aborted", cleanup);
+    } catch (err) {
+      console.warn("Failed to register abort handler:", err);
+    }
+
+    await server.connect(transport);
+  });
+
+  app.post("/messages", async (req, reply) => {
+    const q = req.query as Record<string, unknown>;
+    const sessionId = typeof q.sessionId === "string" ? q.sessionId : undefined;
+
+    if (!sessionId) {
+      reply.code(400).send("Missing sessionId");
+      return;
+    }
+
+    const transport = legacySSESessions.get(sessionId);
+    if (!transport) {
+      reply.code(404).send("Session not found");
+      return;
+    }
+
+    touchLegacy(sessionId);
+    await transport.handlePostMessage(req.raw, reply.raw, req.body as unknown);
+  });
+
+  if (enableHealth) {
+    app.get("/health", async (_req, reply) => {
+      reply.send({
+        ok: true,
+        streamableSessions: streamableSessions.size,
+        legacySseSessions: legacySSESessions.size
+      });
+    });
+  }
+
+  app.get("/ping", async (_req, reply) => {
+    reply.send("pong");
+  });
+
+  app.addHook("onClose", async () => {
+    clearInterval(cleanupTimer);
+
+    await Promise.allSettled([...streamableSessions.values()].map((t) => t.close().catch(() => {})));
+
+    for (const res of legacySSEResponses.values()) {
+      try {
+        res.destroy();
+      } catch (err) {
+        console.warn("Failed to destroy SSE response during shutdown:", err);
+      }
+    }
+
+    streamableSessions.clear();
+    streamableServers.clear();
+    legacySSESessions.clear();
+    legacyServers.clear();
+    legacySSEResponses.clear();
+    streamableLastSeen.clear();
+    legacyLastActivity.clear();
+  });
+}

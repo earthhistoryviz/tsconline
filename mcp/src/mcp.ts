@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import { MCPLinkParams } from "@tsconline/shared";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
-dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true });
+dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true, quiet: true });
 
 // makes sure the return link for the AI is correct (pr preview, local, dev, etc...)
 const domain = process.env.DOMAIN ?? "http://localhost:3000";
@@ -75,7 +75,6 @@ const updateChartArgsSchema = z.object({
 });
 
 export const createMCPServer = () => {
-  console.log("Starting MCP server...");
   const server = new McpServer({
     name: "demo-server",
     version: "1.0.0",
@@ -361,7 +360,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
     }
   );
 
-  // Tool: list datapacks from the main server's /mcp/datapacks endpoint.
   server.registerTool(
     "listDatapacks",
     {

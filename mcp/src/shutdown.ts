@@ -1,69 +1,52 @@
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse";
-import chalk from "chalk";
-import { FastifyInstance } from "fastify";
+// shutdown.ts
+import type { FastifyInstance } from "fastify";
 
-// Handle server shutdown gracefully
-type Transports =
-  | Record<string, StreamableHTTPServerTransport>
-  | { streamable: Record<string, StreamableHTTPServerTransport>; sse?: Record<string, SSEServerTransport> };
+export interface ShutdownOptions {
+  timeoutMs?: number; // default 5000
+  exitOnComplete?: boolean; // default true
+}
 
-export const shutdown = async (fastify: FastifyInstance, transports: Transports) => {
-  const shutdownTransports = async () => {
-    console.log(chalk.cyan("Shutting down MCP server..."));
+/**
+ * Gracefully shuts down Fastify.
+ * Assumes resource cleanup (closing transports, destroying SSE sockets, clearing timers)
+ * is done in fastify.ts via app.addHook("onClose", ...).
+ *
+ * IMPORTANT: This function does NOT register process signal handlers.
+ * Does that in index.ts and call this function.
+ */
+export async function shutdown(app: FastifyInstance, signal: string, opts: ShutdownOptions = {}) {
+  const { timeoutMs = 5000, exitOnComplete = true } = opts;
 
-    // normalize shape safely without using `any`
-    const isNestedTransports = (
-      t: Transports
-    ): t is { streamable: Record<string, StreamableHTTPServerTransport>; sse?: Record<string, SSEServerTransport> } => {
-      if (typeof t !== "object" || t === null) return false;
-      const rec = t as unknown as Record<string, unknown>;
-      return rec.streamable !== undefined && typeof rec.streamable === "object";
-    };
+  // Prevent double shutdown attempts
+  const appWithShutdownFlag = app as FastifyInstance & { __isShuttingDown?: boolean };
+  if (appWithShutdownFlag.__isShuttingDown) return;
+  appWithShutdownFlag.__isShuttingDown = true;
 
-    const normalized: {
-      streamable: Record<string, StreamableHTTPServerTransport>;
-      sse: Record<string, SSEServerTransport>;
-    } = isNestedTransports(transports)
-      ? { streamable: transports.streamable, sse: transports.sse ?? {} }
-      : { streamable: transports as Record<string, StreamableHTTPServerTransport>, sse: {} };
+  app.log.info({ signal }, "Shutting down...");
 
-    const streamableCloses = Object.values(normalized.streamable || {}).map((t) => {
-      try {
-        const sessionId = (t as unknown as { sessionId?: string }).sessionId;
-        console.log(chalk.yellow("Closing streamable transport:", sessionId));
-        const result = t.close ? t.close() : undefined;
-        return Promise.resolve(result);
-      } catch (e) {
-        // ignore individual errors during shutdown
-        return Promise.resolve();
-      }
-    });
+  const forceTimer = setTimeout(() => {
+    app.log.error({ timeoutMs }, "Force exiting after shutdown timeout");
+    // eslint-disable-next-line no-process-exit
+    process.exit(1);
+  }, timeoutMs);
+  forceTimer.unref();
 
-    const sseCloses = Object.values(normalized.sse || {}).map((t) => {
-      try {
-        const sessionId = (t as unknown as { sessionId?: string }).sessionId;
-        console.log(chalk.yellow("Closing sse transport:", sessionId));
-        const result = t.close ? t.close() : undefined;
-        return Promise.resolve(result);
-      } catch (e) {
-        return Promise.resolve();
-      }
-    });
+  try {
+    await app.close(); // triggers onClose hook in fastify.ts
+    clearTimeout(forceTimer);
+    app.log.info("Shutdown complete");
 
-    await Promise.all([...streamableCloses, ...sseCloses]);
-    await fastify.close();
-    console.log(chalk.green("MCP server shutdown complete."));
-  };
-  // make sure to handle process termination gracefully
-  process.on("SIGINT", async () => {
-    await shutdownTransports();
-    process.exit(0);
-  });
+    if (exitOnComplete) {
+      // eslint-disable-next-line no-process-exit
+      process.exit(0);
+    }
+  } catch (err) {
+    clearTimeout(forceTimer);
+    app.log.error({ err }, "Error during shutdown");
 
-  // make sure to handle nodemon restarts gracefully
-  process.once("SIGUSR2", async () => {
-    await shutdownTransports();
-    process.kill(process.pid, "SIGUSR2");
-  });
-};
+    if (exitOnComplete) {
+      // eslint-disable-next-line no-process-exit
+      process.exit(1);
+    }
+  }
+}

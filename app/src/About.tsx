@@ -162,6 +162,13 @@ const members = [
     homeTown: "West Lafayette, IN",
     timeWorked: "2026 - Present",
     proPic: "PaulRickert.jpg"
+  },
+  {
+    name: "Hosung Ryu",
+    role: "Member",
+    homeTown: "Seoul, South Korea",
+    timeWorked: "2025 - Present",
+    proPic: "HosungRyu.png"
   }
 ];
 
