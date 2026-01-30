@@ -169,7 +169,7 @@ const members = [
     homeTown: "Seoul, South Korea",
     timeWorked: "2025 - Present",
     proPic: "HosungRyu.png"
-  },
+  }
 ];
 
 export const About = observer(function About() {
