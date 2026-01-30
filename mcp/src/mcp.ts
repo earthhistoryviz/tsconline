@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: t
 const domain = process.env.DOMAIN ?? "http://localhost:3000";
 const serverUrl = domain.startsWith("http") ? domain : `https://${domain}`;
 //app runs on
-const appDomain = process.env.APP_DOMAIN ?? "http://localhost:5173";
+const appDomain = process.env.DOMAIN ?? "http://localhost:5173";
 const appUrl = appDomain.startsWith("http") ? appDomain : `https://${appDomain}`;
 
 // Chart state management - tracks current chart configuration
