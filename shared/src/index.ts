@@ -79,18 +79,18 @@ export type MapPackInfoChunk = {
 };
 
 export type CachedChartRequest = {
-    hash: string;
+  hash: string;
 };
 
 export type MCPLinkParams = {
-    datapacks: string[];
-    chartHash: string;
+  datapacks: string[];
+  chartHash: string;
 };
 
 export type CachedChartResponseInfo = {
-    chartpath: string;
-    settingspath: string;
-    hash: string;
+  chartpath: string;
+  settingspath: string;
+  hash: string;
 };
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
@@ -2262,25 +2262,20 @@ export function assertWorkshopDatapackDownloadResponse(
   }
 }
 
-export function assertMCPLinkParams(o : any): asserts o is MCPLinkParams {
-    if (!o || typeof o !== "object")
-        throw new Error("MCPLinkParams must be a non-null object");
-    if (!Array.isArray(o.datapacks))
-        throwError("MCPLinkParams", "datapacks", "array", o.datapacks);
-    
-    if (typeof o.chartHash !== "string"){
-        throwError("MCPLinkParams", "chartHash", "string", o.chartHash);
-    }
+export function assertMCPLinkParams(o: any): asserts o is MCPLinkParams {
+  if (!o || typeof o !== "object") throw new Error("MCPLinkParams must be a non-null object");
+  if (!Array.isArray(o.datapacks)) throwError("MCPLinkParams", "datapacks", "array", o.datapacks);
+
+  if (typeof o.chartHash !== "string") {
+    throwError("MCPLinkParams", "chartHash", "string", o.chartHash);
+  }
 }
 
 export function assertCachedChartResponseInfo(o: any): asserts o is CachedChartResponseInfo {
-    if (!o || typeof o !== "object")
-        throw new Error("CachedChartResponseInfo must be a non-null object");
-    if (typeof o.chartpath !== "string")
-        throwError("CachedChartResponseInfo", "chartpath", "string", o.chartpath);
-    if (typeof o.hash !== "string")
-        throwError("CachedChartResponseInfo", "hash", "string", o.hash);
-    if (typeof o.settingspath !== "string"){
-        throwError("CachedChartResponseInfo", "settingspath", "string", o.settingspath);
-    }
+  if (!o || typeof o !== "object") throw new Error("CachedChartResponseInfo must be a non-null object");
+  if (typeof o.chartpath !== "string") throwError("CachedChartResponseInfo", "chartpath", "string", o.chartpath);
+  if (typeof o.hash !== "string") throwError("CachedChartResponseInfo", "hash", "string", o.hash);
+  if (typeof o.settingspath !== "string") {
+    throwError("CachedChartResponseInfo", "settingspath", "string", o.settingspath);
+  }
 }
