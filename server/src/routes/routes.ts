@@ -7,7 +7,8 @@ import {
   checkFileExists,
   extractMetadataFromDatapack,
   isFileTypeAllowed,
-  uploadFileToGitHub
+  uploadFileToGitHub,
+  sanitizeFileName
 } from "../util.js";
 import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
@@ -252,14 +253,11 @@ export const fetchCachedFilePaths = async function fetchCachedFilePaths(
 ) {
   try {
     const { chartHash } = request.params;
-    
-    // sanatize chartHash
-    if (!/^[a-f0-9]{64}$/.test(chartHash)) {
-      reply.status(400).send({ error: "Invalid chart hash" });
-      return;
-    }
 
-    const { chartpath, hash, settingsFile } = await findCachedChart({ hash: chartHash });
+    //confirm the chart hash has no path injection
+    const sanitizedChartHash = sanitizeFileName(chartHash);
+
+    const { chartpath, hash, settingsFile } = await findCachedChart({ hash: sanitizedChartHash });
 
     reply.status(200).send({ chartpath: chartpath, hash: hash, settingspath: settingsFile });
     return;

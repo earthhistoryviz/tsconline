@@ -493,4 +493,20 @@ describe("fetchCachedFilePaths", () => {
 
     expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash });
   });
+
+  it("sanitizes chart hash to prevent path traversal", async () => {
+    findCachedChartSpy.mockResolvedValueOnce({
+      chartpath: `/charts/${mockChartHash}/chart.svg`,
+      hash: mockChartHash,
+      settingsFile: `charts/${mockChartHash}/settings.tsc`
+    });
+
+    const maliciousHash = "../" + mockChartHash;
+    await app.inject({
+      method: "GET",
+      url: `/cached-chart/${encodeURIComponent(maliciousHash)}`
+    });
+
+    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash });
+  });
 });
