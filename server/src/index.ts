@@ -4,6 +4,7 @@ import fastifyStatic from "@fastify/static";
 import process from "process";
 import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
 import * as routes from "./routes/routes.js";
+import * as mcpRoutes from "./routes/mcp-routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import fastifyCompress from "@fastify/compress";
 import { collectDefaultMetrics, Gauge, Counter, register } from "prom-client";
@@ -277,6 +278,12 @@ const rateLimitConfig = (max: number) => ({
 const strictRateLimit = rateLimitConfig(10);
 const moderateRateLimit = rateLimitConfig(20);
 const looseRateLimit = rateLimitConfig(30);
+
+server.get("/mcp/datapacks", looseRateLimit, mcpRoutes.mcpListDatapacks);
+server.post("/mcp/get-settings-schema", looseRateLimit, mcpRoutes.mcpGetDatapackSettingsSchema);
+server.post("/mcp/generate-chart-with-schema", looseRateLimit, mcpRoutes.mcpGenerateChartWithSchema);
+server.post("/mcp/list-columns", looseRateLimit, mcpRoutes.mcpListColumns);
+server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderChartWithEdits);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
