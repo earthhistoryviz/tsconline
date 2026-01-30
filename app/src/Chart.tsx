@@ -34,8 +34,16 @@ import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
 import { formatDate, purifyChartContent } from "./state/non-action-util";
-import { ChartHistoryMetadata } from "@tsconline/shared";
+import {
+  ChartHistoryMetadata,
+  DatapackConfigForChartRequest,
+  assertMCPLinkParams,
+  assertCachedChartResponseInfo
+} from "@tsconline/shared";
 import Color from "color";
+import { fetcher } from "./util";
+import { displayServerError } from "./state/actions/util-actions";
+import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -56,6 +64,126 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
+  const isLoadingCachedChart = useRef(false); // Track if we're loading from a cached chart URL
+
+  //check seralized URL params for a given chart state from MCP
+  // Right now, gets a public datapack title only. Then needs to create a DatapackConfigForChartRequest from that title, somehow getting the stored file name.
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!mounted) return;
+
+        isLoadingCachedChart.current = true;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.toString()) {
+          return;
+        }
+
+        const chartStateParam = urlParams.get("mcpChartState");
+        if (!chartStateParam) {
+          actions.pushSnackbar("URL malformed", "warning");
+          return;
+        }
+
+        let parsedState = null;
+        try {
+          const decodedState = atob(chartStateParam);
+          parsedState = JSON.parse(decodedState);
+        } catch (error) {
+          actions.pushSnackbar("Failed to parse MCP link parameters", "warning");
+          return;
+        }
+
+        assertMCPLinkParams(parsedState);
+        const dataPacksTitles = parsedState.datapacks;
+        const chartHash = parsedState.chartHash;
+
+        if (!dataPacksTitles || dataPacksTitles.length === 0) {
+          throw new Error("No datapacks specified in MCP link");
+        }
+
+        const controller = new AbortController();
+
+        for (const title of dataPacksTitles) {
+          if (!mounted) return;
+
+          try {
+            const fetchedDatapack = await actions.fetchDatapack(
+              { title, type: "official", isPublic: true },
+              { signal: controller.signal }
+            );
+            if (fetchedDatapack) {
+              actions.addDatapack(fetchedDatapack);
+            }
+          } catch (error) {
+            actions.pushSnackbar(`Failed to fetch datapack for title: ${title}`, "warning");
+            return;
+          }
+        }
+
+        const datapackConfigs: DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
+          title,
+          isPublic: true,
+          storedFileName: actions.getStoredFileName(title),
+          type: "official"
+        }));
+
+        const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
+        const response = await fetcher(route, {
+          method: "GET",
+          credentials: "include"
+        });
+
+        if (response.ok) {
+          if (!mounted) return;
+
+          const cachedChartInfo = await response.json();
+          assertCachedChartResponseInfo(cachedChartInfo);
+
+          const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
+
+          if (fetchedSettings) {
+            actions.applySettings(fetchedSettings);
+            state.prevSettings = JSON.parse(JSON.stringify(state.settings));
+          }
+
+          await actions.processDatapackConfig(datapackConfigs, {
+            settings: cachedChartInfo.settingspath,
+            silent: true
+          });
+
+          if (!mounted) return;
+
+          const content = await (await fetcher(cachedChartInfo.chartpath)).text();
+          actions.setChartTabState(state.chartTab.state, {
+            chartContent: purifyChartContent(content),
+            chartHash: cachedChartInfo.hash,
+            madeChart: true,
+            matchesSettings: true
+          });
+        } else if (response.status === 404) {
+          displayServerError(response, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
+          return;
+        }
+      } catch (error) {
+        displayServerError(
+          error,
+          ErrorCodes.MCP_LINK_PROCESSING_ERROR,
+          ErrorMessages[ErrorCodes.MCP_LINK_PROCESSING_ERROR]
+        );
+        return;
+      } finally {
+        isLoadingCachedChart.current = false;
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const isCrossPlot = useLocation().pathname === "/crossplot";
   const step = 0.1;
   const minScale = 0.1;
@@ -64,6 +192,9 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const { scale, zoomFitScale, zoomFitMidCoord, zoomFitMidCoordIsX, enableScrollZoom } = chartZoomSettings;
 
   useEffect(() => {
+    // Don't show snackbar if we're loading from a cached chart URL on initial load
+    if (isLoadingCachedChart.current) return;
+
     if (!matchesSettings && !triggeredDifferentSettings.current) {
       triggeredDifferentSettings.current = true;
       actions.pushSnackbar("Chart settings are different from the displayed chart.", "warning");
@@ -259,6 +390,7 @@ export const ChartTab: React.FC = observer(() => {
   const navigate = useNavigate();
   const previousLocation = usePreviousLocation();
   const from = query.get("from");
+
   // see if the previous route/location was crossplot
   // we use two different ways, to make sure that we can try to be hyper accurate about the last location
   const isLastLocationCrossPlot = from === "crossplot" || previousLocation === "/crossplot";

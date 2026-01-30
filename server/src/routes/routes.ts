@@ -7,7 +7,8 @@ import {
   checkFileExists,
   extractMetadataFromDatapack,
   isFileTypeAllowed,
-  uploadFileToGitHub
+  uploadFileToGitHub,
+  sanitizeFileName
 } from "../util.js";
 import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
@@ -20,7 +21,7 @@ import logger from "../error-logger.js";
 import "dotenv/config";
 import { waitForSVGReady } from "../chart-generation/generate-chart-helpers.js";
 import type { WebSocket } from "ws";
-import { generateChart, ChartGenerationError } from "../chart-generation/generate-chart.js";
+import { generateChart, ChartGenerationError, findCachedChart } from "../chart-generation/generate-chart.js";
 
 export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();
@@ -245,6 +246,31 @@ export async function handleChartGeneration(socket: WebSocket, request: FastifyR
     }
   });
 }
+
+export const fetchCachedFilePaths = async function fetchCachedFilePaths(
+  request: FastifyRequest<{ Params: { chartHash: string } }>,
+  reply: FastifyReply
+) {
+  try {
+    const { chartHash } = request.params;
+
+    //confirm the chart hash has no path injection
+    const sanitizedChartHash = sanitizeFileName(chartHash);
+
+    const { chartpath, hash, settingsFile } = await findCachedChart({ hash: sanitizedChartHash });
+
+    reply.status(200).send({ chartpath: chartpath, hash: hash, settingspath: settingsFile });
+    return;
+  } catch (e) {
+    if (e instanceof ChartGenerationError && e.errorCode === 404) {
+      reply.status(404).send({ error: "Cached chart not found" });
+      return;
+    }
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    reply.status(500).send({ error: errorMessage });
+    return;
+  }
+};
 
 // Serve timescale data endpoint
 export const fetchTimescale = async function (_request: FastifyRequest, reply: FastifyReply) {
