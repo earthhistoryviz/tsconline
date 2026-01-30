@@ -3,11 +3,6 @@ import type { FastifyInstance } from "fastify";
 import type { ServerResponse } from "node:http";
 import { randomUUID } from "node:crypto";
 
-// fastify.ts
-import type { FastifyInstance } from "fastify";
-import type { ServerResponse } from "node:http";
-import { randomUUID } from "node:crypto";
-
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
@@ -102,13 +97,6 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
 
     if (!isInitializeRequest(body)) {
       reply.code(400).send({
-      touchStreamable(sessionId);
-      await transport.handleRequest(req.raw, reply.raw, body);
-      return;
-    }
-
-    if (!isInitializeRequest(body)) {
-      reply.code(400).send({
         jsonrpc: "2.0",
         id: null,
         error: { code: -32000, message: "Missing Mcp-Session-Id or initialize request" }
@@ -149,17 +137,9 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     const transport = streamableSessions.get(sessionId);
     if (!transport) {
       reply.code(404).send("Session not found");
-      reply.code(404).send("Session not found");
       return;
     }
 
-    touchStreamable(sessionId);
-
-    reply.raw.setHeader("Cache-Control", "no-cache, no-transform");
-    reply.raw.setHeader("Connection", "keep-alive");
-    reply.raw.setHeader("X-Accel-Buffering", "no");
-
-    await transport.handleRequest(req.raw, reply.raw);
     touchStreamable(sessionId);
 
     reply.raw.setHeader("Cache-Control", "no-cache, no-transform");
@@ -177,25 +157,11 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     }
 
     const transport = streamableSessions.get(sessionId);
-  app.delete("/mcp", async (req, reply) => {
-    const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    if (!sessionId) {
-      reply.code(400).send("Missing Mcp-Session-Id");
-      return;
-    }
-
-    const transport = streamableSessions.get(sessionId);
     if (!transport) {
       reply.code(404).send("Session not found");
       return;
     }
 
-    streamableSessions.delete(sessionId);
-    streamableLastSeen.delete(sessionId);
-    streamableServers.delete(sessionId);
-
-    await transport.close().catch(() => {});
-    reply.code(204).send();
     streamableSessions.delete(sessionId);
     streamableLastSeen.delete(sessionId);
     streamableServers.delete(sessionId);
