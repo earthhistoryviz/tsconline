@@ -148,6 +148,27 @@ const members = [
     homeTown: "West Lafayette, IN",
     timeWorked: "2026",
     proPic: "AsvinSivathanu.jpg"
+  },
+  {
+    name: "Ji Bing Ni",
+    role: "Member",
+    homeTown: "Indianapolis, IN",
+    timeWorked: "2025 - Present",
+    proPic: "JiBingNi.png"
+  },
+  {
+    name: "Paul Rickert",
+    role: "Member",
+    homeTown: "West Lafayette, IN",
+    timeWorked: "2026 - Present",
+    proPic: "PaulRickert.jpg"
+  },
+  {
+    name: "Hosung Ryu",
+    role: "Member",
+    homeTown: "Seoul, South Korea",
+    timeWorked: "2025 - Present",
+    proPic: "HosungRyu.png"
   }
 ];
 

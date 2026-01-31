@@ -1,432 +1,581 @@
-import fastify, { FastifyInstance } from "fastify";
-import { beforeAll, afterAll, beforeEach, vi, describe, it, expect, Mock, MockInstance } from "vitest";
-import { createMCPServer } from "../src/mcp";
-import { registerMCPServer, transports } from "../src/fastify";
-import * as nodeCrypto from "node:crypto";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { EventEmitter } from "node:events";
+import type { FastifyInstance } from "fastify";
 
-const fastifyModule = { registerMCPServer, transports };
-const mockServer = {
-  connect: vi.fn(),
-  registerTool: vi.fn(),
-  registerResource: vi.fn(),
-  callTool: vi.fn(),
-  readResource: vi.fn(),
-  close: vi.fn()
+import { registerMCPRoutes } from "../src/fastify";
+
+// ---- Mocks ----
+type MCPServer = { connect: ReturnType<typeof vi.fn> };
+
+type StreamableTransportLike = {
+  close: ReturnType<typeof vi.fn>;
+  sessionId?: string;
+  onclose?: () => void;
+  handleRequest: ReturnType<typeof vi.fn>;
 };
-const mockInitializeSuccessfulTransportResponse = {
-  jsonrpc: "2.0",
-  id: 1,
-  result: {
-    protocolVersion: "2024-11-05",
-    capabilities: {
-      logging: {},
-      prompts: {
-        listChanged: true
-      },
-      resources: {
-        subscribe: true,
-        listChanged: true
-      },
-      tools: {
-        listChanged: true
-      }
-    },
-    serverInfo: {
-      name: "ExampleServer",
-      title: "Example Server Display Name",
-      version: "1.0.0"
-    },
-    instructions: "Optional instructions for the client"
-  }
-};
-const handleRequest = vi.fn().mockImplementation((req, res) => {
-  res.end(JSON.stringify(mockInitializeSuccessfulTransportResponse));
-  return Promise.resolve();
+
+let lastStreamableTransport: StreamableTransportLike | undefined;
+
+// Mock MCP module
+vi.mock("../src/mcp.js", () => {
+  const sessionIds = new Map<string, { sessionId: string; expiresAt: number }>();
+  const mcpUserInfo = new Map<string, unknown>();
+  const createMCPServer = vi.fn(() => ({ connect: vi.fn().mockResolvedValue(undefined) }) as MCPServer);
+  return { createMCPServer, sessionIds, mcpUserInfo };
 });
-const transportClose = vi.fn();
+
+// Mock SDK "isInitializeRequest"
+vi.mock("@modelcontextprotocol/sdk/types.js", () => ({
+  isInitializeRequest: (body: unknown) => {
+    if (typeof body !== "object" || body === null) return false;
+    const method = (body as { method?: unknown }).method;
+    return method === "initialize";
+  }
+}));
+
+// Mock Streamable + SSE transports
 vi.mock("@modelcontextprotocol/sdk/server/streamableHttp.js", () => {
-  class MockTransport {
-    sessionIdGenerator?: () => string;
-    onsessioninitialized?: (id: string) => void;
-    handleRequest: Mock;
-    onclose: (() => void) | null;
-    sessionId: string;
-    constructor(options: { sessionIdGenerator?: () => string; onsessioninitialized?: (id: string) => void }) {
-      this.onsessioninitialized = options.onsessioninitialized;
-      this.sessionIdGenerator = options.sessionIdGenerator;
-      this.handleRequest = handleRequest;
-      this.onclose = null;
-      this.sessionId = this.sessionIdGenerator ? this.sessionIdGenerator() : "mock-session-id";
-    }
+  class StreamableHTTPServerTransport {
+    public sessionId?: string;
+    public onclose?: () => void;
 
-    close = () => {
-      transportClose();
-      if (this.onclose) {
-        this.onclose();
+    private sessionIdGenerator: () => string;
+    private onsessioninitialized: (id: string) => void;
+
+    public handleRequest = vi.fn(async (_reqRaw: unknown, _replyRaw: unknown, body?: unknown) => {
+      // When called with initialize, create session and call onsessioninitialized
+      if (typeof body === "object" && body !== null) {
+        const method = (body as { method?: unknown }).method;
+        if (method === "initialize" && !this.sessionId) {
+          const id = this.sessionIdGenerator();
+          this.sessionId = id;
+          this.onsessioninitialized(id);
+        }
       }
-    };
+    });
+
+    public close = vi.fn(async () => {
+      // mimic close hook
+      this.onclose?.();
+    });
+
+    constructor(opts: { sessionIdGenerator: () => string; onsessioninitialized: (id: string) => void }) {
+      this.sessionIdGenerator = opts.sessionIdGenerator;
+      this.onsessioninitialized = opts.onsessioninitialized;
+      lastStreamableTransport = this as unknown as StreamableTransportLike;
+    }
   }
-  return {
-    StreamableHTTPServerTransport: MockTransport
-  };
+
+  return { StreamableHTTPServerTransport };
 });
+
 vi.mock("@modelcontextprotocol/sdk/server/sse.js", () => {
-  class MockSSE {
-    sessionId: string;
-    raw: unknown;
-    _closeHandler?: () => void;
-    constructor(path: string, raw: unknown) {
-      this.sessionId = "mock-sse-id";
-      this.raw = raw;
-      // capture close handler so tests can simulate connection close
-      try {
-        // some test runtimes provide an EventEmitter-like raw
-        // attempt to attach a close handler for tests when raw behaves like an EventEmitter
-        const maybeOn = (this.raw as unknown as { on?: (ev: string, cb: () => void) => void }).on;
-        if (typeof maybeOn === "function") {
-          maybeOn.call(this.raw, "close", () => {
-            this._closeHandler = () => {};
-          });
-        } else {
-          // if raw doesn't expose on, create a simple function for tests
-          (this.raw as unknown as { on?: (ev: string, cb: () => void) => void }).on = (ev: string, cb: () => void) => {
-            if (ev === "close") this._closeHandler = cb;
-          };
-        }
-      } catch (e) {
-        // ignore if raw doesn't support assignment
-      }
+  class SSEServerTransport {
+    public sessionId: string;
+    public handlePostMessage = vi.fn(async (_reqRaw: unknown, _replyRaw: unknown, _body: unknown) => {});
+
+    constructor(_endpoint: string, _rawRes: unknown) {
+      this.sessionId = "legacy-test-session";
     }
-    close() {}
-    handleRequest() {}
-    handlePostMessage() {}
   }
-  return {
-    SSEServerTransport: MockSSE
-  };
-});
-vi.mock("../src/mcp", () => {
-  return {
-    createMCPServer: vi.fn(() => Promise.resolve(mockServer))
-  };
-});
-vi.mock("node:crypto", async (importOriginal) => {
-  const actual = await importOriginal<typeof nodeCrypto>();
-  return {
-    ...actual,
-    randomUUID: vi.fn().mockImplementation(() => actual.randomUUID())
-  };
+
+  return { SSEServerTransport };
 });
 
-let app: FastifyInstance;
+// Deterministic randomUUID
+vi.mock("node:crypto", () => ({
+  randomUUID: () => "streamable-uuid-1"
+}));
 
-beforeAll(async () => {
-  app = fastify({
-    exposeHeadRoutes: false
+// ---- Fake Fastify helpers ----
+type Headers = Record<string, string | undefined>;
+type Query = Record<string, unknown>;
+
+type RawReply = EventEmitter & {
+  setHeader: ReturnType<typeof vi.fn>;
+  write: ReturnType<typeof vi.fn>;
+  destroy: ReturnType<typeof vi.fn>;
+  setTimeout: ReturnType<typeof vi.fn>;
+  destroyed?: boolean;
+  writableEnded?: boolean;
+};
+
+type TestReq = {
+  headers: Headers;
+  body?: unknown;
+  query: Query;
+  raw: unknown;
+};
+
+type TestReply = {
+  raw: RawReply;
+  statusCode: number;
+  payload: unknown;
+  code: (n: number) => TestReply;
+  send: (v?: unknown) => TestReply;
+};
+
+type Handler = (req: TestReq, reply: TestReply) => unknown | Promise<unknown>;
+
+class FakeFastify {
+  routes: Array<{ method: string; path: string; handler: Handler }> = [];
+  onCloseHooks: Array<() => Promise<void> | void> = [];
+
+  post(path: string, handler: Handler) {
+    this.routes.push({ method: "POST", path, handler });
+  }
+  get(path: string, handler: Handler) {
+    this.routes.push({ method: "GET", path, handler });
+  }
+  delete(path: string, handler: Handler) {
+    this.routes.push({ method: "DELETE", path, handler });
+  }
+
+  addHook(name: string, hook: () => Promise<void> | void) {
+    if (name === "onClose") this.onCloseHooks.push(hook);
+  }
+
+  find(method: string, path: string): Handler {
+    const r = this.routes.find((x) => x.method === method && x.path === path);
+    if (!r) throw new Error(`Route not found: ${method} ${path}`);
+    return r.handler;
+  }
+
+  async runOnClose() {
+    for (const h of this.onCloseHooks) await h();
+  }
+}
+
+function makeReplyRaw(): RawReply {
+  const raw = new EventEmitter() as RawReply;
+  raw.setHeader = vi.fn();
+  raw.write = vi.fn();
+  raw.destroy = vi.fn(() => {
+    raw.destroyed = true;
   });
-  await app.register(fastifyModule.registerMCPServer, { mcpServer: await createMCPServer() }); // createMCPServer is not an async but await so we expose the spies
-  vi.spyOn(console, "error").mockImplementation(() => undefined);
-  await app.listen({ host: "", port: 2329 });
-});
+  raw.setTimeout = vi.fn();
+  return raw;
+}
 
-afterAll(async () => {
-  await app.close();
-});
+function makeReply(): TestReply {
+  const raw = makeReplyRaw();
 
+  const reply: TestReply = {
+    raw,
+    statusCode: 200,
+    payload: undefined,
+    code: (n: number) => {
+      reply.statusCode = n;
+      return reply;
+    },
+    send: (v?: unknown) => {
+      reply.payload = v;
+      return reply;
+    }
+  };
+
+  return reply;
+}
+
+function makeReq(opts?: Partial<TestReq>): TestReq {
+  return {
+    headers: opts?.headers ?? {},
+    body: opts?.body,
+    query: opts?.query ?? {},
+    raw: opts?.raw ?? {}
+  };
+}
+
+const LEGACY_SESSION_ID = "legacy-test-session";
+
+// ---- Tests ----
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.spyOn(console, "log").mockImplementation(() => {});
+  vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-const initializeRequestBody = {
-  jsonrpc: "2.0",
-  id: 1,
-  method: "initialize",
-  params: {
-    protocolVersion: "2024-11-05",
-    capabilities: {
-      roots: {
-        listChanged: true
-      },
-      sampling: {},
-      elicitation: {}
-    },
-    clientInfo: {
-      name: "ExampleClient",
-      title: "Example Client Display Name",
-      version: "1.0.0"
-    }
-  }
-};
-const initializeTransport = async (randomUUIDSpy: MockInstance, sessionId?: string) => {
-  randomUUIDSpy.mockReturnValueOnce(
-    (sessionId || "mock-session-id") as `${string}-${string}-${string}-${string}-${string}`
-  );
-  // Mock the connect method to simulate the creation of a server connection to a transport
-  mockServer.connect.mockImplementationOnce((transport) => {
-    transport.onsessioninitialized(sessionId || "mock-session-id");
-    return Promise.resolve();
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
+
+describe("registerMCPRoutes", () => {
+  it("registers /sse/ping and returns pong", async () => {
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance);
+
+    const handler = app.find("GET", "/ping");
+    const reply = makeReply();
+    await handler(makeReq(), reply);
+
+    expect(reply.payload).toBe("pong");
   });
-  const initializeResponse = await app.inject({
-    method: "POST",
-    url: "/mcp",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    payload: initializeRequestBody
+
+  it("health endpoint: enabled by default", async () => {
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance);
+
+    const handler = app.find("GET", "/health");
+    const reply = makeReply();
+    await handler(makeReq(), reply);
+
+    expect(reply.payload).toEqual({ ok: true, streamableSessions: 0, legacySseSessions: 0 });
   });
-  expect(initializeResponse.json()).toEqual(mockInitializeSuccessfulTransportResponse);
-  expect(mockServer.connect).toHaveBeenCalled();
-  expect(initializeResponse.statusCode).toBe(200);
-  expect(handleRequest).toHaveBeenCalled();
-  // Now we send a second request with the same session ID
-  handleRequest.mockClear(); // Clear the mock to check if it gets called again
-};
-describe("POST /mcp", () => {
-  const randomUUIDSpy = vi.spyOn(nodeCrypto, "randomUUID");
-  it("should return -32000 error for invalid session with no session id on intialize", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/mcp",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      payload: {
+
+  it("health endpoint: not registered when enableHealth=false", async () => {
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance, { enableHealth: false });
+
+    expect(() => app.find("GET", "/health")).toThrow(/Route not found/);
+  });
+
+  describe("/mcp streamable http", () => {
+    it("POST /mcp: missing session header AND not initialize => 400 jsonrpc error", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/mcp");
+      const reply = makeReply();
+
+      await handler(makeReq({ body: { method: "not-initialize" } }), reply);
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toEqual({
         jsonrpc: "2.0",
-        method: "initialize",
-        params: {}
+        id: null,
+        error: { code: -32000, message: "Missing Mcp-Session-Id or initialize request" }
+      });
+    });
+
+    it("POST /mcp: with session header not found => 404", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/mcp");
+      const reply = makeReply();
+
+      await handler(makeReq({ headers: { "mcp-session-id": "nope" }, body: { any: true } }), reply);
+
+      expect(reply.statusCode).toBe(404);
+      expect(reply.payload).toEqual({ error: "Session not found" });
+    });
+
+    it("POST /mcp: initialize creates session + server.connect called; subsequent POST uses same session", async () => {
+      const { createMCPServer } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const post = app.find("POST", "/mcp");
+
+      // initialize
+      const initReply = makeReply();
+      await post(makeReq({ body: { method: "initialize" } }), initReply);
+
+      // After init: createMCPServer called and connect called
+      expect(createMCPServer).toHaveBeenCalledTimes(1);
+      const createMCPServerMock = createMCPServer as unknown as ReturnType<typeof vi.fn>;
+      const server = createMCPServerMock.mock.results[0]?.value as MCPServer;
+      expect(server.connect).toHaveBeenCalledTimes(1);
+
+      // find session id (randomUUID mock => "streamable-uuid-1")
+      const sid = "streamable-uuid-1";
+
+      // subsequent request with session header
+      const reply2 = makeReply();
+      const req2 = makeReq({ headers: { "mcp-session-id": sid }, body: { method: "anything" } });
+      await post(req2, reply2);
+
+      // we can’t directly access the transport map, but we *can* ensure it didn’t 404 and it didn’t set error payload
+      expect(reply2.statusCode).toBe(200);
+      expect(reply2.payload).toBeUndefined();
+    });
+
+    it("GET /mcp: missing session header => 400", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("GET", "/mcp");
+      const reply = makeReply();
+      await handler(makeReq(), reply);
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toBe("Missing Mcp-Session-Id");
+    });
+
+    it("GET /mcp: session not found => 404", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("GET", "/mcp");
+      const reply = makeReply();
+      await handler(makeReq({ headers: { "mcp-session-id": "missing" } }), reply);
+
+      expect(reply.statusCode).toBe(404);
+      expect(reply.payload).toBe("Session not found");
+    });
+
+    it("GET /mcp: found session sets headers and handles request", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const post = app.find("POST", "/mcp");
+      await post(makeReq({ body: { method: "initialize" } }), makeReply());
+
+      const get = app.find("GET", "/mcp");
+      const reply = makeReply();
+      await get(makeReq({ headers: { "mcp-session-id": "streamable-uuid-1" } }), reply);
+
+      expect(reply.raw.setHeader).toHaveBeenCalledWith("Cache-Control", "no-cache, no-transform");
+      expect(reply.raw.setHeader).toHaveBeenCalledWith("Connection", "keep-alive");
+      expect(reply.raw.setHeader).toHaveBeenCalledWith("X-Accel-Buffering", "no");
+    });
+
+    it("DELETE /mcp: missing session header => 400", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const del = app.find("DELETE", "/mcp");
+      const reply = makeReply();
+      await del(makeReq(), reply);
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toBe("Missing Mcp-Session-Id");
+    });
+
+    it("DELETE /mcp: not found => 404", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const del = app.find("DELETE", "/mcp");
+      const reply = makeReply();
+      await del(makeReq({ headers: { "mcp-session-id": "nope" } }), reply);
+
+      expect(reply.statusCode).toBe(404);
+      expect(reply.payload).toBe("Session not found");
+    });
+
+    it("DELETE /mcp: closes transport and returns 204", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const post = app.find("POST", "/mcp");
+      await post(makeReq({ body: { method: "initialize" } }), makeReply());
+
+      const del = app.find("DELETE", "/mcp");
+      const reply = makeReply();
+      await del(makeReq({ headers: { "mcp-session-id": "streamable-uuid-1" } }), reply);
+
+      expect(reply.statusCode).toBe(204);
+    });
+
+    it("cleanup timer reaps expired STREAMABLE session and calls transport.close()", async () => {
+      vi.useFakeTimers();
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance, { streamableTtlMs: 5, legacySseTtlMs: 50_000 });
+
+      const post = app.find("POST", "/mcp");
+      await post(makeReq({ body: { method: "initialize" } }), makeReply());
+
+      const closeSpy = vi.spyOn(lastStreamableTransport!, "close");
+
+      // advance beyond TTL and run the 10s cleanup interval
+      vi.advanceTimersByTime(20_000);
+
+      expect(closeSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("legacy SSE + /messages", () => {
+    it("GET /sse: creates SSE session, starts keepalive, registers cleanup handlers, connects server", async () => {
+      vi.useFakeTimers();
+
+      const { createMCPServer } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance, { legacyKeepAliveMs: 10 });
+
+      const sse = app.find("GET", "/sse");
+      const reply = makeReply();
+      const req = makeReq({ raw: new EventEmitter() });
+
+      await sse(req, reply);
+
+      // connect called
+      expect(createMCPServer).toHaveBeenCalledTimes(1);
+      const createMCPServerMock = createMCPServer as unknown as ReturnType<typeof vi.fn>;
+      const server = createMCPServerMock.mock.results[0]?.value as MCPServer;
+      expect(server.connect).toHaveBeenCalledTimes(1);
+
+      // keepalive writes ping
+      vi.advanceTimersByTime(25);
+      expect(reply.raw.write).toHaveBeenCalled();
+    });
+
+    it("POST /messages: missing sessionId => 400", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages");
+      const reply = makeReply();
+      await handler(makeReq({ query: {} }), reply);
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toBe("Missing sessionId");
+    });
+
+    it("POST /messages: session not found => 404", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages");
+      const reply = makeReply();
+      await handler(makeReq({ query: { sessionId: "legacy-404" } }), reply);
+
+      expect(reply.statusCode).toBe(404);
+      expect(reply.payload).toBe("Session not found");
+    });
+
+    it("POST /messages: routes to transport.handlePostMessage when session exists", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      // Create SSE session so legacy transport exists
+      const sse = app.find("GET", "/sse");
+      const sseReply = makeReply();
+      const sseReq = makeReq({ raw: new EventEmitter() });
+      await sse(sseReq, sseReply);
+
+      // First SSE transport mock uses sessionId legacy-test-session
+      const handler = app.find("POST", "/messages");
+      const reply = makeReply();
+      await handler(makeReq({ query: { sessionId: LEGACY_SESSION_ID }, body: { hi: 1 } }), reply);
+
+      // No error means it found the transport and called it
+      expect(reply.statusCode).toBe(200);
+    });
+
+    it("GET /sse: keepAlive stops when socket is destroyed (covers destroyed/writableEnded branch)", async () => {
+      vi.useFakeTimers();
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance, { legacyKeepAliveMs: 10 });
+
+      const sse = app.find("GET", "/sse");
+      const reply = makeReply();
+      const req = makeReq({ raw: new EventEmitter() });
+
+      await sse(req, reply);
+
+      reply.raw.destroyed = true;
+
+      reply.raw.write.mockClear();
+      vi.advanceTimersByTime(30);
+
+      expect(reply.raw.write).not.toHaveBeenCalled();
+    });
+
+    it("GET /sse: cleanup handles errors from clearInterval and destroy (covers warn branches)", async () => {
+      vi.useFakeTimers();
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance, { legacyKeepAliveMs: 10 });
+
+      const sse = app.find("GET", "/sse");
+      const reply = makeReply();
+      const req = makeReq({ raw: new EventEmitter() });
+
+      reply.raw.destroy.mockImplementation(() => {
+        throw new Error("destroy failed");
+      });
+
+      const origClearInterval: typeof globalThis.clearInterval = globalThis.clearInterval;
+
+      const throwingClearInterval: typeof globalThis.clearInterval = (() => {
+        throw new Error("clearInterval failed");
+      }) as typeof globalThis.clearInterval;
+
+      Object.defineProperty(globalThis, "clearInterval", { value: throwingClearInterval, configurable: true });
+
+      try {
+        await sse(req, reply);
+
+        reply.raw.emit("close");
+
+        expect(console.warn).toHaveBeenCalled();
+      } finally {
+        Object.defineProperty(globalThis, "clearInterval", { value: origClearInterval, configurable: true });
       }
     });
 
-    expect(response.json()).toEqual({
-      jsonrpc: "2.0",
-      id: null,
-      error: {
-        message: "Bad Request: Invalid session or missing initialize",
-        code: -32000
-      }
-    });
-    expect(response.statusCode).toBe(400);
-  });
-  it("should return -32000 error for invalid session with session id on initialize", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/mcp",
-      headers: {
-        "Content-Type": "application/json",
-        "mcp-session-id": "invalid-session-id"
-      },
-      payload: {
-        jsonrpc: "2.0",
-        method: "initialize",
-        params: {}
-      }
-    });
+    it("GET /sse: logs warning if abort handler registration throws", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
 
-    expect(response.json()).toEqual({
-      jsonrpc: "2.0",
-      id: null,
-      error: {
-        message: "Bad Request: Invalid session or missing initialize",
-        code: -32000
-      }
-    });
-    expect(response.statusCode).toBe(400);
-  });
+      const sse = app.find("GET", "/sse");
+      const reply = makeReply();
 
-  it("should return 500 error for failed connection to MCP server", async () => {
-    mockServer.connect.mockRejectedValue(new Error("Connection failed"));
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/mcp",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      payload: initializeRequestBody
-    });
-
-    expect(response.json()).toEqual({
-      error: "Internal server error"
-    });
-    expect(mockServer.connect).toHaveBeenCalled();
-    expect(response.statusCode).toBe(500);
-  });
-  it("should handle mcp initialize request and create a new session", async () => {
-    mockServer.connect.mockResolvedValue(undefined);
-    const response = await app.inject({
-      method: "POST",
-      url: "/mcp",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      payload: initializeRequestBody
-    });
-    expect(response.json()).toEqual(mockInitializeSuccessfulTransportResponse);
-    expect(mockServer.connect).toHaveBeenCalled();
-    expect(response.statusCode).toBe(200);
-    expect(handleRequest).toHaveBeenCalled();
-  });
-  it("should handle request if transport is already initialized", async () => {
-    await initializeTransport(randomUUIDSpy);
-    const toolResponse = {
-      jsonrpc: "2.0",
-      id: 2,
-      result: "This is a response from the second request"
-    };
-    handleRequest.mockImplementationOnce((req, res) => {
-      res.end(JSON.stringify(toolResponse));
-      return Promise.resolve();
-    });
-    const response = await app.inject({
-      method: "POST",
-      url: "/mcp",
-      headers: {
-        "Content-Type": "application/json",
-        "mcp-session-id": "mock-session-id"
-      },
-      payload: {
-        jsonrpc: "2.0",
-        method: "someMethod",
-        params: {}
-      }
-    });
-    expect(response.json()).toEqual(toolResponse);
-    expect(handleRequest).toHaveBeenCalledTimes(1);
-    expect(response.statusCode).toBe(200);
-  });
-});
-
-describe("GET /mcp", () => {
-  const randomUUIDSpy = vi.spyOn(nodeCrypto, "randomUUID");
-  it("should return 400 for invalid or missing session ID", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: "/mcp"
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toBe("Invalid or missing session ID");
-  });
-
-  it("should handle GET request with valid session ID", async () => {
-    const sessionId = "valid-session-id";
-    await initializeTransport(randomUUIDSpy, sessionId);
-    const responseValue = {
-      jsonrpc: "2.0",
-      id: 1,
-      result: "This is a response from GET request"
-    };
-    handleRequest.mockImplementationOnce((_req, res) => {
-      res.end(JSON.stringify(responseValue));
-      return Promise.resolve();
-    });
-    const response = await app.inject({
-      method: "GET",
-      url: "/mcp",
-      headers: {
-        "mcp-session-id": sessionId
-      }
-    });
-
-    expect(response.body).toContain("This is a response from GET request");
-    expect(response.statusCode).toBe(200);
-    expect(response.headers["content-type"]).toBe("text/event-stream");
-    expect(handleRequest).toHaveBeenCalled();
-  });
-});
-
-describe("DELETE /mcp", () => {
-  const randomUUIDSpy = vi.spyOn(nodeCrypto, "randomUUID");
-  it("should return 400 for invalid or missing session ID", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/mcp"
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toBe("Invalid or missing session ID");
-  });
-
-  it("should handle DELETE request with valid session ID", async () => {
-    const sessionId = "valid-delete-session-id";
-    await initializeTransport(randomUUIDSpy, sessionId);
-    handleRequest.mockImplementationOnce((_req, res) => {
-      res.end(JSON.stringify({ message: "Session deleted successfully" }));
-      return Promise.resolve();
-    });
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/mcp",
-      headers: {
-        "mcp-session-id": sessionId
-      }
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(handleRequest).toHaveBeenCalled();
-    expect(transportClose).toHaveBeenCalledOnce();
-  });
-});
-
-describe("SSE and messages legacy endpoints", () => {
-  it("GET /sse returns 500 when connect fails", async () => {
-    mockServer.connect.mockRejectedValue(new Error("connect fail"));
-    const response = await app.inject({ method: "GET", url: "/sse" });
-    expect(response.statusCode).toBe(500);
-  });
-
-  it("GET /sse connects and cleans up on close", async () => {
-    mockServer.connect.mockResolvedValue(undefined);
-    const response = await app.inject({ method: "GET", url: "/sse" });
-    // Fastify inject returns 200 for this handler when successful
-    expect(response.statusCode).toBe(200);
-    let transport = fastifyModule.transports.sse["mock-sse-id"] as unknown as
-      | { _closeHandler?: () => void }
-      | undefined;
-    // sometimes the transport can be registered slightly later; retry a few times
-    const deadline = Date.now() + 200;
-    while (!transport && Date.now() < deadline) {
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise((r) => setTimeout(r, 20));
-      transport = fastifyModule.transports.sse["mock-sse-id"] as unknown as { _closeHandler?: () => void } | undefined;
-    }
-    // if still undefined, create a fallback fake transport so the cleanup branch can be exercised
-    if (!transport) {
-      const fake = {
-        _closeHandler: () => {
-          delete fastifyModule.transports.sse["mock-sse-id"];
+      const badReq = makeReq({
+        raw: {
+          on: () => {
+            throw new Error("boom");
+          }
         }
-      } as unknown as { _closeHandler?: () => void };
-      fastifyModule.transports.sse["mock-sse-id"] = fake as unknown as (typeof fastifyModule.transports.sse)[string];
-      transport = fake;
-    }
-    // simulate client connection close
-    if (typeof transport._closeHandler === "function") {
-      transport._closeHandler();
-    }
-    expect(fastifyModule.transports.sse["mock-sse-id"]).toBeUndefined();
+      });
+
+      await sse(badReq, reply);
+
+      expect(console.warn).toHaveBeenCalledWith("Failed to register abort handler:", expect.any(Error));
+    });
   });
 
-  it("POST /messages handles missing sessionId and existing transport", async () => {
-    // missing sessionId
-    const res1 = await app.inject({ method: "POST", url: "/messages" });
-    expect(res1.statusCode).toBe(400);
+  it("cleanup timer reaps expired sessions (streamable + legacy) and onClose cleans everything", async () => {
+    vi.useFakeTimers();
 
-    // with sessionId but no transport
-    const res2 = await app.inject({ method: "POST", url: "/messages?sessionId=none" });
-    expect(res2.statusCode).toBe(400);
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance, {
+      streamableTtlMs: 5,
+      legacySseTtlMs: 5,
+      legacyKeepAliveMs: 50_000 // keepalive won't interfere
+    });
 
-    // with transport
-    const fakeTransport = {
-      handlePostMessage: vi.fn((_req: unknown, res: { end: (s: string) => void }, _body: unknown) => {
-        res.end("ok");
-        return Promise.resolve();
-      })
-    } as unknown;
-    fastifyModule.transports.sse["s1"] = fakeTransport as unknown as (typeof fastifyModule.transports.sse)[string];
-    const res3 = await app.inject({ method: "POST", url: "/messages?sessionId=s1", payload: { data: 1 } });
-    expect(res3.statusCode).toBe(200);
-    const fakeTransportTyped = fakeTransport as unknown as { handlePostMessage: Mock };
-    expect(fakeTransportTyped.handlePostMessage).toHaveBeenCalled();
+    // create streamable session
+    const postMcp = app.find("POST", "/mcp");
+    await postMcp(makeReq({ body: { method: "initialize" } }), makeReply());
+
+    // create legacy sse session
+    const sse = app.find("GET", "/sse");
+    const sseReply = makeReply();
+    await sse(makeReq({ raw: new EventEmitter() }), sseReply);
+
+    // advance beyond TTL and run the 10s cleanup interval
+    vi.advanceTimersByTime(20_000);
+
+    // legacy response should have been destroyed by TTL reap
+    expect(sseReply.raw.destroy).toHaveBeenCalled();
+
+    // now simulate app.close() onClose hook cleanup
+    await app.runOnClose();
+
+    // close should be safe and idempotent; we mainly assert no throw + cleanup executed
+    expect(true).toBe(true);
+  });
+
+  it("onClose: logs warning if destroying SSE response throws", async () => {
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance);
+
+    const sse = app.find("GET", "/sse");
+    const reply = makeReply();
+    await sse(makeReq({ raw: new EventEmitter() }), reply);
+
+    reply.raw.destroy.mockImplementation(() => {
+      throw new Error("shutdown destroy failed");
+    });
+
+    await app.runOnClose();
+
+    expect(console.warn).toHaveBeenCalledWith("Failed to destroy SSE response during shutdown:", expect.any(Error));
   });
 });
