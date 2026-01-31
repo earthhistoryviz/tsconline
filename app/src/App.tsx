@@ -132,7 +132,11 @@ export default observer(function App() {
         return enSetTour;
     }
   };
-  const handleTourCallback = (data: CallBackProps, tourName: string, setIndexFunction: React.Dispatch<React.SetStateAction<number>>) => {
+  const handleTourCallback = (
+    data: CallBackProps,
+    tourName: string,
+    setIndexFunction: React.Dispatch<React.SetStateAction<number>>
+  ) => {
     const { status, action, origin, index, type } = data;
     const finishedStatuses: string[] = ["finished", "skipped"];
     if (finishedStatuses.includes(status) || (action === ACTIONS.CLOSE && origin === ORIGIN.OVERLAY)) {
@@ -142,7 +146,7 @@ export default observer(function App() {
       setIndexFunction(index + (action === ACTIONS.PREV ? -1 : 1));
     }
   };
-  
+
   // on theme change, update the background color
   const checkUnsavedChanges = () => {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
