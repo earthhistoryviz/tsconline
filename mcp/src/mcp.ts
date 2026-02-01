@@ -6,15 +6,14 @@ import dotenv from "dotenv";
 import { MCPLinkParams } from "@tsconline/shared";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
-dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true, quiet: true });
+dotenv.config({
+  path: path.resolve(process.cwd(), "../server/.env"),
+  override: true,
+  quiet: true
+});
 
-// makes sure the return link for the AI is correct (pr preview, local, dev, etc...)
-const domain = process.env.DOMAIN ?? "http://localhost:3000";
-const serverUrl = domain.startsWith("http") ? domain : `https://${domain}`;
-//app runs on
-const appDomain = process.env.DOMAIN ?? "http://localhost:5173";
-const appUrl = appDomain.startsWith("http") ? appDomain : `https://${appDomain}`;
-
+const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
+const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:5173`;
 // Chart state management - tracks current chart configuration
 interface ChartState {
   datapackTitles: string[];
@@ -335,7 +334,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
 
         const mcpLinkJson = JSON.stringify(mcpLinkObj);
         const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
-        const mcpToolUrl = `${appUrl}/chart?mcpChartState=${mcpLinkBase64}`;
+        const mcpToolUrl = `${frontendUrl}/chart?mcpChartState=${mcpLinkBase64}`;
 
         return {
           content: [
