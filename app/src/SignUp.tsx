@@ -27,7 +27,7 @@ export const SignUp: React.FC = observer(() => {
   const [loading, setLoading] = useState(false);
   const { actions } = useContext(context);
   const [searchParams] = useSearchParams();
-  const mcpToken = searchParams.get("mcp_token");
+  const mcpToken = searchParams.get("mcp_session");
 
   useEffect(() => {
     loadRecaptcha();

@@ -25,42 +25,37 @@ export interface SessionEntry {
 
 export const sessions = new Map<string, SessionEntry>();
 
-const PRE_LOGIN_TTL_MS = 2 * 60 * 1000; // 2 minutes for unauthenticated sessions
-const AUTHENTICATED_INACTIVITY_TTL_MS = 10 * 60 * 1000; // 10 minutes of inactivity for authenticated sessions
+const PRE_LOGIN_TTL_MS = 2 * 60 * 1000; // login link valid for 2 min
+const AUTHENTICATED_INACTIVITY_TTL_MS = 10 * 60 * 1000; // session lasts 10 minutes since last active
+const MAX_CONCURRENT_LOGIN_REQUESTS = 10; // rate limit: max 10 pre-login sessions
 
 // Cleanup expired sessions every 1 minute
 export const cleanupInterval = setInterval(
   () => {
     const now = Date.now();
-    console.log("========");
-    console.log("Active sessions:", sessions.size);
-    console.log("sessions map:", Array.from(sessions).map(([id, entry]) => ({
-      sessionId: id,
-      userInfo: entry.userInfo,
-      createdAt: entry.createdAt,
-      lastActivity: entry.lastActivity
-    })));
-    console.log("=========");
+
+    console.log("-----");
+    console.log("sessions: ", sessions.size);
+    console.log("sessions makeup:", sessions);
+
+    console.log("-----");
+
     for (const [sessionId, entry] of sessions.entries()) {
       const isAuthenticated = entry.userInfo !== undefined;
       const timeSinceCreation = now - entry.createdAt;
       const timeSinceLastActivity = now - entry.lastActivity;
 
-      // Pre-login: delete if older than 2 minutes
       if (!isAuthenticated && timeSinceCreation > PRE_LOGIN_TTL_MS) {
-        console.log(`Deleting expired pre-login session: ${sessionId}`);
         sessions.delete(sessionId);
         continue;
       }
 
-      // Authenticated: delete if inactive for 10 minutes
       if (isAuthenticated && timeSinceLastActivity > AUTHENTICATED_INACTIVITY_TTL_MS) {
-        console.log(`Deleting inactive authenticated session: ${sessionId}`);
         sessions.delete(sessionId);
       }
     }
   },
-  .1 * 60 * 1000 // Run every 1 minute
+  1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
 // Chart state management - tracks current chart configuration
@@ -120,7 +115,10 @@ const updateChartArgsSchema = z.object({
   columnToggles: columnToggleSchema.optional(),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),
-  sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+  sessionId: z
+    .string()
+    .optional()
+    .describe("INTERNAL ONLY: Session ID from login() - tracks user activity, extends session timeout")
 });
 
 export const createMCPServer = () => {
@@ -249,8 +247,13 @@ If you are suspicious of a given chart name or are unsure which datapacks to use
 When to use:
 - First chart or changing datapacks: provide datapackTitles (required).
 - Adjust time/settings: provide overrides (object, optional). Only known keys have guaranteed effect; unknown keys are accepted but may be ignored by the renderer.
-- Toggle columns: provide columnToggles with on/off arrays (optional). Prefer column ids from listColumns; names may work but ids are safer. Case-insensitive; exclusive on/off (adding to off removes from on).
+- Toggle columns: provide columnToggles with on/off arrays (optional). Just use the column names the user gives you - assume they're correct. Case-insensitive; exclusive on/off (adding to off removes from on).
 - Debugging: always set useCache to true
+
+Column toggling workflow:
+- If user says "turn off column X": just do it with { columnToggles: { off: ["X"] } }
+- Don't pre-emptively call listColumns to verify names
+- Only if chart generation FAILS or user complains about missing columns, THEN call listColumns to see available options
 
 Payload shape (ALWAYS FOLLOWS THIS SHAPE):
 { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean }
@@ -546,11 +549,17 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       title: "List Columns",
       description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
 
-When to use:
-- After picking datapacks, to fetch column ids for toggling in updateChartState.
-- Need a lightweight view (id, name, path, on, enableTitle, type).
+WHEN TO USE THIS:
+- User explicitly ASKS "what columns are available?" or "show me the columns"
+- updateChartState FAILED and you need to troubleshoot which columns actually exist
+- User complains about missing columns after chart generation
 
-Prefer column ids (the id field) when toggling. Names may work if they match an id, but ids are the safe, guaranteed choice.
+WHEN NOT TO USE:
+- Before calling updateChartState "just to check" - DON'T do this!
+- User says "turn off column X" - just trust them and call updateChartState directly
+- Preemptively verifying column names - unnecessary, wastes time
+
+Workflow: Trust user's column names → updateChartState fails? → THEN call listColumns to debug
 
 Input: { datapackTitles: string[], sessionId?: string }
 - Titles must exist (see listDatapacks)
@@ -598,21 +607,41 @@ Example: { "datapackTitles": ["GTS2020"] }`,
     "login",
     {
       title: "Login",
-      description: `What it does: generate a login link to provide to the user for authentication.
+      description: `Generate a login link for user authentication.
 
-When to use:
-- Initial step to authenticate the user
-- Obtain a login URL to present to the user
-- Token is valid for 5 minutes; user must complete login flow within that window
+========================================================================
+CRITICAL: The sessionId is a SECRET. NEVER display the sessionId to the user.
+It must ONLY be used in subsequent internal tool calls.
+========================================================================
 
-Input: {}
-- Do not wrap payload twice (no nested { input: {...} })
+What to show the user:
+- loginUrl ONLY - this is the ONLY thing the user should see
 
-Returns: login URL and sessionId. The sessionId is for the AI to reference in subsequent tool calls after the user completes login.`,
+What to keep internal:
+- sessionId - store this for passing to tool calls, DO NOT display it
+
+Session lifecycle:
+- Link valid for 2 minutes (user must complete login)
+- After login: session valid for 10 minutes of inactivity
+- Pass sessionId to tool calls to track activity`,
       inputSchema: {}
     },
-    async (_, session) => {
+    async () => {
       try {
+        // Rate limit: check number of pre-login sessions
+        const preLoginCount = Array.from(sessions.values()).filter((entry) => entry.userInfo === undefined).length;
+
+        if (preLoginCount >= MAX_CONCURRENT_LOGIN_REQUESTS) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Too many active login requests. Please wait for existing logins to expire (2 minutes) and try again.`
+              }
+            ]
+          };
+        }
+
         const sessionId = randomUUID();
         const loginUrl = `${frontendUrl}/login?mcp_session=${sessionId}`;
 
@@ -622,17 +651,23 @@ Returns: login URL and sessionId. The sessionId is for the AI to reference in su
           // userInfo is undefined until /mcp/user-info is called
         });
 
-        console.log("Created login URL:", loginUrl, "Session ID:", sessionId);
+        console.log("Created login URL:", loginUrl);
         return {
           content: [
             {
               type: "text",
-              text: `Login URL: ${loginUrl}\n\nSession ID (for reference): ${sessionId}\n\nThe login link is valid for 2 minutes. After successful login, use the Session ID in subsequent tool calls for authenticated features.`
+              text: `[SHOW TO USER]
+Please visit this link to log in:
+${loginUrl}
+
+[INTERNAL - DO NOT SHOW TO USER]
+sessionId: ${sessionId}
+(Store for tool calls. Valid 2 min until login, then 10 min of inactivity.)`
             }
           ]
         };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error logging in: ${String(e)}` }]};
+        return { content: [{ type: "text", text: `Error logging in: ${String(e)}` }] };
       }
     }
   );
@@ -643,13 +678,15 @@ Returns: login URL and sessionId. The sessionId is for the AI to reference in su
       title: "Who Am I? Am I logged in?",
       description: `What it does: Check if you're logged in and get user details.
 
+REMINDER: sessionId is internal only - don't show it to the user!
+
 Returns one of three states:
 1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
 2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
 3. SESSION NOT FOUND: Session expired or never existed → call login() to get new sessionId
 
 Input: { sessionId?: string }
-- sessionId (optional): The session ID from the login tool. Without it, returns "not logged in".
+- sessionId (optional): Internal ID from login() tool. Pass it here to check auth status.
 
 Session Expiration Rules:
 - Pre-login: 2 minutes from creation (user must complete login within 2 min)

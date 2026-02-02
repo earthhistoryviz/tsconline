@@ -50,10 +50,12 @@ export const AccountVerify: React.FC = () => {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, ...(mcpToken ? { mcpToken } : {}) }),
         credentials: "include"
       });
       if (response.ok) {
+        const data = await response.json();
+        const sessionIdFromResponse = data.mcpToken;
         await actions.sessionCheck();
         if (!state.isLoggedIn) {
           displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
@@ -62,13 +64,13 @@ export const AccountVerify: React.FC = () => {
           actions.removeAllErrors();
           actions.pushSnackbar("Account verified, redirecting...", "success");
           setMessage("Your account has been verified. Thank you!");
-          if (mcpToken) {
+          if (sessionIdFromResponse) {
             try {
               const userInfo = { ...state.user, historyEntries: [] };
-              await fetcher("/mcp/user-info", {
+              await fetcher("/messages/user-info", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token: mcpToken, userInfo })
+                body: JSON.stringify({ sessionId: sessionIdFromResponse, userInfo })
               });
             } catch (e) {
               console.error("Failed to send user info to MCP", e);
