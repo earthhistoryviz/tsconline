@@ -48,8 +48,8 @@ mcpServer.addHook("onRequest", async (req, reply) => {
   }
 
   // for native EventSource (no headers): /sse?token=... 
-  if (!token && typeof (req.query as any)?.token === "string") {
-    token = (req.query as any).token;
+  if (!token && typeof (req.query as { token?: string })?.token === "string") {
+    token = (req.query as { token?: string }).token;
   }
   
   if (!token || !timingSafeEqualStr(token, MCP_AUTH_TOKEN)) { // see if token matches the one the server expects
