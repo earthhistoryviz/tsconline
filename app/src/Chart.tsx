@@ -44,6 +44,7 @@ import Color from "color";
 import { fetcher } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
+import { toJS } from "mobx";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -59,7 +60,7 @@ type ChartProps = {
 export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList, disableDoubleClick = false }) => {
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
-  const { matchesSettings, chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
+  const {matchesSettings, chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
   const { state, actions } = useContext(context);
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
@@ -145,9 +146,14 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
 
           if (fetchedSettings) {
+            console.log("Applying fetched settings from cached chart...");
             actions.applySettings(fetchedSettings);
             state.prevSettings = JSON.parse(JSON.stringify(state.settings));
           }
+
+          console.log("Settings applied, state : ", toJS(state.settings));
+          console.log("previous settings : ", toJS(state.prevSettings));
+          console.log("settings file ", toJS(state.settingsXML));
 
           await actions.processDatapackConfig(datapackConfigs, {
             settings: cachedChartInfo.settingspath,

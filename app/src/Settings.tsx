@@ -16,6 +16,8 @@ import { TabWrapper, TabsWrapper } from "./components";
 import LoadSettings from "./settings_tabs/LoadSettings";
 import SaveSettings from "./settings_tabs/SaveSettings";
 import { useTranslation } from "react-i18next";
+import { toJS } from "mobx";
+import { useEffect } from "react";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -28,6 +30,13 @@ export const Settings = observer(function Settings() {
   }));
   const tabKeys = Object.keys(SettingsMenuOptionLabels);
   const tabIndex = tabKeys.indexOf(state.settingsTabs.selected);
+
+  useEffect(() => {
+    console.log("Settings applied, state : ", toJS(state.settings));
+    console.log("previous settings : ", toJS(state.prevSettings));
+    console.log("settings file ", toJS(state.settingsXML));
+
+  }, []);
 
   return (
     <div className="settings-container" style={{ background: theme.palette.backgroundColor.main }}>
