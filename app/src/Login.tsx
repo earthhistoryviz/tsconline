@@ -24,15 +24,15 @@ import { useTranslation } from "react-i18next";
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
   const [loading, setLoading] = useState(false);
-  const [mcpToken, setMcpToken] = useState<string | null>(null);
+  const [mcpSession, setMcpSession] = useState<string | null>(null);
   const theme = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get("mcp_token");
-    if (token) {
-      setMcpToken(token);
+    const session = urlParams.get("mcp_session");
+    if (session) {
+      setMcpSession(session);
     }
   }, []);
 
@@ -80,7 +80,7 @@ export const Login: React.FC = observer(() => {
       if (response.ok) {
         // mcp login verification
         await actions.sessionCheck();
-        if (mcpToken) {
+        if (mcpSession) {
           try {
             // Avoid sending large history payloads; MCP only needs identity/role info
             const userInfo = { ...state.user, historyEntries: [] };
@@ -90,7 +90,7 @@ export const Login: React.FC = observer(() => {
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-                token: mcpToken,
+                sessionId: mcpSession,
                 userInfo
               })
             });
@@ -207,7 +207,7 @@ export const Login: React.FC = observer(() => {
                 <Link href="/forgot-password">{t("login.forgot-password")}</Link>
               </Grid>
               <Grid item>
-                <Link href={`/signup${mcpToken ? `?mcp_token=${mcpToken}` : ""}`}>{t("login.signup")}</Link>
+                <Link href={`/signup${mcpSession ? `?mcp_session=${mcpSession}` : ""}`}>{t("login.signup")}</Link>
               </Grid>
             </Grid>
             <Box className="divider-box">

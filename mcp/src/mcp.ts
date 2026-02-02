@@ -16,22 +16,51 @@ dotenv.config({
 const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
 const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:5173`;
 
-export const sessionIds = new Map<string, { sessionId: string; expiresAt: number }>();
-export const mcpUserInfo = new Map<string, SharedUser>();
+// Single session map: sessionId -> { userInfo?, createdAt, lastActivity }
+export interface SessionEntry {
+  userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
+  createdAt: number;
+  lastActivity: number;
+}
 
-const TOKEN_TTL_MS = 2 * 60 * 1000; // 2 minutes
+export const sessions = new Map<string, SessionEntry>();
 
-// Cleanup expired tokens every 2 minutes
+const PRE_LOGIN_TTL_MS = 2 * 60 * 1000; // 2 minutes for unauthenticated sessions
+const AUTHENTICATED_INACTIVITY_TTL_MS = 10 * 60 * 1000; // 10 minutes of inactivity for authenticated sessions
+
+// Cleanup expired sessions every 1 minute
 export const cleanupInterval = setInterval(
   () => {
     const now = Date.now();
-    for (const [token, entry] of sessionIds.entries()) {
-      if (entry.expiresAt <= now) {
-        sessionIds.delete(token);
+    console.log("========");
+    console.log("Active sessions:", sessions.size);
+    console.log("sessions map:", Array.from(sessions).map(([id, entry]) => ({
+      sessionId: id,
+      userInfo: entry.userInfo,
+      createdAt: entry.createdAt,
+      lastActivity: entry.lastActivity
+    })));
+    console.log("=========");
+    for (const [sessionId, entry] of sessions.entries()) {
+      const isAuthenticated = entry.userInfo !== undefined;
+      const timeSinceCreation = now - entry.createdAt;
+      const timeSinceLastActivity = now - entry.lastActivity;
+
+      // Pre-login: delete if older than 2 minutes
+      if (!isAuthenticated && timeSinceCreation > PRE_LOGIN_TTL_MS) {
+        console.log(`Deleting expired pre-login session: ${sessionId}`);
+        sessions.delete(sessionId);
+        continue;
+      }
+
+      // Authenticated: delete if inactive for 10 minutes
+      if (isAuthenticated && timeSinceLastActivity > AUTHENTICATED_INACTIVITY_TTL_MS) {
+        console.log(`Deleting inactive authenticated session: ${sessionId}`);
+        sessions.delete(sessionId);
       }
     }
   },
-  2 * 60 * 1000
+  .1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
 // Chart state management - tracks current chart configuration
@@ -90,7 +119,8 @@ const updateChartArgsSchema = z.object({
   overrides: overridesSchema.optional(),
   columnToggles: columnToggleSchema.optional(),
   useCache: z.boolean().optional(),
-  isCrossPlot: z.boolean().optional()
+  isCrossPlot: z.boolean().optional(),
+  sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
 });
 
 export const createMCPServer = () => {
@@ -117,7 +147,9 @@ export const createMCPServer = () => {
     - After updateChartState (verify changes)
     - When debugging why a chart looks a certain way
 
-    Input: {}
+    Input: { sessionId?: string }
+    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
+
     Example output shape:
     {
       "datapackTitles": ["Africa Bight"],
@@ -126,9 +158,19 @@ export const createMCPServer = () => {
       "lastChartPath": "/charts/...",
       "lastModified": "..."
     }`,
-      inputSchema: {}
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
     },
-    async () => {
+    async ({ sessionId }) => {
+      // Track activity if authenticated
+      if (sessionId) {
+        const entry = sessions.get(sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       if (!currentChartState) {
         return {
           content: [
@@ -162,10 +204,21 @@ export const createMCPServer = () => {
     - Starting a brand new chart setup
     - State feels confusing; you want a clean slate
 
-    Input: {}`,
-      inputSchema: {}
+    Input: { sessionId?: string }
+    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.`,
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
     },
-    async () => {
+    async ({ sessionId }) => {
+      // Track activity if authenticated
+      if (sessionId) {
+        const entry = sessions.get(sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       currentChartState = {
         datapackTitles: [],
         overrides: {},
@@ -254,6 +307,14 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
+      // Track activity if authenticated
+      if (args.sessionId) {
+        const entry = sessions.get(args.sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       // If no state exists and no datapackTitles provided, error
       if (!currentChartState && !args.datapackTitles) {
         return {
@@ -372,11 +433,22 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
 
     Output: array of objects with at least { title, id }. Use title for later calls.
 
-    Input: {}
+    Input: { sessionId?: string }
+    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
     - Do not wrap payload twice (no nested { input: {...} }).`,
-      inputSchema: {}
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
     },
-    async () => {
+    async ({ sessionId }) => {
+      // Track activity if authenticated
+      if (sessionId) {
+        const entry = sessions.get(sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
         const res = await fetch(`${serverUrl}/mcp/datapacks`, { method: "GET", headers });
@@ -403,8 +475,9 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
     - Investigating mismatches between defaults and overrides
     - Want nested columns tree, not just flat ids
 
-    Input: { datapackTitles: string[] }
+    Input: { datapackTitles: string[], sessionId?: string }
     - Titles must exist (see listDatapacks)
+    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
     - Do not wrap payload twice (no nested { input: {...} })
 
     Normal flow: listDatapacks -> listColumns (for ids) -> updateChartState (with overrides/columnToggles).`,
@@ -413,10 +486,19 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           .array(z.string())
           .describe(
             "Array of datapack titles to merge (e.g., ['GTS2020', 'Paleobiology']). Get available titles from listDatapacks tool."
-          )
+          ),
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
     },
-    async ({ datapackTitles }) => {
+    async ({ datapackTitles, sessionId }) => {
+      // Track activity if authenticated
+      if (sessionId) {
+        const entry = sessions.get(sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       try {
         const res = await fetch(`${serverUrl}/mcp/get-settings-schema`, {
           method: "POST",
@@ -470,18 +552,28 @@ When to use:
 
 Prefer column ids (the id field) when toggling. Names may work if they match an id, but ids are the safe, guaranteed choice.
 
-Input: { datapackTitles: string[] }
+Input: { datapackTitles: string[], sessionId?: string }
 - Titles must exist (see listDatapacks)
+- sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
 - Do not wrap payload twice (no nested { input: {...} })
 
 Example: { "datapackTitles": ["GTS2020"] }`,
       inputSchema: {
         datapackTitles: z
           .array(z.string())
-          .describe("Array of datapack titles to merge (e.g., ['GTS2020', 'Paleobiology'])")
+          .describe("Array of datapack titles to merge (e.g., ['GTS2020', 'Paleobiology'])"),
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
     },
-    async ({ datapackTitles }) => {
+    async ({ datapackTitles, sessionId }) => {
+      // Track activity if authenticated
+      if (sessionId) {
+        const entry = sessions.get(sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       try {
         const res = await fetch(`${serverUrl}/mcp/list-columns`, {
           method: "POST",
@@ -511,38 +603,36 @@ Example: { "datapackTitles": ["GTS2020"] }`,
 When to use:
 - Initial step to authenticate the user
 - Obtain a login URL to present to the user
-- The token might expire in a minute but only tell the user that if they say the link didn't work or if they generate another
+- Token is valid for 5 minutes; user must complete login flow within that window
 
 Input: {}
-- Do not wrap payload twice (no nested { input: {...} })`,
+- Do not wrap payload twice (no nested { input: {...} })
+
+Returns: login URL and sessionId. The sessionId is for the AI to reference in subsequent tool calls after the user completes login.`,
       inputSchema: {}
     },
     async (_, session) => {
       try {
-        const token = randomUUID();
+        const sessionId = randomUUID();
+        const loginUrl = `${frontendUrl}/login?mcp_session=${sessionId}`;
 
-        // Delete any old token that points to this same sessionId
-        const oldToken = Array.from(sessionIds.entries()).find(([, v]) => v.sessionId === session.sessionId)?.[0];
-        if (oldToken) {
-          sessionIds.delete(oldToken);
-        }
-
-        const loginUrl = `${frontendUrl}/login?mcp_token=${token}`;
-        sessionIds.set(token, {
-          sessionId: session.sessionId ?? token,
-          expiresAt: Date.now() + TOKEN_TTL_MS
+        sessions.set(sessionId, {
+          createdAt: Date.now(),
+          lastActivity: Date.now()
+          // userInfo is undefined until /mcp/user-info is called
         });
-        console.log("Created login URL:", loginUrl);
+
+        console.log("Created login URL:", loginUrl, "Session ID:", sessionId);
         return {
           content: [
             {
               type: "text",
-              text: `Login URL: ${loginUrl}`
+              text: `Login URL: ${loginUrl}\n\nSession ID (for reference): ${sessionId}\n\nThe login link is valid for 2 minutes. After successful login, use the Session ID in subsequent tool calls for authenticated features.`
             }
           ]
         };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error logging in: ${String(e)}` }] };
+        return { content: [{ type: "text", text: `Error logging in: ${String(e)}` }]};
       }
     }
   );
@@ -558,22 +648,51 @@ When to use:
 - Get user details (username, email, admin status, etc.)
 - Verify user permissions
 
-Input: {}
-- Do not wrap payload twice (no nested { input: {...} }).`,
-      inputSchema: {}
+Input: { sessionId?: string }
+- sessionId (optional): The session ID from the login tool response. If provided and authenticated, returns the associated user info.
+- If no sessionId provided, returns "not logged in" (for general unauthenticated users).
+
+Examples:
+- With sessionId: { "sessionId": "uuid-from-login-tool" }
+- Without sessionId: {} (general unauthenticated user)`,
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool response")
+      }
     },
-    async (_, session) => {
+    async ({ sessionId }) => {
       try {
-        console.log("session.sessionId:", session.sessionId);
-        console.log("sessionId map:", sessionIds);
-        console.log("mcpUserInfo map:", mcpUserInfo);
-        if (mcpUserInfo.has(session.sessionId ?? "")) {
-          const userInfo = mcpUserInfo.get(session.sessionId ?? "")!;
+        if (!sessionId) {
           return {
             content: [
               {
                 type: "text",
-                text: `You are logged in!\n\nUser Information:\n${JSON.stringify(userInfo, null, 2)}`
+                text: `You are not logged in. Please use the login tool to authenticate, then provide the resulting Session ID to this tool.`
+              }
+            ]
+          };
+        }
+
+        const entry = sessions.get(sessionId);
+        if (!entry) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Session ID not found. Please run login tool again.`
+              }
+            ]
+          };
+        }
+
+        if (entry.userInfo) {
+          // Track activity for authenticated session
+          entry.lastActivity = Date.now();
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `You are logged in!\n\nUser Information:\n${JSON.stringify(entry.userInfo, null, 2)}`
               }
             ]
           };
@@ -582,7 +701,7 @@ Input: {}
             content: [
               {
                 type: "text",
-                text: `You are not logged in. Please use the login tool to authenticate.`
+                text: `Session ID not found or not yet authenticated. Please complete the login flow using the URL from the login tool.`
               }
             ]
           };
