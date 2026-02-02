@@ -641,20 +641,21 @@ Returns: login URL and sessionId. The sessionId is for the AI to reference in su
     "whoami",
     {
       title: "Who Am I? Am I logged in?",
-      description: `What it does: returns complete user information if logged in.
+      description: `What it does: Check if you're logged in and get user details.
 
-When to use:
-- Check if user is authenticated
-- Get user details (username, email, admin status, etc.)
-- Verify user permissions
+Returns one of three states:
+1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
+2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
+3. SESSION NOT FOUND: Session expired or never existed → call login() to get new sessionId
 
 Input: { sessionId?: string }
-- sessionId (optional): The session ID from the login tool response. If provided and authenticated, returns the associated user info.
-- If no sessionId provided, returns "not logged in" (for general unauthenticated users).
+- sessionId (optional): The session ID from the login tool. Without it, returns "not logged in".
 
-Examples:
-- With sessionId: { "sessionId": "uuid-from-login-tool" }
-- Without sessionId: {} (general unauthenticated user)`,
+Session Expiration Rules:
+- Pre-login: 2 minutes from creation (user must complete login within 2 min)
+- Authenticated: 10 minutes of inactivity (any tool call resets timer)
+
+If you see "not found": session expired, call login() again.`,
       inputSchema: {
         sessionId: z.string().optional().describe("Session ID from login tool response")
       }
