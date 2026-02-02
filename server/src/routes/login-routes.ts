@@ -610,10 +610,11 @@ export const resendVerificationEmail = async function resendVerificationEmail(
 };
 
 export const verifyEmail = async function verifyEmail(
-  request: FastifyRequest<{ Body: { token: string } }>,
+  request: FastifyRequest<{ Body: { token: string; mcpToken?: string } }>,
   reply: FastifyReply
 ) {
   const token = request.body.token;
+  const { mcpToken } = request.body;
   try {
     const verificationRow = (await findVerification({ token: token }))[0];
     if (!verificationRow || verificationRow.reason !== "verify") {
@@ -639,7 +640,11 @@ export const verifyEmail = async function verifyEmail(
     }
     await updateUser({ userId }, { emailVerified: 1 });
     request.session.set("uuid", uuid);
-    reply.send({ message: "Email verified" });
+    const response: { message: string; mcpToken?: string } = { message: "Email verified" };
+    if (mcpToken) {
+      response.mcpToken = mcpToken;
+    }
+    reply.send(response);
   } catch (error) {
     console.error("Error during verifying email:", error);
     reply.status(500).send({ error: "Unknown Error" });

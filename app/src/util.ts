@@ -15,7 +15,7 @@ export function devSafeUrl(url: string) {
   // will be false.
   if (import.meta.env.DEV) {
     // MCP endpoints are on a separate server at port 3001
-    if (url.startsWith("/mcp")) {
+    if (url.startsWith("/messages")) {
       return `http://localhost:3001${url}`;
     }
     // All other endpoints are on the main server at port 3000
