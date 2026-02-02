@@ -7,7 +7,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
-import { createMCPServer, sessionIds, mcpUserInfo } from "./mcp.js";
+import { createMCPServer, sessions } from "./mcp.js";
 
 import { SharedUser } from "@tsconline/shared";
 
@@ -63,8 +63,8 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
         legacyLastActivity.delete(sid);
         legacySSESessions.delete(sid);
         legacyServers.delete(sid);
-        // Clean up associated user info when session expires (see mcp tools)
-        mcpUserInfo.delete(sid);
+        // Clean up associated session when MCP session expires
+        sessions.delete(sid);
 
         const res = legacySSEResponses.get(sid);
         legacySSEResponses.delete(sid);
@@ -246,19 +246,29 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     await transport.handlePostMessage(req.raw, reply.raw, req.body as unknown);
   });
 
+  //TBD add MCP token for here
   app.post("/mcp/user-info", async (req, reply) => {
-    const { token, userInfo } = req.body as { token: string; userInfo: SharedUser };
-    const entry = sessionIds.get(token);
+    const { sessionId, userInfo } = req.body as { sessionId: string; userInfo: SharedUser };
+    const entry = sessions.get(sessionId);
 
-    if (!entry || entry.expiresAt < Date.now()) {
-      if (entry) sessionIds.delete(token);
-      reply.code(400).send({ error: "Invalid or expired token" });
+    if (!entry) {
+      reply.code(400).send({ error: "Invalid or expired session" });
+      console.log("No session entry found for sessionId:", sessionId);
       return;
     }
 
-    mcpUserInfo.set(entry.sessionId, userInfo);
-    sessionIds.delete(token);
-    reply.code(200).send({ ok: true });
+    // Verify session is in pre-login state (no userInfo yet)
+    if (entry.userInfo) {
+      reply.code(400).send({ error: "Session already authenticated" });
+      console.log("Session already has userInfo for sessionId:", sessionId, entry.userInfo);
+      return;
+    }
+
+    // Transition session from pre-login to authenticated
+    entry.userInfo = userInfo;
+    entry.lastActivity = Date.now();
+
+    reply.code(200).send({ ok: true, sessionId });
   });
 
   if (enableHealth) {

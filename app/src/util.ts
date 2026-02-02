@@ -14,6 +14,11 @@ export function devSafeUrl(url: string) {
   // browser from the node server instead of the vite dev server), then it
   // will be false.
   if (import.meta.env.DEV) {
+    // MCP endpoints are on a separate server at port 3001
+    if (url.startsWith("/mcp")) {
+      return `http://localhost:3001${url}`;
+    }
+    // All other endpoints are on the main server at port 3000
     return `http://localhost:3000${url}`;
   }
   return url;
