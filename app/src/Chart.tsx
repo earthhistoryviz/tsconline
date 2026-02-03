@@ -148,14 +148,26 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
           console.log("Fetched settings XML:", fetchedSettings);
 
+
+          //fetch settings and apply datapack configs.
           if (fetchedSettings) {
-            actions.applySettings(fetchedSettings);
-            state.prevSettings = JSON.parse(JSON.stringify(state.settings));
+            while (mounted && state.isInitializing) {
+              console.log("Waiting for initialization to complete...");
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            actions.setUnsavedDatapackConfig(datapackConfigs);
+            await actions.processDatapackConfig(datapackConfigs, { settings: fetchedSettings });
+
+            console.log("Applied settings and datapack configs from cached chart.");
+            console.log("Current settings:", toJS(state.settings));
+            console.log("current datapack configs:", toJS(state.config.datapacks));
+
+
           } else {
             console.error("Failed to fetch settings XML from path:", cachedChartInfo.settingspath);
           }
 
-          await actions.processDatapackConfig(datapackConfigs, { settings: cachedChartInfo.settingspath });
 
           if (!mounted) return;
 
@@ -167,8 +179,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
             matchesSettings: true
           });
 
-          console.log("state.config.datapacks:", toJS(state.config?.datapacks));
-          console.log("state.datapacks:", toJS(state.datapacks));
         } else if (response.status === 404) {
           displayServerError(response, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
           return;
@@ -183,6 +193,13 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log("On any change");
+    console.log("current settings", toJS(state.settings));
+    return () => {
     };
   }, []);
 
