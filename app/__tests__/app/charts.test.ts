@@ -450,7 +450,7 @@ test("load cached chart from MCP link state in window params", async ({ page }) 
   });
 
   // Navigate to chart page with MCP link params
-  await page.goto(`http://localhost:5173/chart?mcpChartState=${encodedState}`);
+  await page.goto(`http://localhost:5173/mcp-chart?mcpChartState=${encodedState}`);
 
   // Wait for the page to load
   await page.waitForTimeout(7000);

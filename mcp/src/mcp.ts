@@ -334,7 +334,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
 
         const mcpLinkJson = JSON.stringify(mcpLinkObj);
         const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
-        const mcpToolUrl = `${frontendUrl}/chart?mcpChartState=${mcpLinkBase64}`;
+        const mcpToolUrl = `${frontendUrl}/mcp-chart?mcpChartState=${mcpLinkBase64}`;
 
         return {
           content: [
