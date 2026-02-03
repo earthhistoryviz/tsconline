@@ -116,7 +116,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
             );
             if (fetchedDatapack) {
               actions.addDatapack(fetchedDatapack);
-            } 
+            }
           } catch (error) {
             console.error("Error fetching datapack:", error);
             controller.abort();
