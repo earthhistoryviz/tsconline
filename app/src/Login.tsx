@@ -63,7 +63,7 @@ export const Login: React.FC = observer(() => {
         return;
       }
 
-      const recaptchaToken = await executeRecaptcha("login");
+      const recaptchaToken = await executeRecaptcha(isGoogleLogin ? "googleLogin" : "login");
       if (!recaptchaToken) {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;
