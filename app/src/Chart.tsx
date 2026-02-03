@@ -116,11 +116,11 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
             );
             if (fetchedDatapack) {
               actions.addDatapack(fetchedDatapack);
-            } else {
-              console.error("Failed to fetch datapack for title:", title);
-            }
+            } 
           } catch (error) {
-            console.error("Error fetching datapack for title:", title, error);
+            console.error("Error fetching datapack:", error);
+            controller.abort();
+            return;
           }
         }
 
@@ -142,10 +142,8 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
           const cachedChartInfo = await response.json();
           assertCachedChartResponseInfo(cachedChartInfo);
-          console.log("Fetched cached chart info from server:", cachedChartInfo);
 
           const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
-          console.log("Fetched settings XML:", fetchedSettings);
 
           if (mounted && state.isInitializing) {
             actions.pushSnackbar("Loading MCP Chart", "info");
@@ -156,13 +154,12 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
           //fetch settings and apply datapack configs.
           if (fetchedSettings) {
-            console.log("Applying datapack configs from MCP link:", datapackConfigs);
             actions.applySettings(fetchedSettings);
             state.prevSettings = JSON.parse(JSON.stringify(state.settings));
 
             await actions.processDatapackConfig(datapackConfigs, { settings: fetchedSettings });
           } else {
-            console.error("Failed to fetch settings XML from path:", cachedChartInfo.settingspath);
+            throw new Error("Failed to fetch settings XML for cached chart");
           }
 
           if (!mounted) return;
