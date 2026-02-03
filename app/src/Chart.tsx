@@ -77,17 +77,16 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         if (!mounted) return;
         
         isLoadingCachedChart.current = true;
-        console.log("Processing MCP link params for cached chart...");
 
         const urlParams = new URLSearchParams(window.location.search);
         if (!urlParams.toString()) {
-          console.log("No URL parameters found.");
+          actions.pushSnackbar("No URL parameters found for MCP chart link.", "warning");
           return
         }
         
         const chartStateParam = urlParams.get("mcpChartState");
         if (!chartStateParam) {
-          console.log("No mcpChartState parameter found in URL.");
+          actions.pushSnackbar("No mcpChartState parameter found in URL.", "warning");
           return;
         }
         
@@ -97,7 +96,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           parsedState = JSON.parse(decodedState);
         }
         catch (error) {
-          console.error("Error parsing chartState from URL:", error);
+          actions.pushSnackbar("Error parsing chartState from URL.", "warning");
           return;
         }
 
@@ -115,7 +114,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           if (!mounted) return;
           
           try {
-            console.log("Fetching datapack for title:", title);
             const fetchedDatapack = await actions.fetchDatapack({ title, type: "official", isPublic: true }, { signal: controller.signal });
             if (fetchedDatapack) {
               actions.addDatapack(fetchedDatapack);
@@ -127,8 +125,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           }
         }
 
-        console.log("datapack state after fetch:", toJS(state.datapacks));
-
         const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
           title,
           isPublic: true,
@@ -136,14 +132,12 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           type: "official"
         }));
 
-        console.log("Constructed datapackConfigs from titles:", datapackConfigs);
         const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
         const response = await fetcher(route, {
           method: "GET",
           credentials: "include"
         });
         
-        console.log("Fetched cached chart response from server:", response.status);
         if (response.ok) {
           if (!mounted) return;
           
@@ -158,13 +152,11 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
             actions.applySettings(fetchedSettings);
             state.prevSettings = JSON.parse(JSON.stringify(state.settings));
           } else {
-            console.error("Failed to fetch settings file for cached chart.");
+            console.error("Failed to fetch settings XML from path:", cachedChartInfo.settingspath);
           }
 
-          console.log("Processing datapack config with settings path:", datapackConfigs);
           await actions.processDatapackConfig(datapackConfigs, { settings: cachedChartInfo.settingspath });
 
-          console.log("chart settings after DP process", toJS(state.settings));
 
           if (!mounted) return;
           
