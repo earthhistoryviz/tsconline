@@ -97,6 +97,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           return;
         }
 
+
         assertMCPLinkParams(parsedState);
         const dataPacksTitles = parsedState.datapacks;
         const chartHash = parsedState.chartHash;
@@ -148,26 +149,23 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
           console.log("Fetched settings XML:", fetchedSettings);
 
+        if (mounted && state.isInitializing) {
+          actions.pushSnackbar("Waiting for site init", "info");
+          while (mounted && state.isInitializing) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
+
 
           //fetch settings and apply datapack configs.
           if (fetchedSettings) {
-            while (mounted && state.isInitializing) {
-              console.log("Waiting for initialization to complete...");
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-
-            actions.setUnsavedDatapackConfig(datapackConfigs);
+            console.log("Applying datapack configs from MCP link:", datapackConfigs);
             await actions.processDatapackConfig(datapackConfigs, { settings: fetchedSettings });
-
-            console.log("Applied settings and datapack configs from cached chart.");
-            console.log("Current settings:", toJS(state.settings));
-            console.log("current datapack configs:", toJS(state.config.datapacks));
 
 
           } else {
             console.error("Failed to fetch settings XML from path:", cachedChartInfo.settingspath);
           }
-
 
           if (!mounted) return;
 
@@ -176,7 +174,8 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
             chartContent: purifyChartContent(content),
             chartHash: cachedChartInfo.hash,
             madeChart: true,
-            matchesSettings: true
+            matchesSettings: true,
+            chartLoading: false
           });
 
         } else if (response.status === 404) {
@@ -196,12 +195,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
     };
   }, []);
 
-  useEffect(() => {
-    console.log("On any change");
-    console.log("current settings", toJS(state.settings));
-    return () => {
-    };
-  }, []);
 
   const isCrossPlot = useLocation().pathname === "/crossplot";
   const step = 0.1;
