@@ -41,7 +41,6 @@ import {
   assertCachedChartResponseInfo
 } from "@tsconline/shared";
 import Color from "color";
-import { toJS } from "mobx";
 import { fetcher } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
@@ -97,7 +96,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           return;
         }
 
-
         assertMCPLinkParams(parsedState);
         const dataPacksTitles = parsedState.datapacks;
         const chartHash = parsedState.chartHash;
@@ -149,20 +147,20 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
           console.log("Fetched settings XML:", fetchedSettings);
 
-        if (mounted && state.isInitializing) {
-          actions.pushSnackbar("Waiting for site init", "info");
-          while (mounted && state.isInitializing) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+          if (mounted && state.isInitializing) {
+            actions.pushSnackbar("Loading MCP Chart", "info");
+            while (mounted && state.isInitializing) {
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
           }
-        }
-
 
           //fetch settings and apply datapack configs.
           if (fetchedSettings) {
             console.log("Applying datapack configs from MCP link:", datapackConfigs);
+            actions.applySettings(fetchedSettings);
+            state.prevSettings = JSON.parse(JSON.stringify(state.settings));
+
             await actions.processDatapackConfig(datapackConfigs, { settings: fetchedSettings });
-
-
           } else {
             console.error("Failed to fetch settings XML from path:", cachedChartInfo.settingspath);
           }
@@ -177,7 +175,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
             matchesSettings: true,
             chartLoading: false
           });
-
         } else if (response.status === 404) {
           displayServerError(response, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
           return;
@@ -194,7 +191,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
       mounted = false;
     };
   }, []);
-
 
   const isCrossPlot = useLocation().pathname === "/crossplot";
   const step = 0.1;
