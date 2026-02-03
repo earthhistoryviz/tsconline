@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
 import { CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -27,24 +27,24 @@ import HistoryIcon from "@mui/icons-material/History";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import { ChartContextType, DatapackFetchParams } from "./types";
+import { ChartContextType } from "./types";
 import { context } from "./state";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
-import { formatDate, purifyChartContent, getMetadataFromArray} from "./state/non-action-util";
-import { ChartHistoryMetadata, 
-  DatapackConfigForChartRequest, 
-  assertMCPLinkParams, 
-  assertCachedChartResponseInfo } from "@tsconline/shared";
+import { formatDate, purifyChartContent } from "./state/non-action-util";
+import {
+  ChartHistoryMetadata,
+  DatapackConfigForChartRequest,
+  assertMCPLinkParams,
+  assertCachedChartResponseInfo
+} from "@tsconline/shared";
 import Color from "color";
 import { toJS } from "mobx";
 import { fetcher } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
-
-
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -65,7 +65,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
-  const navigate = useNavigate();
   const isLoadingCachedChart = useRef(false); // Track if we're loading from a cached chart URL
 
   //check seralized URL params for a given chart state from MCP
@@ -73,29 +72,27 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   useEffect(() => {
     let mounted = true;
     (async () => {
-      try{
+      try {
         if (!mounted) return;
-        
+
         isLoadingCachedChart.current = true;
 
         const urlParams = new URLSearchParams(window.location.search);
         if (!urlParams.toString()) {
-          actions.pushSnackbar("No URL parameters found for MCP chart link.", "warning");
-          return
+          return;
         }
-        
+
         const chartStateParam = urlParams.get("mcpChartState");
         if (!chartStateParam) {
           actions.pushSnackbar("No mcpChartState parameter found in URL.", "warning");
           return;
         }
-        
+
         let parsedState = null;
         try {
           const decodedState = atob(chartStateParam);
           parsedState = JSON.parse(decodedState);
-        }
-        catch (error) {
+        } catch (error) {
           actions.pushSnackbar("Error parsing chartState from URL.", "warning");
           return;
         }
@@ -112,20 +109,23 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
         for (const title of dataPacksTitles) {
           if (!mounted) return;
-          
+
           try {
-            const fetchedDatapack = await actions.fetchDatapack({ title, type: "official", isPublic: true }, { signal: controller.signal });
+            const fetchedDatapack = await actions.fetchDatapack(
+              { title, type: "official", isPublic: true },
+              { signal: controller.signal }
+            );
             if (fetchedDatapack) {
               actions.addDatapack(fetchedDatapack);
             } else {
               console.error("Failed to fetch datapack for title:", title);
-            } 
+            }
           } catch (error) {
             console.error("Error fetching datapack for title:", title, error);
           }
         }
 
-        const datapackConfigs : DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
+        const datapackConfigs: DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
           title,
           isPublic: true,
           storedFileName: actions.getStoredFileName(title),
@@ -137,17 +137,17 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           method: "GET",
           credentials: "include"
         });
-        
+
         if (response.ok) {
           if (!mounted) return;
-          
+
           const cachedChartInfo = await response.json();
           assertCachedChartResponseInfo(cachedChartInfo);
           console.log("Fetched cached chart info from server:", cachedChartInfo);
 
           const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
           console.log("Fetched settings XML:", fetchedSettings);
-          
+
           if (fetchedSettings) {
             actions.applySettings(fetchedSettings);
             state.prevSettings = JSON.parse(JSON.stringify(state.settings));
@@ -157,39 +157,33 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
           await actions.processDatapackConfig(datapackConfigs, { settings: cachedChartInfo.settingspath });
 
-
           if (!mounted) return;
-          
+
           const content = await (await fetcher(cachedChartInfo.chartpath)).text();
           actions.setChartTabState(state.chartTab.state, {
-              chartContent: purifyChartContent(content),
-              chartHash: cachedChartInfo.hash,
-              madeChart: true,
-              matchesSettings: true,
-            });
+            chartContent: purifyChartContent(content),
+            chartHash: cachedChartInfo.hash,
+            madeChart: true,
+            matchesSettings: true
+          });
 
           console.log("state.config.datapacks:", toJS(state.config?.datapacks));
           console.log("state.datapacks:", toJS(state.datapacks));
-
         } else if (response.status === 404) {
           displayServerError(response, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
           return;
         }
-      }
-      catch(e: any){
-        console.error("Error processing MCP link params:", e.message);
+      } catch (e) {
+        displayServerError(null, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
         return;
-      }
-      finally {
+      } finally {
         isLoadingCachedChart.current = false;
       }
-
     })();
-    
+
     return () => {
       mounted = false;
     };
-
   }, []);
 
   const isCrossPlot = useLocation().pathname === "/crossplot";
@@ -202,7 +196,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   useEffect(() => {
     // Don't show snackbar if we're loading from a cached chart URL on initial load
     if (isLoadingCachedChart.current) return;
-    
+
     if (!matchesSettings && !triggeredDifferentSettings.current) {
       triggeredDifferentSettings.current = true;
       actions.pushSnackbar("Chart settings are different from the displayed chart.", "warning");
@@ -398,7 +392,6 @@ export const ChartTab: React.FC = observer(() => {
   const navigate = useNavigate();
   const previousLocation = usePreviousLocation();
   const from = query.get("from");
-
 
   // see if the previous route/location was crossplot
   // we use two different ways, to make sure that we can try to be hyper accurate about the last location

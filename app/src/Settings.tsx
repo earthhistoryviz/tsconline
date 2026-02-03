@@ -35,7 +35,6 @@ export const Settings = observer(function Settings() {
     console.log("Settings applied, state : ", toJS(state.settings));
     console.log("previous settings : ", toJS(state.prevSettings));
     console.log("settings file ", toJS(state.settingsXML));
-
   }, []);
 
   return (
