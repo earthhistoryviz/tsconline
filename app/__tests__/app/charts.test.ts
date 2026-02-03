@@ -479,6 +479,11 @@ test("load cached chart from MCP link state in window params", async ({ page }) 
 
   // Verify key chart elements are present
   await expect(chartSvg.locator("text=9")).toBeVisible();
+
+  //click settings, expect input to be 12 for baseAge
+  await page.locator("text=SETTINGS").click();
+  const baseAgeInput = page.locator('input[value="12"]');
+  await expect(baseAgeInput).toBeVisible();
 });
 
 //future PR test that popoff preview works with MCP link
