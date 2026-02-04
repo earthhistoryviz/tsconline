@@ -21,6 +21,7 @@ export interface SessionEntry {
   userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
   createdAt: number;
   lastActivity: number;
+  userChartState: ChartState;
 }
 
 export const sessions = new Map<string, SessionEntry>();
@@ -67,11 +68,17 @@ interface ChartState {
   lastModified?: Date;
 }
 
+function newChartState(): ChartState {
+  return { datapackTitles: [], overrides: {}, columnToggles: {} };
+}
+
+/*
 let currentChartState: ChartState = {
   datapackTitles: [],
   overrides: {},
   columnToggles: {}
 };
+*/
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -161,6 +168,35 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
+
+      if (!sessionId) {
+        return {
+          content: [{ type: "text", text: "Missing sessionId." }]
+        };
+      }
+
+      const entry = sessions.get(sessionId);
+      if (!entry) {
+        return {
+          content: [{ type: "text", text: "Session not found or expired. Please login again." }]
+        };
+      }
+
+      // Track activity if authenticated
+      if (entry.userInfo) {
+        entry.lastActivity = Date.now();
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(entry.userChartState, null, 2)
+          }
+        ]
+      };
+
+      /*
       // Track activity if authenticated
       if (sessionId) {
         const entry = sessions.get(sessionId);
@@ -188,6 +224,8 @@ export const createMCPServer = () => {
           }
         ]
       };
+      */
+
     }
   );
 
@@ -209,6 +247,37 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
+
+      if (!sessionId) {
+        return {
+          content: [{ type: "text", text: "Missing sessionId." }]
+        };
+      }
+
+      const entry = sessions.get(sessionId);
+      if (!entry) {
+        return {
+          content: [{ type: "text", text: "Session not found or expired. Please login again." }]
+        };
+      }
+
+      // Track activity if authenticated
+      if (entry.userInfo) {
+        entry.lastActivity = Date.now();
+      }
+
+      entry.userChartState = newChartState();
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Chart state cleared for this session. Ready for new configuration."
+          }
+        ]
+      };
+
+      /*
       // Track activity if authenticated
       if (sessionId) {
         const entry = sessions.get(sessionId);
@@ -230,6 +299,7 @@ export const createMCPServer = () => {
           }
         ]
       };
+      */
     }
   );
 
@@ -310,65 +380,70 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
-      // Track activity if authenticated
-      if (args.sessionId) {
-        const entry = sessions.get(args.sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
 
-      // If no state exists and no datapackTitles provided, error
-      if (!currentChartState && !args.datapackTitles) {
+      if (!args.sessionId) {
         return {
-          content: [
-            {
-              type: "text",
-              text: "First chart requires datapackTitles. Example: { datapackTitles: ['Africa Bight'], overrides: {}, columnToggles: {} }"
-            }
-          ]
+          content: [{ type: "text", text: "Missing sessionId." }]
         };
       }
 
-      if (!args.datapackTitles) {
-        return { content: [{ type: "text", text: `Error: datapackTitles is required for updating the chart state.` }] };
+      const entry = sessions.get(args.sessionId);
+      if (!entry) {
+        return {
+          content: [{ type: "text", text: "Session not found or expired. Please login again." }]
+        };
       }
 
-      // Merge args into current state
-      currentChartState.datapackTitles = args.datapackTitles;
+      // Track activity if authenticated
+      if (entry.userInfo) {
+        entry.lastActivity = Date.now();
+      }
 
-      currentChartState.overrides = {
-        ...currentChartState.overrides,
+      if (!args.datapackTitles) {
+        return {
+          content: [{ type: "text", text: "Error: datapackTitles is required." }]
+        };
+      }
+
+
+      // Use THIS SESSION'S state
+      const st = entry.userChartState;
+
+      // Merge args into session chart state
+      st.datapackTitles = args.datapackTitles;
+
+      st.overrides = {
+        ...st.overrides,
         ...(args.overrides ?? {})
       };
 
       const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
       const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
 
-      const currentOff = new Set((currentChartState.columnToggles.off ?? []).map((id) => id.toLowerCase()));
-      const currentOn = new Set((currentChartState.columnToggles.on ?? []).map((id) => id.toLowerCase()));
+      const currentOff = new Set((st.columnToggles.off ?? []).map((id) => id.toLowerCase()));
+      const currentOn = new Set((st.columnToggles.on ?? []).map((id) => id.toLowerCase()));
 
       for (const id of incomingOff) {
-        currentOn.delete(id); // Exclusive enforcement
+        currentOn.delete(id);
         currentOff.add(id);
       }
       for (const id of incomingOn) {
-        currentOff.delete(id); // Exclusive enforcement
+        currentOff.delete(id);
         currentOn.add(id);
       }
 
-      currentChartState.columnToggles.off = Array.from(currentOff);
-      currentChartState.columnToggles.on = Array.from(currentOn);
+      st.columnToggles.off = Array.from(currentOff);
+      st.columnToggles.on = Array.from(currentOn);
 
-      // Generate chart with current state
+      // Generate chart with THIS SESSION'S state
       try {
         const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            datapackTitles: currentChartState.datapackTitles,
-            overrides: currentChartState.overrides,
-            columnToggles: currentChartState.columnToggles,
+            datapackTitles: st.datapackTitles,
+            overrides: st.overrides,
+            columnToggles: st.columnToggles,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false
           })
@@ -379,6 +454,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         if (!res.ok) {
           return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
         }
+
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
         const filePath = path.join("..", "server", chartPath);
         const svg = await readFile(filePath, "utf8");
@@ -388,25 +464,21 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           svgBase64 = Buffer.from(svg).toString("base64");
         } catch (e) {
           return {
-            content: [
-              {
-                type: "text",
-                text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}`
-              }
-            ]
+            content: [{ type: "text", text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}` }]
           };
         }
+
         const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
-        // Update state with new chart path
-        currentChartState.lastChartPath = chartPath;
-        currentChartState.lastModified = new Date();
+        // Update THIS SESSION'S state with new chart path
+        st.lastChartPath = chartPath;
+        st.lastModified = new Date();
 
         return {
           content: [
             {
               type: "text",
-              text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
+              text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(st, null, 2)}`
             },
             {
               type: "resource",
@@ -421,8 +493,129 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       } catch (e) {
         return { content: [{ type: "text", text: `Error generating chart: ${String(e)}` }] };
       }
+
+
+        /*
+  // Track activity if authenticated
+  if (args.sessionId) {
+    const entry = sessions.get(args.sessionId);
+    if (entry?.userInfo) {
+      entry.lastActivity = Date.now();
+    }
+  }
+
+  // If no state exists and no datapackTitles provided, error
+  if (!currentChartState && !args.datapackTitles) {
+    return {
+      content: [
+        {
+          type: "text",
+          text: "First chart requires datapackTitles. Example: { datapackTitles: ['Africa Bight'], overrides: {}, columnToggles: {} }"
+        }
+      ]
+    };
+  }
+
+  if (!args.datapackTitles) {
+    return { content: [{ type: "text", text: `Error: datapackTitles is required for updating the chart state.` }] };
+  }
+
+  // Merge args into current state
+  currentChartState.datapackTitles = args.datapackTitles;
+
+  currentChartState.overrides = {
+    ...currentChartState.overrides,
+    ...(args.overrides ?? {})
+  };
+
+  const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
+  const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
+
+  const currentOff = new Set((currentChartState.columnToggles.off ?? []).map((id) => id.toLowerCase()));
+  const currentOn = new Set((currentChartState.columnToggles.on ?? []).map((id) => id.toLowerCase()));
+
+  for (const id of incomingOff) {
+    currentOn.delete(id); // Exclusive enforcement
+    currentOff.add(id);
+  }
+  for (const id of incomingOn) {
+    currentOff.delete(id); // Exclusive enforcement
+    currentOn.add(id);
+  }
+
+  currentChartState.columnToggles.off = Array.from(currentOff);
+  currentChartState.columnToggles.on = Array.from(currentOn);
+
+  // Generate chart with current state
+  try {
+    const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        datapackTitles: currentChartState.datapackTitles,
+        overrides: currentChartState.overrides,
+        columnToggles: currentChartState.columnToggles,
+        useCache: args.useCache ?? true,
+        isCrossPlot: args.isCrossPlot ?? false
+      })
+    });
+
+    const json = await res.json();
+
+    if (!res.ok) {
+      return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
+    }
+    const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
+    const filePath = path.join("..", "server", chartPath);
+    const svg = await readFile(filePath, "utf8");
+
+    let svgBase64: string;
+    try {
+      svgBase64 = Buffer.from(svg).toString("base64");
+    } catch (e) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}`
+          }
+        ]
+      };
+    }
+    const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
+
+    // Update state with new chart path
+    currentChartState.lastChartPath = chartPath;
+    currentChartState.lastModified = new Date();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
+        },
+        {
+          type: "resource",
+          resource: {
+            uri: dataUri,
+            mimeType: "image/svg+xml",
+            text: svg
+          }
+        }
+      ]
+    };
+  } catch (e) {
+    return { content: [{ type: "text", text: `Error generating chart: ${String(e)}` }] };
+  }
+}
+  
+  );
+  */
+
     }
   );
+
+
 
   server.registerTool(
     "listDatapacks",
@@ -647,8 +840,9 @@ Session lifecycle:
 
         sessions.set(sessionId, {
           createdAt: Date.now(),
-          lastActivity: Date.now()
+          lastActivity: Date.now(),
           // userInfo is undefined until /mcp/user-info is called
+          userChartState: newChartState()
         });
 
         console.log("Created login URL:", loginUrl);
