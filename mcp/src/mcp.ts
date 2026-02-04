@@ -168,7 +168,6 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-
       if (!sessionId) {
         return {
           content: [{ type: "text", text: "Missing sessionId." }]
@@ -225,7 +224,6 @@ export const createMCPServer = () => {
         ]
       };
       */
-
     }
   );
 
@@ -247,7 +245,6 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-
       if (!sessionId) {
         return {
           content: [{ type: "text", text: "Missing sessionId." }]
@@ -380,7 +377,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
-
       if (!args.sessionId) {
         return {
           content: [{ type: "text", text: "Missing sessionId." }]
@@ -404,7 +400,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           content: [{ type: "text", text: "Error: datapackTitles is required." }]
         };
       }
-
 
       // Use THIS SESSION'S state
       const st = entry.userChartState;
@@ -464,7 +459,9 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           svgBase64 = Buffer.from(svg).toString("base64");
         } catch (e) {
           return {
-            content: [{ type: "text", text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}` }]
+            content: [
+              { type: "text", text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}` }
+            ]
           };
         }
 
@@ -494,8 +491,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         return { content: [{ type: "text", text: `Error generating chart: ${String(e)}` }] };
       }
 
-
-        /*
+      /*
   // Track activity if authenticated
   if (args.sessionId) {
     const entry = sessions.get(args.sessionId);
@@ -611,11 +607,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
   
   );
   */
-
     }
   );
-
-
 
   server.registerTool(
     "listDatapacks",
