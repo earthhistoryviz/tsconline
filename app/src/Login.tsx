@@ -103,7 +103,7 @@ export const Login: React.FC = observer(() => {
         } else {
           actions.removeAllErrors();
           actions.pushSnackbar("Successfully signed in", "success");
-          navigate("/");
+          navigate("/mcp_home");
         }
       } else {
         const message = await response.json();
