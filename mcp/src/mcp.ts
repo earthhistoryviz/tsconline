@@ -181,10 +181,14 @@ export const createMCPServer = () => {
         };
       }
 
-      // Track activity if authenticated
-      if (entry.userInfo) {
-        entry.lastActivity = Date.now();
+      // added userinfo check
+      if (!entry.userInfo) {
+        return {
+          content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
+        };
       }
+
+      entry.lastActivity = Date.now();
 
       return {
         content: [
@@ -258,10 +262,14 @@ export const createMCPServer = () => {
         };
       }
 
-      // Track activity if authenticated
-      if (entry.userInfo) {
-        entry.lastActivity = Date.now();
+      // added userinfo check
+      if (!entry.userInfo) {
+        return {
+          content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
+        };
       }
+
+      entry.lastActivity = Date.now();
 
       entry.userChartState = newChartState();
 
@@ -390,10 +398,14 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         };
       }
 
-      // Track activity if authenticated
-      if (entry.userInfo) {
-        entry.lastActivity = Date.now();
+      // added userinfo check
+      if (!entry.userInfo) {
+        return {
+          content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
+        };
       }
+
+      entry.lastActivity = Date.now();
 
       if (!args.datapackTitles) {
         return {
