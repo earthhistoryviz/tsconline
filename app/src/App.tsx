@@ -45,7 +45,9 @@ export default observer(function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const [stepIndex, setStepIndex] = useState(0);
+  const [qsgStepIndex, setQsgStepIndex] = useState(0);
+  const [datapackStepIndex, setDatapackStepIndex] = useState(0);
+  const [settingsStepIndex, setSettingsStepIndex] = useState(0);
   const darkTheme = isDDEServer ? ddeDarkTheme : originalDarkTheme;
   const lightTheme = isDDEServer ? ddeLightTheme : originalLightTheme;
   const theme = state.user.settings.darkMode ? darkTheme : lightTheme;
@@ -130,37 +132,21 @@ export default observer(function App() {
         return enSetTour;
     }
   };
-  const handleQSGCallback = (data: CallBackProps) => {
+  const handleTourCallback = (
+    data: CallBackProps,
+    tourName: string,
+    setIndexFunction: React.Dispatch<React.SetStateAction<number>>
+  ) => {
     const { status, action, origin, index, type } = data;
     const finishedStatuses: string[] = ["finished", "skipped"];
     if (finishedStatuses.includes(status) || (action === ACTIONS.CLOSE && origin === ORIGIN.OVERLAY)) {
-      actions.setTourOpen(false, "qsg");
-      setStepIndex(0);
-    } else if (type === EVENTS.STEP_AFTER) {
-      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+      actions.setTourOpen(false, tourName);
+      setIndexFunction(0);
+    } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+      setIndexFunction(index + (action === ACTIONS.PREV ? -1 : 1));
     }
   };
 
-  const handleDatapackTourCallback = (data: CallBackProps) => {
-    const { status, action, origin, index, type } = data;
-    const finishedStatuses: string[] = ["finished", "skipped"];
-    if (finishedStatuses.includes(status) || (action === ACTIONS.CLOSE && origin === ORIGIN.OVERLAY)) {
-      actions.setTourOpen(false, "datapacks");
-      setStepIndex(0);
-    } else if (type === EVENTS.STEP_AFTER) {
-      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
-    }
-  };
-  const handleSettingsTourCallback = (data: CallBackProps) => {
-    const { status, action, origin, index, type } = data;
-    const finishedStatuses: string[] = ["finished", "skipped"];
-    if (finishedStatuses.includes(status) || (action === ACTIONS.CLOSE && origin === ORIGIN.OVERLAY)) {
-      actions.setTourOpen(false, "settings");
-      setStepIndex(0);
-    } else if (type === EVENTS.STEP_AFTER) {
-      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
-    }
-  };
   // on theme change, update the background color
   const checkUnsavedChanges = () => {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
@@ -265,14 +251,14 @@ export default observer(function App() {
               continuous
               run={state.guides.isQSGOpen}
               steps={getQsg()}
-              callback={handleQSGCallback}
+              callback={(data) => handleTourCallback(data, "qsg", setQsgStepIndex)}
               locale={{
                 skip: t("tours.quit"),
                 last: t("tours.finish"),
                 back: t("tours.back"),
-                nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getQsg().length})`
+                nextLabelWithProgress: `${i18n.t("tours.next")} (${qsgStepIndex + 1} / ${getQsg().length})`
               }}
-              stepIndex={stepIndex}
+              stepIndex={qsgStepIndex}
               showProgress
               styles={{
                 options: {
@@ -288,15 +274,15 @@ export default observer(function App() {
               continuous
               run={state.guides.isDatapacksTourOpen}
               steps={getDatapackTour()}
-              stepIndex={stepIndex}
+              stepIndex={datapackStepIndex}
               disableScrolling
-              callback={handleDatapackTourCallback}
+              callback={(data) => handleTourCallback(data, "datapacks", setDatapackStepIndex)}
               locale={{
                 skip: t("tours.quit"),
                 last: t("tours.finish"),
                 next: t("tours.next"),
                 back: t("tours.back"),
-                nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getDatapackTour().length})`
+                nextLabelWithProgress: `${i18n.t("tours.next")} (${datapackStepIndex + 1} / ${getDatapackTour().length})`
               }}
               showProgress
               styles={{
@@ -313,14 +299,14 @@ export default observer(function App() {
               continuous
               run={state.guides.isSettingsTourOpen}
               steps={getSettingsTour()}
-              stepIndex={stepIndex}
-              callback={handleSettingsTourCallback}
+              stepIndex={settingsStepIndex}
+              callback={(data) => handleTourCallback(data, "settings", setSettingsStepIndex)}
               locale={{
                 skip: t("tours.quit"),
                 last: t("tours.finish"),
                 next: t("tours.next"),
                 back: t("tours.back"),
-                nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getSettingsTour().length})`
+                nextLabelWithProgress: `${i18n.t("tours.next")} (${settingsStepIndex + 1} / ${getSettingsTour().length})`
               }}
               showProgress
               styles={{
