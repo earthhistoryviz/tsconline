@@ -7,7 +7,6 @@ export async function initialize() {
 
   try {
     if (state.skipInitialization) {
-      console.log("Skipping initialization as per state flag.");
       return;
     }
     actions.sessionCheck();
@@ -17,7 +16,6 @@ export async function initialize() {
     // Auto-load the TimeScale Creator Internal Datapack only if no datapacks are already selected
     // This ensures first-time users get a good experience while preserving existing configurations
     // Skip auto-loading in test environments to avoid conflicts with test expectations
-    console.log("RUN INNITIALIZE CONFLICT");
     try {
       // First initialize with empty config to check current state
       await actions.processDatapackConfig([], { silent: true });
