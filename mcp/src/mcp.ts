@@ -296,6 +296,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
         }
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
+        const chartHash = typeof json.charthash === "string" ? json.hash : "";
         const filePath = path.join("..", "server", chartPath);
         const svg = await readFile(filePath, "utf8");
 
@@ -318,19 +319,10 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         currentChartState.lastChartPath = chartPath;
         currentChartState.lastModified = new Date();
 
-        //extract the chart hash from the chartPath
-        // example chartPath: public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg
-        // we want to extract b3427e1d4e367edd668b65695e4df0f4
-        // split by /
-        const pathParts = chartPath.split("/");
-        const chartHash = pathParts.length >= 4 ? pathParts[3] : "";
-
         const mcpLinkObj: MCPLinkParams = {
           datapacks: currentChartState.datapackTitles,
           chartHash: chartHash
         };
-
-        console.log("Generated MCP link object:", mcpLinkObj);
 
         const mcpLinkJson = JSON.stringify(mcpLinkObj);
         const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
