@@ -23,9 +23,9 @@ export interface MCPRoutesOptions {
  */
 export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions = {}) {
   const {
-    streamableTtlMs = 15 * 60 * 1000,
-    legacySseTtlMs = 10 * 60 * 1000,
-    legacyKeepAliveMs = 15_000,
+    streamableTtlMs = 15 * 60 * 1000, // 15 minutes for streamable HTTP
+    legacySseTtlMs = 10 * 60 * 1000, // 10 minutes for legacy SSE
+    legacyKeepAliveMs = 15_000, // 15 seconds between keep-alives for legacy SSE
     enableHealth = true
   } = opts;
 
