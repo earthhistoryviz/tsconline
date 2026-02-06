@@ -9,7 +9,10 @@ import {
   assertChartProgressUpdate,
   isCompleteProgress,
   isErrorProgress,
-  isTempDatapack
+  isTempDatapack,
+  DatapackConfigForChartRequest,
+  MCPLinkParams,
+  assertCachedChartResponseInfo
 } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
@@ -288,3 +291,87 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
     }
   });
 });
+
+export const loadMcpChartLink = action(
+  "loadMCPChartLink",
+  async (
+    parsedState: MCPLinkParams
+    
+  ) => {
+
+     //start function
+      const dataPacksTitles = parsedState.datapacks;
+      const chartHash = parsedState.chartHash;
+      if (!dataPacksTitles || dataPacksTitles.length === 0) {
+        throw new Error("No datapacks specified in MCP link");
+      }
+
+      const controller = new AbortController();
+      for (const title of dataPacksTitles) {
+
+        try {
+          const fetchedDatapack = await generalActions.fetchDatapack(
+            { title, type: "official", isPublic: true },
+            { signal: controller.signal }
+          );
+          if (fetchedDatapack) {
+            generalActions.addDatapack(fetchedDatapack);
+          }
+        } catch (error) {
+          console.error("Error fetching datapack:", error);
+          controller.abort();
+          return;
+        }
+      }
+      const datapackConfigs: DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
+        title,
+        isPublic: true,
+        storedFileName: generalActions.getStoredFileName(title),
+        type: "official"
+      }));
+      const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
+      const response = await fetcher(route, {
+        method: "GET",
+        credentials: "include"
+      });
+      if (response.ok) {
+
+        const cachedChartInfo = await response.json();
+        assertCachedChartResponseInfo(cachedChartInfo);
+
+        const fetchedSettings = await generalActions.fetchSettingsXML(cachedChartInfo.settingspath);
+
+        if (state.isInitializing) {
+          generalActions.pushSnackbar("Loading MCP Chart", "info");
+          while (state.isInitializing) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+
+        //fetch settings and apply datapack configs.
+        if (fetchedSettings) {
+          generalActions.applySettings(fetchedSettings);
+          state.prevSettings = JSON.parse(JSON.stringify(state.settings));
+
+          await generalActions.processDatapackConfig(datapackConfigs, { settings: fetchedSettings });
+        } else {
+          throw new Error("Failed to fetch settings XML for cached chart");
+        }
+
+        const content = await (await fetcher(cachedChartInfo.chartpath)).text();
+        generalActions.setChartTabState(state.chartTab.state, {
+          chartContent: purifyChartContent(content),
+          chartHash: cachedChartInfo.hash,
+          madeChart: true,
+          matchesSettings: true,
+          chartLoading: false
+        });
+
+        
+      } else if (response.status === 404) {
+          throw new Error("Failed to fetch chart from server");
+        return;
+      }
+      //end function
+  }
+);

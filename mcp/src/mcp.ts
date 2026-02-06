@@ -307,7 +307,9 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
         }
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
-        const chartHash = typeof json.charthash === "string" ? json.hash : "";
+        const chartHash = typeof json.hash === "string" ? json.hash : "";
+
+
         const filePath = path.join("..", "server", chartPath);
         const svg = await readFile(filePath, "utf8");
 

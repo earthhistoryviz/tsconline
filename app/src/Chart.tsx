@@ -80,13 +80,11 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         if (!urlParams.toString()) {
           return;
         }
-
         const chartStateParam = urlParams.get("mcpChartState");
         if (!chartStateParam) {
           actions.pushSnackbar("No mcpChartState parameter found in URL.", "warning");
           return;
         }
-
         let parsedState = null;
         try {
           const decodedState = atob(chartStateParam);
@@ -95,88 +93,13 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           actions.pushSnackbar("Error parsing chartState from URL.", "warning");
           return;
         }
-
         assertMCPLinkParams(parsedState);
-        const dataPacksTitles = parsedState.datapacks;
-        const chartHash = parsedState.chartHash;
 
-        if (!dataPacksTitles || dataPacksTitles.length === 0) {
-          throw new Error("No datapacks specified in MCP link");
-        }
+        await actions.loadMcpChartLink(parsedState);
 
-        const controller = new AbortController();
 
-        for (const title of dataPacksTitles) {
-          if (!mounted) return;
-
-          try {
-            const fetchedDatapack = await actions.fetchDatapack(
-              { title, type: "official", isPublic: true },
-              { signal: controller.signal }
-            );
-            if (fetchedDatapack) {
-              actions.addDatapack(fetchedDatapack);
-            }
-          } catch (error) {
-            console.error("Error fetching datapack:", error);
-            controller.abort();
-            return;
-          }
-        }
-
-        const datapackConfigs: DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
-          title,
-          isPublic: true,
-          storedFileName: actions.getStoredFileName(title),
-          type: "official"
-        }));
-
-        const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
-        const response = await fetcher(route, {
-          method: "GET",
-          credentials: "include"
-        });
-
-        if (response.ok) {
-          if (!mounted) return;
-
-          const cachedChartInfo = await response.json();
-          assertCachedChartResponseInfo(cachedChartInfo);
-
-          const fetchedSettings = await actions.fetchSettingsXML(cachedChartInfo.settingspath);
-
-          if (mounted && state.isInitializing) {
-            actions.pushSnackbar("Loading MCP Chart", "info");
-            while (mounted && state.isInitializing) {
-              await new Promise((resolve) => setTimeout(resolve, 100));
-            }
-          }
-
-          //fetch settings and apply datapack configs.
-          if (fetchedSettings) {
-            actions.applySettings(fetchedSettings);
-            state.prevSettings = JSON.parse(JSON.stringify(state.settings));
-
-            await actions.processDatapackConfig(datapackConfigs, { settings: fetchedSettings });
-          } else {
-            throw new Error("Failed to fetch settings XML for cached chart");
-          }
-
-          if (!mounted) return;
-
-          const content = await (await fetcher(cachedChartInfo.chartpath)).text();
-          actions.setChartTabState(state.chartTab.state, {
-            chartContent: purifyChartContent(content),
-            chartHash: cachedChartInfo.hash,
-            madeChart: true,
-            matchesSettings: true,
-            chartLoading: false
-          });
-        } else if (response.status === 404) {
-          displayServerError(response, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
-          return;
-        }
-      } catch (e) {
+      } catch (e: any) {
+        console.log(e.message)
         displayServerError(null, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
         return;
       } finally {
