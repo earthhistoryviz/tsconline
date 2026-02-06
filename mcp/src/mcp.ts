@@ -309,7 +309,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
         const chartHash = typeof json.hash === "string" ? json.hash : "";
 
-
         const filePath = path.join("..", "server", chartPath);
         const svg = await readFile(filePath, "utf8");
 
@@ -340,8 +339,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         const mcpLinkJson = JSON.stringify(mcpLinkObj);
         const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
         const mcpToolUrl = `${frontendUrl}/mcp-chart?mcpChartState=${mcpLinkBase64}`;
-
-        text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
 
         return {
           content: [

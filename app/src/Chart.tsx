@@ -34,14 +34,8 @@ import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
 import { formatDate, purifyChartContent } from "./state/non-action-util";
-import {
-  ChartHistoryMetadata,
-  DatapackConfigForChartRequest,
-  assertMCPLinkParams,
-  assertCachedChartResponseInfo
-} from "@tsconline/shared";
+import { ChartHistoryMetadata, assertMCPLinkParams } from "@tsconline/shared";
 import Color from "color";
-import { fetcher } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 
@@ -96,10 +90,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         assertMCPLinkParams(parsedState);
 
         await actions.loadMcpChartLink(parsedState);
-
-
-      } catch (e: any) {
-        console.log(e.message)
+      } catch (e) {
         displayServerError(null, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
         return;
       } finally {

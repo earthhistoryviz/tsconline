@@ -16,8 +16,6 @@ import { TabWrapper, TabsWrapper } from "./components";
 import LoadSettings from "./settings_tabs/LoadSettings";
 import SaveSettings from "./settings_tabs/SaveSettings";
 import { useTranslation } from "react-i18next";
-import { toJS } from "mobx";
-import { useEffect } from "react";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
