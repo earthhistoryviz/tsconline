@@ -392,6 +392,7 @@ const Carousel = observer(
 );
 
 export const LandingPageCards = observer(function LandingPageCards() {
+  const navigate = useNavigate();
   const [hoveredCard, setHoveredCard] = useState(-1);
   const { t } = useTranslation();
   const cards = [
@@ -408,7 +409,8 @@ export const LandingPageCards = observer(function LandingPageCards() {
     {
       title: t("landing-page.cards.help.title"),
       description: t("landing-page.cards.help.description"),
-      icon: <HelpOutline />
+      icon: <HelpOutline />,
+      onClick: () => navigate("/help")
     }
   ];
   return (
@@ -422,7 +424,9 @@ export const LandingPageCards = observer(function LandingPageCards() {
           transition={{ type: "spring", stiffness: 300, damping: 15 }}
           onMouseEnter={() => setHoveredCard(index)}
           onMouseLeave={() => setHoveredCard(-1)}>
-          <Box className="landing-page-card" sx={{ backgroundColor: "secondaryBackground.main" }}>
+          <Box className="landing-page-card" 
+            onClick={card.onClick}
+            sx={{ backgroundColor: "secondaryBackground.main", cursor: "pointer" }}>
             <Box className="landing-page-card-icon">
               {cloneElement(card.icon, { className: "landing-page-card-icon-component" })}
             </Box>
