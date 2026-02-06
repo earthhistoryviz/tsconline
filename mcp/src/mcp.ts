@@ -222,10 +222,21 @@ After every successful updateChartState call, the assistant MUST immediately dis
 
 This is an example for how to display it in Markdown with an embedded image:
 
-This is just an example of a chart, replace the URL with the actual returned chart url.
+Use the url marked as <![Chart] below to embed the chart image like this:
 ![Chart](https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg)
 
 so ![Chart](<INSERT_RETURNED_CHART_URL_HERE>)
+
+There are 2 URLs in the response. Use the one labeled as <Embedded Chart URL> for embedding the image in Markdown. Do not display this link to the user directly; it's for embedding only. Use the URL marked as Direct URL to show the user the direct link to the chart.
+
+Example response snippet:
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Chart generated!\n\nDirect URL: https://pr-preview.geolex.org/mcp-chart?mcpChartState=eyJkYXRhcGFja3MiOlsiQWZyaWNhIEJpZ2h\n\nCurrent state:\n{...}\n\n<Embedded Chart URL>: https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg"
+    },
+}
 
 The assistant MUST embed the chart image using the returned chart URL in a Markdown image tag as shown above.
 
@@ -328,12 +339,15 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
         const mcpToolUrl = `${frontendUrl}/mcp-chart?mcpChartState=${mcpLinkBase64}`;
 
+        text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
+
         return {
           content: [
             {
               type: "text",
-              text: `Chart generated!\n\nURL: ${mcpToolUrl}
-              \n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
+              text: `Chart generated!\n\nDirect URL: ${mcpToolUrl}
+              \n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}
+              \n\n<Embedded Chart URL>: ${serverUrl}${chartPath}`
             },
             {
               type: "resource",

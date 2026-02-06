@@ -55,7 +55,8 @@
     "coverage:ci": "vitest run --coverage --no-color",
     "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color; yarn playwright test --reporter=html",
     "coverage": "vitest run --coverage",
-    "clean-packages": "yarn dlx syncpack fix-mismatches && yarn dedupe"
+    "clean-packages": "yarn dlx syncpack fix-mismatches && yarn dedupe",
+    "inspector": "npx @modelcontextprotocol/inspector"
   },
   "workspaces": [
     "app",
