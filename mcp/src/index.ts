@@ -40,6 +40,20 @@ function timingSafeEqualStr(a: string, b: string) {
 mcpServer.addHook("onRequest", async (req, reply) => {
   reply.header("X-Server-Signature", "mcp-fastify-3001");
 
+  // Allow /messages if sessionId is one we created
+  if (req.url.startsWith("/messages")) {
+    const q = req.query as unknown as { sessionId?: unknown };
+    const sessionId = typeof q.sessionId === "string" ? q.sessionId : undefined;
+
+    const sessions = (mcpServer as unknown as { legacySSESessions?: Map<string, unknown> }).legacySSESessions;
+
+    if (typeof sessionId === "string" && sessions?.has(sessionId)) {
+      return; // valid session -> skip bearer token check
+    }
+
+    return reply.code(401).send({ error: "Invalid or missing sessionId" });
+  }
+
   const auth = req.headers.authorization; // Expects : Bearer <token>
 
   let token: string | undefined;
