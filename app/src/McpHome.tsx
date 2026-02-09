@@ -1,12 +1,14 @@
 import { Box, Typography } from "@mui/material";
-import "./McpHome.css"
+import "./McpHome.css";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 export const McpHome = () => {
   return (
     <Box className="mcp-home-container">
-      <Typography variant="h4" mb="1rem" mt="2rem">
+      <SmartToyIcon fontSize="large" />
+      <Typography variant="h3" mb=".5rem" mt=".5rem">
         Login Successful
       </Typography>
-      <Typography variant="p">
+      <Typography variant="p" fontSize="1.25rem">
         Please return to your Agent
       </Typography>
     </Box>

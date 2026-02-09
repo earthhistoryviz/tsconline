@@ -39,7 +39,7 @@ import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 import { isDDEServer } from "./constants";
 import { PreviousLocationProvider } from "./providers/PreviousLocationProvider";
 import { ReportBug } from "./ReportBug";
-import { McpHome } from "./McpHome"
+import { McpHome } from "./McpHome";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -174,7 +174,9 @@ export default observer(function App() {
         <ThemeProvider theme={theme}>
           <PreviousLocationProvider>
             <CssBaseline />
-            {location.pathname != "/verify" && location.pathname != "/chart/preview" && location.pathname != "/mcp_home" && <NavBar />}
+            {location.pathname != "/verify" &&
+              location.pathname != "/chart/preview" &&
+              location.pathname != "/mcp_home" && <NavBar />}
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
