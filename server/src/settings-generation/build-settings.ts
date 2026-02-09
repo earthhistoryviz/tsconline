@@ -254,9 +254,7 @@ function applyOverridesToChartSettings(
     } else {
       const map = new Map(unitsOverride.map((u) => [u.unit.toLowerCase(), u.value]));
       chartSettings.unitsPerMY = chartSettings.unitsPerMY.map((u) =>
-        map.has(u.unit.toLowerCase())
-          ? { ...u, text: (map.get(u.unit.toLowerCase()) ?? u.text / 30) * 30 }
-          : u
+        map.has(u.unit.toLowerCase()) ? { ...u, text: (map.get(u.unit.toLowerCase()) ?? u.text / 30) * 30 } : u
       );
     }
   }
