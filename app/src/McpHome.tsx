@@ -4,7 +4,7 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 export const McpHome = () => {
   return (
     <Box className="mcp-home-container">
-      <SmartToyIcon sx={{fontSize: "4rem"}} />
+      <SmartToyIcon sx={{ fontSize: "4rem" }} />
       <Typography variant="h3" mb=".5rem" mt=".5rem">
         Login Successful
       </Typography>
