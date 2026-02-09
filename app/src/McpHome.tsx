@@ -4,11 +4,11 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 export const McpHome = () => {
   return (
     <Box className="mcp-home-container">
-      <SmartToyIcon sx={{ fontSize: "4rem" }} />
-      <Typography variant="h3" mb=".5rem" mt=".5rem">
+      <SmartToyIcon className="mcp-home-icon" />
+      <Typography variant="h3" className="mcp-home-title">
         Login Successful
       </Typography>
-      <Typography variant="p" fontSize="1.25rem">
+      <Typography component="p" className="mcp-home-text">
         Please return to your Agent
       </Typography>
     </Box>

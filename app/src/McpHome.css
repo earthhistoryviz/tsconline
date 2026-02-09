@@ -5,3 +5,14 @@
   align-items: center;
   min-height: 100vh;
 }
+
+.mcp-home-icon {
+  font-size: 4rem;
+}
+.mcp-home-title {
+  margin: 0.5rem 0;
+}
+
+.mcp-home-text {
+  font-size: 1.25rem;
+}
