@@ -402,3 +402,11 @@ export function convertTitleToUrlPath(title: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
+
+export const sanitizeFileName = (input: string): string => {
+  if (!input || typeof input !== "string") return "";
+
+  const sanitized = path.basename(path.normalize(input).replace(/^(\.\.(\/|\\|$))+/, ""));
+
+  return sanitized.replace(/[^a-z0-9.-]/gi, "_");
+};

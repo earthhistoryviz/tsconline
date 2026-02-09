@@ -3,12 +3,17 @@ import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
 import dotenv from "dotenv";
+import { MCPLinkParams } from "@tsconline/shared";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
-dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true, quiet: true });
+dotenv.config({
+  path: path.resolve(process.cwd(), "../server/.env"),
+  override: true,
+  quiet: true
+});
 
 const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
-
+const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:5173`;
 // Chart state management - tracks current chart configuration
 interface ChartState {
   datapackTitles: string[];
@@ -217,10 +222,21 @@ After every successful updateChartState call, the assistant MUST immediately dis
 
 This is an example for how to display it in Markdown with an embedded image:
 
-This is just an example of a chart, replace the URL with the actual returned chart url.
+Use the url marked as <![Chart] below to embed the chart image like this:
 ![Chart](https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg)
 
 so ![Chart](<INSERT_RETURNED_CHART_URL_HERE>)
+
+There are 2 URLs in the response. Use the one labeled as <Embedded Chart URL> for embedding the image in Markdown. Do not display this link to the user directly; it's for embedding only. Use the URL marked as Direct URL to show the user the direct link to the chart.
+
+Example response snippet:
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Chart generated!\n\nDirect URL: https://pr-preview.geolex.org/mcp-chart?mcpChartState=eyJkYXRhcGFja3MiOlsiQWZyaWNhIEJpZ2h\n\nCurrent state:\n{...}\n\n<Embedded Chart URL>: https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg"
+    },
+}
 
 The assistant MUST embed the chart image using the returned chart URL in a Markdown image tag as shown above.
 
@@ -291,6 +307,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
         }
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
+        const chartHash = typeof json.hash === "string" ? json.hash : "";
+
         const filePath = path.join("..", "server", chartPath);
         const svg = await readFile(filePath, "utf8");
 
@@ -313,11 +331,22 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         currentChartState.lastChartPath = chartPath;
         currentChartState.lastModified = new Date();
 
+        const mcpLinkObj: MCPLinkParams = {
+          datapacks: currentChartState.datapackTitles,
+          chartHash: chartHash
+        };
+
+        const mcpLinkJson = JSON.stringify(mcpLinkObj);
+        const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
+        const mcpToolUrl = `${frontendUrl}/mcp-chart?mcpChartState=${mcpLinkBase64}`;
+
         return {
           content: [
             {
               type: "text",
-              text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
+              text: `Chart generated!\n\nDirect URL: ${mcpToolUrl}
+              \n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}
+              \n\n<Embedded Chart URL>: ${serverUrl}${chartPath}`
             },
             {
               type: "resource",
