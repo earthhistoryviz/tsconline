@@ -2,7 +2,7 @@ import fastifyMultipart from "@fastify/multipart";
 import fastifyWebsocket from "@fastify/websocket";
 import fastify, { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { handleChartGeneration, submitBugReport } from "../src/routes/routes";
+import { handleChartGeneration, submitBugReport, fetchCachedFilePaths } from "../src/routes/routes";
 import fastifySecureSession from "@fastify/secure-session";
 import formAutoContent from "form-auto-content";
 import * as util from "../src/util";
@@ -69,6 +69,7 @@ beforeAll(async () => {
   });
   app.post("/bug-report", submitBugReport);
   app.get("/chart", { websocket: true }, handleChartGeneration);
+  app.get<{ Params: { chartHash: string } }>("/cached-chart/:chartHash", fetchCachedFilePaths);
   await app.listen({ host: "localhost", port: 4650 });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -394,5 +395,118 @@ describe("handleChartGeneration", () => {
       error: "Unexpected failure",
       errorCode: 5000
     });
+  });
+});
+
+describe("fetchCachedFilePaths", () => {
+  const mockChartHash = "test-hash-123";
+  const uuid = "user-uuid-123";
+  const findCachedChartSpy = vi.spyOn(generateChart, "findCachedChart");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 200 with chart data on successful cache hit", async () => {
+    findCachedChartSpy.mockResolvedValueOnce({
+      chartpath: `/charts/${mockChartHash}/chart.svg`,
+      hash: mockChartHash,
+      settingsFile: `charts/${mockChartHash}/settings.tsc`
+    });
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/cached-chart/${encodeURIComponent(mockChartHash)}`,
+      headers: {
+        "mock-uuid": uuid
+      }
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(await res.json()).toEqual({
+      chartpath: `/charts/${mockChartHash}/chart.svg`,
+      hash: mockChartHash,
+      settingspath: `charts/${mockChartHash}/settings.tsc`
+    });
+    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash });
+  });
+
+  it("returns 404 when cached chart not found", async () => {
+    const error = new generateChart.ChartGenerationError("Cached chart not found", 404);
+    findCachedChartSpy.mockRejectedValueOnce(error);
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/cached-chart/${encodeURIComponent(mockChartHash)}`,
+      headers: {
+        "mock-uuid": uuid
+      }
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(await res.json()).toEqual({ error: "Cached chart not found" });
+  });
+
+  it("returns 500 for generic error", async () => {
+    const error = new Error("Unexpected file system error");
+    findCachedChartSpy.mockRejectedValueOnce(error);
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/cached-chart/${encodeURIComponent(mockChartHash)}`,
+      headers: {
+        "mock-uuid": uuid
+      }
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(await res.json()).toEqual({ error: "Unexpected file system error" });
+  });
+
+  it("returns 500 for ChartGenerationError with non-404 code", async () => {
+    const error = new generateChart.ChartGenerationError("Server error", 500);
+    findCachedChartSpy.mockRejectedValueOnce(error);
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/cached-chart/${encodeURIComponent(mockChartHash)}`,
+      headers: {
+        "mock-uuid": uuid
+      }
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(await res.json()).toEqual({ error: "Server error" });
+  });
+
+  it("passes uuid from session to findCachedChart", async () => {
+    findCachedChartSpy.mockResolvedValueOnce({
+      chartpath: `/charts/${mockChartHash}/chart.svg`,
+      hash: mockChartHash,
+      settingsFile: `charts/${mockChartHash}/settings.tsc`
+    });
+
+    await app.inject({
+      method: "GET",
+      url: `/cached-chart/${encodeURIComponent(mockChartHash)}`
+    });
+
+    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash });
+  });
+
+  it("sanitizes chart hash to prevent path traversal", async () => {
+    findCachedChartSpy.mockResolvedValueOnce({
+      chartpath: `/charts/${mockChartHash}/chart.svg`,
+      hash: mockChartHash,
+      settingsFile: `charts/${mockChartHash}/settings.tsc`
+    });
+
+    const maliciousHash = "../" + mockChartHash;
+    await app.inject({
+      method: "GET",
+      url: `/cached-chart/${encodeURIComponent(maliciousHash)}`
+    });
+
+    expect(findCachedChartSpy).toHaveBeenCalledWith({ hash: mockChartHash });
   });
 });

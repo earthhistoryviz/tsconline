@@ -1,4 +1,4 @@
-import { ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
+import { ChartRequest, ChartProgressUpdate, CachedChartRequest } from "@tsconline/shared";
 import md5 from "md5";
 import path from "path";
 import { resolveDatapacks, checkForCacheHit, runJavaChartGeneration } from "./generate-chart-helpers.js";
@@ -121,4 +121,30 @@ export async function generateChart(
       logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
     });
   return { chartpath: chartUrlPath, hash: hash };
+}
+
+export async function findCachedChart(chartRequest: CachedChartRequest) {
+  try {
+    const hash = chartRequest.hash;
+    // const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
+    const chartDir = path.join(assetconfigs.chartsDirectory, hash);
+    const chartFile = path.join(chartDir, "chart.svg");
+    const settingsFile = path.join(chartDir, "settings.tsc");
+    const chartUrlPath = `/${assetconfigs.chartsDirectory}/${hash}/chart.svg`;
+    const useCache = true;
+    // const isCrossPlot = false; // only used for charts for now
+
+    const cached = await checkForCacheHit(chartFile, useCache, chartUrlPath, hash);
+    if (cached) {
+      return { chartpath: cached.chartpath, hash: cached.hash, settingsFile };
+    } else {
+      throw new ChartGenerationError("Cached chart not found", 404);
+    }
+  } catch (error) {
+    if (error instanceof ChartGenerationError) {
+      throw error;
+    } else {
+      throw new Error("Error while finding cached chart");
+    }
+  }
 }

@@ -171,6 +171,7 @@ export type State = {
   snackbars: SnackbarInfo[];
   presetColors: string[];
   isProcessingDatapacks: boolean;
+  skipInitialization: boolean;
   isInitializing: boolean;
   unsavedDatapackConfig: DatapackConfigForChartRequest[];
   guides: {
@@ -350,6 +351,7 @@ export const state = observable<State>({
   snackbars: [],
   isProcessingDatapacks: false,
   isInitializing: true,
+  skipInitialization: false,
   unsavedDatapackConfig: [],
   guides: {
     isQSGOpen: false,
