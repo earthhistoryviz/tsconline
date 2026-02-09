@@ -67,7 +67,7 @@ export async function areDropboxDatapacksDifferent(access_token: string): Promis
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      path: "/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/datapacks"
+      path: "/TSC online supporting files/datapacks",
     })
   });
   if (!response.ok) {
@@ -104,7 +104,7 @@ export async function downloadDatapacks(access_token: string) {
     headers: {
       Authorization: `Bearer ${access_token}`,
       "Dropbox-API-Arg": JSON.stringify({
-        path: `/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/datapacks`
+        path: `/TSC online supporting files/datapacks`
       })
     }
   });
@@ -131,12 +131,12 @@ export async function downloadJars(access_token: string) {
   // List of jars to download: [Dropbox path, local path, description]
   const jars = [
     {
-      dropboxPath: `/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/${basename(assetconfigs.activeJar)}`,
+      dropboxPath: `/TSC online supporting files/${basename(assetconfigs.activeJar)}`,
       localPath: assetconfigs.activeJar,
       description: "Jar file"
     },
     {
-      dropboxPath: `/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/${basename(assetconfigs.decryptionJar)}`,
+      dropboxPath: `/TSC online supporting files/${basename(assetconfigs.decryptionJar)}`,
       localPath: assetconfigs.decryptionJar,
       description: "Decryption jar file"
     }
