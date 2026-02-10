@@ -173,13 +173,13 @@ export default observer(function App() {
         <ThemeProvider theme={theme}>
           <PreviousLocationProvider>
             <CssBaseline />
-            {location.pathname != "/verify" && location.pathname != "/chart/preview" && <NavBar />}
+            {location.pathname != "/verify" && location.pathname != "/chart-view/preview" && <NavBar />}
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/chart" element={<ChartTab />} />
+              <Route path="/chart-view" element={<ChartTab />} />
               <Route path="/mcp-chart" element={<ChartTab />} />
-              <Route path="/chart/preview" element={<ChartPreview />} />
+              <Route path="/chart-view/preview" element={<ChartPreview />} />
               <Route path="/help/*" element={<Help />} />
               <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
