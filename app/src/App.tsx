@@ -178,7 +178,6 @@ export default observer(function App() {
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/chart-view" element={<ChartTab />} />
-              <Route path="/mcp-chart" element={<ChartTab />} />
               <Route path="/chart-view/preview" element={<ChartPreview />} />
               <Route path="/help/*" element={<Help />} />
               <Route path="/about" element={<About />} />
