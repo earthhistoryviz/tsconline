@@ -3,7 +3,7 @@
   "type": "module",
   "dependencies": {
     "concurrently": "^8.2.2",
-    "fastify": "^4.27.0"
+    "fastify": "^5.7.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
