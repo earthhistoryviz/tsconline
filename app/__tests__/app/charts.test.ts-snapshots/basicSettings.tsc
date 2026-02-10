@@ -5,7 +5,7 @@
             <setting name="text">0</setting>
         </setting>
         <setting name="baseAge" source="text" unit="Ma">
-            <setting name="text">10</setting>
+            <setting name="text">12</setting>
         </setting>
         <setting name="unitsPerMY" unit="Ma">60</setting>
         <setting name="skipEmptyColumns" unit="Ma">true</setting>
