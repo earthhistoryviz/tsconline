@@ -39,6 +39,24 @@ type StringDict = { [key: string]: string[] };
 type StringDictSet = { [key: string]: Set<string> };
 type ProcessColumnOutput = { path: string; column: string; lines: string[]; sort: number };
 
+const normalizeIntervalType = (value: string | null | undefined) => (value ?? "").trim();
+
+const matchesIntervalType = (intervalType: string | null | undefined, pattern: string | null | undefined) => {
+  const value = normalizeIntervalType(intervalType);
+  const target = normalizeIntervalType(pattern);
+  if (!target) return false;
+  if (target === "%") return true;
+  if (target.includes("%") || target.includes("_")) {
+    const escaped = target
+      .replace(/[-/\\^$+?.()|[\]{}]/g, "\\$&")
+      .replace(/%/g, ".*")
+      .replace(/_/g, ".");
+    const regex = new RegExp(`^${escaped}$`, "i");
+    return regex.test(value);
+  }
+  return value.toLowerCase() === target.toLowerCase();
+};
+
 async function processSequenceColumns(events: arkL_events[], columns: arkL_columns[], datasets: arkL_datasets[]) {
   const sequenceColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
@@ -192,18 +210,15 @@ async function processBlockColumns(
         console.log(chalk.yellow("missing dataset id for " + column.columnx));
         continue;
       }
-      let regex = new RegExp(column.interval_type!, "i");
-      //% in sql is wildcard, so match anything
-      if (column.interval_type === "%") {
-        regex = new RegExp(".*", "i");
-      }
       let dbIntervals = [];
       if (column.colshare) {
         const subs = subdatasets.filter((subdataset) => subdataset.colshare === column.colshare).map((item) => item.id);
         dbIntervals = intervals
           .filter(
             (interval) =>
-              interval.subdataset_id && subs.includes(interval.subdataset_id) && interval.interval_type?.match(regex)
+              interval.subdataset_id &&
+              subs.includes(interval.subdataset_id) &&
+              matchesIntervalType(interval.interval_type, column.interval_type)
           )
           .sort((a, b) => a.base_age2020! - b.base_age2020!);
       } else if (column.subdataset_id) {
@@ -211,7 +226,7 @@ async function processBlockColumns(
           .filter(
             (interval) =>
               interval.dataset_id === column.dataset_id &&
-              interval.interval_type?.match(regex) &&
+              matchesIntervalType(interval.interval_type, column.interval_type) &&
               interval.subdataset_id === column.subdataset_id
           )
           .sort((a, b) => a.base_age2020! - b.base_age2020!);
@@ -220,7 +235,7 @@ async function processBlockColumns(
           .filter(
             (interval) =>
               interval.dataset_id === column.dataset_id &&
-              interval.interval_type?.match(regex) &&
+              matchesIntervalType(interval.interval_type, column.interval_type) &&
               interval.subdataset === ""
           )
           .sort((a, b) => a.base_age2020! - b.base_age2020!);
@@ -261,6 +276,181 @@ async function processBlockColumns(
     }
   }
   return blockColumns;
+}
+
+async function processFaciesColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
+  const faciesColumns: ProcessColumnOutput[] = [];
+  for (const column of columns) {
+    if (
+      (column.columnx?.includes("Facies") && (column.column_type?.includes("interval") || column.column_type === "lithology")) &&
+      !column.columnx?.includes("Facies Label ") &&
+      !column.columnx?.includes("Series Label")
+    ) {
+      console.log("FACIES!!!");
+      const columnLines: string[] = [];
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
+        continue;
+      }
+
+      const faciesLabelColumn = columns.find(
+        (col) =>
+          col.columnx?.includes("Facies Label") && col.dataset_id === column.dataset_id && col.path === column.path
+      );
+      if (!faciesLabelColumn) {
+        console.log(chalk.yellow("missing facies label column for " + column.columnx));
+        continue;
+      }
+      const faciesSeriesColumn = columns.find(
+        (col) =>
+          col.columnx?.includes("Series Label") && col.dataset_id === column.dataset_id && col.path === column.path
+      );
+      // Series Label is optional - use facies label as series if not available
+      
+      let faciesIntervals = [];
+      let faciesLabelIntervals = [];
+      let faciesSeriesIntervals = [];
+
+      const regex = new RegExp(column.interval_type!, "i");
+      const path = column.path || "";
+      if (path === null || path === "") {
+        console.log(chalk.yellow("missing path for " + column.columnx));
+        continue;
+      }
+
+      faciesIntervals = intervals
+        .filter(
+          (interval) =>
+            interval.dataset_id === column.dataset_id &&
+            interval.interval_type?.match(regex) &&
+            (interval.subdataset === "" || interval.subdataset === null)
+        )
+        .sort((a, b) => a.base_age2020! - b.base_age2020!);
+      if (faciesIntervals.length === 0) {
+        console.log(chalk.yellow("no facies intervals found for " + column.columnx));
+        continue;
+      }
+
+      faciesLabelIntervals = faciesLabelColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === column.dataset_id &&
+                interval.interval_type?.match(faciesLabelColumn.interval_type!) &&
+                interval.subdataset === "" &&
+                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : [];
+      if (faciesLabelIntervals.length === 0 && faciesLabelColumn) {
+        console.log(chalk.yellow("no facies label intervals found for " + column.columnx));
+        continue;
+      }
+
+      // If no series column, use label intervals as series
+      faciesSeriesIntervals = faciesSeriesColumn
+        ? intervals
+            .filter(
+              (interval) =>
+                interval.dataset_id === column.dataset_id &&
+                interval.interval_type?.match(faciesSeriesColumn.interval_type!) &&
+                interval.subdataset === "" &&
+                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+            )
+            .sort((a, b) => a.base_age2020! - b.base_age2020!)
+        : faciesLabelIntervals;
+
+      const popup = dataset.notes_Jur;
+      let line = `${column.columnx}\tfacies\t\tnotitle\toff\t${
+        popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""
+      }`;
+      columnLines.push(line);
+
+      let topWritten = false;
+      let prevSeries = "";
+
+      for (const faciesInter of faciesIntervals) {
+        if (faciesInter.base_age === null) continue;
+        if (faciesInter.intervalx === null) continue;
+
+        const faciesLabel = faciesLabelIntervals.find(
+          (inter) =>
+            inter.top_age2020 != null &&
+            inter.base_age2020 != null &&
+            inter.base_age2020 >= faciesInter.base_age2020! &&
+            inter.top_age2020 <= faciesInter.base_age2020!
+        );
+        if (!faciesLabel) {
+          console.log(
+            chalk.yellow(`No facies label found for interval ${faciesInter.intervalx} in column ${column.columnx}`)
+          );
+          continue;
+        }
+        const faciesSeries = faciesSeriesIntervals.find((inter) => {
+          const interBase = inter.base_age != null ? inter.base_age : inter.base_age2020;
+          const interTop = inter.top_age != null ? inter.top_age : inter.top_age2020;
+          return (
+            interTop != null &&
+            interBase != null &&
+            interBase >= faciesInter.base_age2020! &&
+            interTop <= faciesInter.base_age2020!
+          );
+        });
+        if (!faciesSeries) {
+          console.log(
+            chalk.yellow(`No facies series found for interval ${faciesInter.intervalx} in column ${column.columnx}`)
+          );
+          continue;
+        }
+
+        if (faciesSeries?.intervalx !== prevSeries) {
+          prevSeries = faciesSeries?.intervalx ?? "";
+          if (prevSeries != "") {
+            line = `${faciesSeries?.intervalx || ""}\tPrimary`;
+            columnLines.push(line);
+          }
+          if (!topWritten) {
+            columnLines.push(
+              `\tTOP\t\t${faciesIntervals[0]!.top_age2020 === null ? 0 : Number(faciesIntervals[0]!.top_age2020.toFixed(3))}`
+            );
+            topWritten = true;
+          }
+        }
+
+        // Use lithology as the facies pattern name (for visual display)
+        const faciesPattern = faciesInter.lithology || faciesInter.intervalx;
+        
+        // Use the facies label name as the label text
+        const faciesLabel_text = faciesLabel.intervalx;
+        
+        let faciesPopup = "";
+        if (
+          faciesInter.preset_duration_notes !== null &&
+          faciesInter.preset_duration_notes !== undefined &&
+          faciesInter.preset_duration_notes !== ""
+        ) {
+          faciesPopup = String(faciesInter.preset_duration_notes).replace(/[\r\n]+/g, " ");
+        } else {
+          faciesPopup = faciesInter.intervalx.replace(/[\r\n]+/g, " ") || "";
+        }
+
+        line = `\t${faciesPattern}\t${faciesLabel_text}\t${Number(faciesInter.base_age2020?.toFixed(3))}\t${faciesPopup}`;
+        columnLines.push(line);
+      }
+
+      columnLines.push("");
+      if (column.path && column.columnx) {
+        faciesColumns.push({
+          path: column.path,
+          column: column.columnx,
+          lines: columnLines,
+          sort: column.sort ?? 0
+        });
+      }
+    }
+  }
+  return faciesColumns;
 }
 
 async function processChronColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
@@ -466,6 +656,104 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
   return chronColumns;
 }
 
+async function processRangeColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
+  const rangeColumns: ProcessColumnOutput[] = [];
+  // Range columns show species/fauna ranges through time
+  // TODO: Implement when range data is available in arkL tables
+  for (const column of columns) {
+    if (column.column_type === "range") {
+      console.log(chalk.cyan("Range column support not yet implemented: " + column.columnx));
+    }
+  }
+  return rangeColumns;
+}
+
+async function processPointColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
+  const pointColumns: ProcessColumnOutput[] = [];
+  // Point/Graph columns show X vs Age graphs
+  // TODO: Implement when point/graph data is available in arkL tables
+  for (const column of columns) {
+    if (column.column_type === "point" || column.column_type === "point-overlay") {
+      console.log(chalk.cyan("Point/Graph column support not yet implemented: " + column.columnx));
+    }
+  }
+  return pointColumns;
+}
+
+async function processBlankColumns(columns: arkL_columns[]) {
+  const blankColumns: ProcessColumnOutput[] = [];
+  // Blank columns are simple spacing columns
+  for (const column of columns) {
+    if (column.column_type === "blank") {
+      const columnLines: string[] = [];
+      const line = `${column.columnx}\tblank\t${column.width || ""}\t\tnotitle\toff`;
+      columnLines.push(line);
+      columnLines.push("");
+      if (column.path && column.columnx) {
+        blankColumns.push({
+          path: column.path,
+          column: column.columnx,
+          lines: columnLines,
+          sort: column.sort ?? 0
+        });
+      }
+    }
+  }
+  return blankColumns;
+}
+
+async function processTrendColumns(events: arkL_events[], columns: arkL_columns[], datasets: arkL_datasets[]) {
+  const trendColumns: ProcessColumnOutput[] = [];
+  // Trend columns are like sequence columns but with different visualization
+  // TODO: Implement separate handling for trend vs sequence if needed
+  for (const column of columns) {
+    if (column.column_type === "trend") {
+      console.log(chalk.cyan("Trend column support can use sequence implementation: " + column.columnx));
+    }
+  }
+  return trendColumns;
+}
+
+async function processTransectColumns(columns: arkL_columns[]) {
+  const transectColumns: ProcessColumnOutput[] = [];
+  // Transect columns show 2D facies changes (like well correlations)
+  // TODO: Implement when 2D facies/transect data is available
+  for (const column of columns) {
+    if (column.column_type === "transect") {
+      console.log(chalk.cyan("Transect column support not yet implemented: " + column.columnx));
+    }
+  }
+  return transectColumns;
+}
+
+async function processFreehandColumns(columns: arkL_columns[]) {
+  const freehandColumns: ProcessColumnOutput[] = [];
+  // Freehand columns allow custom drawn polygons/shapes
+  // TODO: Implement when polygon/drawing data is available
+  for (const column of columns) {
+    if (
+      column.column_type === "freehand" ||
+      column.column_type === "freehand-overlay" ||
+      column.column_type === "freehand-underlay"
+    ) {
+      console.log(chalk.cyan("Freehand column support not yet implemented: " + column.columnx));
+    }
+  }
+  return freehandColumns;
+}
+
+async function processImageColumns(columns: arkL_columns[]) {
+  const imageColumns: ProcessColumnOutput[] = [];
+  // Image columns embed external image files (JPG, PNG, SVG)
+  // TODO: Implement when image references are available in database
+  for (const column of columns) {
+    if (column.column_type === "image") {
+      console.log(chalk.cyan("Image column support not yet implemented: " + column.columnx));
+    }
+  }
+  return imageColumns;
+}
+
 const organizeColumn = (entries: ProcessColumnOutput[], pathDict: StringDictSet, linesDict: StringDict) => {
   for (const entry of entries) {
     const { path, column, lines } = entry;
@@ -586,10 +874,29 @@ export async function generateLondonDatapack(): Promise<File | undefined> {
     const eventColumns = await processEventColumns(datasets, columns, events);
     const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
     const sequenceColumns = await processSequenceColumns(events, columns, datasets);
+    const trendColumns = await processTrendColumns(events, columns, datasets);
+    const faciesColumns = await processFaciesColumns(datasets, columns, intervals);
     const chronColumns = await processChronColumns(datasets, columns, intervals);
-    const allColumns = [...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns].sort(
-      (a, b) => a.sort - b.sort
-    );
+    const rangeColumns = await processRangeColumns(datasets, columns, intervals);
+    const pointColumns = await processPointColumns(datasets, columns, intervals);
+    const blankColumns = await processBlankColumns(columns);
+    const transectColumns = await processTransectColumns(columns);
+    const freehandColumns = await processFreehandColumns(columns);
+    const imageColumns = await processImageColumns(columns);
+    const allColumns = [
+      ...eventColumns,
+      ...blockColumns,
+      ...sequenceColumns,
+      ...trendColumns,
+      ...faciesColumns,
+      ...chronColumns,
+      ...rangeColumns,
+      ...pointColumns,
+      ...blankColumns,
+      ...transectColumns,
+      ...freehandColumns,
+      ...imageColumns
+    ].sort((a, b) => a.sort - b.sort);
     organizeColumn(allColumns, pathDict, linesDict);
     const lines = await linesFromDicts(pathDict, linesDict);
     await writeFile(filePath, lines.join("\n"));
