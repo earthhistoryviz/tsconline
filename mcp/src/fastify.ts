@@ -7,7 +7,9 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
-import { createMCPServer } from "./mcp.js";
+import { createMCPServer, sessions } from "./mcp.js";
+
+import { SharedUser } from "@tsconline/shared";
 
 export interface MCPRoutesOptions {
   streamableTtlMs?: number; // default 15m
@@ -21,9 +23,9 @@ export interface MCPRoutesOptions {
  */
 export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions = {}) {
   const {
-    streamableTtlMs = 15 * 60 * 1000,
-    legacySseTtlMs = 10 * 60 * 1000,
-    legacyKeepAliveMs = 15_000,
+    streamableTtlMs = 15 * 60 * 1000, // 15 minutes for streamable HTTP
+    legacySseTtlMs = 10 * 60 * 1000, // 10 minutes for legacy SSE
+    legacyKeepAliveMs = 15_000, // 15 seconds between keep-alives for legacy SSE
     enableHealth = true
   } = opts;
 
@@ -63,7 +65,8 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
         legacyLastActivity.delete(sid);
         legacySSESessions.delete(sid);
         legacyServers.delete(sid);
-        // Clean up associated user info when session expires (see mcp tools)
+        // Clean up associated session when MCP session expires
+        sessions.delete(sid);
 
         const res = legacySSEResponses.get(sid);
         legacySSEResponses.delete(sid);
@@ -245,8 +248,33 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     await transport.handlePostMessage(req.raw, reply.raw, req.body as unknown);
   });
 
+  //TBD add MCP token for here
+  app.post("/messages/user-info", async (req, reply) => {
+    const { sessionId, userInfo } = req.body as { sessionId: string; userInfo: SharedUser };
+    const entry = sessions.get(sessionId);
+    console.log("Received user-info for sessionId:", sessionId, userInfo);
+    if (!entry) {
+      reply.code(400).send({ error: "Invalid or expired session" });
+      console.log("No session entry found for sessionId:", sessionId);
+      return;
+    }
+
+    // Verify session is in pre-login state (no userInfo yet)
+    if (entry.userInfo) {
+      reply.code(400).send({ error: "Session already authenticated" });
+      console.log("Session already has userInfo for sessionId:", sessionId, entry.userInfo);
+      return;
+    }
+
+    // Transition session from pre-login to authenticated
+    entry.userInfo = userInfo;
+    entry.lastActivity = Date.now();
+
+    reply.code(200).send({ ok: true, sessionId });
+  });
+
   if (enableHealth) {
-    app.get("/health", async (_req, reply) => {
+    app.get("/messages/health", async (_req, reply) => {
       reply.send({
         ok: true,
         streamableSessions: streamableSessions.size,
@@ -255,7 +283,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     });
   }
 
-  app.get("/ping", async (_req, reply) => {
+  app.get("/messages/ping", async (_req, reply) => {
     reply.send("pong");
   });
 
