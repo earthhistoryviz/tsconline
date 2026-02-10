@@ -22,6 +22,7 @@ export interface SessionEntry {
   userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
   createdAt: number;
   lastActivity: number;
+  userChartState: ChartState;
 }
 
 export const sessions = new Map<string, SessionEntry>();
@@ -497,7 +498,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         st.lastModified = new Date();
 
         const mcpLinkObj: MCPLinkParams = {
-          datapacks: currentChartState.datapackTitles,
+          datapacks: st.datapackTitles,
           chartHash: chartHash
         };
 
@@ -510,7 +511,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
             {
               type: "text",
               text: `Chart generated!\n\nDirect URL: ${mcpToolUrl}
-              \n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}
+              \n\nCurrent state:\n${JSON.stringify(st, null, 2)}
               \n\n<Embedded Chart URL>: ${serverUrl}${chartPath}`
             },
             {
