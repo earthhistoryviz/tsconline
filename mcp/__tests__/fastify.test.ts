@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { EventEmitter } from "node:events";
 import type { FastifyInstance } from "fastify";
 
+import type { SharedUser } from "@tsconline/shared";
 import { registerMCPRoutes } from "../src/fastify";
 
 // ---- Mocks ----
@@ -18,10 +19,9 @@ let lastStreamableTransport: StreamableTransportLike | undefined;
 
 // Mock MCP module
 vi.mock("../src/mcp.js", () => {
-  const sessionIds = new Map<string, { sessionId: string; expiresAt: number }>();
-  const mcpUserInfo = new Map<string, unknown>();
+  const sessions = new Map<string, { userInfo?: unknown; createdAt: number; lastActivity: number }>();
   const createMCPServer = vi.fn(() => ({ connect: vi.fn().mockResolvedValue(undefined) }) as MCPServer);
-  return { createMCPServer, sessionIds, mcpUserInfo };
+  return { createMCPServer, sessions };
 });
 
 // Mock SDK "isInitializeRequest"
@@ -186,6 +186,7 @@ function makeReq(opts?: Partial<TestReq>): TestReq {
   };
 }
 
+const makeSharedUser = (overrides: Partial<SharedUser> = {}): SharedUser => ({ ...overrides }) as SharedUser;
 const LEGACY_SESSION_ID = "legacy-test-session";
 
 // ---- Tests ----
@@ -200,11 +201,11 @@ afterEach(() => {
 });
 
 describe("registerMCPRoutes", () => {
-  it("registers /sse/ping and returns pong", async () => {
+  it("registers /messages/ping and returns pong", async () => {
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance);
 
-    const handler = app.find("GET", "/ping");
+    const handler = app.find("GET", "/messages/ping");
     const reply = makeReply();
     await handler(makeReq(), reply);
 
@@ -215,7 +216,7 @@ describe("registerMCPRoutes", () => {
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance);
 
-    const handler = app.find("GET", "/health");
+    const handler = app.find("GET", "/messages/health");
     const reply = makeReply();
     await handler(makeReq(), reply);
 
@@ -226,7 +227,7 @@ describe("registerMCPRoutes", () => {
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance, { enableHealth: false });
 
-    expect(() => app.find("GET", "/health")).toThrow(/Route not found/);
+    expect(() => app.find("GET", "/messages/health")).toThrow(/Route not found/);
   });
 
   describe("/mcp streamable http", () => {
@@ -530,8 +531,47 @@ describe("registerMCPRoutes", () => {
     });
   });
 
+  describe("/messages/user-info", () => {
+    it("invalid or expired session => 400", async () => {
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/user-info");
+      const reply = makeReply();
+      await handler(makeReq({ body: { sessionId: "missing", userInfo: makeSharedUser() } }), reply);
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toEqual({ error: "Invalid or expired session" });
+    });
+
+    it("valid session => sets userInfo and updates lastActivity", async () => {
+      const { sessions } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const now = Date.now();
+      sessions.set("sid-1", { createdAt: now - 1000, lastActivity: now - 1000 });
+
+      const handler = app.find("POST", "/messages/user-info");
+      const reply = makeReply();
+      const userInfo = makeSharedUser();
+
+      await handler(makeReq({ body: { sessionId: "sid-1", userInfo } }), reply);
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ ok: true, sessionId: "sid-1" });
+
+      const entry = sessions.get("sid-1");
+      expect(entry?.userInfo).toEqual(userInfo);
+      expect(entry?.lastActivity).toBeGreaterThanOrEqual(now);
+    });
+  });
+
   it("cleanup timer reaps expired sessions (streamable + legacy) and onClose cleans everything", async () => {
     vi.useFakeTimers();
+
+    const { sessions } = await import("../src/mcp.js");
 
     const app = new FakeFastify();
     registerMCPRoutes(app as unknown as FastifyInstance, {
@@ -549,11 +589,18 @@ describe("registerMCPRoutes", () => {
     const sseReply = makeReply();
     await sse(makeReq({ raw: new EventEmitter() }), sseReply);
 
+    // Pretend there is user info to be removed on legacy expiry
+    const now = Date.now();
+    sessions.set(LEGACY_SESSION_ID, { userInfo: makeSharedUser(), createdAt: now - 1000, lastActivity: now - 1000 });
+
     // advance beyond TTL and run the 10s cleanup interval
     vi.advanceTimersByTime(20_000);
 
     // legacy response should have been destroyed by TTL reap
     expect(sseReply.raw.destroy).toHaveBeenCalled();
+
+    // also removes session entry for that legacy sid
+    expect(sessions.has(LEGACY_SESSION_ID)).toBe(false);
 
     // now simulate app.close() onClose hook cleanup
     await app.runOnClose();

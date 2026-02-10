@@ -19,12 +19,15 @@ import { displayServerError } from "./state/actions/util-actions";
 import { context } from "./state";
 import "./Login.css";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 export const SignUp: React.FC = observer(() => {
   const theme = useTheme();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const { actions } = useContext(context);
+  const [searchParams] = useSearchParams();
+  const mcpToken = searchParams.get("mcp_session");
 
   useEffect(() => {
     loadRecaptcha();
@@ -59,7 +62,8 @@ export const SignUp: React.FC = observer(() => {
           username: data.get("username"),
           password: data.get("password"),
           email: data.get("email"),
-          recaptchaToken
+          recaptchaToken,
+          ...(mcpToken ? { mcpToken } : {})
         })
       });
       if (response.ok) {

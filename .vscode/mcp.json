@@ -1,9 +1,0 @@
-{
-	"servers": {
-		"tsc": {
-			"url": "http://localhost:3001/sse",
-			"type": "sse"
-		}
-	},
-	"inputs": []
-}
