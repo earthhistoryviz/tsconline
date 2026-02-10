@@ -66,7 +66,7 @@ export const NavBar = observer(function Navbar() {
   const [menuDrawerOpen, setMenuDrawerOpen] = React.useState(false);
   const { t } = useTranslation();
   const menuItems = [
-    { label: t("navBar.presets"), path: "/presets", icon: <Dataset />, className: "qsg-presets" },
+    { label: t("navBar.presets"), path: "/presets-view", icon: <Dataset />, className: "qsg-presets" },
     { label: t("navBar.datapacks"), path: "/datapacks", icon: <Dataset />, className: "qsg-datapacks" },
     { label: t("navBar.chart"), path: "/chart-view", icon: <TableChart />, className: "qsg-chart" },
     {

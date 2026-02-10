@@ -190,7 +190,7 @@ export default observer(function App() {
               <Route path="/datapack/:id" element={<DatapackProfile />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/datapacks" element={<Datapacks />} />
-              <Route path="/presets" element={<Presets />} />
+              <Route path="/presets-view" element={<Presets />} />
               <Route path="/workshops" element={<Workshops />} />
               <Route path="/generate-external-chart" element={<GenerateExternalChart />} />
               <Route path="/workshops/:id" element={<WorkshopDetails />} />
