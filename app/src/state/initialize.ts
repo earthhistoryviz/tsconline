@@ -4,6 +4,9 @@ export async function initialize() {
   // as the server hosts the /charts endpoint.  So, we'll hard-code that for ourselves here.
 
   try {
+    if (state.skipInitialization) {
+      return;
+    }
     actions.sessionCheck();
     actions.fetchAllPublicDatapacksMetadata();
     actions.fetchPresets();

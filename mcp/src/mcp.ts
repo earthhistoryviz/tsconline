@@ -3,11 +3,62 @@ import z from "zod";
 import { readFile } from "fs/promises";
 import * as path from "path";
 import dotenv from "dotenv";
+import { randomUUID } from "crypto";
+import type { SharedUser } from "@tsconline/shared";
+import { MCPLinkParams } from "@tsconline/shared";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
-dotenv.config({ path: path.resolve(process.cwd(), "../server/.env"), override: true, quiet: true });
+dotenv.config({
+  path: path.resolve(process.cwd(), "../server/.env"),
+  override: true,
+  quiet: true
+});
 
 const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
+const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:5173`;
+
+// Single session map: sessionId -> { userInfo?, createdAt, lastActivity }
+export interface SessionEntry {
+  userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
+  createdAt: number;
+  lastActivity: number;
+  userChartState: ChartState;
+}
+
+export const sessions = new Map<string, SessionEntry>();
+
+const PRE_LOGIN_TTL_MS = 2 * 60 * 1000; // login link valid for 2 min
+const AUTHENTICATED_INACTIVITY_TTL_MS = 10 * 60 * 1000; // session lasts 10 minutes since last active
+const MAX_CONCURRENT_LOGIN_REQUESTS = 10; // rate limit: max 10 pre-login sessions
+
+// Cleanup expired sessions every 1 minute
+export const cleanupInterval = setInterval(
+  () => {
+    const now = Date.now();
+
+    console.log("-----");
+    console.log("sessions: ", sessions.size);
+    console.log("sessions makeup:", sessions);
+
+    console.log("-----");
+
+    for (const [sessionId, entry] of sessions.entries()) {
+      const isAuthenticated = entry.userInfo !== undefined;
+      const timeSinceCreation = now - entry.createdAt;
+      const timeSinceLastActivity = now - entry.lastActivity;
+
+      if (!isAuthenticated && timeSinceCreation > PRE_LOGIN_TTL_MS) {
+        sessions.delete(sessionId);
+        continue;
+      }
+
+      if (isAuthenticated && timeSinceLastActivity > AUTHENTICATED_INACTIVITY_TTL_MS) {
+        sessions.delete(sessionId);
+      }
+    }
+  },
+  1 * 60 * 1000 // Run every 1 minute
+).unref?.();
 
 // Chart state management - tracks current chart configuration
 interface ChartState {
@@ -18,11 +69,37 @@ interface ChartState {
   lastModified?: Date;
 }
 
-let currentChartState: ChartState = {
-  datapackTitles: [],
-  overrides: {},
-  columnToggles: {}
-};
+function newChartState(): ChartState {
+  return { datapackTitles: [], overrides: {}, columnToggles: {} };
+}
+
+function verifyMCPSession(
+  sessionId?: string
+): { entry: SessionEntry } | { response: { content: { type: "text"; text: string }[] } } {
+  if (!sessionId) {
+    return { response: { content: [{ type: "text", text: "Missing sessionId." }] } };
+  }
+
+  const entry = sessions.get(sessionId);
+  if (!entry) {
+    return {
+      response: {
+        content: [{ type: "text", text: "Session not found or expired. Please login again." }]
+      }
+    };
+  }
+
+  if (!entry.userInfo) {
+    return {
+      response: {
+        content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
+      }
+    };
+  }
+
+  entry.lastActivity = Date.now();
+  return { entry };
+}
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -65,7 +142,11 @@ const updateChartArgsSchema = z.object({
   overrides: overridesSchema.optional(),
   columnToggles: columnToggleSchema.optional(),
   useCache: z.boolean().optional(),
-  isCrossPlot: z.boolean().optional()
+  isCrossPlot: z.boolean().optional(),
+  sessionId: z
+    .string()
+    .optional()
+    .describe("INTERNAL ONLY: Session ID from login() - tracks user activity, extends session timeout")
 });
 
 export const createMCPServer = () => {
@@ -92,7 +173,9 @@ export const createMCPServer = () => {
     - After updateChartState (verify changes)
     - When debugging why a chart looks a certain way
 
-    Input: {}
+    Input: { sessionId?: string }
+    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
+
     Example output shape:
     {
       "datapackTitles": ["Africa Bight"],
@@ -101,27 +184,16 @@ export const createMCPServer = () => {
       "lastChartPath": "/charts/...",
       "lastModified": "..."
     }`,
-      inputSchema: {}
-    },
-    async () => {
-      if (!currentChartState) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "No chart state set. Use updateChartState to create your first chart."
-            }
-          ]
-        };
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
+    },
+    async ({ sessionId }) => {
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
 
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(currentChartState, null, 2)
-          }
-        ]
+        content: [{ type: "text", text: JSON.stringify(v.entry.userChartState, null, 2) }]
       };
     }
   );
@@ -137,22 +209,20 @@ export const createMCPServer = () => {
     - Starting a brand new chart setup
     - State feels confusing; you want a clean slate
 
-    Input: {}`,
-      inputSchema: {}
+    Input: { sessionId?: string }
+    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.`,
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
     },
-    async () => {
-      currentChartState = {
-        datapackTitles: [],
-        overrides: {},
-        columnToggles: {}
-      };
+    async ({ sessionId }) => {
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
+
+      v.entry.userChartState = newChartState();
+
       return {
-        content: [
-          {
-            type: "text",
-            text: "Chart state cleared. Ready for new configuration."
-          }
-        ]
+        content: [{ type: "text", text: "Chart state cleared for this session." }]
       };
     }
   );
@@ -171,8 +241,13 @@ If you are suspicious of a given chart name or are unsure which datapacks to use
 When to use:
 - First chart or changing datapacks: provide datapackTitles (required).
 - Adjust time/settings: provide overrides (object, optional). Only known keys have guaranteed effect; unknown keys are accepted but may be ignored by the renderer.
-- Toggle columns: provide columnToggles with on/off arrays (optional). Prefer column ids from listColumns; names may work but ids are safer. Case-insensitive; exclusive on/off (adding to off removes from on).
+- Toggle columns: provide columnToggles with on/off arrays (optional). Just use the column names the user gives you - assume they're correct. Case-insensitive; exclusive on/off (adding to off removes from on).
 - Debugging: always set useCache to true
+
+Column toggling workflow:
+- If user says "turn off column X": just do it with { columnToggles: { off: ["X"] } }
+- Don't pre-emptively call listColumns to verify names
+- Only if chart generation FAILS or user complains about missing columns, THEN call listColumns to see available options
 
 Payload shape (ALWAYS FOLLOWS THIS SHAPE):
 { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean }
@@ -217,10 +292,21 @@ After every successful updateChartState call, the assistant MUST immediately dis
 
 This is an example for how to display it in Markdown with an embedded image:
 
-This is just an example of a chart, replace the URL with the actual returned chart url.
+Use the url marked as <![Chart] below to embed the chart image like this:
 ![Chart](https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg)
 
 so ![Chart](<INSERT_RETURNED_CHART_URL_HERE>)
+
+There are 2 URLs in the response. Use the one labeled as <Embedded Chart URL> for embedding the image in Markdown. Do not display this link to the user directly; it's for embedding only. Use the URL marked as Direct URL to show the user the direct link to the chart.
+
+Example response snippet:
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Chart generated!\n\nDirect URL: https://pr-preview.geolex.org/mcp-chart?mcpChartState=eyJkYXRhcGFja3MiOlsiQWZyaWNhIEJpZ2h\n\nCurrent state:\n{...}\n\n<Embedded Chart URL>: https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg"
+    },
+}
 
 The assistant MUST embed the chart image using the returned chart URL in a Markdown image tag as shown above.
 
@@ -229,57 +315,52 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
-      // If no state exists and no datapackTitles provided, error
-      if (!currentChartState && !args.datapackTitles) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "First chart requires datapackTitles. Example: { datapackTitles: ['Africa Bight'], overrides: {}, columnToggles: {} }"
-            }
-          ]
-        };
-      }
+      const v = verifyMCPSession(args.sessionId);
+      if ("response" in v) return v.response;
+
+      const entry = v.entry;
 
       if (!args.datapackTitles) {
-        return { content: [{ type: "text", text: `Error: datapackTitles is required for updating the chart state.` }] };
+        return { content: [{ type: "text", text: "Error: datapackTitles is required." }] };
       }
 
-      // Merge args into current state
-      currentChartState.datapackTitles = args.datapackTitles;
+      const st = entry.userChartState;
 
-      currentChartState.overrides = {
-        ...currentChartState.overrides,
+      // Merge args into session chart state
+      st.datapackTitles = args.datapackTitles;
+
+      st.overrides = {
+        ...st.overrides,
         ...(args.overrides ?? {})
       };
 
       const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
       const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
 
-      const currentOff = new Set((currentChartState.columnToggles.off ?? []).map((id) => id.toLowerCase()));
-      const currentOn = new Set((currentChartState.columnToggles.on ?? []).map((id) => id.toLowerCase()));
+      const currentOff = new Set((st.columnToggles.off ?? []).map((id) => id.toLowerCase()));
+      const currentOn = new Set((st.columnToggles.on ?? []).map((id) => id.toLowerCase()));
 
       for (const id of incomingOff) {
-        currentOn.delete(id); // Exclusive enforcement
+        currentOn.delete(id);
         currentOff.add(id);
       }
       for (const id of incomingOn) {
-        currentOff.delete(id); // Exclusive enforcement
+        currentOff.delete(id);
         currentOn.add(id);
       }
 
-      currentChartState.columnToggles.off = Array.from(currentOff);
-      currentChartState.columnToggles.on = Array.from(currentOn);
+      st.columnToggles.off = Array.from(currentOff);
+      st.columnToggles.on = Array.from(currentOn);
 
-      // Generate chart with current state
+      // Generate chart with THIS SESSION'S state
       try {
         const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            datapackTitles: currentChartState.datapackTitles,
-            overrides: currentChartState.overrides,
-            columnToggles: currentChartState.columnToggles,
+            datapackTitles: st.datapackTitles,
+            overrides: st.overrides,
+            columnToggles: st.columnToggles,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false
           })
@@ -290,7 +371,10 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         if (!res.ok) {
           return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
         }
+
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
+        const chartHash = typeof json.hash === "string" ? json.hash : "";
+
         const filePath = path.join("..", "server", chartPath);
         const svg = await readFile(filePath, "utf8");
 
@@ -300,24 +384,33 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         } catch (e) {
           return {
             content: [
-              {
-                type: "text",
-                text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}`
-              }
+              { type: "text", text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}` }
             ]
           };
         }
+
         const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
-        // Update state with new chart path
-        currentChartState.lastChartPath = chartPath;
-        currentChartState.lastModified = new Date();
+        // Update THIS SESSION'S state with new chart path
+        st.lastChartPath = chartPath;
+        st.lastModified = new Date();
+
+        const mcpLinkObj: MCPLinkParams = {
+          datapacks: st.datapackTitles,
+          chartHash: chartHash
+        };
+
+        const mcpLinkJson = JSON.stringify(mcpLinkObj);
+        const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
+        const mcpToolUrl = `${frontendUrl}/mcp-chart?mcpChartState=${mcpLinkBase64}`;
 
         return {
           content: [
             {
               type: "text",
-              text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
+              text: `Chart generated!\n\nDirect URL: ${mcpToolUrl}
+              \n\nCurrent state:\n${JSON.stringify(st, null, 2)}
+              \n\n<Embedded Chart URL>: ${serverUrl}${chartPath}`
             },
             {
               type: "resource",
@@ -347,11 +440,22 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
 
     Output: array of objects with at least { title, id }. Use title for later calls.
 
-    Input: {}
+    Input: { sessionId?: string }
+    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
     - Do not wrap payload twice (no nested { input: {...} }).`,
-      inputSchema: {}
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
     },
-    async () => {
+    async ({ sessionId }) => {
+      // Track activity if authenticated
+      if (sessionId) {
+        const entry = sessions.get(sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
         const res = await fetch(`${serverUrl}/mcp/datapacks`, { method: "GET", headers });
@@ -378,8 +482,9 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
     - Investigating mismatches between defaults and overrides
     - Want nested columns tree, not just flat ids
 
-    Input: { datapackTitles: string[] }
+    Input: { datapackTitles: string[], sessionId?: string }
     - Titles must exist (see listDatapacks)
+    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
     - Do not wrap payload twice (no nested { input: {...} })
 
     Normal flow: listDatapacks -> listColumns (for ids) -> updateChartState (with overrides/columnToggles).`,
@@ -388,10 +493,19 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
           .array(z.string())
           .describe(
             "Array of datapack titles to merge (e.g., ['GTS2020', 'Paleobiology']). Get available titles from listDatapacks tool."
-          )
+          ),
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
     },
-    async ({ datapackTitles }) => {
+    async ({ datapackTitles, sessionId }) => {
+      // Track activity if authenticated
+      if (sessionId) {
+        const entry = sessions.get(sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       try {
         const res = await fetch(`${serverUrl}/mcp/get-settings-schema`, {
           method: "POST",
@@ -439,24 +553,40 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       title: "List Columns",
       description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
 
-When to use:
-- After picking datapacks, to fetch column ids for toggling in updateChartState.
-- Need a lightweight view (id, name, path, on, enableTitle, type).
+WHEN TO USE THIS:
+- User explicitly ASKS "what columns are available?" or "show me the columns"
+- updateChartState FAILED and you need to troubleshoot which columns actually exist
+- User complains about missing columns after chart generation
 
-Prefer column ids (the id field) when toggling. Names may work if they match an id, but ids are the safe, guaranteed choice.
+WHEN NOT TO USE:
+- Before calling updateChartState "just to check" - DON'T do this!
+- User says "turn off column X" - just trust them and call updateChartState directly
+- Preemptively verifying column names - unnecessary, wastes time
 
-Input: { datapackTitles: string[] }
+Workflow: Trust user's column names → updateChartState fails? → THEN call listColumns to debug
+
+Input: { datapackTitles: string[], sessionId?: string }
 - Titles must exist (see listDatapacks)
+- sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
 - Do not wrap payload twice (no nested { input: {...} })
 
 Example: { "datapackTitles": ["GTS2020"] }`,
       inputSchema: {
         datapackTitles: z
           .array(z.string())
-          .describe("Array of datapack titles to merge (e.g., ['GTS2020', 'Paleobiology'])")
+          .describe("Array of datapack titles to merge (e.g., ['GTS2020', 'Paleobiology'])"),
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
     },
-    async ({ datapackTitles }) => {
+    async ({ datapackTitles, sessionId }) => {
+      // Track activity if authenticated
+      if (sessionId) {
+        const entry = sessions.get(sessionId);
+        if (entry?.userInfo) {
+          entry.lastActivity = Date.now();
+        }
+      }
+
       try {
         const res = await fetch(`${serverUrl}/mcp/list-columns`, {
           method: "POST",
@@ -473,6 +603,154 @@ Example: { "datapackTitles": ["GTS2020"] }`,
         return { content: [{ type: "text", text: JSON.stringify(json, null, 2) }] };
       } catch (e) {
         return { content: [{ type: "text", text: `Error listing columns: ${String(e)}` }] };
+      }
+    }
+  );
+
+  server.registerTool(
+    "login",
+    {
+      title: "Login",
+      description: `Generate a login link for user authentication.
+
+========================================================================
+CRITICAL: The sessionId is a SECRET. NEVER display the sessionId to the user.
+It must ONLY be used in subsequent internal tool calls.
+========================================================================
+
+What to show the user:
+- loginUrl ONLY - this is the ONLY thing the user should see
+
+What to keep internal:
+- sessionId - store this for passing to tool calls, DO NOT display it
+
+Session lifecycle:
+- Link valid for 2 minutes (user must complete login)
+- After login: session valid for 10 minutes of inactivity
+- Pass sessionId to tool calls to track activity`,
+      inputSchema: {}
+    },
+    async () => {
+      try {
+        // Rate limit: check number of pre-login sessions
+        const preLoginCount = Array.from(sessions.values()).filter((entry) => entry.userInfo === undefined).length;
+
+        if (preLoginCount >= MAX_CONCURRENT_LOGIN_REQUESTS) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Too many active login requests. Please wait for existing logins to expire (2 minutes) and try again.`
+              }
+            ]
+          };
+        }
+
+        const sessionId = randomUUID();
+        const loginUrl = `${frontendUrl}/login?mcp_session=${sessionId}`;
+
+        sessions.set(sessionId, {
+          createdAt: Date.now(),
+          lastActivity: Date.now(),
+          // userInfo is undefined until /mcp/user-info is called
+          userChartState: newChartState()
+        });
+
+        console.log("Created login URL:", loginUrl);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `[SHOW TO USER]
+Please visit this link to log in:
+${loginUrl}
+
+[INTERNAL - DO NOT SHOW TO USER]
+sessionId: ${sessionId}
+(Store for tool calls. Valid 2 min until login, then 10 min of inactivity.)`
+            }
+          ]
+        };
+      } catch (e) {
+        return { content: [{ type: "text", text: `Error logging in: ${String(e)}` }] };
+      }
+    }
+  );
+
+  server.registerTool(
+    "whoami",
+    {
+      title: "Who Am I? Am I logged in?",
+      description: `What it does: Check if you're logged in and get user details.
+
+REMINDER: sessionId is internal only - don't show it to the user!
+
+Returns one of three states:
+1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
+2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
+3. SESSION NOT FOUND: Session expired or never existed → call login() to get new sessionId
+
+Input: { sessionId?: string }
+- sessionId (optional): Internal ID from login() tool. Pass it here to check auth status.
+
+Session Expiration Rules:
+- Pre-login: 2 minutes from creation (user must complete login within 2 min)
+- Authenticated: 10 minutes of inactivity (any tool call resets timer)
+
+If you see "not found": session expired, call login() again.`,
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool response")
+      }
+    },
+    async ({ sessionId }) => {
+      try {
+        if (!sessionId) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `You are not logged in. Please use the login tool to authenticate, then provide the resulting Session ID to this tool.`
+              }
+            ]
+          };
+        }
+
+        const entry = sessions.get(sessionId);
+        if (!entry) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Session ID not found. Please run login tool again.`
+              }
+            ]
+          };
+        }
+
+        if (entry.userInfo) {
+          // Track activity for authenticated session
+          entry.lastActivity = Date.now();
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `You are logged in!\n\nUser Information:\n${JSON.stringify(entry.userInfo, null, 2)}`
+              }
+            ]
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Session ID not found or not yet authenticated. Please complete the login flow using the URL from the login tool.`
+              }
+            ]
+          };
+        }
+      } catch (e) {
+        return { content: [{ type: "text", text: `Error checking user info: ${String(e)}` }] };
       }
     }
   );
