@@ -180,8 +180,9 @@ export default observer(function App() {
             {location.pathname != "/verify" &&
               location.pathname != "/chart/preview" &&
               location.pathname != "/mcp_home" &&
-              !(location.pathname === "/login" && params.has("mcp_session")) && <NavBar />}
-            {location.pathname != "/verify" && location.pathname != "/chart-view/preview" && <NavBar />}
+              !(location.pathname === "/login" && params.has("mcp_session")) &&
+              location.pathname != "/verify" &&
+              location.pathname != "/chart-view/preview" && <NavBar />}
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
