@@ -100,7 +100,7 @@ export const setChartTab = action("setChartTab", (chartTab: typeof state.chartTa
 });
 
 function areSettingsValidForGeneration(options?: { from?: string }) {
-  if (!state.config.datapacks || state.config.datapacks.length === 0 || !state.settingsTabs.columns) {
+  if (!state.config.datapacks || !state.settingsTabs.columns) {
     generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
     return false;
   }
@@ -153,6 +153,45 @@ export const compileChartRequest = action(
       from?: string;
     }
   ) => {
+    // Auto-load internal datapack if none selected
+    let autoLoadedInternalDatapack = false;
+    if (state.config.datapacks.length === 0) {
+      autoLoadedInternalDatapack = true;
+      state.loadingInternalFromChartGeneration = true;
+      if (!state.datapacks.some((dp) => dp.title === "TimeScale Creator Internal Datapack")) {
+        generalActions.setLoadingDatapacks(true);
+        const internalDatapack = await generalActions.fetchDatapack({
+          isPublic: true,
+          title: "TimeScale Creator Internal Datapack",
+          type: "official"
+        });
+        if (internalDatapack) {
+          generalActions.addDatapack(internalDatapack);
+          const internalDatapackConfig = {
+            storedFileName: internalDatapack.storedFileName,
+            title: internalDatapack.title,
+            isPublic: internalDatapack.isPublic,
+            type: "official" as const
+          };
+          await generalActions.processDatapackConfig([internalDatapackConfig], { silent: true });
+          generalActions.setLoadingDatapacks(false);
+        } else {
+          console.warn("Failed to load internal datapack");
+          generalActions.setUnsavedDatapackConfig([]);
+        }
+      }
+      // If datapack is already fetched
+      else {
+        const internalDatapack = state.datapacks.find((dp) => dp.title === "TimeScale Creator Internal Datapack")!;
+        const internalDatapackConfig = {
+          storedFileName: internalDatapack.storedFileName,
+          title: internalDatapack.title,
+          isPublic: internalDatapack.isPublic,
+          type: "official" as const
+        };
+        await generalActions.processDatapackConfig([internalDatapackConfig], { silent: true });
+      }
+    }
     // asserts column is not null
     if (!areSettingsValidForGeneration(options)) return;
     state.showSuggestedAgePopup = false;
@@ -203,6 +242,12 @@ export const compileChartRequest = action(
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
       generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
+      if (autoLoadedInternalDatapack) {
+        await generalActions.processDatapackConfig([], { silent: true });
+        state.config.datapacks = [];
+        state.prevConfig.datapacks = [];
+        state.loadingInternalFromChartGeneration = false;
+      }
     }
   }
 );
