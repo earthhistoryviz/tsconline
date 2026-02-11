@@ -73,13 +73,33 @@ function newChartState(): ChartState {
   return { datapackTitles: [], overrides: {}, columnToggles: {} };
 }
 
-/*
-let currentChartState: ChartState = {
-  datapackTitles: [],
-  overrides: {},
-  columnToggles: {}
-};
-*/
+function verifyMCPSession(
+  sessionId?: string
+): { entry: SessionEntry } | { response: { content: { type: "text"; text: string }[] } } {
+  if (!sessionId) {
+    return { response: { content: [{ type: "text", text: "Missing sessionId." }] } };
+  }
+
+  const entry = sessions.get(sessionId);
+  if (!entry) {
+    return {
+      response: {
+        content: [{ type: "text", text: "Session not found or expired. Please login again." }]
+      }
+    };
+  }
+
+  if (!entry.userInfo) {
+    return {
+      response: {
+        content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
+      }
+    };
+  }
+
+  entry.lastActivity = Date.now();
+  return { entry };
+}
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -169,66 +189,12 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      if (!sessionId) {
-        return {
-          content: [{ type: "text", text: "Missing sessionId." }]
-        };
-      }
-
-      const entry = sessions.get(sessionId);
-      if (!entry) {
-        return {
-          content: [{ type: "text", text: "Session not found or expired. Please login again." }]
-        };
-      }
-
-      // added userinfo check
-      if (!entry.userInfo) {
-        return {
-          content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
-        };
-      }
-
-      entry.lastActivity = Date.now();
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
 
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(entry.userChartState, null, 2)
-          }
-        ]
+        content: [{ type: "text", text: JSON.stringify(v.entry.userChartState, null, 2) }]
       };
-
-      /*
-      // Track activity if authenticated
-      if (sessionId) {
-        const entry = sessions.get(sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
-
-      if (!currentChartState) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "No chart state set. Use updateChartState to create your first chart."
-            }
-          ]
-        };
-      }
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(currentChartState, null, 2)
-          }
-        ]
-      };
-      */
     }
   );
 
@@ -250,62 +216,14 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      if (!sessionId) {
-        return {
-          content: [{ type: "text", text: "Missing sessionId." }]
-        };
-      }
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
 
-      const entry = sessions.get(sessionId);
-      if (!entry) {
-        return {
-          content: [{ type: "text", text: "Session not found or expired. Please login again." }]
-        };
-      }
-
-      // added userinfo check
-      if (!entry.userInfo) {
-        return {
-          content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
-        };
-      }
-
-      entry.lastActivity = Date.now();
-
-      entry.userChartState = newChartState();
+      v.entry.userChartState = newChartState();
 
       return {
-        content: [
-          {
-            type: "text",
-            text: "Chart state cleared for this session. Ready for new configuration."
-          }
-        ]
+        content: [{ type: "text", text: "Chart state cleared for this session." }]
       };
-
-      /*
-      // Track activity if authenticated
-      if (sessionId) {
-        const entry = sessions.get(sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
-
-      currentChartState = {
-        datapackTitles: [],
-        overrides: {},
-        columnToggles: {}
-      };
-      return {
-        content: [
-          {
-            type: "text",
-            text: "Chart state cleared. Ready for new configuration."
-          }
-        ]
-      };
-      */
     }
   );
 
@@ -397,35 +315,15 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
-      if (!args.sessionId) {
-        return {
-          content: [{ type: "text", text: "Missing sessionId." }]
-        };
-      }
+      const v = verifyMCPSession(args.sessionId);
+      if ("response" in v) return v.response;
 
-      const entry = sessions.get(args.sessionId);
-      if (!entry) {
-        return {
-          content: [{ type: "text", text: "Session not found or expired. Please login again." }]
-        };
-      }
-
-      // added userinfo check
-      if (!entry.userInfo) {
-        return {
-          content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
-        };
-      }
-
-      entry.lastActivity = Date.now();
+      const entry = v.entry;
 
       if (!args.datapackTitles) {
-        return {
-          content: [{ type: "text", text: "Error: datapackTitles is required." }]
-        };
+        return { content: [{ type: "text", text: "Error: datapackTitles is required." }] };
       }
 
-      // Use THIS SESSION'S state
       const st = entry.userChartState;
 
       // Merge args into session chart state
@@ -527,123 +425,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       } catch (e) {
         return { content: [{ type: "text", text: `Error generating chart: ${String(e)}` }] };
       }
-
-      /*
-  // Track activity if authenticated
-  if (args.sessionId) {
-    const entry = sessions.get(args.sessionId);
-    if (entry?.userInfo) {
-      entry.lastActivity = Date.now();
-    }
-  }
-
-  // If no state exists and no datapackTitles provided, error
-  if (!currentChartState && !args.datapackTitles) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: "First chart requires datapackTitles. Example: { datapackTitles: ['Africa Bight'], overrides: {}, columnToggles: {} }"
-        }
-      ]
-    };
-  }
-
-  if (!args.datapackTitles) {
-    return { content: [{ type: "text", text: `Error: datapackTitles is required for updating the chart state.` }] };
-  }
-
-  // Merge args into current state
-  currentChartState.datapackTitles = args.datapackTitles;
-
-  currentChartState.overrides = {
-    ...currentChartState.overrides,
-    ...(args.overrides ?? {})
-  };
-
-  const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
-  const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
-
-  const currentOff = new Set((currentChartState.columnToggles.off ?? []).map((id) => id.toLowerCase()));
-  const currentOn = new Set((currentChartState.columnToggles.on ?? []).map((id) => id.toLowerCase()));
-
-  for (const id of incomingOff) {
-    currentOn.delete(id); // Exclusive enforcement
-    currentOff.add(id);
-  }
-  for (const id of incomingOn) {
-    currentOff.delete(id); // Exclusive enforcement
-    currentOn.add(id);
-  }
-
-  currentChartState.columnToggles.off = Array.from(currentOff);
-  currentChartState.columnToggles.on = Array.from(currentOn);
-
-  // Generate chart with current state
-  try {
-    const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        datapackTitles: currentChartState.datapackTitles,
-        overrides: currentChartState.overrides,
-        columnToggles: currentChartState.columnToggles,
-        useCache: args.useCache ?? true,
-        isCrossPlot: args.isCrossPlot ?? false
-      })
-    });
-
-    const json = await res.json();
-
-    if (!res.ok) {
-      return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
-    }
-    const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
-    const filePath = path.join("..", "server", chartPath);
-    const svg = await readFile(filePath, "utf8");
-
-    let svgBase64: string;
-    try {
-      svgBase64 = Buffer.from(svg).toString("base64");
-    } catch (e) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}`
-          }
-        ]
-      };
-    }
-    const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
-
-    // Update state with new chart path
-    currentChartState.lastChartPath = chartPath;
-    currentChartState.lastModified = new Date();
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Chart generated!\n\nURL: ${serverUrl}${chartPath}\n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}`
-        },
-        {
-          type: "resource",
-          resource: {
-            uri: dataUri,
-            mimeType: "image/svg+xml",
-            text: svg
-          }
-        }
-      ]
-    };
-  } catch (e) {
-    return { content: [{ type: "text", text: `Error generating chart: ${String(e)}` }] };
-  }
-}
-  
-  );
-  */
     }
   );
 
