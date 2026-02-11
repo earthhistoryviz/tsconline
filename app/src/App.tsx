@@ -168,6 +168,9 @@ export default observer(function App() {
     if (state.loadingDatapacks && !(isOnDatapackPath || isOnDatapacksTab)) return true;
     return false;
   };
+  // Get query string after route if one exists
+  const params = new URLSearchParams(location.search);
+
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -176,7 +179,8 @@ export default observer(function App() {
             <CssBaseline />
             {location.pathname != "/verify" &&
               location.pathname != "/chart/preview" &&
-              location.pathname != "/mcp_home" && <NavBar />}
+              location.pathname != "/mcp_home" &&
+              !(location.pathname === "/login" && params.has("mcp_session")) && <NavBar />}
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
