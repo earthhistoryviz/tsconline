@@ -181,12 +181,12 @@ export default observer(function App() {
               location.pathname != "/chart/preview" &&
               location.pathname != "/mcp_home" &&
               !(location.pathname === "/login" && params.has("mcp_session")) && <NavBar />}
+            {location.pathname != "/verify" && location.pathname != "/chart-view/preview" && <NavBar />}
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/chart" element={<ChartTab />} />
-              <Route path="/mcp-chart" element={<ChartTab />} />
-              <Route path="/chart/preview" element={<ChartPreview />} />
+              <Route path="/chart-view" element={<ChartTab />} />
+              <Route path="/chart-view/preview" element={<ChartPreview />} />
               <Route path="/help/*" element={<Help />} />
               <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
@@ -198,7 +198,7 @@ export default observer(function App() {
               <Route path="/datapack/:id" element={<DatapackProfile />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/datapacks" element={<Datapacks />} />
-              <Route path="/presets" element={<Presets />} />
+              <Route path="/presets-view" element={<Presets />} />
               <Route path="/workshops" element={<Workshops />} />
               <Route path="/generate-external-chart" element={<GenerateExternalChart />} />
               <Route path="/workshops/:id" element={<WorkshopDetails />} />
