@@ -160,9 +160,9 @@ export const compileChartRequest = action(
     if (!areSettingsValidForGeneration(options)) return;
     state.showSuggestedAgePopup = false;
     if (options && options.from === "/crossplot") {
-      navigate("/chart?from=crossplot");
+      navigate("/chart-view?from=crossplot");
     } else {
-      navigate("/chart");
+      navigate("/chart-view");
     }
     //set the loading screen and make sure the chart isn't up
     savePreviousSettings();
