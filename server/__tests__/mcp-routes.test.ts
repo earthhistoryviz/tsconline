@@ -13,7 +13,7 @@ vi.mock("../src/settings-generation/build-settings.js", () => ({
   listColumns: vi.fn()
 }));
 
-import { mcpListDatapacks, mcpListColumns, mcpRenderChartWithEdits } from "../src/routes/mcp-routes.js";
+import { mcpListDatapacks, mcpListColumns, mcpRenderChartWithEdits, mcpUserInfoProxy } from "../src/routes/mcp-routes.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks } from "../src/user/user-handler.js";
 import { extractMetadataFromDatapack } from "../src/util.js";
