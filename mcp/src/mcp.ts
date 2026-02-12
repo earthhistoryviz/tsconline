@@ -304,7 +304,7 @@ Example response snippet:
   "content": [
     {
       "type": "text",
-      "text": "Chart generated!\n\nDirect URL: https://pr-preview.geolex.org/mcp-chart?mcpChartState=eyJkYXRhcGFja3MiOlsiQWZyaWNhIEJpZ2h\n\nCurrent state:\n{...}\n\n<Embedded Chart URL>: https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg"
+      "text": "Chart generated!\n\nDirect URL: https://pr-preview.geolex.org/chart-view?mcpChartState=eyJkYXRhcGFja3MiOlsiQWZyaWNhIEJpZ2h\n\nCurrent state:\n{...}\n\n<Embedded Chart URL>: https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg"
     },
 }
 
@@ -402,7 +402,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
 
         const mcpLinkJson = JSON.stringify(mcpLinkObj);
         const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
-        const mcpToolUrl = `${frontendUrl}/mcp-chart?mcpChartState=${mcpLinkBase64}`;
+        const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkBase64}`;
 
         return {
           content: [

@@ -295,7 +295,7 @@ test("check if new window button works", async ({ page, context }) => {
   const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
 
   await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart/preview");
+  expect(newPage.url()).toContain("/chart-view/preview");
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
   const newWindowButtonPrev = await newPage.locator(".new-window-button");
@@ -312,7 +312,7 @@ test("check sync of preview with window", async ({ page, context }) => {
   const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
 
   await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart/preview");
+  expect(newPage.url()).toContain("/chart-view/preview");
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
   //bring first page to front and make an update
@@ -348,7 +348,7 @@ test("test locking of preview window", async ({ page, context }) => {
   const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
 
   await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart/preview");
+  expect(newPage.url()).toContain("/chart-view/preview");
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
   await expect(newPage.locator(".lock-button")).toBeVisible();
@@ -450,7 +450,7 @@ test("load cached chart from MCP link state in window params", async ({ page }) 
   });
 
   // Navigate to chart page with MCP link params
-  await page.goto(`http://localhost:5173/mcp-chart?mcpChartState=${encodedState}`);
+  await page.goto(`http://localhost:5173/chart-view?mcpChartState=${encodedState}`);
 
   // Wait for the page to load
   await page.waitForTimeout(7000);
