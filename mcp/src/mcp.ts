@@ -22,6 +22,7 @@ export interface SessionEntry {
   userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
   createdAt: number;
   lastActivity: number;
+  userChartState: ChartState;
 }
 
 export const sessions = new Map<string, SessionEntry>();
@@ -68,11 +69,37 @@ interface ChartState {
   lastModified?: Date;
 }
 
-let currentChartState: ChartState = {
-  datapackTitles: [],
-  overrides: {},
-  columnToggles: {}
-};
+function newChartState(): ChartState {
+  return { datapackTitles: [], overrides: {}, columnToggles: {} };
+}
+
+function verifyMCPSession(
+  sessionId?: string
+): { entry: SessionEntry } | { response: { content: { type: "text"; text: string }[] } } {
+  if (!sessionId) {
+    return { response: { content: [{ type: "text", text: "Missing sessionId." }] } };
+  }
+
+  const entry = sessions.get(sessionId);
+  if (!entry) {
+    return {
+      response: {
+        content: [{ type: "text", text: "Session not found or expired. Please login again." }]
+      }
+    };
+  }
+
+  if (!entry.userInfo) {
+    return {
+      response: {
+        content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
+      }
+    };
+  }
+
+  entry.lastActivity = Date.now();
+  return { entry };
+}
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -162,32 +189,11 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      // Track activity if authenticated
-      if (sessionId) {
-        const entry = sessions.get(sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
-
-      if (!currentChartState) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "No chart state set. Use updateChartState to create your first chart."
-            }
-          ]
-        };
-      }
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
 
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(currentChartState, null, 2)
-          }
-        ]
+        content: [{ type: "text", text: JSON.stringify(v.entry.userChartState, null, 2) }]
       };
     }
   );
@@ -210,26 +216,13 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      // Track activity if authenticated
-      if (sessionId) {
-        const entry = sessions.get(sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
 
-      currentChartState = {
-        datapackTitles: [],
-        overrides: {},
-        columnToggles: {}
-      };
+      v.entry.userChartState = newChartState();
+
       return {
-        content: [
-          {
-            type: "text",
-            text: "Chart state cleared. Ready for new configuration."
-          }
-        ]
+        content: [{ type: "text", text: "Chart state cleared for this session." }]
       };
     }
   );
@@ -311,7 +304,7 @@ Example response snippet:
   "content": [
     {
       "type": "text",
-      "text": "Chart generated!\n\nDirect URL: https://pr-preview.geolex.org/mcp-chart?mcpChartState=eyJkYXRhcGFja3MiOlsiQWZyaWNhIEJpZ2h\n\nCurrent state:\n{...}\n\n<Embedded Chart URL>: https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg"
+      "text": "Chart generated!\n\nDirect URL: https://pr-preview.geolex.org/chart-view?mcpChartState=eyJkYXRhcGFja3MiOlsiQWZyaWNhIEJpZ2h\n\nCurrent state:\n{...}\n\n<Embedded Chart URL>: https://pr-preview.geolex.org/public/charts/b3427e1d4e367edd668b65695e4df0f4/chart.svg"
     },
 }
 
@@ -322,65 +315,52 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
-      // Track activity if authenticated
-      if (args.sessionId) {
-        const entry = sessions.get(args.sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
+      const v = verifyMCPSession(args.sessionId);
+      if ("response" in v) return v.response;
 
-      // If no state exists and no datapackTitles provided, error
-      if (!currentChartState && !args.datapackTitles) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "First chart requires datapackTitles. Example: { datapackTitles: ['Africa Bight'], overrides: {}, columnToggles: {} }"
-            }
-          ]
-        };
-      }
+      const entry = v.entry;
 
       if (!args.datapackTitles) {
-        return { content: [{ type: "text", text: `Error: datapackTitles is required for updating the chart state.` }] };
+        return { content: [{ type: "text", text: "Error: datapackTitles is required." }] };
       }
 
-      // Merge args into current state
-      currentChartState.datapackTitles = args.datapackTitles;
+      const st = entry.userChartState;
 
-      currentChartState.overrides = {
-        ...currentChartState.overrides,
+      // Merge args into session chart state
+      st.datapackTitles = args.datapackTitles;
+
+      st.overrides = {
+        ...st.overrides,
         ...(args.overrides ?? {})
       };
 
       const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
       const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
 
-      const currentOff = new Set((currentChartState.columnToggles.off ?? []).map((id) => id.toLowerCase()));
-      const currentOn = new Set((currentChartState.columnToggles.on ?? []).map((id) => id.toLowerCase()));
+      const currentOff = new Set((st.columnToggles.off ?? []).map((id) => id.toLowerCase()));
+      const currentOn = new Set((st.columnToggles.on ?? []).map((id) => id.toLowerCase()));
 
       for (const id of incomingOff) {
-        currentOn.delete(id); // Exclusive enforcement
+        currentOn.delete(id);
         currentOff.add(id);
       }
       for (const id of incomingOn) {
-        currentOff.delete(id); // Exclusive enforcement
+        currentOff.delete(id);
         currentOn.add(id);
       }
 
-      currentChartState.columnToggles.off = Array.from(currentOff);
-      currentChartState.columnToggles.on = Array.from(currentOn);
+      st.columnToggles.off = Array.from(currentOff);
+      st.columnToggles.on = Array.from(currentOn);
 
-      // Generate chart with current state
+      // Generate chart with THIS SESSION'S state
       try {
         const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            datapackTitles: currentChartState.datapackTitles,
-            overrides: currentChartState.overrides,
-            columnToggles: currentChartState.columnToggles,
+            datapackTitles: st.datapackTitles,
+            overrides: st.overrides,
+            columnToggles: st.columnToggles,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false
           })
@@ -391,6 +371,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         if (!res.ok) {
           return { content: [{ type: "text", text: `Server error ${res.status}: ${JSON.stringify(json)}` }] };
         }
+
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
         const chartHash = typeof json.hash === "string" ? json.hash : "";
 
@@ -403,34 +384,32 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         } catch (e) {
           return {
             content: [
-              {
-                type: "text",
-                text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}`
-              }
+              { type: "text", text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}` }
             ]
           };
         }
+
         const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
-        // Update state with new chart path
-        currentChartState.lastChartPath = chartPath;
-        currentChartState.lastModified = new Date();
+        // Update THIS SESSION'S state with new chart path
+        st.lastChartPath = chartPath;
+        st.lastModified = new Date();
 
         const mcpLinkObj: MCPLinkParams = {
-          datapacks: currentChartState.datapackTitles,
+          datapacks: st.datapackTitles,
           chartHash: chartHash
         };
 
         const mcpLinkJson = JSON.stringify(mcpLinkObj);
         const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
-        const mcpToolUrl = `${frontendUrl}/mcp-chart?mcpChartState=${mcpLinkBase64}`;
+        const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkBase64}`;
 
         return {
           content: [
             {
               type: "text",
               text: `Chart generated!\n\nDirect URL: ${mcpToolUrl}
-              \n\nCurrent state:\n${JSON.stringify(currentChartState, null, 2)}
+              \n\nCurrent state:\n${JSON.stringify(st, null, 2)}
               \n\n<Embedded Chart URL>: ${serverUrl}${chartPath}`
             },
             {
@@ -672,8 +651,9 @@ Session lifecycle:
 
         sessions.set(sessionId, {
           createdAt: Date.now(),
-          lastActivity: Date.now()
+          lastActivity: Date.now(),
           // userInfo is undefined until /mcp/user-info is called
+          userChartState: newChartState()
         });
 
         console.log("Created login URL:", loginUrl);

@@ -9,14 +9,14 @@ test("navigation to presets page works", async ({ page }) => {
   const datapacksTab = page.locator(".qsg-presets");
   await expect(datapacksTab).toBeVisible();
   await datapacksTab.click();
-  await expect(page).toHaveURL(/.*\/presets/);
+  await expect(page).toHaveURL(/.*\/presets-view/);
 });
 
 test("navigation to datapack page works", async ({ page }) => {
   const datapacksTab = page.locator(".qsg-chart");
   await expect(datapacksTab).toBeVisible();
   await datapacksTab.click();
-  await expect(page).toHaveURL(/.*\/chart/);
+  await expect(page).toHaveURL(/.*\/chart-view/);
 });
 
 test("navigation to settings page works", async ({ page }) => {
