@@ -27,7 +27,7 @@ export interface SessionEntry {
 
 export const sessions = new Map<string, SessionEntry>();
 
-const PRE_LOGIN_TTL_MS = 2 * 60 * 1000; // login link valid for 2 min
+const PRE_LOGIN_TTL_MS = 5 * 60 * 1000; // login link valid for 5 min
 const AUTHENTICATED_INACTIVITY_TTL_MS = 10 * 60 * 1000; // session lasts 10 minutes since last active
 const MAX_CONCURRENT_LOGIN_REQUESTS = 10; // rate limit: max 10 pre-login sessions
 
@@ -73,32 +73,79 @@ function newChartState(): ChartState {
   return { datapackTitles: [], overrides: {}, columnToggles: {} };
 }
 
-function verifyMCPSession(
-  sessionId?: string
-): { entry: SessionEntry } | { response: { content: { type: "text"; text: string }[] } } {
+function createSession(): { sessionId: string; entry: SessionEntry } {
+  const sessionId = randomUUID();
+  const entry: SessionEntry = {
+    createdAt: Date.now(),
+    lastActivity: Date.now(),
+    userInfo: undefined,
+    userChartState: newChartState()
+  };
+
+  sessions.set(sessionId, entry);
+  return { sessionId, entry };
+}
+
+type SessionResult = { sessionId: string; entry: SessionEntry; internalNote?: string };
+
+function verifyMCPSession(sessionId?: string): SessionResult {
+  // No sessionId provided -> Create one
   if (!sessionId) {
-    return { response: { content: [{ type: "text", text: "Missing sessionId." }] } };
+    const created = createSession();
+    return {
+      sessionId: created.sessionId,
+      entry: created.entry,
+      internalNote: "No sessionId provided -> created a new pre-login session"
+    };
   }
 
   const entry = sessions.get(sessionId);
+
+  // Provided sessionId is unknown/expired -> Create a new one
   if (!entry) {
+    const created = createSession();
     return {
-      response: {
-        content: [{ type: "text", text: "Session not found or expired. Please login again." }]
-      }
+      sessionId: created.sessionId,
+      entry: created.entry,
+      internalNote: "Provided sessionId not found/expired -> created a new sessionId"
     };
   }
 
-  if (!entry.userInfo) {
-    return {
-      response: {
-        content: [{ type: "text", text: "Session exists but is not authenticated yet. Please complete login." }]
+  return { sessionId, entry };
+}
+
+function denyNeedLogin(es: { sessionId: string; internalNote?: string }) {
+  if (es.internalNote) console.log("[Auth Notice]", es.internalNote);
+
+  const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
+
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: `[SHOW TO USER]
+Please log in to continue:
+${loginUrl}
+
+[INTERNAL - DO NOT SHOW TO USER]
+sessionId: ${es.sessionId}
+(Store for tool calls. Valid 5 min until login, then 10 min of inactivity.)`
       }
-    };
+    ]
+  };
+}
+
+function requireAuth(es: {
+  sessionId: string;
+  entry: SessionEntry;
+  internalNote?: string;
+}): { response: { content: { type: "text"; text: string }[] } } | { entry: SessionEntry } {
+  if (!es.entry.userInfo) {
+    return { response: denyNeedLogin(es) };
   }
 
-  entry.lastActivity = Date.now();
-  return { entry };
+  es.entry.lastActivity = Date.now();
+  return { entry: es.entry };
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -189,11 +236,13 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      const v = verifyMCPSession(sessionId);
-      if ("response" in v) return v.response;
+      const es = verifyMCPSession(sessionId);
+
+      const auth = requireAuth(es);
+      if ("response" in auth) return auth.response;
 
       return {
-        content: [{ type: "text", text: JSON.stringify(v.entry.userChartState, null, 2) }]
+        content: [{ type: "text", text: JSON.stringify(auth.entry.userChartState, null, 2) }]
       };
     }
   );
@@ -216,10 +265,12 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      const v = verifyMCPSession(sessionId);
-      if ("response" in v) return v.response;
+      const es = verifyMCPSession(sessionId);
 
-      v.entry.userChartState = newChartState();
+      const auth = requireAuth(es);
+      if ("response" in auth) return auth.response;
+
+      auth.entry.userChartState = newChartState();
 
       return {
         content: [{ type: "text", text: "Chart state cleared for this session." }]
@@ -315,10 +366,12 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
-      const v = verifyMCPSession(args.sessionId);
-      if ("response" in v) return v.response;
+      const es = verifyMCPSession(args.sessionId);
 
-      const entry = v.entry;
+      const auth = requireAuth(es);
+      if ("response" in auth) return auth.response;
+
+      const entry = auth.entry;
 
       if (!args.datapackTitles) {
         return { content: [{ type: "text", text: "Error: datapackTitles is required." }] };
@@ -625,12 +678,12 @@ What to keep internal:
 - sessionId - store this for passing to tool calls, DO NOT display it
 
 Session lifecycle:
-- Link valid for 2 minutes (user must complete login)
+- Link valid for 5 minutes (user must complete login)
 - After login: session valid for 10 minutes of inactivity
 - Pass sessionId to tool calls to track activity`,
-      inputSchema: {}
+      inputSchema: { sessionId: z.string().optional() }
     },
-    async () => {
+    async ({ sessionId }) => {
       try {
         // Rate limit: check number of pre-login sessions
         const preLoginCount = Array.from(sessions.values()).filter((entry) => entry.userInfo === undefined).length;
@@ -646,15 +699,23 @@ Session lifecycle:
           };
         }
 
-        const sessionId = randomUUID();
-        const loginUrl = `${frontendUrl}/login?mcp_session=${sessionId}`;
+        const es = verifyMCPSession(sessionId);
 
-        sessions.set(sessionId, {
-          createdAt: Date.now(),
-          lastActivity: Date.now(),
-          // userInfo is undefined until /mcp/user-info is called
-          userChartState: newChartState()
-        });
+        if (es.entry.userInfo) {
+          es.entry.lastActivity = Date.now();
+          return {
+            content: [
+              {
+                type: "text",
+                text: "You are already logged in."
+              }
+            ]
+          };
+        }
+
+        if (es.internalNote) console.log("[Login]", es.internalNote);
+
+        const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
 
         console.log("Created login URL:", loginUrl);
         return {
@@ -662,12 +723,12 @@ Session lifecycle:
             {
               type: "text",
               text: `[SHOW TO USER]
-Please visit this link to log in:
-${loginUrl}
-
-[INTERNAL - DO NOT SHOW TO USER]
-sessionId: ${sessionId}
-(Store for tool calls. Valid 2 min until login, then 10 min of inactivity.)`
+  Please visit this link to log in:
+  ${loginUrl}
+  
+  [INTERNAL - DO NOT SHOW TO USER]
+  sessionId: ${es.sessionId}
+  (Store for tool calls. Valid 5 min until login, then 10 min of inactivity.)`
             }
           ]
         };
