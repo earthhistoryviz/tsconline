@@ -212,3 +212,34 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
     reply.status(500).send({ error: String(err) });
   }
 }
+
+// Route used by app to make POST request to mcp server with addition of passing in auth token for Authorization header
+export async function mcpUserInfoProxy(request: FastifyRequest, reply: FastifyReply) {
+  const { sessionId, userInfo } = request.body as { sessionId: string; userInfo: unknown };
+
+  // No session id was passed in from frontend
+  if (!sessionId) {
+    return reply.code(400).send({ error: "Missing sessionId" });
+  }
+
+  // Get the token the mcp server is expecting
+  const token = process.env.MCP_AUTH_TOKEN;
+  if (!token) return reply.code(500).send({ error: "Missing MCP_AUTH_TOKEN" });
+
+  // Base mcp server url
+  const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
+
+  // Make call to MCP server with info from frontend with additional Authorization header
+  const res = await fetch(`${base}/messages/user-info`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ sessionId, userInfo })
+  });
+
+  // Wait and return response from request call
+  const data = await res.json();
+  return reply.code(res.status).send(data);
+}

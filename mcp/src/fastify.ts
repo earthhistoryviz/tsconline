@@ -269,7 +269,6 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     // Transition session from pre-login to authenticated
     entry.userInfo = userInfo;
     entry.lastActivity = Date.now();
-
     reply.code(200).send({ ok: true, sessionId });
   });
 

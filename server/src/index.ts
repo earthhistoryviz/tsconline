@@ -284,6 +284,7 @@ server.post("/mcp/get-settings-schema", looseRateLimit, mcpRoutes.mcpGetDatapack
 server.post("/mcp/generate-chart-with-schema", looseRateLimit, mcpRoutes.mcpGenerateChartWithSchema);
 server.post("/mcp/list-columns", looseRateLimit, mcpRoutes.mcpListColumns);
 server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderChartWithEdits);
+server.post("/mcp/user-info", moderateRateLimit, mcpRoutes.mcpUserInfoProxy);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);

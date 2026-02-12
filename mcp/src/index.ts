@@ -40,20 +40,7 @@ function timingSafeEqualStr(a: string, b: string) {
 mcpServer.addHook("onRequest", async (req, reply) => {
   reply.header("X-Server-Signature", "mcp-fastify-3001");
 
-  // Allow /messages if sessionId is one we created
-  if (req.url.startsWith("/messages")) {
-    const q = req.query as unknown as { sessionId?: unknown };
-    const sessionId = typeof q.sessionId === "string" ? q.sessionId : undefined;
-
-    const sessions = (mcpServer as unknown as { legacySSESessions?: Map<string, unknown> }).legacySSESessions;
-
-    if (typeof sessionId === "string" && sessions?.has(sessionId)) {
-      return; // valid session -> skip bearer token check
-    }
-
-    return reply.code(401).send({ error: "Invalid or missing sessionId" });
-  }
-
+  // First check if auth header exists
   const auth = req.headers.authorization; // Expects : Bearer <token>
 
   let token: string | undefined;
@@ -68,10 +55,26 @@ mcpServer.addHook("onRequest", async (req, reply) => {
     token = (req.query as { token?: string }).token;
   }
 
-  if (!token || !timingSafeEqualStr(token, MCP_AUTH_TOKEN)) {
-    // see if token matches the one the server expects
-    return reply.code(401).send({ error: "Unauthorized" }); // if no token or token doesn't match - return a 401 to client
+  // If token is present and valid, allow EVERYTHING any request that includes it
+  if (token && timingSafeEqualStr(token, MCP_AUTH_TOKEN)) {
+    return;
   }
+
+  // If no token - we still allow /messages if sessionId is one we created to pass
+  if (req.url.startsWith("/messages")) {
+    const q = req.query as unknown as { sessionId?: unknown };
+    const sessionId = typeof q.sessionId === "string" ? q.sessionId : undefined;
+    const sessions = (mcpServer as unknown as { legacySSESessions?: Map<string, unknown> }).legacySSESessions;
+
+    if (typeof sessionId === "string" && sessions?.has(sessionId)) {
+      return; // valid session -> skip bearer token check
+    }
+    console.log("invalid or missing");
+    return reply.code(401).send({ error: "Invalid or missing sessionId" });
+  }
+
+  // Everything else requires token
+  return reply.code(401).send({ error: "Unauthorized" });
 });
 
 // MCP routes + SSE keepalive + TTL

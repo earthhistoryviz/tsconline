@@ -67,7 +67,7 @@ export const AccountVerify: React.FC = () => {
           if (sessionIdFromResponse) {
             try {
               const userInfo = { ...state.user, historyEntries: [] };
-              await fetcher("/messages/user-info", {
+              await fetcher("/mcp/user-info", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sessionId: sessionIdFromResponse, userInfo })
