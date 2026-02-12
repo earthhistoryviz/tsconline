@@ -375,8 +375,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         const chartHash = typeof json.hash === "string" ? json.hash : "";
 
         // Update state with new chart path
-        currentChartState.lastChartPath = chartPath;
-        currentChartState.lastModified = new Date();
+        st.lastChartPath = chartPath;
+        st.lastModified = new Date();
 
         const mcpLinkObj: MCPLinkParams = {
           datapacks: st.datapackTitles,
