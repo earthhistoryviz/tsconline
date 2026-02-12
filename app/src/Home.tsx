@@ -400,13 +400,13 @@ export const LandingPageCards = observer(function LandingPageCards() {
       title: t("landing-page.cards.datapack.title"),
       description: t("landing-page.cards.datapack.description"),
       icon: <FolderCopy />,
-      onClick: () => navigate("/help/datapacks")
+      onClick: () => navigate("/datapacks")
     },
     {
       title: t("landing-page.cards.charts.title"),
       description: t("landing-page.cards.charts.description"),
       icon: <TableChart />,
-      onClick: () => navigate("/help/chart")
+      onClick: () => navigate("/chart")
     },
     {
       title: t("landing-page.cards.help.title"),
@@ -426,8 +426,7 @@ export const LandingPageCards = observer(function LandingPageCards() {
           transition={{ type: "spring", stiffness: 300, damping: 15 }}
           onMouseEnter={() => setHoveredCard(index)}
           onMouseLeave={() => setHoveredCard(-1)}>
-          <Box
-            className="landing-page-card"
+          <Box className="landing-page-card" 
             onClick={card.onClick}
             sx={{ backgroundColor: "secondaryBackground.main", cursor: "pointer" }}>
             <Box className="landing-page-card-icon">
