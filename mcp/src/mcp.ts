@@ -1,6 +1,5 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import z from "zod";
-import { readFile } from "fs/promises";
 import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
@@ -375,23 +374,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
         const chartHash = typeof json.hash === "string" ? json.hash : "";
 
-        const filePath = path.join("..", "server", chartPath);
-        const svg = await readFile(filePath, "utf8");
-
-        let svgBase64: string;
-        try {
-          svgBase64 = Buffer.from(svg).toString("base64");
-        } catch (e) {
-          return {
-            content: [
-              { type: "text", text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}` }
-            ]
-          };
-        }
-
-        const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
-
-        // Update THIS SESSION'S state with new chart path
+        // Update state with new chart path
         st.lastChartPath = chartPath;
         st.lastModified = new Date();
 
@@ -411,14 +394,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
               text: `Chart generated!\n\nDirect URL: ${mcpToolUrl}
               \n\nCurrent state:\n${JSON.stringify(st, null, 2)}
               \n\n<Embedded Chart URL>: ${serverUrl}${chartPath}`
-            },
-            {
-              type: "resource",
-              resource: {
-                uri: dataUri,
-                mimeType: "image/svg+xml",
-                text: svg
-              }
             }
           ]
         };
@@ -467,82 +442,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         return { content: [{ type: "text", text: JSON.stringify(json) }] };
       } catch (e) {
         return { content: [{ type: "text", text: `Error fetching datapacks: ${String(e)}` }] };
-      }
-    }
-  );
-
-  server.registerTool(
-    "getSettingsSchema",
-    {
-      title: "Get Chart Settings Schema",
-      description: `What it does: returns the merged default schema (columns + chartSettings) for the given datapacks. Heavy call; usually not needed.
-
-    When to use:
-    - Need to audit every field/default
-    - Investigating mismatches between defaults and overrides
-    - Want nested columns tree, not just flat ids
-
-    Input: { datapackTitles: string[], sessionId?: string }
-    - Titles must exist (see listDatapacks)
-    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
-    - Do not wrap payload twice (no nested { input: {...} })
-
-    Normal flow: listDatapacks -> listColumns (for ids) -> updateChartState (with overrides/columnToggles).`,
-      inputSchema: {
-        datapackTitles: z
-          .array(z.string())
-          .describe(
-            "Array of datapack titles to merge (e.g., ['GTS2020', 'Paleobiology']). Get available titles from listDatapacks tool."
-          ),
-        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
-      }
-    },
-    async ({ datapackTitles, sessionId }) => {
-      // Track activity if authenticated
-      if (sessionId) {
-        const entry = sessions.get(sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
-
-      try {
-        const res = await fetch(`${serverUrl}/mcp/get-settings-schema`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ datapackTitles })
-        });
-
-        if (!res.ok) {
-          const text = await res.text();
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Server error ${res.status}: ${text}`
-              }
-            ]
-          };
-        }
-
-        const schema = await res.json();
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(schema, null, 2)
-            }
-          ]
-        };
-      } catch (e) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error getting settings schema: ${String(e)}`
-            }
-          ]
-        };
       }
     }
   );
