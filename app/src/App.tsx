@@ -152,8 +152,7 @@ export default observer(function App() {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
     const isOnDatapackPath = location.pathname === "/datapacks";
     const hasUnsavedChanges = JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
-    const loadingInternalFromChartGeneration = state.loadingInternalFromChartGeneration;
-    if (state.isProcessingDatapacks || state.isInitializing || loadingInternalFromChartGeneration) {
+    if (state.isProcessingDatapacks || state.isInitializing || state.loadingInternalDatapackWhenNoDatapacksSelected) {
       return false;
     }
     if (hasUnsavedChanges && !(isOnDatapackPath || isOnDatapacksTab)) {
@@ -165,8 +164,10 @@ export default observer(function App() {
   const checkLoadingDatapacks = () => {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
     const isOnDatapackPath = location.pathname === "/datapacks";
-    const loadingInternalFromChartGeneration = state.loadingInternalFromChartGeneration;
-    if (state.loadingDatapacks && (!(isOnDatapackPath || isOnDatapacksTab) || loadingInternalFromChartGeneration))
+    if (
+      state.loadingDatapacks &&
+      (!(isOnDatapackPath || isOnDatapacksTab) || state.loadingInternalDatapackWhenNoDatapacksSelected)
+    )
       return true;
     return false;
   };
