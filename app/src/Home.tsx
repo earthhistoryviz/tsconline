@@ -427,7 +427,7 @@ export const LandingPageCards = observer(function LandingPageCards() {
           onMouseEnter={() => setHoveredCard(index)}
           onMouseLeave={() => setHoveredCard(-1)}>
           <Box
-            className="landing-page-card" 
+            className="landing-page-card"
             onClick={card.onClick}
             sx={{ backgroundColor: "secondaryBackground.main", cursor: "pointer" }}>
             <Box className="landing-page-card-icon">
