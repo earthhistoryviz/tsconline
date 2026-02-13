@@ -114,11 +114,27 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
 
 // Route used by app to make POST request to mcp server with addition of passing in auth token for Authorization header
 export async function mcpUserInfoProxy(request: FastifyRequest, reply: FastifyReply) {
-  const { sessionId, userInfo } = request.body as { sessionId: string; userInfo: unknown };
+  const { sessionId, userInfo } = request.body as { sessionId?: string; userInfo?: { uuid?: string } };
 
   // No session id was passed in from frontend
   if (!sessionId) {
     return reply.code(400).send({ error: "Missing sessionId" });
+  }
+  // Error checking to see if userInfo does or does NOT include uuid propety
+  if (!userInfo?.uuid) {
+    return reply.code(400).send({ error: "Missing userInfo.uuid" });
+  }
+
+  // Get the trusted UUID from the server-side session
+  const sessionUuid = request.session?.get?.("uuid");
+
+  // If there is no session UUID, the user is not authenticated
+  if (!sessionUuid) {
+    return reply.code(401).send({ error: "Not logged in" });
+  }
+  // Make sure the UUID provided by the client matches the UUID stored in the trusted session.
+  if (userInfo.uuid !== sessionUuid) {
+    return reply.code(403).send({ error: "UUID mismatch" });
   }
 
   // Get the token the mcp server is expecting

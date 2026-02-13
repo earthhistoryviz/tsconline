@@ -254,7 +254,7 @@ describe("mcpUserInfoProxy", () => {
   // Test for when no sessionID is passed in to request
   it("returns 400 when sessionId is missing", async () => {
     const req = {
-      body: { userInfo: { a: 1 } }
+      body: { userInfo: { uuid: "u123", a: 1 } }
     } as unknown as FastifyRequest;
 
     const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -272,7 +272,8 @@ describe("mcpUserInfoProxy", () => {
     delete process.env.MCP_AUTH_TOKEN;
 
     const req = {
-      body: { sessionId: "sid123", userInfo: { a: 1 } }
+      body: { sessionId: "sid123", userInfo: { uuid: "u123", a: 1 } },
+      session: { get: vi.fn().mockReturnValue("u123") }
     } as unknown as FastifyRequest;
 
     const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -298,7 +299,8 @@ describe("mcpUserInfoProxy", () => {
     }) as unknown as typeof fetch;
 
     const req = {
-      body: { sessionId: "sid123", userInfo: { name: "J" } }
+      body: { sessionId: "sid123", userInfo: { uuid: "u123", name: "J" } },
+      session: { get: vi.fn().mockReturnValue("u123") }
     } as unknown as FastifyRequest;
 
     const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -311,7 +313,7 @@ describe("mcpUserInfoProxy", () => {
         "Content-Type": "application/json",
         Authorization: "Bearer token123"
       },
-      body: JSON.stringify({ sessionId: "sid123", userInfo: { name: "J" } })
+      body: JSON.stringify({ sessionId: "sid123", userInfo: { uuid: "u123", name: "J" } })
     });
 
     // Expect code 200 for success

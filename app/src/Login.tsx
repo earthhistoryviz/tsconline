@@ -89,6 +89,7 @@ export const Login: React.FC = observer(() => {
               headers: {
                 "Content-Type": "application/json"
               },
+              credentials: "include",
               body: JSON.stringify({
                 sessionId: mcpSession,
                 userInfo
