@@ -285,6 +285,51 @@ describe("mcpUserInfoProxy", () => {
     expect(reply.send).toHaveBeenCalledWith({ error: "Missing MCP_AUTH_TOKEN" });
   });
 
+  it("returns 400 when userInfo.uuid is missing", async () => {
+    const req = {
+      body: { sessionId: "sid123", userInfo: { a: 1 } }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUserInfoProxy(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing userInfo.uuid" });
+  });
+
+  it("returns 401 when session uuid is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      body: { sessionId: "sid123", userInfo: { uuid: "u123" } },
+      session: { get: vi.fn().mockReturnValue(undefined) }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUserInfoProxy(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Not logged in" });
+  });
+
+  it("returns 403 when userInfo.uuid does not match session uuid", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      body: { sessionId: "sid123", userInfo: { uuid: "u123" } },
+      session: { get: vi.fn().mockReturnValue("DIFFERENT") }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUserInfoProxy(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(403);
+    expect(reply.send).toHaveBeenCalledWith({ error: "UUID mismatch" });
+  });
+
   // Test for actual call when everything is present
   it("forwards to MCP /messages/user-info with Bearer token", async () => {
     // Use a dummy expected token for test
