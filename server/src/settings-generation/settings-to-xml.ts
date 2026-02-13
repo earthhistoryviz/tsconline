@@ -99,6 +99,9 @@ function attachTscPrefixToName(name: string, columnDisplayType: string): string 
     case "Facies":
       prefix = "class datastore.FaciesColumn:";
       break;
+    case "Freehand":
+      prefix = "class datastore.FreehandColumn:";
+      break;
     case "BlockSeriesMetaColumn":
       prefix = "class datastore.BlockSeriesMetaColumn:";
       break;
