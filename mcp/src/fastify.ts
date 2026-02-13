@@ -35,6 +35,8 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
   const legacySSESessions = new Map<string, SSEServerTransport>();
   const legacyServers = new Map<string, ReturnType<typeof createMCPServer>>();
 
+  // Make SSE sessions accessible to the auth hook in index.ts
+  (app as unknown as { legacySSESessions: Map<string, SSEServerTransport> }).legacySSESessions = legacySSESessions;
   // Track raw SSE responses so TTL can hard-close sockets
   const legacySSEResponses = new Map<string, ServerResponse>();
 
@@ -267,7 +269,6 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     // Transition session from pre-login to authenticated
     entry.userInfo = userInfo;
     entry.lastActivity = Date.now();
-
     reply.code(200).send({ ok: true, sessionId });
   });
 

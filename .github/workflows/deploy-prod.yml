@@ -142,7 +142,7 @@ jobs:
             echo 'LONDON_DATABASE_PORT="${{ secrets.LONDON_DATABASE_PORT }}"' >> ./server/.env
             echo 'LONDON_DATABASE_USER="${{ secrets.LONDON_DATABASE_USER }}"' >> ./server/.env
             echo 'LONDON_DATABASE_PASSWORD="${{ secrets.LONDON_DATABASE_PASSWORD }}"' >> ./server/.env
-
+            echo 'MCP_AUTH_TOKEN="${{ secrets.MCP_AUTH_TOKEN }}"' >> ./server/.env
             if [ ! -f "$COMPOSE_FILE" ]; then
               echo "Error: $COMPOSE_FILE not found"
               exit 1
