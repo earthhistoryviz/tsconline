@@ -158,40 +158,28 @@ export const compileChartRequest = action(
     }
   ) => {
     // Auto-load internal datapack if none selected
-    if (state.config.datapacks.length === 0) {
+    if (state.config.datapacks.length === 0 && !state.loadingInternalDatapackWhenNoDatapacksSelected) {
+      const INTERNAL_DATAPACK_TITLE = "TimeScale Creator Internal Datapack";
       generalActions.setLoadingInternalDatapackWhenNoDatapacksSelected(true);
-      if (!state.datapacks.some((dp) => dp.title === "TimeScale Creator Internal Datapack")) {
-        generalActions.setLoadingDatapacks(true);
-        const internalDatapack = await generalActions.fetchDatapack({
-          isPublic: true,
-          title: "TimeScale Creator Internal Datapack",
-          type: "official"
-        });
-        if (internalDatapack) {
-          generalActions.addDatapack(internalDatapack);
-          const internalDatapackConfig = {
-            storedFileName: internalDatapack.storedFileName,
-            title: internalDatapack.title,
-            isPublic: internalDatapack.isPublic,
-            type: "official" as const
-          };
-          await generalActions.processDatapackConfig([internalDatapackConfig], { silent: true });
-          generalActions.setLoadingDatapacks(false);
-        } else {
-          console.warn("Failed to load internal datapack");
-          generalActions.setUnsavedDatapackConfig([]);
-        }
-      }
-      // If datapack is already fetched
-      else {
-        const internalDatapack = state.datapacks.find((dp) => dp.title === "TimeScale Creator Internal Datapack")!;
+      generalActions.setLoadingDatapacks(true);
+      const internalDatapack = await generalActions.fetchDatapack({
+        isPublic: true,
+        title: INTERNAL_DATAPACK_TITLE,
+        type: "official"
+      });
+      if (internalDatapack) {
+        generalActions.addDatapack(internalDatapack);
         const internalDatapackConfig = {
           storedFileName: internalDatapack.storedFileName,
-          title: internalDatapack.title,
+          title: INTERNAL_DATAPACK_TITLE,
           isPublic: internalDatapack.isPublic,
           type: "official" as const
         };
         await generalActions.processDatapackConfig([internalDatapackConfig], { silent: true });
+        generalActions.setLoadingDatapacks(false);
+      } else {
+        console.warn("Failed to load internal datapack");
+        generalActions.setUnsavedDatapackConfig([]);
       }
     }
     // asserts column is not null
