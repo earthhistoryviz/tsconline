@@ -63,12 +63,13 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   //check seralized URL params for a given chart state from MCP
   // Right now, gets a public datapack title only. Then needs to create a DatapackConfigForChartRequest from that title, somehow getting the stored file name.
   useEffect(() => {
+    // Guard against multiple calls (React strict mode can cause double calls)
+    if (isLoadingCachedChart.current) return;
+
     let mounted = true;
     (async () => {
       try {
         if (!mounted) return;
-
-        isLoadingCachedChart.current = true;
 
         const urlParams = new URLSearchParams(window.location.search);
         if (!urlParams.toString()) {
@@ -79,6 +80,10 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           actions.pushSnackbar("No mcpChartState parameter found in URL.", "warning");
           return;
         }
+
+        // Set loading flag before any async operations
+        isLoadingCachedChart.current = true;
+
         let parsedState = null;
         try {
           const decodedState = atob(chartStateParam);

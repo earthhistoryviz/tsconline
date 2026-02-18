@@ -5,7 +5,10 @@ const ORIGINAL_ENV = { ...process.env };
 
 // Mock the module dependencies used by mcp-routes
 vi.mock("../src/public-datapack-handler.js", () => ({ loadPublicUserDatapacks: vi.fn() }));
-vi.mock("../src/user/user-handler.js", () => ({ fetchAllPrivateOfficialDatapacks: vi.fn() }));
+vi.mock("../src/user/user-handler.js", () => ({
+  fetchAllPrivateOfficialDatapacks: vi.fn(),
+  fetchAllUsersDatapacks: vi.fn()
+}));
 vi.mock("../src/util.js", () => ({ extractMetadataFromDatapack: vi.fn() }));
 vi.mock("../src/chart-generation/generate-chart.js", () => ({ generateChart: vi.fn() }));
 vi.mock("../src/settings-generation/build-settings.js", () => ({
@@ -20,7 +23,7 @@ import {
   mcpUserInfoProxy
 } from "../src/routes/mcp-routes.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
-import { fetchAllPrivateOfficialDatapacks } from "../src/user/user-handler.js";
+import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../src/user/user-handler.js";
 import { extractMetadataFromDatapack } from "../src/util.js";
 import { generateChart } from "../src/chart-generation/generate-chart.js";
 import { generateChartWithEdits, listColumns } from "../src/settings-generation/build-settings.js";
@@ -94,6 +97,33 @@ describe("mcpListDatapacks", () => {
     expect(reply.status).toHaveBeenCalledWith(500);
     expect(reply.send).toHaveBeenCalledWith({ error: expect.stringContaining("bad metadata") });
   });
+
+  it("includes user datapacks when uuid is provided", async () => {
+    const publicDp = { id: "p1", name: "pub" };
+    const officialDp = { id: "o1", name: "off" };
+    const userDp = { id: "u1", name: "user" };
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([publicDp]);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([officialDp]);
+    (fetchAllUsersDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([userDp]);
+    (extractMetadataFromDatapack as unknown as ReturnType<typeof vi.fn>).mockImplementation((dp: unknown) => ({
+      id: (dp as { id?: string }).id,
+      title: (dp as { name?: string }).name
+    }));
+
+    const req = { body: { uuid: "user-123" } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn() } as unknown as FastifyReply;
+
+    await mcpListDatapacks(req, reply);
+
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledWith("user-123");
+    expect(extractMetadataFromDatapack).toHaveBeenCalledTimes(3);
+    expect(reply.send).toHaveBeenCalledWith([
+      { id: "p1", title: "pub" },
+      { id: "o1", title: "off" },
+      { id: "u1", title: "user" }
+    ]);
+  });
 });
 
 describe("mcpListColumns", () => {
@@ -116,6 +146,26 @@ describe("mcpListColumns", () => {
 
   it("returns 400 when datapackTitles is missing", async () => {
     const req = { body: {} } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 400 when datapackTitles is not an array", async () => {
+    const req = { body: { datapackTitles: "GTS2020" } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 400 when datapackTitles is an empty array", async () => {
+    const req = { body: { datapackTitles: [] } } as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
 
     await mcpListColumns(req, reply);
@@ -152,6 +202,26 @@ describe("mcpListColumns", () => {
 
     expect(reply.status).toHaveBeenCalledWith(500);
     expect(reply.send).toHaveBeenCalledWith({ error: "Error: fail" });
+  });
+
+  it("includes user datapacks when uuid is provided", async () => {
+    const mockPublicDp = [{ title: "Public", storedFileName: "public.zip" }];
+    const mockUserDp = [{ title: "UserDP", storedFileName: "user.zip" }];
+    const mockColumns = [{ id: "c1", name: "Col", path: "Col", on: true, enableTitle: true, type: "zone" }];
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockPublicDp);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (fetchAllUsersDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockUserDp);
+    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockColumns);
+
+    const req = { body: { datapackTitles: ["UserDP"], uuid: "user-456" } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledWith("user-456");
+    expect(listColumns).toHaveBeenCalledWith(mockUserDp);
+    expect(reply.send).toHaveBeenCalledWith(mockColumns);
   });
 });
 
@@ -193,6 +263,26 @@ describe("mcpRenderChartWithEdits", () => {
 
   it("returns 400 when datapackTitles is missing", async () => {
     const req = { body: { overrides: {}, columnToggles: {} } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 400 when datapackTitles is not an array", async () => {
+    const req = { body: { datapackTitles: "GTS2020", overrides: {}, columnToggles: {} } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 400 when datapackTitles is an empty array", async () => {
+    const req = { body: { datapackTitles: [], overrides: {}, columnToggles: {} } } as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
 
     await mcpRenderChartWithEdits(req, reply);
@@ -247,6 +337,45 @@ describe("mcpRenderChartWithEdits", () => {
 
     expect(reply.status).toHaveBeenCalledWith(500);
     expect(reply.send).toHaveBeenCalledWith({ error: "Error: fail chart" });
+  });
+
+  it("includes user datapacks with uuid field when uuid is provided", async () => {
+    const mockUserDp = {
+      title: "UserData",
+      storedFileName: "user.zip",
+      uuid: "dp-uuid-123",
+      type: "user",
+      isPublic: false
+    };
+    const mockSettingsXml = "<settings/>";
+    const mockResult = { chartpath: "public/charts/xyz/chart.svg" };
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (fetchAllUsersDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([mockUserDp]);
+    (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockSettingsXml);
+    (generateChart as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResult);
+
+    const req = {
+      body: { datapackTitles: ["UserData"], uuid: "user-789", overrides: {}, columnToggles: {} }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledWith("user-789");
+
+    const generateChartMock = (generateChart as unknown as ReturnType<typeof vi.fn>).mock;
+    expect(generateChartMock.calls.length).toBeGreaterThan(0);
+    const callArgs = generateChartMock.calls[0]?.[0];
+    expect(callArgs.datapacks).toContainEqual({
+      storedFileName: "user.zip",
+      title: "UserData",
+      isPublic: false,
+      type: "user",
+      uuid: "dp-uuid-123"
+    });
+    expect(reply.send).toHaveBeenCalledWith(mockResult);
   });
 });
 

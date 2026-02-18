@@ -385,7 +385,13 @@ test("load cached chart from MCP link state in window params", async ({ page }) 
 
   // Create MCP link state with Africa Bight datapack and the test chart hash
   const mcpLinkState = {
-    datapacks: ["Africa Bight"],
+    datapacks: [
+      {
+        title: "Africa Bight",
+        type: "official",
+        isPublic: true
+      }
+    ],
     chartHash: testChartHash
   };
 
