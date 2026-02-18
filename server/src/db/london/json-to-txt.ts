@@ -281,12 +281,13 @@ async function processBlockColumns(
 async function processFaciesColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
   const faciesColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
+    // Only process columns that have "Facies" in the name and are lithology type, excluding label columns
     if (
-      (column.columnx?.includes("Facies") && (column.column_type?.includes("interval") || column.column_type === "lithology")) &&
-      !column.columnx?.includes("Facies Label ") &&
+      column.columnx?.includes("Facies") &&
+      column.column_type === "lithology" &&
+      !column.columnx?.includes("Facies Label") &&
       !column.columnx?.includes("Series Label")
     ) {
-      console.log("FACIES!!!");
       const columnLines: string[] = [];
       const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
       if (!dataset) {
@@ -294,149 +295,97 @@ async function processFaciesColumns(datasets: arkL_datasets[], columns: arkL_col
         continue;
       }
 
-      const faciesLabelColumn = columns.find(
-        (col) =>
-          col.columnx?.includes("Facies Label") && col.dataset_id === column.dataset_id && col.path === column.path
-      );
-      if (!faciesLabelColumn) {
-        console.log(chalk.yellow("missing facies label column for " + column.columnx));
-        continue;
-      }
-      const faciesSeriesColumn = columns.find(
-        (col) =>
-          col.columnx?.includes("Series Label") && col.dataset_id === column.dataset_id && col.path === column.path
-      );
-      // Series Label is optional - use facies label as series if not available
-      
-      let faciesIntervals = [];
-      let faciesLabelIntervals = [];
-      let faciesSeriesIntervals = [];
-
-      const regex = new RegExp(column.interval_type!, "i");
-      const path = column.path || "";
-      if (path === null || path === "") {
-        console.log(chalk.yellow("missing path for " + column.columnx));
-        continue;
-      }
-
-      faciesIntervals = intervals
+      // Get bed intervals for this column (intervals with lithology data)
+      const bedIntervals = intervals
         .filter(
           (interval) =>
             interval.dataset_id === column.dataset_id &&
-            interval.interval_type?.match(regex) &&
+            interval.interval_type === "bed" &&
+            interval.lithology !== null &&
+            interval.lithology !== "" &&
             (interval.subdataset === "" || interval.subdataset === null)
         )
         .sort((a, b) => a.base_age2020! - b.base_age2020!);
-      if (faciesIntervals.length === 0) {
-        console.log(chalk.yellow("no facies intervals found for " + column.columnx));
+      
+      console.log(chalk.gray(`    Found ${bedIntervals.length} bed intervals`));
+      if (bedIntervals.length === 0) {
+        console.log(chalk.yellow("no bed intervals found for " + column.columnx));
         continue;
       }
 
-      faciesLabelIntervals = faciesLabelColumn
-        ? intervals
-            .filter(
-              (interval) =>
-                interval.dataset_id === column.dataset_id &&
-                interval.interval_type?.match(faciesLabelColumn.interval_type!) &&
-                interval.subdataset === "" &&
-                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
-            )
-            .sort((a, b) => a.base_age2020! - b.base_age2020!)
-        : [];
-      if (faciesLabelIntervals.length === 0 && faciesLabelColumn) {
-        console.log(chalk.yellow("no facies label intervals found for " + column.columnx));
-        continue;
-      }
-
-      // If no series column, use label intervals as series
-      faciesSeriesIntervals = faciesSeriesColumn
-        ? intervals
-            .filter(
-              (interval) =>
-                interval.dataset_id === column.dataset_id &&
-                interval.interval_type?.match(faciesSeriesColumn.interval_type!) &&
-                interval.subdataset === "" &&
-                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
-            )
-            .sort((a, b) => a.base_age2020! - b.base_age2020!)
-        : faciesLabelIntervals;
-
+      // Get stage intervals to group by (e.g., "Lias", "Upper Keuper", "Middle Keuper")
+      const stageIntervals = intervals
+        .filter(
+          (interval) =>
+            interval.dataset_id === column.dataset_id &&
+            interval.interval_type === "Stage" &&
+            (interval.subdataset === "" || interval.subdataset === null)
+        )
+        .sort((a, b) => a.top_age2020! - b.top_age2020!);;
       const popup = dataset.notes_Jur;
-      let line = `${column.columnx}\tfacies\t\tnotitle\toff\t${
-        popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""
+      let line = `${column.columnx}\tfacies\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${
+        popup !== null ? popup.replace(/[\r\n\t]+/g, " ") : ""
       }`;
       columnLines.push(line);
 
-      let topWritten = false;
-      let prevSeries = "";
-
-      for (const faciesInter of faciesIntervals) {
-        if (faciesInter.base_age === null) continue;
-        if (faciesInter.intervalx === null) continue;
-
-        const faciesLabel = faciesLabelIntervals.find(
-          (inter) =>
-            inter.top_age2020 != null &&
-            inter.base_age2020 != null &&
-            inter.base_age2020 >= faciesInter.base_age2020! &&
-            inter.top_age2020 <= faciesInter.base_age2020!
+      // Group bed intervals by stage and create hierarchical structure
+      let isFirstStage = true;
+      for (const stageInter of stageIntervals) {
+        const stageTop = stageInter.top_age2020!;
+        const stageBase = stageInter.base_age2020!;
+        
+        // Find all bed intervals that fall within this stage's age range
+        // In geological time: larger age = older/deeper, smaller age = younger/shallower
+        // A bed is within a stage if: bed.top >= stage.top AND bed.base <= stage.base
+        const bedsInStage = bedIntervals.filter(
+          (bed) =>
+            bed.top_age2020! >= stageTop &&
+            bed.base_age2020! <= stageBase
         );
-        if (!faciesLabel) {
-          console.log(
-            chalk.yellow(`No facies label found for interval ${faciesInter.intervalx} in column ${column.columnx}`)
-          );
-          continue;
-        }
-        const faciesSeries = faciesSeriesIntervals.find((inter) => {
-          const interBase = inter.base_age != null ? inter.base_age : inter.base_age2020;
-          const interTop = inter.top_age != null ? inter.top_age : inter.top_age2020;
-          return (
-            interTop != null &&
-            interBase != null &&
-            interBase >= faciesInter.base_age2020! &&
-            interTop <= faciesInter.base_age2020!
-          );
-        });
-        if (!faciesSeries) {
-          console.log(
-            chalk.yellow(`No facies series found for interval ${faciesInter.intervalx} in column ${column.columnx}`)
-          );
-          continue;
-        }
 
-        if (faciesSeries?.intervalx !== prevSeries) {
-          prevSeries = faciesSeries?.intervalx ?? "";
-          if (prevSeries != "") {
-            line = `${faciesSeries?.intervalx || ""}\tPrimary`;
-            columnLines.push(line);
-          }
-          if (!topWritten) {
-            columnLines.push(
-              `\tTOP\t\t${faciesIntervals[0]!.top_age2020 === null ? 0 : Number(faciesIntervals[0]!.top_age2020.toFixed(3))}`
-            );
-            topWritten = true;
-          }
-        }
+        if (bedsInStage.length === 0) continue;
 
-        // Use lithology as the facies pattern name (for visual display)
-        const faciesPattern = faciesInter.lithology || faciesInter.intervalx;
+        // Add stage header - series declaration format: SERIESNAME PRIMARY
+        const stageName = (stageInter.intervalx || "").replace(/[\t]+/g, " ");
+        columnLines.push(`${stageName}\tPrimary`);
         
-        // Use the facies label name as the label text
-        const faciesLabel_text = faciesLabel.intervalx;
-        
-        let faciesPopup = "";
-        if (
-          faciesInter.preset_duration_notes !== null &&
-          faciesInter.preset_duration_notes !== undefined &&
-          faciesInter.preset_duration_notes !== ""
-        ) {
-          faciesPopup = String(faciesInter.preset_duration_notes).replace(/[\r\n]+/g, " ");
-        } else {
-          faciesPopup = faciesInter.intervalx.replace(/[\r\n]+/g, " ") || "";
+        // Add TOP entry only for the first (youngest) stage
+        if (isFirstStage) {
+          const topAge = bedsInStage[0]!.top_age2020!;
+          const topNotes = (stageInter.preset_duration_notes || "").replace(/[\r\n\t]+/g, " ");
+          columnLines.push(
+            `\tTOP\t\t${Number(topAge.toFixed(3))}\t${topNotes}`
+          );
+          isFirstStage = false;
         }
 
-        line = `\t${faciesPattern}\t${faciesLabel_text}\t${Number(faciesInter.base_age2020?.toFixed(3))}\t${faciesPopup}`;
-        columnLines.push(line);
+        // Add all beds in this stage
+        for (const bedInter of bedsInStage) {
+          // Use lithology as the facies pattern, intervalx as the formation/bed label
+          const lithology = (bedInter.lithology || bedInter.intervalx || "").replace(/[\t]+/g, " ");
+          
+          // Extract formation name from intervalx (e.g., "Exter Fm. bed 3" -> "Exter Fm.")
+          let formationName = bedInter.intervalx || "";
+          const bedMatch = formationName.match(/^(.+?)\s+bed\s+\d+$/);
+          if (bedMatch) {
+            formationName = bedMatch[1] ?? "";
+          }
+          formationName = formationName.replace(/[\t]+/g, " ");
+          
+          let popup = "";
+          if (
+            bedInter.preset_duration_notes !== null &&
+            bedInter.preset_duration_notes !== undefined &&
+            bedInter.preset_duration_notes !== ""
+          ) {
+            popup = String(bedInter.preset_duration_notes).replace(/[\r\n\t]+/g, " ");
+          } else if (bedInter.interval_notes) {
+            popup = bedInter.interval_notes.replace(/[\r\n\t]+/g, " ");
+          }
+
+          line = `\t${lithology}\t${formationName}\t${Number(bedInter.base_age2020?.toFixed(3))}\t${popup}`;
+          columnLines.push(line);
+        }
       }
 
       columnLines.push("");
@@ -888,7 +837,7 @@ export async function generateLondonDatapack(): Promise<File | undefined> {
       ...blockColumns,
       ...sequenceColumns,
       ...trendColumns,
-      ...faciesColumns,
+      // ...faciesColumns,
       ...chronColumns,
       ...rangeColumns,
       ...pointColumns,
