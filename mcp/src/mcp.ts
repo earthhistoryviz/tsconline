@@ -137,7 +137,7 @@ const columnToggleSchema = z
   .passthrough();
 
 const updateChartArgsSchema = z.object({
-  datapackTitles: datapackTitlesSchema.optional(),
+  datapackTitles: datapackTitlesSchema,
   overrides: overridesSchema.optional(),
   columnToggles: columnToggleSchema.optional(),
   useCache: z.boolean().optional(),
@@ -148,90 +148,44 @@ const updateChartArgsSchema = z.object({
     .describe("INTERNAL ONLY: Session ID from login() - tracks user activity, extends session timeout")
 });
 
-export const createMCPServer = () => {
-  const server = new McpServer({
-    name: "demo-server",
-    version: "1.0.0",
-    title: "Demo MCP Server",
-    description: "A simple server to demonstrate MCP capabilities",
-    protocolVersion: "2024-11-05",
-    capabilities: {
-      tools: { listChanged: true }
-    }
-  });
+const TOOL_DESCRIPTIONS = {
+  getCurrentChartState: {
+    title: "Get Current Chart State",
+    description: `What it does: returns the server's current chart configuration (datapacks, merged overrides, column toggles, last chart path/time).
 
-  // Tool: Get current chart state
-  server.registerTool(
-    "getCurrentChartState",
-    {
-      title: "Get Current Chart State",
-      description: `What it does: returns the server's current chart configuration (datapacks, merged overrides, column toggles, last chart path/time).
+When to use:
+- Before incremental changes (see what's set)
+- After updateChartState (verify changes)
+- When debugging why a chart looks a certain way
 
-    When to use:
-    - Before incremental changes (see what's set)
-    - After updateChartState (verify changes)
-    - When debugging why a chart looks a certain way
+Input: { sessionId?: string }
+- sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
 
-    Input: { sessionId?: string }
-    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
+Example output shape:
+{
+  "datapackTitles": ["Africa Bight"],
+  "overrides": { "topAge": 0, "baseAge": 65 },
+  "columnToggles": { "off": ["nigeria coast"], "on": [] },
+  "lastChartPath": "/charts/...",
+  "lastModified": "..."
+}`
+  },
 
-    Example output shape:
-    {
-      "datapackTitles": ["Africa Bight"],
-      "overrides": { "topAge": 0, "baseAge": 65 },
-      "columnToggles": { "off": ["nigeria coast"], "on": [] },
-      "lastChartPath": "/charts/...",
-      "lastModified": "..."
-    }`,
-      inputSchema: {
-        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
-      }
-    },
-    async ({ sessionId }) => {
-      const v = verifyMCPSession(sessionId);
-      if ("response" in v) return v.response;
+  resetChartState: {
+    title: "Reset Chart State",
+    description: `What it does: clears the server's chart state so the next build starts fresh.
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(v.entry.userChartState, null, 2) }]
-      };
-    }
-  );
+When to use:
+- Starting a brand new chart setup
+- State feels confusing; you want a clean slate
 
-  // Tool: Reset chart state
-  server.registerTool(
-    "resetChartState",
-    {
-      title: "Reset Chart State",
-      description: `What it does: clears the server's chart state so the next build starts fresh.
+Input: { sessionId?: string }
+- sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.`
+  },
 
-    When to use:
-    - Starting a brand new chart setup
-    - State feels confusing; you want a clean slate
-
-    Input: { sessionId?: string }
-    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.`,
-      inputSchema: {
-        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
-      }
-    },
-    async ({ sessionId }) => {
-      const v = verifyMCPSession(sessionId);
-      if ("response" in v) return v.response;
-
-      v.entry.userChartState = newChartState();
-
-      return {
-        content: [{ type: "text", text: "Chart state cleared for this session." }]
-      };
-    }
-  );
-
-  // Tool: Update/Generate chart
-  server.registerTool(
-    "updateChartState",
-    {
-      title: "Update/Generate Chart",
-      description: `What it does: merges into the chart state and triggers chart render. Returns the generated chart SVG and updated state.
+  updateChartState: {
+    title: "Update/Generate Chart",
+    description: `What it does: merges into the chart state and triggers chart render. Returns the generated chart SVG and updated state.
 
 CRITICAL REQUIREMENT: Every call MUST include datapackTitles (array, non-empty). Partial updates are allowed for overrides and columnToggles, but datapacks cannot be omitted.
 A good workflow is to try to use the datapackTitles given to you (or what you assume the user wants). And should chart generation fail, you can always call listDatapacks to see available options.
@@ -309,8 +263,151 @@ Example response snippet:
 
 The assistant MUST embed the chart image using the returned chart URL in a Markdown image tag as shown above.
 
-The assistant SHOULD still provide the direct URL as plain text under the embed.
-`,
+The assistant SHOULD still provide the direct URL as plain text under the embed.`
+  },
+
+  listDatapacks: {
+    title: "List Available Datapacks",
+    description: `What it does: lists datapacks you can use when building a chart.
+
+When to use:
+- First step before selecting datapacks
+- Need to confirm titles/ids available
+
+Output: array of objects with at least { title, id }. Use title for later calls.
+
+Input: { sessionId?: string }
+- sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
+- Do not wrap payload twice (no nested { input: {...} }).`
+  },
+
+  listColumns: {
+    title: "List Columns",
+    description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
+
+WHEN TO USE THIS:
+- User explicitly ASKS "what columns are available?" or "show me the columns"
+- updateChartState FAILED and you need to troubleshoot which columns actually exist
+- User complains about missing columns after chart generation
+
+WHEN NOT TO USE:
+- Before calling updateChartState "just to check" - DON'T do this!
+- User says "turn off column X" - just trust them and call updateChartState directly
+- Preemptively verifying column names - unnecessary, wastes time
+
+Workflow: Trust user's column names → updateChartState fails? → THEN call listColumns to debug
+
+Input: { datapackTitles: string[], sessionId?: string }
+- Titles must exist (see listDatapacks)
+- sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
+- Do not wrap payload twice (no nested { input: {...} })
+
+Example: { "datapackTitles": ["GTS2020"] }`
+  },
+
+  login: {
+    title: "Login",
+    description: `Generate a login link for user authentication.
+
+========================================================================
+CRITICAL: The sessionId is a SECRET. NEVER display the sessionId to the user.
+It must ONLY be used in subsequent internal tool calls.
+========================================================================
+
+What to show the user:
+- loginUrl ONLY - this is the ONLY thing the user should see
+
+What to keep internal:
+- sessionId - store this for passing to tool calls, DO NOT display it
+
+Session lifecycle:
+- Link valid for 2 minutes (user must complete login)
+- After login: session valid for 10 minutes of inactivity
+- Pass sessionId to tool calls to track activity`
+  },
+
+  whoami: {
+    title: "Who Am I? Am I logged in?",
+    description: `What it does: Check if you're logged in and get user details.
+
+REMINDER: sessionId is internal only - don't show it to the user!
+
+Returns one of three states:
+1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
+2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
+3. SESSION NOT FOUND: Session expired or never existed → call login() to get new sessionId
+
+Input: { sessionId?: string }
+- sessionId (optional): Internal ID from login() tool. Pass it here to check auth status.
+
+Session Expiration Rules:
+- Pre-login: 2 minutes from creation (user must complete login within 2 min)
+- Authenticated: 10 minutes of inactivity (any tool call resets timer)
+
+If you see "not found": session expired, call login() again.`
+  }
+} as const;
+
+export const createMCPServer = () => {
+  const server = new McpServer({
+    name: "demo-server",
+    version: "1.0.0",
+    title: "Demo MCP Server",
+    description: "A simple server to demonstrate MCP capabilities",
+    protocolVersion: "2024-11-05",
+    capabilities: {
+      tools: { listChanged: true }
+    }
+  });
+
+  // Get current chart state
+  server.registerTool(
+    "getCurrentChartState",
+    {
+      title: TOOL_DESCRIPTIONS.getCurrentChartState.title,
+      description: TOOL_DESCRIPTIONS.getCurrentChartState.description,
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
+    },
+    async ({ sessionId }) => {
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(v.entry.userChartState, null, 2) }]
+      };
+    }
+  );
+
+  // Reset chart state
+  server.registerTool(
+    "resetChartState",
+    {
+      title: TOOL_DESCRIPTIONS.resetChartState.title,
+      description: TOOL_DESCRIPTIONS.resetChartState.description,
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
+    },
+    async ({ sessionId }) => {
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
+
+      v.entry.userChartState = newChartState();
+
+      return {
+        content: [{ type: "text", text: "Chart state cleared for this session." }]
+      };
+    }
+  );
+
+  // Update/Generate chart
+  server.registerTool(
+    "updateChartState",
+    {
+      title: TOOL_DESCRIPTIONS.updateChartState.title,
+      description: TOOL_DESCRIPTIONS.updateChartState.description,
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
@@ -361,7 +458,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
             overrides: st.overrides,
             columnToggles: st.columnToggles,
             useCache: args.useCache ?? true,
-            isCrossPlot: args.isCrossPlot ?? false
+            isCrossPlot: args.isCrossPlot ?? false,
+            uuid: entry.userInfo?.uuid
           })
         });
 
@@ -406,18 +504,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
   server.registerTool(
     "listDatapacks",
     {
-      title: "List Available Datapacks",
-      description: `What it does: lists datapacks you can use when building a chart.
-
-    When to use:
-    - First step before selecting datapacks
-    - Need to confirm titles/ids available
-
-    Output: array of objects with at least { title, id }. Use title for later calls.
-
-    Input: { sessionId?: string }
-    - sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
-    - Do not wrap payload twice (no nested { input: {...} }).`,
+      title: TOOL_DESCRIPTIONS.listDatapacks.title,
+      description: TOOL_DESCRIPTIONS.listDatapacks.description,
       inputSchema: {
         sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
@@ -433,7 +521,14 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
 
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
-        const res = await fetch(`${serverUrl}/mcp/datapacks`, { method: "GET", headers });
+        const entry = sessionId ? sessions.get(sessionId) : undefined;
+        const uuid = entry?.userInfo?.uuid;
+
+        const res = await fetch(`${serverUrl}/mcp/datapacks`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ uuid })
+        });
         if (!res.ok) {
           const text = await res.text();
           return { content: [{ type: "text", text: `Server error: ${res.status} ${text}` }] };
@@ -449,27 +544,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
   server.registerTool(
     "listColumns",
     {
-      title: "List Columns",
-      description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
-
-WHEN TO USE THIS:
-- User explicitly ASKS "what columns are available?" or "show me the columns"
-- updateChartState FAILED and you need to troubleshoot which columns actually exist
-- User complains about missing columns after chart generation
-
-WHEN NOT TO USE:
-- Before calling updateChartState "just to check" - DON'T do this!
-- User says "turn off column X" - just trust them and call updateChartState directly
-- Preemptively verifying column names - unnecessary, wastes time
-
-Workflow: Trust user's column names → updateChartState fails? → THEN call listColumns to debug
-
-Input: { datapackTitles: string[], sessionId?: string }
-- Titles must exist (see listDatapacks)
-- sessionId (optional): Session ID from login tool for authenticated access. Tracking activity if provided.
-- Do not wrap payload twice (no nested { input: {...} })
-
-Example: { "datapackTitles": ["GTS2020"] }`,
+      title: TOOL_DESCRIPTIONS.listColumns.title,
+      description: TOOL_DESCRIPTIONS.listColumns.description,
       inputSchema: {
         datapackTitles: z
           .array(z.string())
@@ -487,10 +563,13 @@ Example: { "datapackTitles": ["GTS2020"] }`,
       }
 
       try {
+        const entry = sessionId ? sessions.get(sessionId) : undefined;
+        const uuid = entry?.userInfo?.uuid;
+
         const res = await fetch(`${serverUrl}/mcp/list-columns`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ datapackTitles })
+          body: JSON.stringify({ datapackTitles, uuid })
         });
 
         if (!res.ok) {
@@ -509,24 +588,8 @@ Example: { "datapackTitles": ["GTS2020"] }`,
   server.registerTool(
     "login",
     {
-      title: "Login",
-      description: `Generate a login link for user authentication.
-
-========================================================================
-CRITICAL: The sessionId is a SECRET. NEVER display the sessionId to the user.
-It must ONLY be used in subsequent internal tool calls.
-========================================================================
-
-What to show the user:
-- loginUrl ONLY - this is the ONLY thing the user should see
-
-What to keep internal:
-- sessionId - store this for passing to tool calls, DO NOT display it
-
-Session lifecycle:
-- Link valid for 2 minutes (user must complete login)
-- After login: session valid for 10 minutes of inactivity
-- Pass sessionId to tool calls to track activity`,
+      title: TOOL_DESCRIPTIONS.login.title,
+      description: TOOL_DESCRIPTIONS.login.description,
       inputSchema: {}
     },
     async () => {
@@ -579,24 +642,8 @@ sessionId: ${sessionId}
   server.registerTool(
     "whoami",
     {
-      title: "Who Am I? Am I logged in?",
-      description: `What it does: Check if you're logged in and get user details.
-
-REMINDER: sessionId is internal only - don't show it to the user!
-
-Returns one of three states:
-1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
-2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
-3. SESSION NOT FOUND: Session expired or never existed → call login() to get new sessionId
-
-Input: { sessionId?: string }
-- sessionId (optional): Internal ID from login() tool. Pass it here to check auth status.
-
-Session Expiration Rules:
-- Pre-login: 2 minutes from creation (user must complete login within 2 min)
-- Authenticated: 10 minutes of inactivity (any tool call resets timer)
-
-If you see "not found": session expired, call login() again.`,
+      title: TOOL_DESCRIPTIONS.whoami.title,
+      description: TOOL_DESCRIPTIONS.whoami.description,
       inputSchema: {
         sessionId: z.string().optional().describe("Session ID from login tool response")
       }

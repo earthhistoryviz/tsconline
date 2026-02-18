@@ -82,9 +82,14 @@ export type CachedChartRequest = {
   hash: string;
 };
 
+export type MCPDatapackIdentifier = DatapackUniqueIdentifier & {
+  isPublic: boolean;
+};
+
 export type MCPLinkParams = {
-  datapacks: string[];
+  datapacks: string[] | MCPDatapackIdentifier[];
   chartHash: string;
+  uuid?: string;
 };
 
 export type CachedChartResponseInfo = {
@@ -2264,10 +2269,28 @@ export function assertWorkshopDatapackDownloadResponse(
 
 export function assertMCPLinkParams(o: any): asserts o is MCPLinkParams {
   if (!o || typeof o !== "object") throw new Error("MCPLinkParams must be a non-null object");
-  if (!Array.isArray(o.datapacks)) throwError("MCPLinkParams", "datapacks", "array", o.datapacks);
 
   if (typeof o.chartHash !== "string") {
     throwError("MCPLinkParams", "chartHash", "string", o.chartHash);
+  }
+
+  if (o.uuid !== undefined && typeof o.uuid !== "string") {
+    throwError("MCPLinkParams", "uuid", "string", o.uuid);
+  }
+
+  if (!Array.isArray(o.datapacks)) {
+    throwError("MCPLinkParams", "datapacks", "array", o.datapacks);
+  }
+  // Support both string[] (legacy) and MCPDatapackIdentifier[] formats
+  for (const datapack of o.datapacks) {
+    if (typeof datapack === "string") {
+      // Legacy format: just a title string
+      continue;
+    }
+    assertDatapackUniqueIdentifier(datapack);
+    if (typeof (datapack as MCPDatapackIdentifier).isPublic !== "boolean") {
+      throwError("MCPLinkParams", "datapacks.isPublic", "boolean", (datapack as MCPDatapackIdentifier).isPublic);
+    }
   }
 }
 
