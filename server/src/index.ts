@@ -24,7 +24,7 @@ import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
-import { uploadExternalDatapack } from "./routes/user-routes.js";
+import { uploadDatapack, uploadExternalDatapack } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
@@ -283,6 +283,7 @@ server.get("/mcp/datapacks", looseRateLimit, mcpRoutes.mcpListDatapacks);
 server.post("/mcp/list-columns", looseRateLimit, mcpRoutes.mcpListColumns);
 server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderChartWithEdits);
 server.post("/mcp/user-info", moderateRateLimit, mcpRoutes.mcpUserInfoProxy);
+server.post("/mcp/upload-datapack", moderateRateLimit, uploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);

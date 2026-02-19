@@ -832,8 +832,9 @@ Input:
 
     Input:
     - datapackFile: The datapack file to upload 
+    - datapackFileName: The name of the datapack file. If not provided, the AI should try to send filename from the user uploaded datapack. 
     - title: The title of the datapack
-    - description: The description of the datapack (optional)
+    - description: The description of the datapack
     - datapackImage: The profile picture to upload (optional)
     - pdfFiles: The pdf files to upload (optional)
     - contact: The contact of the datapack (optional)
@@ -843,16 +844,18 @@ Input:
     inputSchema: {
             datapackUri: z.string().url().describe("A HTTP or HTTPS URL of the datapack file uploaded to cloud storage by the AI."),
             datapackImageUri: z.string().url().optional().describe("A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded."),
+            datapackFileName: z.string().optional().describe("The name of the datapack file. If not provided, the name will be extracted from the URL."),
             pdfFilesUris: z.array(z.string().url()).optional().describe("Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded."),
             title: z.string().describe("The title of the datapack"),
-            description: z.string().optional().describe("The description of the datapack (optional)"),
+            description: z.string().describe("The description of the datapack"),
             contact: z.string().optional().describe("The contact of the datapack (optional)"),
             date: z.string().optional().describe("The date of the datapack (optional)"),
             tags: z.array(z.string()).optional().describe("The tags of the datapack (optional)"),
             sessionId: z.string().optional().describe("The session ID of the user. If not provided, the user will not be authenticated."),
+            references: z.array(z.string()).optional().describe("The references of the datapack (optional)"),
         },
       },
-    async ({sessionId}) => {
+    async ({datapackUri, datapackFileName, title, description, contact, sessionId, tags, references}) => {
 
       //Update session activity
 
@@ -860,14 +863,61 @@ Input:
       if ("response" in v) return v.response;
       const entry = v.entry;
 
-      //enforce session id
+      //Check if description is provided
+      if (description.length === 0 || title.length === 0) {
+        return { content: [{ type: "text", text: `Error: Description and title are required.` }], isError: true };
+      }
 
-    try {
-      return { content: [{ type: "text", text: "Uploading datapack" }] };
+      try {
+      //fetch file form datapackUri
+      const datapack_response = await fetch(datapackUri);
+      if (!datapack_response.ok) {
+        return { content: [{ type: "text", text: `Failed to fetch file from URL: ${datapack_response.status} ${datapack_response.statusText}` }], isError: true };
+      }
+      const arrayBuffer = await datapack_response.arrayBuffer();
+      const datapack_buffer = Buffer.from(arrayBuffer);
+
+
+      const currentDate = new Date().toISOString().split("T")[0];
+      const authoredBy = entry.userInfo?.username ?? "";
+
+      const tagsArray = tags ?? [];
+      const referencesArray = references ?? [];
+      const isPublic = "false";
+      const type = "user";
+      const hasFiles = "false";
+      const priority = "0";
+
+      const formData = new FormData();
+      // Server expects file part named "datapack"; form-data package accepts Buffer, not Blob
+      formData.append("datapack", datapack_buffer, datapackFileName ?? "default-datapack.txt");
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("authoredBy", authoredBy);
+      formData.append("date", currentDate);
+      formData.append("tags", JSON.stringify(tagsArray));
+      formData.append("references", JSON.stringify(referencesArray));
+      formData.append("isPublic", isPublic);
+      formData.append("type", type);
+      formData.append("hasFiles", hasFiles);
+      formData.append("priority", priority);
+
+      const upload_response = await fetch(`${serverUrl}/mcp/upload-datapack`, {
+        method: "POST",
+        headers: formData.getHeaders(),
+        body: formData as unknown as BodyInit
+      });
+
+      if (!upload_response.ok) {
+        return { content: [{ type: "text", text: `Failed to upload datapack: ${upload_response.status} ${upload_response.statusText}` }], isError: true };
+      }
+
+
+      const data = await upload_response.json();
+      return { content: [{ type: "text", text: `Datapack uploaded: ${data.message}` }] };
     } catch (e) {
       return { content: [{ type: "text", text: `Upload failed: ${String(e)}` }], isError: true };
     }
-  
   });
 
   server.registerResource(
