@@ -825,6 +825,106 @@ export const createMCPServer = () => {
     }
   );
 
+  // Upload a file: accepts HTTP/HTTPS URL from AI (user uploads file to AI, AI uploads to cloud storage), converts to base64, and uploads it
+  server.registerTool(
+    "uploadFile",
+    {
+      title: "Upload File",
+      description: `Upload an image file to the server. The user uploads the file to the AI, the AI saves file at some internal storage and serves the HTTP/HTTPS URL.
+
+When to use:
+- User provides an image file (uploaded to the AI) and you need to send it to the server.
+- The file will be automatically fetched from the HTTP URL, converted to base64, and uploaded.
+- For images: if the file is a JPG/JPEG, PNG, or GIF, the server will return it for display.
+
+Input:
+- fileUri: HTTP or HTTPS URL of the file (e.g. "https://example.com/image.jpg")
+- fileName: (optional) original file name. If not provided, will be extracted from the URL or defaulted.`,
+      inputSchema: {
+        fileUri: z.string().url().describe("HTTP or HTTPS URL of the file uploaded to cloud storage by the AI"),
+        fileName: z.string().optional().describe("Optional: original file name. If not provided, extracted from the URL")
+      }
+    },
+    async ({ fileUri, fileName }) => {
+      try {
+        const { writeFile, mkdir } = await import("fs/promises");
+        const { tmpdir } = await import("os");
+
+        // Validate that it's an HTTP/HTTPS URL
+        let url: URL;
+        try {
+          url = new URL(fileUri);
+          if (url.protocol !== "http:" && url.protocol !== "https:") {
+            return {
+              content: [{ type: "text", text: `Invalid URL protocol. Only HTTP and HTTPS URLs are supported. Got: ${url.protocol}` }],
+              isError: true
+            };
+          }
+        } catch {
+          return {
+            content: [{ type: "text", text: `Invalid URL format: ${fileUri}` }],
+            isError: true
+          };
+        }
+
+        // Fetch the file from the HTTP/HTTPS URL
+        const response = await fetch(fileUri);
+        if (!response.ok) {
+          return {
+            content: [{ type: "text", text: `Failed to fetch file from URL: ${response.status} ${response.statusText}` }],
+            isError: true
+          };
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const fileContentBase64 = buffer.toString("base64");
+        const detectedMimeType = response.headers.get("content-type") || undefined;
+
+        // Determine file name
+        let finalFileName = fileName;
+        if (!finalFileName) {
+          finalFileName = path.basename(url.pathname) || `upload-${randomUUID()}`;
+        }
+
+        // Determine file extension and type
+        const ext = path.extname(finalFileName).toLowerCase();
+        const isJpg = ext === ".jpg" || ext === ".jpeg";
+        const isPng = ext === ".png";
+        const isGif = ext === ".gif";
+        const isImage = isJpg || isPng || isGif || (detectedMimeType?.startsWith("image/") ?? false);
+
+        // Determine MIME type
+        let mimeType = detectedMimeType || "image/jpeg";
+        if (!mimeType.startsWith("image/")) {
+          if (isPng) mimeType = "image/png";
+          else if (isGif) mimeType = "image/gif";
+          else if (isJpg) mimeType = "image/jpeg";
+        }
+
+        // Optional: persist to server temp dir to simulate "upload to our server"
+        const uploadDir = path.join(tmpdir(), "mcp-uploads");
+        await mkdir(uploadDir, { recursive: true });
+        const safeName = `${randomUUID()}-${path.basename(finalFileName)}`;
+        const serverPath = path.join(uploadDir, safeName);
+        await writeFile(serverPath, buffer);
+
+        const textMessage = `Uploaded file: ${finalFileName} (saved on server as ${safeName}). ${isImage ? `It is an image (${ext || detectedMimeType}) — image is included below for display.` : "It is not a recognized image format."}`;
+
+        type TextContent = { type: "text"; text: string };
+        type ImageContent = { type: "image"; data: string; mimeType: string };
+        const content: (TextContent | ImageContent)[] = [{ type: "text", text: textMessage }];
+        if (isImage) {
+          content.push({ type: "image", data: fileContentBase64, mimeType });
+        }
+
+        return { content } as { content: TextContent[] };
+      } catch (e) {
+        return { content: [{ type: "text", text: `Upload failed: ${String(e)}` }], isError: true };
+      }
+    }
+  );
+
   server.registerResource(
     "greeting",
     new ResourceTemplate("greeting://{name}", { list: undefined }),
