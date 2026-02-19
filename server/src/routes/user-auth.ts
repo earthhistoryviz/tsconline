@@ -308,4 +308,6 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     deleteDatapackComment
   );
+
 };
+
