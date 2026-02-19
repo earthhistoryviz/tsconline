@@ -13,6 +13,8 @@
     "chalk": "^5.4.1",
     "dotenv": "^17.2.3",
     "fastify": "4.27.0",
+    "form-data": "^4.0.5",
+    "formdata": "^0.10.4",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.10",
     "zod": "3"
@@ -26,6 +28,7 @@
     "inspector": "npx @modelcontextprotocol/inspector"
   },
   "devDependencies": {
+    "@types/formdata": "^0",
     "@types/node": "^24.1.0",
     "@types/ws": "^8.18.1",
     "concurrently": "^9.2.1",

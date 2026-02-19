@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
 import { MCPLinkParams } from "@tsconline/shared";
+import FormData from "form-data";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -817,6 +818,57 @@ Input:
       }
     }
   );
+
+  server.registerTool(
+    "uploadDatapack",
+    {
+      title: "Upload Datapack",
+      description: `Upload a datapack file to the server as well as meta data, profile picture, and optional pdf files. The user uploads the datapack file, optional profile picture, and optional pdf files to the AI, the AI saves the file at some internal storage and serves the HTTP/HTTPS URL.
+
+    When to use:
+    - user asks to upload a datapack
+    - user provides the datapack file, optional profile picture, and optional pdf files
+
+
+    Input:
+    - datapackFile: The datapack file to upload 
+    - title: The title of the datapack
+    - description: The description of the datapack (optional)
+    - datapackImage: The profile picture to upload (optional)
+    - pdfFiles: The pdf files to upload (optional)
+    - contact: The contact of the datapack (optional)
+    - date: The date of the datapack (optional)
+    - tags: The tags of the datapack (optional)`,
+
+    inputSchema: {
+            datapackUri: z.string().url().describe("A HTTP or HTTPS URL of the datapack file uploaded to cloud storage by the AI."),
+            datapackImageUri: z.string().url().optional().describe("A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded."),
+            pdfFilesUris: z.array(z.string().url()).optional().describe("Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded."),
+            title: z.string().describe("The title of the datapack"),
+            description: z.string().optional().describe("The description of the datapack (optional)"),
+            contact: z.string().optional().describe("The contact of the datapack (optional)"),
+            date: z.string().optional().describe("The date of the datapack (optional)"),
+            tags: z.array(z.string()).optional().describe("The tags of the datapack (optional)"),
+            sessionId: z.string().optional().describe("The session ID of the user. If not provided, the user will not be authenticated."),
+        },
+      },
+    async ({sessionId}) => {
+
+      //Update session activity
+
+      const v = verifyMCPSession(sessionId);
+      if ("response" in v) return v.response;
+      const entry = v.entry;
+
+      //enforce session id
+
+    try {
+      return { content: [{ type: "text", text: "Uploading datapack" }] };
+    } catch (e) {
+      return { content: [{ type: "text", text: `Upload failed: ${String(e)}` }], isError: true };
+    }
+  
+  });
 
   server.registerResource(
     "greeting",
