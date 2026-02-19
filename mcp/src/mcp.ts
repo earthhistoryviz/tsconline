@@ -654,98 +654,162 @@ If you see "not found": session expired, call login() again.`,
     }
   );
 
-  // Upload a file: accepts HTTP/HTTPS URL from AI (user uploads file to AI, AI uploads to cloud storage), converts to base64, and uploads it
+  // Upload files: accepts HTTP/HTTPS URLs from AI (user uploads files to AI, AI uploads to cloud storage), converts to base64, and uploads them
   server.registerTool(
-    "uploadFile",
+    "uploadFiles",
     {
-      title: "Upload File",
-      description: `Upload an image file to the server. The user uploads the file to the AI, the AI saves file at some internal storage and serves the HTTP/HTTPS URL.
+      title: "Upload Files",
+      description: `Upload one or more image files to the server. The user uploads files to the AI, the AI saves files at some internal storage and serves HTTP/HTTPS URLs.
 
 When to use:
-- User provides an image file (uploaded to the AI) and you need to send it to the server.
-- The file will be automatically fetched from the HTTP URL, converted to base64, and uploaded.
-- For images: if the file is a JPG/JPEG, PNG, or GIF, the server will return it for display.
+- User provides image files (uploaded to the AI) and you need to send them to the server.
+- Files will be automatically fetched from the HTTP URLs, converted to base64, and uploaded.
+- For images: if files are JPG/JPEG, PNG, or GIF, the server will return them for display.
 
 Input:
-- fileUri: HTTP or HTTPS URL of the file (e.g. "https://example.com/image.jpg")
-- fileName: (optional) original file name. If not provided, will be extracted from the URL or defaulted.`,
+- fileUris: Array of HTTP or HTTPS URLs of the files (e.g. ["https://example.com/image1.jpg", "https://example.com/image2.png"])
+- fileNames: (optional) Array of original file names. If not provided, will be extracted from URLs or defaulted.`,
       inputSchema: {
-        fileUri: z.string().url().describe("HTTP or HTTPS URL of the file uploaded to cloud storage by the AI"),
-        fileName: z.string().optional().describe("Optional: original file name. If not provided, extracted from the URL")
+        fileUris: z.array(z.string().url()).min(1).describe("Array of HTTP or HTTPS URLs of the files uploaded to cloud storage by the AI. At least one URL is required."),
+        fileNames: z.array(z.string()).optional().describe("Optional: Array of original file names. If provided, must match the length of fileUris. If not provided, extracted from URLs")
       }
     },
-    async ({ fileUri, fileName }) => {
+    async ({ fileUris, fileNames }, _extra) => {
       try {
         const { writeFile, mkdir } = await import("fs/promises");
         const { tmpdir } = await import("os");
 
-        // Validate that it's an HTTP/HTTPS URL
-        let url: URL;
-        try {
-          url = new URL(fileUri);
-          if (url.protocol !== "http:" && url.protocol !== "https:") {
-            return {
-              content: [{ type: "text", text: `Invalid URL protocol. Only HTTP and HTTPS URLs are supported. Got: ${url.protocol}` }],
-              isError: true
-            };
-          }
-        } catch {
+        // Validate that at least one file is provided
+        if (!fileUris || fileUris.length === 0) {
           return {
-            content: [{ type: "text", text: `Invalid URL format: ${fileUri}` }],
+            content: [{ type: "text", text: "Error: No files provided. Please provide at least one file URL." }],
             isError: true
           };
         }
 
-        // Fetch the file from the HTTP/HTTPS URL
-        const response = await fetch(fileUri);
-        if (!response.ok) {
+        // Validate fileNames length matches fileUris if provided
+        if (fileNames && fileNames.length !== fileUris.length) {
           return {
-            content: [{ type: "text", text: `Failed to fetch file from URL: ${response.status} ${response.statusText}` }],
+            content: [{ type: "text", text: `Error: fileNames array length (${fileNames.length}) does not match fileUris array length (${fileUris.length}).` }],
             isError: true
           };
         }
-
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const fileContentBase64 = buffer.toString("base64");
-        const detectedMimeType = response.headers.get("content-type") || undefined;
-
-        // Determine file name
-        let finalFileName = fileName;
-        if (!finalFileName) {
-          finalFileName = path.basename(url.pathname) || `upload-${randomUUID()}`;
-        }
-
-        // Determine file extension and type
-        const ext = path.extname(finalFileName).toLowerCase();
-        const isJpg = ext === ".jpg" || ext === ".jpeg";
-        const isPng = ext === ".png";
-        const isGif = ext === ".gif";
-        const isImage = isJpg || isPng || isGif || (detectedMimeType?.startsWith("image/") ?? false);
-
-        // Determine MIME type
-        let mimeType = detectedMimeType || "image/jpeg";
-        if (!mimeType.startsWith("image/")) {
-          if (isPng) mimeType = "image/png";
-          else if (isGif) mimeType = "image/gif";
-          else if (isJpg) mimeType = "image/jpeg";
-        }
-
-        // Optional: persist to server temp dir to simulate "upload to our server"
-        const uploadDir = path.join(tmpdir(), "mcp-uploads");
-        await mkdir(uploadDir, { recursive: true });
-        const safeName = `${randomUUID()}-${path.basename(finalFileName)}`;
-        const serverPath = path.join(uploadDir, safeName);
-        await writeFile(serverPath, buffer);
-
-        const textMessage = `Uploaded file: ${finalFileName} (saved on server as ${safeName}). ${isImage ? `It is an image (${ext || detectedMimeType}) — image is included below for display.` : "It is not a recognized image format."}`;
 
         type TextContent = { type: "text"; text: string };
         type ImageContent = { type: "image"; data: string; mimeType: string };
-        const content: (TextContent | ImageContent)[] = [{ type: "text", text: textMessage }];
-        if (isImage) {
-          content.push({ type: "image", data: fileContentBase64, mimeType });
+        const content: (TextContent | ImageContent)[] = [];
+        const uploadDir = path.join(tmpdir(), "mcp-uploads");
+        await mkdir(uploadDir, { recursive: true });
+
+        const uploadedFiles: Array<{ fileName: string; safeName: string; isImage: boolean; mimeType?: string }> = [];
+        const errors: string[] = [];
+
+        // Process each file
+        for (let i = 0; i < fileUris.length; i++) {
+          const fileUri = fileUris[i];
+          
+          // Skip if fileUri is undefined (shouldn't happen, but TypeScript safety check)
+          if (!fileUri) {
+            errors.push(`File ${i + 1}: Missing file URI`);
+            continue;
+          }
+          
+          try {
+            // Validate that it's an HTTP/HTTPS URL
+            let url: URL;
+            try {
+              url = new URL(fileUri);
+              if (url.protocol !== "http:" && url.protocol !== "https:") {
+                errors.push(`File ${i + 1}: Invalid URL protocol. Only HTTP and HTTPS URLs are supported. Got: ${url.protocol}`);
+                continue;
+              }
+            } catch {
+              errors.push(`File ${i + 1}: Invalid URL format: ${fileUri}`);
+              continue;
+            }
+
+            // Fetch the file from the HTTP/HTTPS URL
+            const response = await fetch(fileUri);
+            if (!response.ok) {
+              errors.push(`File ${i + 1}: Failed to fetch file from URL: ${response.status} ${response.statusText}`);
+              continue;
+            }
+
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const fileContentBase64 = buffer.toString("base64");
+            const detectedMimeType = response.headers.get("content-type") || undefined;
+
+            // Determine file name
+            let finalFileName = fileNames?.[i];
+            if (!finalFileName) {
+              finalFileName = path.basename(url.pathname) || `upload-${randomUUID()}`;
+            }
+
+            // Determine file extension and type
+            const ext = path.extname(finalFileName).toLowerCase();
+            const isJpg = ext === ".jpg" || ext === ".jpeg";
+            const isPng = ext === ".png";
+            const isGif = ext === ".gif";
+            const isImage = isJpg || isPng || isGif || (detectedMimeType?.startsWith("image/") ?? false);
+
+            // Determine MIME type
+            let mimeType = detectedMimeType || "image/jpeg";
+            if (!mimeType.startsWith("image/")) {
+              if (isPng) mimeType = "image/png";
+              else if (isGif) mimeType = "image/gif";
+              else if (isJpg) mimeType = "image/jpeg";
+            }
+
+            // Save to server temp dir
+            const safeName = `${randomUUID()}-${path.basename(finalFileName)}`;
+            const serverPath = path.join(uploadDir, safeName);
+            await writeFile(serverPath, buffer);
+
+            uploadedFiles.push({
+              fileName: finalFileName,
+              safeName,
+              isImage,
+              mimeType
+            });
+
+            // Add image to content for display
+            if (isImage) {
+              content.push({ type: "image", data: fileContentBase64, mimeType });
+            }
+          } catch (e) {
+            errors.push(`File ${i + 1}: Upload failed: ${String(e)}`);
+          }
         }
+
+        // Build response message
+        let textMessage = "";
+        if (uploadedFiles.length > 0) {
+          textMessage += `Successfully uploaded ${uploadedFiles.length} file(s):\n`;
+          uploadedFiles.forEach((file, idx) => {
+            textMessage += `  ${idx + 1}. ${file.fileName} (saved as ${file.safeName})`;
+            if (file.isImage) {
+              textMessage += ` - Image (${file.mimeType})`;
+            }
+            textMessage += "\n";
+          });
+        }
+
+        if (errors.length > 0) {
+          textMessage += `\nErrors encountered:\n`;
+          errors.forEach((error) => {
+            textMessage += `  - ${error}\n`;
+          });
+        }
+
+        if (uploadedFiles.length === 0) {
+          return {
+            content: [{ type: "text", text: `Error: Failed to upload any files.\n\n${errors.join("\n")}` }],
+            isError: true
+          };
+        }
+
+        content.unshift({ type: "text", text: textMessage.trim() });
 
         return { content } as { content: TextContent[] };
       } catch (e) {
