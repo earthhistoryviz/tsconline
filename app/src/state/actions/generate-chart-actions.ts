@@ -324,35 +324,28 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
 });
 
 export const loadMcpChartLink = action("loadMCPChartLink", async (parsedState: MCPLinkParams) => {
-  //start function
   const datapacks = parsedState.datapacks;
   const chartHash = parsedState.chartHash;
   if (!datapacks || datapacks.length === 0) {
     throw new Error("No datapacks specified in MCP link");
   }
-  console.log("getting here with datapacks:", datapacks, "and chart hash:", chartHash);
 
-  // Extract titles from datapacks (handle both string[] and object[] formats)
-  const requestedTitles = datapacks.map((dp) => (typeof dp === "string" ? dp : dp.title));
-
-  // Fetch all available datapack metadata
   await generalActions.fetchAllPublicDatapacksMetadata();
 
-  // Find metadata for each requested datapack and fetch the full datapack
   const controller = new AbortController();
   const datapackConfigs: DatapackConfigForChartRequest[] = [];
 
-  for (const title of requestedTitles) {
+  for (const title of datapacks) {
     const metadata = state.datapackMetadata.find((dp) => dp.title === title);
 
     if (!metadata) {
-      const datapackList = requestedTitles.join(", ");
+      const datapackList = datapacks.join(", ");
       displayServerError(
         null,
         ErrorCodes.MCP_DATAPACK_ACCESS_DENIED,
         ErrorMessages[ErrorCodes.MCP_DATAPACK_ACCESS_DENIED].replace("{{datapacks}}", datapackList)
       );
-      return; // Return early instead of throwing to prevent NO_CACHED_FILE_FOUND error
+      return;
     }
 
     // Build fetch params directly from metadata (uuid only exists for user/workshop types)
