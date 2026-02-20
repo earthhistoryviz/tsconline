@@ -10,6 +10,7 @@ import {
   SchemaOverrides,
   ColumnToggles
 } from "../settings-generation/build-settings.js";
+import { processAndUploadDatapack } from "../upload-datapack.js";
 
 /**
  * MCP route: list datapacks (public + official)
@@ -158,3 +159,27 @@ export async function mcpUserInfoProxy(request: FastifyRequest, reply: FastifyRe
   const data = await res.json();
   return reply.code(res.status).send(data);
 }
+
+
+export const mcpUploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
+
+  // User-ID is sent by MCP client; header names are lowercased by Fastify
+  const uuid = (request.headers["user-id"] ?? request.headers["User-ID"]) as string | undefined;
+  if (!uuid || !String(uuid).trim()) {
+    reply.status(401).send({ error: "Unauthorized" });
+    return;
+  }
+  console.log("Now user is valid in mcpUploadDatapack")
+  try {
+    const result = await processAndUploadDatapack(uuid, request.parts());
+    if (result.code !== 200) {
+      console.log("result", result);
+      reply.status(result.code).send({ error: result.message });
+      return;
+    }
+  } catch (e) {
+    console.log("Error uploading datapack", e);
+    reply.status(500).send({ error: `Error uploading datapack` });
+  }
+  reply.send({ message: "Datapack uploaded" });
+};
