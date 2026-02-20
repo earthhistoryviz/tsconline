@@ -17,7 +17,7 @@ import {
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { ChartSettings, ChartTabState } from "../../types";
+import { ChartSettings, ChartTabState, DatapackFetchParams } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray, purifyChartContent } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
@@ -324,35 +324,55 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
 });
 
 export const loadMcpChartLink = action("loadMCPChartLink", async (parsedState: MCPLinkParams) => {
-  //start function
-  const dataPacksTitles = parsedState.datapacks;
+  const datapacks = parsedState.datapacks;
   const chartHash = parsedState.chartHash;
-  if (!dataPacksTitles || dataPacksTitles.length === 0) {
+  if (!datapacks || datapacks.length === 0) {
     throw new Error("No datapacks specified in MCP link");
   }
 
+  await generalActions.fetchAllPublicDatapacksMetadata();
+
   const controller = new AbortController();
-  for (const title of dataPacksTitles) {
-    try {
-      const fetchedDatapack = await generalActions.fetchDatapack(
-        { title, type: "official", isPublic: true },
-        { signal: controller.signal }
+  const datapackConfigs: DatapackConfigForChartRequest[] = [];
+
+  for (const title of datapacks) {
+    const metadata = state.datapackMetadata.find((dp) => dp.title === title);
+
+    if (!metadata) {
+      const datapackList = datapacks.join(", ");
+      displayServerError(
+        null,
+        ErrorCodes.MCP_DATAPACK_ACCESS_DENIED,
+        ErrorMessages[ErrorCodes.MCP_DATAPACK_ACCESS_DENIED].replace("{{datapacks}}", datapackList)
       );
-      if (fetchedDatapack) {
-        generalActions.addDatapack(fetchedDatapack);
-      }
-    } catch (error) {
-      console.error("Error fetching datapack:", error);
-      controller.abort();
       return;
     }
+
+    // Build fetch params directly from metadata (uuid only exists for user/workshop types)
+    const fetchParams: DatapackFetchParams = {
+      title: metadata.title,
+      type: metadata.type,
+      isPublic: metadata.isPublic,
+      ...((metadata.type === "user" || metadata.type === "workshop") && { uuid: metadata.uuid })
+    } as DatapackFetchParams;
+
+    const fetchedDatapack = await generalActions.fetchDatapack(fetchParams, { signal: controller.signal });
+    if (!fetchedDatapack) {
+      throw new Error(`Failed to fetch datapack: ${title}`);
+    }
+
+    generalActions.addDatapack(fetchedDatapack);
+
+    // Build datapack config directly from metadata
+    datapackConfigs.push({
+      title: metadata.title,
+      type: metadata.type,
+      isPublic: metadata.isPublic,
+      storedFileName: metadata.storedFileName,
+      ...((metadata.type === "user" || metadata.type === "workshop") && { uuid: metadata.uuid })
+    } as DatapackConfigForChartRequest);
   }
-  const datapackConfigs: DatapackConfigForChartRequest[] = dataPacksTitles.map((title: string) => ({
-    title,
-    isPublic: true,
-    storedFileName: generalActions.getStoredFileName(title),
-    type: "official"
-  }));
+
   const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
   const response = await fetcher(route, {
     method: "GET",
