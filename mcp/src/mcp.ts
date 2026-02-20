@@ -35,12 +35,6 @@ export const cleanupInterval = setInterval(
   () => {
     const now = Date.now();
 
-    console.log("-----");
-    console.log("sessions: ", sessions.size);
-    console.log("sessions makeup:", sessions);
-
-    console.log("-----");
-
     for (const [sessionId, entry] of sessions.entries()) {
       const isAuthenticated = entry.userInfo !== undefined;
       const timeSinceCreation = now - entry.createdAt;
