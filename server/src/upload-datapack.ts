@@ -80,6 +80,7 @@ export const processAndUploadDatapack = async (
     return { code: 404, message: "Error finding user" };
   }
 
+  console.log("Processing datapack upload for user", user[0]?.username);
   const isAdmin = user[0] ? !!user[0].isAdmin : false;
   const result = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack(
     uuid,

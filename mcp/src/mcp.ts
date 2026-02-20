@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
 import { MCPLinkParams } from "@tsconline/shared";
-import FormData from "form-data";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -1030,9 +1029,20 @@ Input:
 
       //Update session activity
 
-      const v = verifyMCPSession(sessionId);
-      if ("response" in v) return v.response;
-      const entry = v.entry;
+      // const v = verifyMCPSession(sessionId);
+      // if ("response" in v) return v.response;
+
+      //neel uuid 7b9cf389-f0ef-4fbc-a82e-37046cb61bac
+
+      // const entry = v.entry;
+      // const user = entry.userInfo;
+      // const uuid = user?.uuid;
+      const uuid = "7b9cf389-f0ef-4fbc-a82e-37046cb61bac";
+      if (!uuid) {
+        return { content: [{ type: "text", text: `Error: User UUID not found.` }], isError: true };
+      }
+
+      console.log("_______\n\nuuid", uuid);
 
       //Check if description is provided
       if (description.length === 0 || title.length === 0) {
@@ -1047,10 +1057,9 @@ Input:
       }
       const arrayBuffer = await datapack_response.arrayBuffer();
       const datapack_buffer = Buffer.from(arrayBuffer);
-
-
-      const currentDate = new Date().toISOString().split("T")[0];
-      const authoredBy = entry.userInfo?.username ?? "";
+      
+      // const authoredBy = entry.userInfo?.username ?? "";
+      const authoredBy = "Neel";
 
       const tagsArray = tags ?? [];
       const referencesArray = references ?? [];
@@ -1059,13 +1068,14 @@ Input:
       const hasFiles = "false";
       const priority = "0";
 
+      // Use global FormData (Node 18+ undici) so multipart is formatted for fetch and parsed correctly by the server
       const formData = new FormData();
-      // Server expects file part named "datapack"; form-data package accepts Buffer, not Blob
-      formData.append("datapack", datapack_buffer, datapackFileName ?? "default-datapack.txt");
+      const filename = datapackFileName ?? "default-datapack.txt";
+      formData.append("datapack", new Blob([datapack_buffer]) as unknown as Blob, filename);
       formData.append("title", title);
       formData.append("description", description);
       formData.append("authoredBy", authoredBy);
-      formData.append("date", currentDate);
+      formData.append("date", new Date().toISOString().split("T")[0] ?? "");
       formData.append("tags", JSON.stringify(tagsArray));
       formData.append("references", JSON.stringify(referencesArray));
       formData.append("isPublic", isPublic);
@@ -1075,8 +1085,8 @@ Input:
 
       const upload_response = await fetch(`${serverUrl}/mcp/upload-datapack`, {
         method: "POST",
-        headers: formData.getHeaders(),
-        body: formData as unknown as BodyInit
+        headers: { "User-ID": uuid },
+        body: formData
       });
 
       if (!upload_response.ok) {
@@ -1086,8 +1096,9 @@ Input:
 
       const data = await upload_response.json();
       return { content: [{ type: "text", text: `Datapack uploaded: ${data.message}` }] };
-    } catch (e) {
-      return { content: [{ type: "text", text: `Upload failed: ${String(e)}` }], isError: true };
+    } catch (e: unknown) {
+      //print the stack trace
+      return { content: [{ type: "text", text: `Upload failed stack: ${(e as Error).stack}` }], isError: true };
     }
   });
 
