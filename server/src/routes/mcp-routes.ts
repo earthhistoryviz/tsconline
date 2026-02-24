@@ -4,6 +4,7 @@ import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../user/user-handler.js";
 import { extractMetadataFromDatapack } from "../util.js";
 import { generateChart } from "../chart-generation/generate-chart.js";
+import { findUser } from "../database.js";
 import {
   generateChartWithEdits,
   listColumns,
@@ -119,25 +120,32 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
   }
 }
 
-// Route used by app to make POST request to mcp server with addition of passing in auth token for Authorization header
 export async function mcpUserInfoProxy(request: FastifyRequest, reply: FastifyReply) {
-  const { sessionId, userInfo } = request.body as { sessionId?: string; userInfo?: { uuid?: string } };
+  const { sessionId } = request.body as { sessionId?: string };
 
   if (!sessionId) {
     return reply.code(400).send({ error: "Missing sessionId" });
   }
-  if (!userInfo?.uuid) {
-    return reply.code(400).send({ error: "Missing userInfo.uuid" });
-  }
 
   const sessionUuid = request.session?.get?.("uuid");
-
   if (!sessionUuid) {
     return reply.code(401).send({ error: "Not logged in" });
   }
-  if (userInfo.uuid !== sessionUuid) {
-    return reply.code(403).send({ error: "UUID mismatch" });
+
+  const users = await findUser({ uuid: sessionUuid });
+  if (!users || users.length !== 1 || !users[0]) {
+    return reply.code(404).send({ error: "User not found" });
   }
+  const user = users[0];
+
+  const userInfo = {
+    uuid: user.uuid,
+    username: user.username,
+    email: user.email,
+    pictureUrl: user.pictureUrl || "",
+    accountType: user.accountType,
+    isAdmin: Boolean(user.isAdmin)
+  };
 
   const token = process.env.MCP_AUTH_TOKEN;
   if (!token) return reply.code(500).send({ error: "Missing MCP_AUTH_TOKEN" });

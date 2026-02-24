@@ -66,11 +66,10 @@ export const AccountVerify: React.FC = () => {
           setMessage("Your account has been verified. Thank you!");
           if (sessionIdFromResponse) {
             try {
-              const userInfo = { ...state.user, historyEntries: [] };
               await fetcher("/mcp/user-info", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId: sessionIdFromResponse, userInfo })
+                body: JSON.stringify({ sessionId: sessionIdFromResponse })
               });
             } catch (e) {
               console.error("Failed to send user info to MCP", e);

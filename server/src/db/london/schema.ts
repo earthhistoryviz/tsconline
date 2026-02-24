@@ -12,6 +12,7 @@ export interface arkL_columns {
   sub_columnE: string;
   colshare: string;
   width: number | null;
+  colour: string | null;
   data_type: string | null;
   column_type: string | null;
   column_subtype: string | null;
@@ -39,6 +40,7 @@ export function assertarkL_columns(o: any): asserts o is arkL_columns {
     if (typeof o.sub_columnE !== "string") throwError("arkL_columns", "sub_columnE", "string", o.sub_columnE);
     if (typeof o.colshare !== "string") throwError("arkL_columns", "colshare", "string", o.colshare);
     if (o.width !== null && typeof o.width !== "number") throwError("arkL_columns", "width", "number", o.width);
+    if (o.colour !== null && typeof o.colour !== "string") throwError("arkL_columns", "colour", "string", o.colour);
     if (o.data_type !== null && typeof o.data_type !== "string") throwError("arkL_columns", "data_type", "string", o.data_type);
     if (o.column_type !== null && typeof o.column_type !== "string") throwError("arkL_columns", "column_type", "string", o.column_type);
     if (o.column_subtype !== null && typeof o.column_subtype !== "string") throwError("arkL_columns", "column_subtype", "string", o.column_subtype);

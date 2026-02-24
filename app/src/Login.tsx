@@ -82,8 +82,6 @@ export const Login: React.FC = observer(() => {
         await actions.sessionCheck();
         if (mcpSession) {
           try {
-            // Avoid sending large history payloads; MCP only needs identity/role info
-            const userInfo = { ...state.user, historyEntries: [] };
             await fetcher("/mcp/user-info", {
               method: "POST",
               headers: {
@@ -91,8 +89,7 @@ export const Login: React.FC = observer(() => {
               },
               credentials: "include",
               body: JSON.stringify({
-                sessionId: mcpSession,
-                userInfo
+                sessionId: mcpSession
               })
             });
           } catch (e) {
