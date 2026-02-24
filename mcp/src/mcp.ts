@@ -1,6 +1,5 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import z from "zod";
-import { readFile } from "fs/promises";
 import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
@@ -439,23 +438,7 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         const chartPath = typeof json.chartpath === "string" ? json.chartpath : "";
         const chartHash = typeof json.hash === "string" ? json.hash : "";
 
-        const filePath = path.join("..", "server", chartPath);
-        const svg = await readFile(filePath, "utf8");
-
-        let svgBase64: string;
-        try {
-          svgBase64 = Buffer.from(svg).toString("base64");
-        } catch (e) {
-          return {
-            content: [
-              { type: "text", text: `Error loading chart SVG for embedding: ${String(e)}\nFile path: ${filePath}` }
-            ]
-          };
-        }
-
-        const dataUri = `data:image/svg+xml;base64,${svgBase64}`;
-
-        // Update THIS SESSION'S state with new chart path
+        // Update state with new chart path
         st.lastChartPath = chartPath;
         st.lastModified = new Date();
 
@@ -475,14 +458,6 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
               text: `Chart generated!\n\nDirect URL: ${mcpToolUrl}
               \n\nCurrent state:\n${JSON.stringify(st, null, 2)}
               \n\n<Embedded Chart URL>: ${serverUrl}${chartPath}`
-            },
-            {
-              type: "resource",
-              resource: {
-                uri: dataUri,
-                mimeType: "image/svg+xml",
-                text: svg
-              }
             }
           ]
         };
