@@ -27,7 +27,7 @@ export interface SessionEntry {
 
 export const sessions = new Map<string, SessionEntry>();
 
-const PRE_LOGIN_TTL_MS = 5 * 60 * 1000; // login link valid for 5 min
+const PRE_LOGIN_TTL_MS = 30 * 60 * 1000; // login link valid for 30 min
 const AUTHENTICATED_INACTIVITY_TTL_MS = 10 * 60 * 1000; // session lasts 10 minutes since last active
 const MAX_CONCURRENT_LOGIN_REQUESTS = 10; // rate limit: max 10 pre-login sessions
 
@@ -114,6 +114,7 @@ function verifyMCPSession(sessionId?: string): SessionResult {
   return { sessionId, entry };
 }
 
+/*
 function denyNeedLogin(es: { sessionId: string; internalNote?: string }) {
   if (es.internalNote) console.log("[Auth Notice]", es.internalNote);
 
@@ -129,13 +130,25 @@ ${loginUrl}
 
 [INTERNAL - DO NOT SHOW TO USER]
 sessionId: ${es.sessionId}
-(Store for tool calls. Valid 5 min until login, then 10 min of inactivity.)`
+(Store for tool calls. Valid 30 min until login, then 10 min of inactivity.)`
       }
     ]
   };
 }
+*/
 
-function requireAuth(es: {
+function requireSession(es: { sessionId: string; entry: SessionEntry; internalNote?: string }): {
+  entry: SessionEntry;
+} {
+  if (es.internalNote) console.log("[Session Notice]", es.internalNote);
+
+  es.entry.lastActivity = Date.now();
+  return { entry: es.entry };
+}
+
+// version for tools that truly need login
+/*
+function requireLogin(es: {
   sessionId: string;
   entry: SessionEntry;
   internalNote?: string;
@@ -147,6 +160,7 @@ function requireAuth(es: {
   es.entry.lastActivity = Date.now();
   return { entry: es.entry };
 }
+*/
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -238,11 +252,10 @@ export const createMCPServer = () => {
     async ({ sessionId }) => {
       const es = verifyMCPSession(sessionId);
 
-      const auth = requireAuth(es);
-      if ("response" in auth) return auth.response;
+      const sess = requireSession(es);
 
       return {
-        content: [{ type: "text", text: JSON.stringify(auth.entry.userChartState, null, 2) }]
+        content: [{ type: "text", text: JSON.stringify(sess.entry.userChartState, null, 2) }]
       };
     }
   );
@@ -267,10 +280,9 @@ export const createMCPServer = () => {
     async ({ sessionId }) => {
       const es = verifyMCPSession(sessionId);
 
-      const auth = requireAuth(es);
-      if ("response" in auth) return auth.response;
+      const sess = requireSession(es);
 
-      auth.entry.userChartState = newChartState();
+      sess.entry.userChartState = newChartState();
 
       return {
         content: [{ type: "text", text: "Chart state cleared for this session." }]
@@ -368,10 +380,9 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
     async (args) => {
       const es = verifyMCPSession(args.sessionId);
 
-      const auth = requireAuth(es);
-      if ("response" in auth) return auth.response;
+      const sess = requireSession(es);
 
-      const entry = auth.entry;
+      const entry = sess.entry;
 
       if (!args.datapackTitles) {
         return { content: [{ type: "text", text: "Error: datapackTitles is required." }] };
@@ -501,13 +512,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       }
     },
     async ({ sessionId }) => {
-      // Track activity if authenticated
-      if (sessionId) {
-        const entry = sessions.get(sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
+      const es = verifyMCPSession(sessionId);
+      requireSession(es);
 
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -551,13 +557,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
       }
     },
     async ({ datapackTitles, sessionId }) => {
-      // Track activity if authenticated
-      if (sessionId) {
-        const entry = sessions.get(sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
+      const es = verifyMCPSession(sessionId);
+      requireSession(es);
 
       try {
         const res = await fetch(`${serverUrl}/mcp/get-settings-schema`, {
@@ -632,13 +633,8 @@ Example: { "datapackTitles": ["GTS2020"] }`,
       }
     },
     async ({ datapackTitles, sessionId }) => {
-      // Track activity if authenticated
-      if (sessionId) {
-        const entry = sessions.get(sessionId);
-        if (entry?.userInfo) {
-          entry.lastActivity = Date.now();
-        }
-      }
+      const es = verifyMCPSession(sessionId);
+      requireSession(es);
 
       try {
         const res = await fetch(`${serverUrl}/mcp/list-columns`, {
@@ -678,7 +674,7 @@ What to keep internal:
 - sessionId - store this for passing to tool calls, DO NOT display it
 
 Session lifecycle:
-- Link valid for 5 minutes (user must complete login)
+- Link valid for 30 minutes (user must complete login)
 - After login: session valid for 10 minutes of inactivity
 - Pass sessionId to tool calls to track activity`,
       inputSchema: { sessionId: z.string().optional() }
@@ -693,16 +689,16 @@ Session lifecycle:
             content: [
               {
                 type: "text",
-                text: `Too many active login requests. Please wait for existing logins to expire (2 minutes) and try again.`
+                text: `Too many active login requests. Please wait for existing logins to expire (30 minutes) and try again.`
               }
             ]
           };
         }
 
         const es = verifyMCPSession(sessionId);
+        requireSession(es);
 
         if (es.entry.userInfo) {
-          es.entry.lastActivity = Date.now();
           return {
             content: [
               {
@@ -712,8 +708,6 @@ Session lifecycle:
             ]
           };
         }
-
-        if (es.internalNote) console.log("[Login]", es.internalNote);
 
         const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
 
@@ -728,7 +722,7 @@ Session lifecycle:
   
   [INTERNAL - DO NOT SHOW TO USER]
   sessionId: ${es.sessionId}
-  (Store for tool calls. Valid 5 min until login, then 10 min of inactivity.)`
+  (Store for tool calls. Valid 30 min until login, then 10 min of inactivity.)`
             }
           ]
         };
@@ -755,7 +749,7 @@ Input: { sessionId?: string }
 - sessionId (optional): Internal ID from login() tool. Pass it here to check auth status.
 
 Session Expiration Rules:
-- Pre-login: 2 minutes from creation (user must complete login within 2 min)
+- Pre-login: 30 minutes from creation (user must complete login within 30 min)
 - Authenticated: 10 minutes of inactivity (any tool call resets timer)
 
 If you see "not found": session expired, call login() again.`,
@@ -788,10 +782,9 @@ If you see "not found": session expired, call login() again.`,
           };
         }
 
-        if (entry.userInfo) {
-          // Track activity for authenticated session
-          entry.lastActivity = Date.now();
+        requireSession({ sessionId, entry });
 
+        if (entry.userInfo) {
           return {
             content: [
               {
