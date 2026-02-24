@@ -675,7 +675,7 @@ sessionId: ${sessionId}
             content: [
               {
                 type: "text",
-                text: `You are logged in!\n\nUser Information:\n${JSON.stringify(entry.userInfo, null, 2)}`
+                text: `You are logged in!\n\nUsername:\n${JSON.stringify(entry.userInfo.username, null, 2)}`
               }
             ]
           };

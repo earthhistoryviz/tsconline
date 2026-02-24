@@ -248,11 +248,25 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     await transport.handlePostMessage(req.raw, reply.raw, req.body as unknown);
   });
 
-  //TBD add MCP token for here
   app.post("/messages/user-info", async (req, reply) => {
+    // Verify Bearer token from server (never accept requests without token)
+    const authHeader = req.headers.authorization;
+    const expectedToken = process.env.MCP_AUTH_TOKEN;
+    
+    if (!expectedToken || !authHeader?.startsWith("Bearer ")) {
+      reply.code(401).send({ error: "Missing or invalid Bearer token" });
+      return;
+    }
+    
+    const token = authHeader.slice(7); // Remove "Bearer " prefix
+    if (token !== expectedToken) {
+      reply.code(401).send({ error: "Invalid Bearer token" });
+      return;
+    }
+
     const { sessionId, userInfo } = req.body as { sessionId: string; userInfo: SharedUser };
     const entry = sessions.get(sessionId);
-    console.log("Received user-info for sessionId:", sessionId, userInfo);
+    console.log("Received user-info for sessionId:", sessionId, "from authenticated server");
     if (!entry) {
       reply.code(400).send({ error: "Invalid or expired session" });
       console.log("No session entry found for sessionId:", sessionId);
