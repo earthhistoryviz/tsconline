@@ -15,6 +15,7 @@ vi.mock("../src/settings-generation/build-settings.js", () => ({
   generateChartWithEdits: vi.fn(),
   listColumns: vi.fn()
 }));
+vi.mock("../src/database.js", () => ({ findUser: vi.fn() }));
 
 import {
   mcpListDatapacks,
@@ -27,6 +28,7 @@ import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../src
 import { extractMetadataFromDatapack } from "../src/util.js";
 import { generateChart } from "../src/chart-generation/generate-chart.js";
 import { generateChartWithEdits, listColumns } from "../src/settings-generation/build-settings.js";
+import { findUser } from "../src/database.js";
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -401,30 +403,28 @@ describe("mcpUserInfoProxy", () => {
     delete process.env.MCP_AUTH_TOKEN;
 
     const req = {
-      body: { sessionId: "sid123", userInfo: { uuid: "u123", a: 1 } },
+      body: { sessionId: "sid123" },
       session: { get: vi.fn().mockReturnValue("u123") }
     } as unknown as FastifyRequest;
 
     const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    (findUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        uuid: "u123",
+        username: "user",
+        email: "user@example.com",
+        pictureUrl: null,
+        accountType: "pro",
+        isAdmin: 0
+      }
+    ]);
 
     await mcpUserInfoProxy(req, reply);
 
     // Expect error 500 with exact error text
     expect(reply.code).toHaveBeenCalledWith(500);
     expect(reply.send).toHaveBeenCalledWith({ error: "Missing MCP_AUTH_TOKEN" });
-  });
-
-  it("returns 400 when userInfo.uuid is missing", async () => {
-    const req = {
-      body: { sessionId: "sid123", userInfo: { a: 1 } }
-    } as unknown as FastifyRequest;
-
-    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
-
-    await mcpUserInfoProxy(req, reply);
-
-    expect(reply.code).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: "Missing userInfo.uuid" });
   });
 
   it("returns 401 when session uuid is missing", async () => {
@@ -443,22 +443,6 @@ describe("mcpUserInfoProxy", () => {
     expect(reply.send).toHaveBeenCalledWith({ error: "Not logged in" });
   });
 
-  it("returns 403 when userInfo.uuid does not match session uuid", async () => {
-    process.env.MCP_AUTH_TOKEN = "token123";
-
-    const req = {
-      body: { sessionId: "sid123", userInfo: { uuid: "u123" } },
-      session: { get: vi.fn().mockReturnValue("DIFFERENT") }
-    } as unknown as FastifyRequest;
-
-    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
-
-    await mcpUserInfoProxy(req, reply);
-
-    expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.send).toHaveBeenCalledWith({ error: "UUID mismatch" });
-  });
-
   // Test for actual call when everything is present
   it("forwards to MCP /messages/user-info with Bearer token", async () => {
     // Use a dummy expected token for test
@@ -473,11 +457,22 @@ describe("mcpUserInfoProxy", () => {
     }) as unknown as typeof fetch;
 
     const req = {
-      body: { sessionId: "sid123", userInfo: { uuid: "u123", name: "J" } },
+      body: { sessionId: "sid123" },
       session: { get: vi.fn().mockReturnValue("u123") }
     } as unknown as FastifyRequest;
 
     const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    (findUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        uuid: "u123",
+        username: "user",
+        email: "user@example.com",
+        pictureUrl: "pic",
+        accountType: "pro",
+        isAdmin: 1
+      }
+    ]);
 
     await mcpUserInfoProxy(req, reply);
 
@@ -487,7 +482,17 @@ describe("mcpUserInfoProxy", () => {
         "Content-Type": "application/json",
         Authorization: "Bearer token123"
       },
-      body: JSON.stringify({ sessionId: "sid123", userInfo: { uuid: "u123", name: "J" } })
+      body: JSON.stringify({
+        sessionId: "sid123",
+        userInfo: {
+          uuid: "u123",
+          username: "user",
+          email: "user@example.com",
+          pictureUrl: "pic",
+          accountType: "pro",
+          isAdmin: true
+        }
+      })
     });
 
     // Expect code 200 for success
