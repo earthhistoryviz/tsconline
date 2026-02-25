@@ -252,12 +252,12 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     // Verify Bearer token from server (never accept requests without token)
     const authHeader = req.headers.authorization;
     const expectedToken = process.env.MCP_AUTH_TOKEN;
-    
+
     if (!expectedToken || !authHeader?.startsWith("Bearer ")) {
       reply.code(401).send({ error: "Missing or invalid Bearer token" });
       return;
     }
-    
+
     const token = authHeader.slice(7); // Remove "Bearer " prefix
     if (token !== expectedToken) {
       reply.code(401).send({ error: "Invalid Bearer token" });

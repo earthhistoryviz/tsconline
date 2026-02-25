@@ -533,31 +533,49 @@ describe("registerMCPRoutes", () => {
 
   describe("/messages/user-info", () => {
     it("invalid or expired session => 400", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
       const handler = app.find("POST", "/messages/user-info");
       const reply = makeReply();
-      await handler(makeReq({ body: { sessionId: "missing", userInfo: makeSharedUser() } }), reply);
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer token123" },
+          body: { sessionId: "missing", userInfo: makeSharedUser() }
+        }),
+        reply
+      );
 
       expect(reply.statusCode).toBe(400);
       expect(reply.payload).toEqual({ error: "Invalid or expired session" });
     });
 
     it("valid session => sets userInfo and updates lastActivity", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
       const { sessions } = await import("../src/mcp.js");
 
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
       const now = Date.now();
-      sessions.set("sid-1", { createdAt: now - 1000, lastActivity: now - 1000 });
+      sessions.set("sid-1", {
+        createdAt: now - 1000,
+        lastActivity: now - 1000,
+        userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+      });
 
       const handler = app.find("POST", "/messages/user-info");
       const reply = makeReply();
       const userInfo = makeSharedUser();
 
-      await handler(makeReq({ body: { sessionId: "sid-1", userInfo } }), reply);
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer token123" },
+          body: { sessionId: "sid-1", userInfo }
+        }),
+        reply
+      );
 
       expect(reply.statusCode).toBe(200);
       expect(reply.payload).toEqual({ ok: true, sessionId: "sid-1" });
@@ -591,7 +609,12 @@ describe("registerMCPRoutes", () => {
 
     // Pretend there is user info to be removed on legacy expiry
     const now = Date.now();
-    sessions.set(LEGACY_SESSION_ID, { userInfo: makeSharedUser(), createdAt: now - 1000, lastActivity: now - 1000 });
+    sessions.set(LEGACY_SESSION_ID, {
+      userInfo: makeSharedUser(),
+      createdAt: now - 1000,
+      lastActivity: now - 1000,
+      userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+    });
 
     // advance beyond TTL and run the 10s cleanup interval
     vi.advanceTimersByTime(20_000);
