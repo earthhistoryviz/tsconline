@@ -894,7 +894,8 @@ export const createMCPServer = () => {
         references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
         notes: z.string().optional().describe("The notes of the datapack (optional)")
       }
-    }, async ({
+    },
+    async ({
       sessionId,
       datapackUri,
       datapackFileName,
