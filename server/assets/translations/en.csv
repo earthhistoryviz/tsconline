@@ -85,6 +85,8 @@ translation.signup.username,Username
 translation.signup.password,Password
 translation.signup.signin,Already have an account? Sign in
 translation.signup.email-sent,Email sent. Please check your email to verify your account.
+translation.mcpHome.loginSuccessful,Login Successful
+translation.mcpHome.returnToAgent,Please return to your Agent
 translation.title.about,About
 translation.title.main,Time Scale Creator Online
 translation.title.settings,Settings

@@ -39,6 +39,7 @@ import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 import { isDDEServer } from "./constants";
 import { PreviousLocationProvider } from "./providers/PreviousLocationProvider";
 import { ReportBug } from "./ReportBug";
+import { McpHome } from "./McpHome";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -171,13 +172,21 @@ export default observer(function App() {
       return true;
     return false;
   };
+  // Get query string after route if one exists
+  const params = new URLSearchParams(location.search);
+
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <ThemeProvider theme={theme}>
           <PreviousLocationProvider>
             <CssBaseline />
-            {location.pathname != "/verify" && location.pathname != "/chart-view/preview" && <NavBar />}
+            {location.pathname != "/verify" &&
+              location.pathname != "/chart/preview" &&
+              location.pathname != "/mcp_home" &&
+              !(location.pathname === "/login" && params.has("mcp_session")) &&
+              location.pathname != "/verify" &&
+              location.pathname != "/chart-view/preview" && <NavBar />}
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/settings" element={<Settings />} />
@@ -200,6 +209,7 @@ export default observer(function App() {
               <Route path="/workshops/:id" element={<WorkshopDetails />} />
               <Route path="/crossplot" element={<CrossPlotChart />} />
               <Route path="/report-bug" element={<ReportBug />} />
+              <Route path="/mcp_home" element={<McpHome />} />
             </Routes>
             {Array.from(state.errors.errorAlerts.entries())
               .reverse()
