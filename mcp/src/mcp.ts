@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
 import { MCPLinkParams } from "@tsconline/shared";
-import { title } from "process";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -35,6 +34,12 @@ const MAX_CONCURRENT_LOGIN_REQUESTS = 10; // rate limit: max 10 pre-login sessio
 export const cleanupInterval = setInterval(
   () => {
     const now = Date.now();
+
+    console.log("-----");
+    console.log("sessions: ", sessions.size);
+    console.log("sessions makeup:", sessions);
+
+    console.log("-----");
 
     for (const [sessionId, entry] of sessions.entries()) {
       const isAuthenticated = entry.userInfo !== undefined;
