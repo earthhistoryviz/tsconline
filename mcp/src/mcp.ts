@@ -4,7 +4,7 @@ import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
-import { MCPLinkParams } from "@tsconline/shared";
+import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType, UserDatapack, assertDatapackTypeString} from "@tsconline/shared";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -849,12 +849,13 @@ Input:
             description: z.string().describe("The description of the datapack"),
             contact: z.string().optional().describe("The contact of the datapack (optional)"),
             date: z.string().optional().describe("The date of the datapack (optional)"),
-            tags: z.array(z.string()).optional().describe("The tags of the datapack (optional)"),
+            tags: z.array(z.string()).optional().describe("String array of tags of the datapack (optional)"),
+            priority: z.number().optional().describe("The priority of the datapack (optional)"),
             sessionId: z.string().optional().describe("The session ID of the user. If not provided, the user will not be authenticated."),
-            references: z.array(z.string()).optional().describe("The references of the datapack (optional)"),
+            references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
         },
       },
-    async ({datapackUri, datapackFileName, title, description, contact, sessionId, tags, references}) => {
+    async ({datapackUri, datapackFileName, title, description, contact, sessionId, tags, references, priority}) => {
 
       //Update session activity
 
@@ -889,28 +890,54 @@ Input:
       
       // const authoredBy = entry.userInfo?.username ?? "";
       const authoredBy = "Neel";
+      const isPublic = false;
+      const notes = ""; // TODO: add notes
 
-      const tagsArray = tags ?? [];
-      const referencesArray = references ?? [];
-      const isPublic = "false";
-      const type = "user";
-      const hasFiles = "false";
-      const priority = "0";
 
-      // Use global FormData (Node 18+ undici) so multipart is formatted for fetch and parsed correctly by the server
+
+
+      const datapackType: DatapackType = {
+        type: "user",
+        uuid: uuid
+      };
+
+      const metadata: DatapackMetadata = {
+        description,
+        title,
+        originalFileName: datapackFileName ?? "default-datapack.txt",
+        storedFileName: datapackFileName ?? "default-datapack.txt",
+        size: datapack_buffer.length.toString(),
+        date: new Date().toISOString().split("T")[0] ?? "",
+        authoredBy,
+        tags: tags ?? [],
+        references: references ?? [],
+        isPublic,
+        priority: priority ?? 0,
+        hasFiles: false,
+        ...datapackType,
+        ...(contact != null && contact !== "" && { contact }),
+        ...(notes != null && notes !== "" && { notes })
+      };
+
+      assertDatapackMetadata(metadata);
+
       const formData = new FormData();
-      const filename = datapackFileName ?? "default-datapack.txt";
+      const filename = metadata.storedFileName ?? "default-datapack.txt";
       formData.append("datapack", new Blob([datapack_buffer]) as unknown as Blob, filename);
-      formData.append("title", title);
-      formData.append("description", description);
-      formData.append("authoredBy", authoredBy);
-      formData.append("date", new Date().toISOString().split("T")[0] ?? "");
-      formData.append("tags", JSON.stringify(tagsArray));
-      formData.append("references", JSON.stringify(referencesArray));
-      formData.append("isPublic", isPublic);
-      formData.append("type", type);
-      formData.append("hasFiles", hasFiles);
-      formData.append("priority", priority);
+      formData.append("title", metadata.title);
+      formData.append("description", metadata.description);
+      formData.append("references", JSON.stringify(metadata.references));
+      formData.append("tags", JSON.stringify(metadata.tags));
+      formData.append("authoredBy", metadata.authoredBy);
+      formData.append("isPublic", metadata.isPublic.toString());
+      formData.append("uuid", metadata.uuid);
+      formData.append("type", metadata.type);
+      formData.append("hasFiles", metadata.hasFiles.toString());
+      formData.append("priority", metadata.priority.toString());
+      if (metadata.notes) formData.append("notes", metadata.notes);
+      if (metadata.contact) formData.append("contact", metadata.contact);
+      if (metadata.date) formData.append("date", metadata.date);
+
 
       const upload_response = await fetch(`${serverUrl}/mcp/upload-datapack`, {
         method: "POST",

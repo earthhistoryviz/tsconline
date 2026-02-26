@@ -491,7 +491,6 @@ export async function processMultipartPartsForDatapackUpload(
       filepath,
       originalFileName,
       storedFileName,
-      ...(uuid && { uuid }),
       ...(datapackImage && { datapackImage }),
       ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
     },
