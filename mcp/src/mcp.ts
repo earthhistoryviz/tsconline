@@ -769,7 +769,6 @@ Session Expiration Rules:
     - Do not generate fake tags, references or notes unless a user prompts you to do so.
     
     `,
-
       inputSchema: {
         sessionId: z
           .string()
@@ -804,8 +803,8 @@ Session Expiration Rules:
         references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
         notes: z.string().optional().describe("The notes of the datapack (optional)")
       }
-    },
-    async ({
+    }, async ({
+      sessionId,
       datapackUri,
       datapackFileName,
       title,
@@ -816,9 +815,8 @@ Session Expiration Rules:
       references,
       priority,
       datapackImageUri,
-      pdfFilesUris,
-      sessionId
-    }) => {
+      pdfFilesUris
+    }): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> => {
       //Update session activity
       if (!sessionId) {
         return {
@@ -828,10 +826,6 @@ Session Expiration Rules:
       }
 
       const v = verifyMCPSession(sessionId);
-      if ("response" in v) return v.response;
-
-      //neel uuid 7b9cf389-f0ef-4fbc-a82e-37046cb61bac
-
       const entry = v.entry;
       const user = entry.userInfo;
       const uuid = user?.uuid;
