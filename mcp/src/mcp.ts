@@ -840,6 +840,8 @@ Input:
     - contact: The contact of the datapack (optional)
     - date: The date of the datapack (optional)
     - tags: The tags of the datapack (optional)
+    - notes: The notes of the datapack (optional)
+    - priority: An integer priority of the datapack (optional)
     
     Note about file Uploads:
     - A user will upload a datapack file. The user may also upload a profile picture and a number of attached pdfs. If there is confusion of which file is the datapack, profile picture, or pdfs, the AI should ask the user to clarify.
@@ -859,6 +861,7 @@ Input:
             priority: z.number().optional().describe("The priority of the datapack (optional)"),
             sessionId: z.string().optional().describe("The session ID of the user. If not provided, the user will not be authenticated."),
             references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
+            notes: z.string().optional().describe("The notes of the datapack (optional)"),
         },
       },
     async ({datapackUri, datapackFileName, title, description, contact, sessionId, tags, references, priority, datapackImageUri, pdfFilesUris}) => {
