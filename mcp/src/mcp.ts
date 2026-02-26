@@ -894,8 +894,8 @@ export const createMCPServer = () => {
         references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
         notes: z.string().optional().describe("The notes of the datapack (optional)")
       }
-    },
-    async ({
+    }, async ({
+      sessionId,
       datapackUri,
       datapackFileName,
       title,
@@ -906,9 +906,8 @@ export const createMCPServer = () => {
       references,
       priority,
       datapackImageUri,
-      pdfFilesUris,
-      sessionId
-    }) => {
+      pdfFilesUris
+    }): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> => {
       //Update session activity
       if (!sessionId) {
         return wrapResponse({ error: "No session ID provided. Please login again." }, sessionId || "");
