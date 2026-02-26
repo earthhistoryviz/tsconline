@@ -147,6 +147,10 @@
             "signin": "Already have an account? Sign in",
             "email-sent": "Email sent. Please check your email to verify your account."
         },
+        "mcpHome": {
+            "loginSuccessful": "Login Successful",
+            "returnToAgent": "Please return to your Agent"
+        },
         "title": {
             "about": "About",
             "main": "Time Scale Creator Online",
