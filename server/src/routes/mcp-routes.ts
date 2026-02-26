@@ -175,6 +175,7 @@ export const mcpUploadDatapack = async function uploadDatapack(request: FastifyR
     }
   } catch (e) {
     reply.status(500).send({ error: `Error uploading datapack` });
+    return;
   }
   reply.send({ message: "Datapack uploaded" });
 };
