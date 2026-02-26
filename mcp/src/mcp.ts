@@ -4,8 +4,8 @@ import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
-import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType, UserDatapack, assertDatapackTypeString} from "@tsconline/shared";
-import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType} from "./mcp-helper.js";
+import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType } from "@tsconline/shared";
+import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType } from "./mcp-helper.js";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -680,31 +680,66 @@ If you see "not found": session expired, call login() again.`,
     - priority: An integer priority of the datapack (optional)
     
     Note about file Uploads:
-    - A user will upload a datapack file. The user may also upload a profile picture and a number of attached pdfs. If there is confusion of which file is the datapack, profile picture, or pdfs, the AI should ask the user to clarify.
+    - A user will upload a datapack file. The user may also upload a profile picture and a number of attached pdfs. If there is confusion of which file is the datapack, profile picture, or pdfs, the AI should ask the user to clarify. 
+    - Do not generate fake tags, references or notes unless a user prompts you to do so.
     
     `,
 
-    inputSchema: {
-            sessionId: z.string().describe("The session ID of the user. If not provided, the user will not be authenticated."),
-            datapackUri: z.string().url().describe("A HTTP or HTTPS URL of the datapack file uploaded to cloud storage by the AI."),
-            datapackImageUri: z.string().url().optional().describe("A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded."),
-            datapackFileName: z.string().optional().describe("The name of the datapack file. If not provided, the name will be extracted from the URL."),
-            pdfFilesUris: z.array(z.string().url()).optional().describe("Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded."),
-            title: z.string().describe("The title of the datapack"),
-            description: z.string().describe("The description of the datapack"),
-            contact: z.string().optional().describe("The contact of the datapack (optional)"),
-            date: z.string().optional().describe("The date of the datapack (optional)"),
-            tags: z.array(z.string()).optional().describe("String array of tags of the datapack (optional)"),
-            priority: z.number().optional().describe("The priority of the datapack (optional)"),
-            references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
-            notes: z.string().optional().describe("The notes of the datapack (optional)"),
-        },
-      },
-    async ({datapackUri, datapackFileName, title, description, contact, notes, tags, references, priority, datapackImageUri, pdfFilesUris, sessionId}) => {
-
+      inputSchema: {
+        sessionId: z
+          .string()
+          .describe("The session ID of the user. If not provided, the user will not be authenticated."),
+        datapackUri: z
+          .string()
+          .url()
+          .describe("A HTTP or HTTPS URL of the datapack file uploaded to cloud storage by the AI."),
+        datapackImageUri: z
+          .string()
+          .url()
+          .optional()
+          .describe(
+            "A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded."
+          ),
+        datapackFileName: z
+          .string()
+          .optional()
+          .describe("The name of the datapack file. If not provided, the name will be extracted from the URL."),
+        pdfFilesUris: z
+          .array(z.string().url())
+          .optional()
+          .describe(
+            "Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded."
+          ),
+        title: z.string().describe("The title of the datapack"),
+        description: z.string().describe("The description of the datapack"),
+        contact: z.string().optional().describe("The contact of the datapack (optional)"),
+        date: z.string().optional().describe("The date of the datapack (optional)"),
+        tags: z.array(z.string()).optional().describe("String array of tags of the datapack (optional)"),
+        priority: z.number().optional().describe("The priority of the datapack (optional)"),
+        references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
+        notes: z.string().optional().describe("The notes of the datapack (optional)")
+      }
+    },
+    async ({
+      datapackUri,
+      datapackFileName,
+      title,
+      description,
+      contact,
+      notes,
+      tags,
+      references,
+      priority,
+      datapackImageUri,
+      pdfFilesUris,
+      sessionId
+    }) => {
       //Update session activity
       if (!sessionId) {
-        return { content: [{ type: "text", text: `Error: No session ID provided. Please login again.` }], isError: true };
+        return {
+          content: [{ type: "text", text: `Error: No session ID provided. Please login again.` }],
+          isError: true
+        };
       }
 
       const v = verifyMCPSession(sessionId);
@@ -716,7 +751,6 @@ If you see "not found": session expired, call login() again.`,
       const user = entry.userInfo;
       const uuid = user?.uuid;
 
-
       if (!uuid) {
         return { content: [{ type: "text", text: `Error: User UUID not found.` }], isError: true };
       }
@@ -727,118 +761,132 @@ If you see "not found": session expired, call login() again.`,
       }
 
       try {
-      //fetch file form datapackUri
-      const [arrayBuffer, datapackMimeType] = await fetchFileFromUrl(datapackUri);
-      const datapackBuffer = Buffer.from(arrayBuffer);
+        //fetch file form datapackUri
+        const [arrayBuffer, datapackMimeType] = await fetchFileFromUrl(datapackUri);
+        const datapackBuffer = Buffer.from(arrayBuffer);
 
-      //todo: assert datapackMimeType is a valid datapack mime type
+        //todo: assert datapackMimeType is a valid datapack mime type
 
-      let profilePictureBuffer: Buffer | undefined;
-      let profilePictureMimeType: string | null = null;
-      let profilePictureExtension: string | undefined;
-      if (datapackImageUri) {
-        const [profilePictureArrayBuffer, rawMimeType] = await fetchFileFromUrl(datapackImageUri);
-        profilePictureBuffer = Buffer.from(profilePictureArrayBuffer);
-        profilePictureMimeType = assertValidImageMimeType(rawMimeType);
-        profilePictureExtension = getImageFileExtension(profilePictureMimeType);
-      }
+        let profilePictureBuffer: Buffer | undefined;
+        let profilePictureMimeType: string | null = null;
+        let profilePictureExtension: string | undefined;
+        if (datapackImageUri) {
+          const [profilePictureArrayBuffer, rawMimeType] = await fetchFileFromUrl(datapackImageUri);
+          profilePictureBuffer = Buffer.from(profilePictureArrayBuffer);
+          profilePictureMimeType = assertValidImageMimeType(rawMimeType);
+          profilePictureExtension = getImageFileExtension(profilePictureMimeType);
+        }
 
+        const pdfBuffers: Buffer[] = [];
+        const pdfMimeTypes: string[] = [];
+        const pdfExtensions: string[] = [];
+        let hasFiles = false;
+        if (pdfFilesUris && pdfFilesUris.length > 0) {
+          hasFiles = true;
+          for (const pdfUri of pdfFilesUris) {
+            const [pdfArrayBuffer, rawMimeType] = await fetchFileFromUrl(pdfUri);
+            pdfBuffers.push(Buffer.from(pdfArrayBuffer));
+            pdfMimeTypes.push(assertPdfMimeType(rawMimeType));
+            pdfExtensions.push(".pdf");
+          }
+        }
 
-      let pdfBuffers: Buffer[] = [];
-      let pdfMimeTypes: string[] = [];
-      let pdfExtensions: string[] = [];
-      let hasFiles = false;
-      if (pdfFilesUris && pdfFilesUris.length > 0) {
-        hasFiles = true;
-        for (const pdfUri of pdfFilesUris) {
-          const [pdfArrayBuffer, rawMimeType] = await fetchFileFromUrl(pdfUri);
-          pdfBuffers.push(Buffer.from(pdfArrayBuffer));
-          pdfMimeTypes.push(assertPdfMimeType(rawMimeType));
-          pdfExtensions.push(".pdf");
+        const authoredBy = entry.userInfo?.username ?? "";
+
+        const datapackType: DatapackType = {
+          type: "user",
+          uuid: uuid
+        };
+
+        const metadata: DatapackMetadata = {
+          description,
+          title,
+          originalFileName: datapackFileName ?? "default-datapack.txt",
+          storedFileName: datapackFileName ?? "default-datapack.txt",
+          size: datapackBuffer.length.toString(),
+          date: new Date().toISOString().split("T")[0] ?? "",
+          authoredBy,
+          tags: tags ?? [],
+          references: references ?? [],
+          isPublic: false,
+          priority: priority ?? 0,
+          hasFiles: hasFiles,
+          ...datapackType,
+          ...(contact != null && contact !== "" && { contact }),
+          ...(notes != null && notes !== "" && { notes })
+        };
+
+        assertDatapackMetadata(metadata);
+
+        const formData = new FormData();
+        const filename = metadata.storedFileName;
+        formData.append(
+          "datapack",
+          new Blob([datapackBuffer], { type: datapackMimeType ?? undefined }) as unknown as Blob,
+          filename
+        );
+        formData.append("title", metadata.title);
+        formData.append("description", metadata.description);
+        formData.append("references", JSON.stringify(metadata.references));
+        formData.append("tags", JSON.stringify(metadata.tags));
+        formData.append("authoredBy", metadata.authoredBy);
+        formData.append("isPublic", metadata.isPublic.toString());
+        formData.append("uuid", metadata.uuid);
+        formData.append("type", metadata.type);
+        formData.append("priority", metadata.priority.toString());
+        if (profilePictureBuffer && profilePictureMimeType && profilePictureExtension) {
+          const profileFilename = `profile-picture${profilePictureExtension}`;
+          formData.append(
+            "datapack-image",
+            new Blob([profilePictureBuffer], { type: profilePictureMimeType }) as unknown as Blob,
+            profileFilename
+          );
+        }
+
+        formData.append("hasFiles", metadata.hasFiles.toString());
+        if (hasFiles) {
+          pdfBuffers.forEach((pdfBuffer, index) => {
+            formData.append(
+              "pdfFiles[]",
+              new Blob([pdfBuffer], { type: pdfMimeTypes[index] }) as unknown as Blob,
+              `attachment-${index}.pdf`
+            );
+          });
+        }
+        if (metadata.notes) formData.append("notes", metadata.notes);
+        if (metadata.contact) formData.append("contact", metadata.contact);
+        if (metadata.date) formData.append("date", metadata.date);
+
+        const uploadResponse = await fetch(`${serverUrl}/mcp/upload-datapack`, {
+          method: "POST",
+          headers: { "User-ID": uuid },
+          body: formData
+        });
+
+        if (!uploadResponse.ok) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Failed to upload datapack: ${uploadResponse.status} ${uploadResponse.statusText}`
+              }
+            ],
+            isError: true
+          };
+        }
+
+        const data = await uploadResponse.json();
+        return { content: [{ type: "text", text: `Datapack uploaded: ${data.message}` }] };
+      } catch (e) {
+        //print the stack trace
+        if (e instanceof Error) {
+          return { content: [{ type: "text", text: `Upload failed: ${e.message}` }], isError: true };
+        } else {
+          return { content: [{ type: "text", text: `Upload failed: ${String(e)}` }], isError: true };
         }
       }
-      
-
-      const authoredBy = entry.userInfo?.username ?? "";
-
-
-
-
-      const datapackType: DatapackType = {
-        type: "user",
-        uuid: uuid
-      };
-
-      const metadata: DatapackMetadata = {
-        description,
-        title,
-        originalFileName: datapackFileName ?? "default-datapack.txt",
-        storedFileName: datapackFileName ?? "default-datapack.txt",
-        size: datapackBuffer.length.toString(),
-        date: new Date().toISOString().split("T")[0] ?? "",
-        authoredBy,
-        tags: tags ?? [],
-        references: references ?? [],
-        isPublic: false,
-        priority: priority ?? 0,
-        hasFiles: hasFiles,
-        ...datapackType,
-        ...(contact != null && contact !== "" && { contact }),
-        ...(notes != null && notes !== "" && { notes })
-      };
-
-      assertDatapackMetadata(metadata);
-
-      const formData = new FormData();
-      const filename = metadata.storedFileName;
-      formData.append("datapack", new Blob([datapackBuffer], { type: datapackMimeType ?? undefined }) as unknown as Blob, filename);
-      formData.append("title", metadata.title);
-      formData.append("description", metadata.description);
-      formData.append("references", JSON.stringify(metadata.references));
-      formData.append("tags", JSON.stringify(metadata.tags));
-      formData.append("authoredBy", metadata.authoredBy);
-      formData.append("isPublic", metadata.isPublic.toString());
-      formData.append("uuid", metadata.uuid);
-      formData.append("type", metadata.type);
-      formData.append("priority", metadata.priority.toString());
-      if (profilePictureBuffer && profilePictureMimeType && profilePictureExtension) {
-        const profileFilename = `profile-picture${profilePictureExtension}`;
-        formData.append("datapack-image", new Blob([profilePictureBuffer], { type: profilePictureMimeType }) as unknown as Blob, profileFilename);
-      }
-
-      formData.append("hasFiles", metadata.hasFiles.toString());
-      if (hasFiles) {
-        pdfBuffers.forEach((pdfBuffer, index) => {
-          formData.append("pdfFiles[]", new Blob([pdfBuffer], { type: pdfMimeTypes[index]}) as unknown as Blob, `attachment-${index}.pdf`);
-        });
-      }
-      if (metadata.notes) formData.append("notes", metadata.notes);
-      if (metadata.contact) formData.append("contact", metadata.contact);
-      if (metadata.date) formData.append("date", metadata.date);
-
-
-      const upload_response = await fetch(`${serverUrl}/mcp/upload-datapack`, {
-        method: "POST",
-        headers: { "User-ID": uuid },
-        body: formData
-      });
-
-      if (!upload_response.ok) {
-        return { content: [{ type: "text", text: `Failed to upload datapack: ${upload_response.status} ${upload_response.statusText}` }], isError: true };
-      }
-
-
-      const data = await upload_response.json();
-      return { content: [{ type: "text", text: `Datapack uploaded: ${data.message}` }] };
-    } catch (e) {
-      //print the stack trace
-      if (e instanceof Error) {
-        return { content: [{ type: "text", text: `Upload failed: ${e.message}` }], isError: true };
-      } else {
-        return { content: [{ type: "text", text: `Upload failed: ${String(e)}` }], isError: true };
-      }
     }
-  });
+  );
 
   server.registerResource(
     "greeting",
