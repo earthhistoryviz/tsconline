@@ -8,6 +8,17 @@ export async function fetchFileFromUrl(url: string): Promise<[ArrayBuffer, strin
   return [arrayBuffer, response.headers.get("content-type")];
 }
 
+export function assertValidImageMimeType(mimeType: string | null): string {
+  //normalize mime type
+  if (!mimeType) throw new Error("Invalid image mime type: null");
+  const normalizedMime = mimeType.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (normalizedMime === "image/png") return "image/png";
+  if (normalizedMime === "image/jpeg") return "image/jpeg";
+  if (normalizedMime === "image/jpg") return "image/jpg";
+  //not valid image mime type
+  throw new Error(`Invalid image mime type: ${mimeType}`);
+}
+
 export function getImageFileExtension(mimeType: string): string {
   if (mimeType === "image/png") return ".png";
   if (mimeType === "image/jpeg") return ".jpg";

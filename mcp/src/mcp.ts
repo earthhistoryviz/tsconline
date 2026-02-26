@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
 import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType, UserDatapack, assertDatapackTypeString} from "@tsconline/shared";
-import { fetchFileFromUrl, getImageFileExtension } from "./mcp-helper.js";
+import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType } from "./mcp-helper.js";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -1064,19 +1064,14 @@ Input:
       //todo: assert datapackMimeType is a valid datapack mime type
 
       let profilePictureBuffer: Buffer | undefined;
+      let profilePictureMimeType: string | null = null;
+      let profilePictureExtension: string | undefined;
       if (datapackImageUri) {
-        const [profilePictureArrayBuffer, profilePictureMimeType] = await fetchFileFromUrl(datapackImageUri);
+        const [profilePictureArrayBuffer, rawMimeType] = await fetchFileFromUrl(datapackImageUri);
         profilePictureBuffer = Buffer.from(profilePictureArrayBuffer);
-        try {
-          const profilePictureExtension = getImageFileExtension(profilePictureMimeType ?? "");
-        } catch (e) {
-          return { content: [{ type: "text", text: `Error: Invalid profile picture mime type: ${profilePictureMimeType}` }], isError: true };
-        }
-
+        profilePictureMimeType = assertValidImageMimeType(rawMimeType);
+        profilePictureExtension = getImageFileExtension(profilePictureMimeType);
       }
-
-      
-
 
       // const authoredBy = entry.userInfo?.username ?? "";
       const authoredBy = "Neel";
@@ -1112,7 +1107,7 @@ Input:
       assertDatapackMetadata(metadata);
 
       const formData = new FormData();
-      const filename = metadata.storedFileName ?? "default-datapack.txt";
+      const filename = metadata.storedFileName;
       formData.append("datapack", new Blob([datapackBuffer]) as unknown as Blob, filename);
       formData.append("title", metadata.title);
       formData.append("description", metadata.description);
@@ -1124,7 +1119,10 @@ Input:
       formData.append("type", metadata.type);
       formData.append("hasFiles", metadata.hasFiles.toString());
       formData.append("priority", metadata.priority.toString());
-      if (profilePictureBuffer) formData.append("datapack-image", new Blob([profilePictureBuffer]) as unknown as Blob, "profile-picture.jpg");
+      if (profilePictureBuffer && profilePictureMimeType && profilePictureExtension) {
+        const profileFilename = `profile-picture${profilePictureExtension}`;
+        formData.append("datapack-image", new Blob([profilePictureBuffer], { type: profilePictureMimeType }) as unknown as Blob, profileFilename);
+      }
       if (metadata.notes) formData.append("notes", metadata.notes);
       if (metadata.contact) formData.append("contact", metadata.contact);
       if (metadata.date) formData.append("date", metadata.date);
