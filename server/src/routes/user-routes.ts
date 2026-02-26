@@ -307,7 +307,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   } catch (e) {
-    console.log("Error uploading datapack", e);
     reply.status(500).send({ error: `Error uploading datapack` });
   }
   reply.send({ message: "Datapack uploaded" });
