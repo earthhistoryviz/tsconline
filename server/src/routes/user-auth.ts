@@ -42,45 +42,6 @@ async function verifySession(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-/**
- * Auth for MCP server uploads: no session cookie. Validates Bearer MCP_AUTH_TOKEN and accepts a user object
- * in the X-MCP-User-Info header (JSON). Sets request.user so uploadDatapack can use the same handler.
- */
-// export async function verifyMcpUploadAuth(request: FastifyRequest, reply: FastifyReply) {
-//   const authHeader = request.headers.authorization;
-//   console.log("authHeader", authHeader);
-//   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-//     reply.status(401).send({ error: "Missing or invalid Authorization header" });
-//     return;
-//   }
-//   const userHeader = request.headers["x-mcp-user-info"];
-//   console.log("userHeader", userHeader);
-
-//   if (typeof userHeader !== "string" || !userHeader.trim()) {
-//     reply.status(400).send({ error: "Missing or invalid X-MCP-User-Info header" });
-//     return;
-//   }
-
-//   let parsed: unknown;
-//   try {
-//     parsed = JSON.parse(userHeader) as unknown;
-//   } catch {
-//     reply.status(400).send({ error: "X-MCP-User-Info must be valid JSON" });
-//     return;
-//   }
-
-//   if (typeof parsed !== "object" || parsed === null || typeof (parsed as { uuid?: unknown }).uuid !== "string") {
-//     reply.status(400).send({ error: "X-MCP-User-Info must be a user object with a uuid" });
-//     return;
-//   }
-//   //get uuid and use the findUser function to get the user object
-//   const user = await findUser({ uuid: (parsed as { uuid: string }).uuid });
-//   if (!user || user.length !== 1 || !user[0]) {
-//     reply.status(401).send({ error: "Unauthorized access" });
-//     return;
-//   }
-//   request.user = user[0];
-// }
 
 export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const looseRateLimit = {
