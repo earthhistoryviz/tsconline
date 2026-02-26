@@ -104,7 +104,13 @@ export const Login: React.FC = observer(() => {
         } else {
           actions.removeAllErrors();
           actions.pushSnackbar("Successfully signed in", "success");
-          navigate("/");
+          // dynamic redirection based on if we have an mcp session or not
+          if (mcpSession) {
+            actions.logout();
+            navigate("/mcp_home");
+          } else {
+            navigate("/");
+          }
         }
       } else {
         const message = await response.json();
