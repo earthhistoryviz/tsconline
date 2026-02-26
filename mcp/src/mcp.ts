@@ -147,7 +147,7 @@ function requireSession(es: { sessionId: string; entry: SessionEntry; internalNo
 }
 
 // Helper to wrap tool responses with sessionId
-function wrapResponse(content: any, sessionId: string) {
+function wrapResponse(content: unknown, sessionId: string) {
   return {
     content: [
       {
@@ -538,7 +538,6 @@ The response includes the sessionId to use in all subsequent calls. Response for
     }
   );
 
-
   server.registerTool(
     "listColumns",
     {
@@ -635,11 +634,17 @@ Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId":
 
         if (preLoginCount >= MAX_CONCURRENT_LOGIN_REQUESTS) {
           const es = verifyMCPSession(sessionId);
-          return wrapResponse({ error: "Too many active login requests. Please wait for existing logins to expire (30 minutes) and try again." }, es.sessionId);
+          return wrapResponse(
+            {
+              error:
+                "Too many active login requests. Please wait for existing logins to expire (30 minutes) and try again."
+            },
+            es.sessionId
+          );
         }
 
         const es = verifyMCPSession(sessionId);
-        const sess = requireSession(es);
+        requireSession(es);
 
         if (es.entry.userInfo) {
           return wrapResponse({ message: "You are already logged in." }, es.sessionId);
@@ -648,10 +653,13 @@ Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId":
         const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
 
         console.log("Created login URL:", loginUrl);
-        return wrapResponse({
-          message: "Please visit this link to log in",
-          loginUrl: loginUrl
-        }, es.sessionId);
+        return wrapResponse(
+          {
+            message: "Please visit this link to log in",
+            loginUrl: loginUrl
+          },
+          es.sessionId
+        );
       } catch (e) {
         return wrapResponse({ error: `Error logging in: ${String(e)}` }, sessionId || "");
       }
@@ -691,27 +699,39 @@ Session Expiration Rules:
       try {
         if (!sessionId) {
           const es = verifyMCPSession(undefined);
-          return wrapResponse({ error: "You are not logged in. Please use the login tool to authenticate.", loginRequired: true }, es.sessionId);
+          return wrapResponse(
+            { error: "You are not logged in. Please use the login tool to authenticate.", loginRequired: true },
+            es.sessionId
+          );
         }
 
         const entry = sessions.get(sessionId);
         if (!entry) {
           const es = verifyMCPSession(undefined);
-          return wrapResponse({ error: "Session ID not found. Please run login tool again.", loginRequired: true }, es.sessionId);
+          return wrapResponse(
+            { error: "Session ID not found. Please run login tool again.", loginRequired: true },
+            es.sessionId
+          );
         }
 
-        const sess = requireSession({ sessionId, entry });
+        requireSession({ sessionId, entry });
 
         if (entry.userInfo) {
-          return wrapResponse({
-            message: "You are logged in",
-            userInfo: entry.userInfo
-          }, sessionId);
+          return wrapResponse(
+            {
+              message: "You are logged in",
+              userInfo: entry.userInfo
+            },
+            sessionId
+          );
         } else {
-          return wrapResponse({
-            message: "Session exists but not yet authenticated",
-            loginRequired: true
-          }, sessionId);
+          return wrapResponse(
+            {
+              message: "Session exists but not yet authenticated",
+              loginRequired: true
+            },
+            sessionId
+          );
         }
       } catch (e) {
         return wrapResponse({ error: `Error checking user info: ${String(e)}` }, sessionId || "");
