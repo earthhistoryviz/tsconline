@@ -25,3 +25,10 @@ export function getImageFileExtension(mimeType: string): string {
   if (mimeType === "image/jpg") return ".jpg";
   throw new Error(`Invalid image mime type: ${mimeType}`);
 }
+
+export function assertPdfMimeType(mimeType: string | null): string {
+  if (!mimeType) throw new Error("Invalid pdf mime type: null");
+  const normalizedMime = mimeType.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (normalizedMime === "application/pdf") return "application/pdf";
+  throw new Error(`Invalid pdf mime type: ${mimeType}`);
+}

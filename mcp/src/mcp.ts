@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
 import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType, UserDatapack, assertDatapackTypeString} from "@tsconline/shared";
-import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType } from "./mcp-helper.js";
+import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType} from "./mcp-helper.js";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -836,7 +836,7 @@ Input:
     - title: The title of the datapack
     - description: The description of the datapack
     - datapackImageUri: A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded.
-    - pdfFiles: The pdf files to upload (optional)
+    - pdfFilesUris: Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded.
     - contact: The contact of the datapack (optional)
     - date: The date of the datapack (optional)
     - tags: The tags of the datapack (optional)
@@ -861,7 +861,7 @@ Input:
             references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
         },
       },
-    async ({datapackUri, datapackFileName, title, description, contact, sessionId, tags, references, priority, datapackImageUri}) => {
+    async ({datapackUri, datapackFileName, title, description, contact, sessionId, tags, references, priority, datapackImageUri, pdfFilesUris}) => {
 
       //Update session activity
 
@@ -902,6 +902,22 @@ Input:
         profilePictureExtension = getImageFileExtension(profilePictureMimeType);
       }
 
+
+      let pdfBuffers: Buffer[] = [];
+      let pdfMimeTypes: string[] = [];
+      let pdfExtensions: string[] = [];
+      let hasFiles = false;
+      if (pdfFilesUris && pdfFilesUris.length > 0) {
+        hasFiles = true;
+        for (const pdfUri of pdfFilesUris) {
+          const [pdfArrayBuffer, rawMimeType] = await fetchFileFromUrl(pdfUri);
+          pdfBuffers.push(Buffer.from(pdfArrayBuffer));
+          pdfMimeTypes.push(assertPdfMimeType(rawMimeType));
+          pdfExtensions.push(".pdf");
+        }
+      }
+      
+
       // const authoredBy = entry.userInfo?.username ?? "";
       const authoredBy = "Neel";
       const isPublic = false;
@@ -927,7 +943,7 @@ Input:
         references: references ?? [],
         isPublic,
         priority: priority ?? 0,
-        hasFiles: false,
+        hasFiles: hasFiles,
         ...datapackType,
         ...(contact != null && contact !== "" && { contact }),
         ...(notes != null && notes !== "" && { notes })
@@ -946,11 +962,17 @@ Input:
       formData.append("isPublic", metadata.isPublic.toString());
       formData.append("uuid", metadata.uuid);
       formData.append("type", metadata.type);
-      formData.append("hasFiles", metadata.hasFiles.toString());
       formData.append("priority", metadata.priority.toString());
       if (profilePictureBuffer && profilePictureMimeType && profilePictureExtension) {
         const profileFilename = `profile-picture${profilePictureExtension}`;
         formData.append("datapack-image", new Blob([profilePictureBuffer], { type: profilePictureMimeType }) as unknown as Blob, profileFilename);
+      }
+
+      formData.append("hasFiles", metadata.hasFiles.toString());
+      if (hasFiles) {
+        pdfBuffers.forEach((pdfBuffer, index) => {
+          formData.append("pdfFiles[]", new Blob([pdfBuffer], { type: pdfMimeTypes[index]}) as unknown as Blob, `attachment-${index}.pdf`);
+        });
       }
       if (metadata.notes) formData.append("notes", metadata.notes);
       if (metadata.contact) formData.append("contact", metadata.contact);
