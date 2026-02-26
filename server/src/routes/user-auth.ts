@@ -19,7 +19,6 @@ import {
   downloadPrivateDatapackFilesZip
 } from "./user-routes.js";
 import { findUser } from "../database.js";
-import type { User } from "../types.js";
 import { UserRecaptchaActions } from "@tsconline/shared";
 import { genericRecaptchaMiddlewarePrehandler } from "./prehandlers.js";
 
@@ -41,7 +40,6 @@ async function verifySession(request: FastifyRequest, reply: FastifyReply) {
     return;
   }
 }
-
 
 export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const looseRateLimit = {
@@ -310,6 +308,4 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     deleteDatapackComment
   );
-
 };
-

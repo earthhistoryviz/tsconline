@@ -378,7 +378,6 @@ export const uploadUserDatapack = action(
       });
       const data = await response.json();
 
-
       if (response.ok) {
         const datapack = await fetchUserDatapack(metadata.title);
         if (!datapack) {

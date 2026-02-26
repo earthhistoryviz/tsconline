@@ -24,7 +24,7 @@ import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
-import { uploadDatapack, uploadExternalDatapack } from "./routes/user-routes.js";
+import { uploadExternalDatapack } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
@@ -79,14 +79,12 @@ const activeUsers = new Gauge({
   help: "number of active users"
 });
 
-
-
 const ipSet = new Set<string>();
 
 //IP restrict access to mcp routes
 server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
   if (request.url.startsWith("/mcp")) {
-    const allowedIPs = ['127.0.0.1', '::1'];
+    const allowedIPs = ["127.0.0.1", "::1"];
     if (!allowedIPs.includes(request.ip)) {
       reply.status(401).send({ error: "Unauthorized access" });
       return;
