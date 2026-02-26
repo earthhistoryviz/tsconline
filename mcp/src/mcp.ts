@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
 import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType, UserDatapack, assertDatapackTypeString} from "@tsconline/shared";
+import { fetchFileFromUrl, getImageFileExtension } from "./mcp-helper.js";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -834,11 +835,16 @@ Input:
     - datapackFileName: The name of the datapack file. If not provided, the AI should try to send filename from the user uploaded datapack. 
     - title: The title of the datapack
     - description: The description of the datapack
-    - datapackImage: The profile picture to upload (optional)
+    - datapackImageUri: A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded.
     - pdfFiles: The pdf files to upload (optional)
     - contact: The contact of the datapack (optional)
     - date: The date of the datapack (optional)
-    - tags: The tags of the datapack (optional)`,
+    - tags: The tags of the datapack (optional)
+    
+    Note about file Uploads:
+    - A user will upload a datapack file. The user may also upload a profile picture and a number of attached pdfs. If there is confusion of which file is the datapack, profile picture, or pdfs, the AI should ask the user to clarify.
+    
+    `,
 
     inputSchema: {
             datapackUri: z.string().url().describe("A HTTP or HTTPS URL of the datapack file uploaded to cloud storage by the AI."),
@@ -855,7 +861,7 @@ Input:
             references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
         },
       },
-    async ({datapackUri, datapackFileName, title, description, contact, sessionId, tags, references, priority}) => {
+    async ({datapackUri, datapackFileName, title, description, contact, sessionId, tags, references, priority, datapackImageUri}) => {
 
       //Update session activity
 
@@ -881,13 +887,26 @@ Input:
 
       try {
       //fetch file form datapackUri
-      const datapack_response = await fetch(datapackUri);
-      if (!datapack_response.ok) {
-        return { content: [{ type: "text", text: `Failed to fetch file from URL: ${datapack_response.status} ${datapack_response.statusText}` }], isError: true };
+      const [arrayBuffer, datapackMimeType] = await fetchFileFromUrl(datapackUri);
+      const datapackBuffer = Buffer.from(arrayBuffer);
+
+      //todo: assert datapackMimeType is a valid datapack mime type
+
+      let profilePictureBuffer: Buffer | undefined;
+      if (datapackImageUri) {
+        const [profilePictureArrayBuffer, profilePictureMimeType] = await fetchFileFromUrl(datapackImageUri);
+        profilePictureBuffer = Buffer.from(profilePictureArrayBuffer);
+        try {
+          const profilePictureExtension = getImageFileExtension(profilePictureMimeType ?? "");
+        } catch (e) {
+          return { content: [{ type: "text", text: `Error: Invalid profile picture mime type: ${profilePictureMimeType}` }], isError: true };
+        }
+
       }
-      const arrayBuffer = await datapack_response.arrayBuffer();
-      const datapack_buffer = Buffer.from(arrayBuffer);
+
       
+
+
       // const authoredBy = entry.userInfo?.username ?? "";
       const authoredBy = "Neel";
       const isPublic = false;
@@ -906,7 +925,7 @@ Input:
         title,
         originalFileName: datapackFileName ?? "default-datapack.txt",
         storedFileName: datapackFileName ?? "default-datapack.txt",
-        size: datapack_buffer.length.toString(),
+        size: datapackBuffer.length.toString(),
         date: new Date().toISOString().split("T")[0] ?? "",
         authoredBy,
         tags: tags ?? [],
@@ -923,7 +942,7 @@ Input:
 
       const formData = new FormData();
       const filename = metadata.storedFileName ?? "default-datapack.txt";
-      formData.append("datapack", new Blob([datapack_buffer]) as unknown as Blob, filename);
+      formData.append("datapack", new Blob([datapackBuffer]) as unknown as Blob, filename);
       formData.append("title", metadata.title);
       formData.append("description", metadata.description);
       formData.append("references", JSON.stringify(metadata.references));
@@ -934,6 +953,7 @@ Input:
       formData.append("type", metadata.type);
       formData.append("hasFiles", metadata.hasFiles.toString());
       formData.append("priority", metadata.priority.toString());
+      if (profilePictureBuffer) formData.append("datapack-image", new Blob([profilePictureBuffer]) as unknown as Blob, "profile-picture.jpg");
       if (metadata.notes) formData.append("notes", metadata.notes);
       if (metadata.contact) formData.append("contact", metadata.contact);
       if (metadata.date) formData.append("date", metadata.date);
