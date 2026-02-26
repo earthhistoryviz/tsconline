@@ -85,6 +85,8 @@ translation.signup.username,Имя пользователя
 translation.signup.password,Пароль
 translation.signup.signin,Уже есть аккаунт? Войдите
 translation.signup.email-sent,Письмо отправлено. Проверьте почту для подтверждения аккаунта.
+translation.mcpHome.loginSuccessful,Вход успешен
+translation.mcpHome.returnToAgent,Пожалуйста, верните вашему агенту
 translation.title.about,О нас
 translation.title.main,TimeScale Creator Online
 translation.title.settings,Настройки

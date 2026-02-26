@@ -38,6 +38,10 @@
             "signin": "已有账户？登陆",
             "email-sent": "已发送电子邮件。请检查您的电子邮件以验证您的账户"
         },
+        "mcpHome": {
+            "loginSuccessful": "登录成功",
+            "returnToAgent": "请返回您的代理人处"
+        },
         "title": {
             "about": "关于我们",
             "main": "Time Scale Creator 在线版",
