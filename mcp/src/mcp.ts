@@ -147,7 +147,7 @@ function requireSession(es: { sessionId: string; entry: SessionEntry; internalNo
 }
 
 // Helper to wrap tool responses with sessionId
-function wrapResponse(content: unknown, sessionId: string) {
+function wrapResponse(content: unknown, sessionId: string): { content: Array<{ type: "text"; text: string }> } {
   return {
     content: [
       {
@@ -218,7 +218,7 @@ const columnToggleSchema = z
   .passthrough();
 
 const updateChartArgsSchema = z.object({
-  datapackTitles: datapackTitlesSchema.optional(),
+  datapackTitles: datapackTitlesSchema,
   overrides: overridesSchema.optional(),
   columnToggles: columnToggleSchema.optional(),
   useCache: z.boolean().optional(),
@@ -229,29 +229,20 @@ const updateChartArgsSchema = z.object({
     .describe("INTERNAL ONLY: Session ID from login() - tracks user activity, extends session timeout")
 });
 
-export const createMCPServer = () => {
-  const server = new McpServer({
-    name: "demo-server",
-    version: "1.0.0",
-    title: "Demo MCP Server",
-    description: "A simple server to demonstrate MCP capabilities",
-    protocolVersion: "2024-11-05",
-    capabilities: {
-      tools: { listChanged: true }
-    }
-  });
+const TOOL_DESCRIPTIONS = {
+  getCurrentChartState: {
+    title: "Get Current Chart State",
+    description: `What it does: returns the server's current chart configuration (datapacks, merged overrides, column toggles, last chart path/time).
 
-  // Tool: Get current chart state
-  server.registerTool(
-    "getCurrentChartState",
-    {
-      title: "Get Current Chart State",
-      description: `What it does: returns the server's current chart configuration (datapacks, merged overrides, column toggles, last chart path/time).
+=== SESSION MANAGEMENT (CRITICAL) ===
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
 
-=== SESSION MANAGEMENT ===
-IMPORTANT: Every tool call returns a sessionId in the response. Store and pass this sessionId to all subsequent tool calls.
-If you don't provide a sessionId, one will be automatically created.
-If you provide an invalid/expired sessionId, a new one will be automatically created and returned.
+This tool (like ALL tools) returns: { "data": {...}, "sessionId": "uuid" }
+The sessionId flows through: listDatapacks → login → whoami → updateChartState → (etc)
+
+If this is your VERY FIRST tool call in the conversation: omit sessionId (auto-created).
+WARNING: Omitting sessionId on subsequent calls breaks the session chain and creates a NEW session (losing all previous state).
 
     When to use:
     - Before incremental changes (see what's set)
@@ -259,67 +250,41 @@ If you provide an invalid/expired sessionId, a new one will be automatically cre
     - When debugging why a chart looks a certain way
 
     Input: { sessionId?: string }
-    - sessionId (optional): From previous tool call response. Maintains session state and user activity.
+    - sessionId: REQUIRED (except first call) - the sessionId from your previous tool call
 
     Example output shape:
     {
-      "datapackTitles": ["Africa Bight"],
-      "overrides": { "topAge": 0, "baseAge": 65 },
-      "columnToggles": { "off": ["nigeria coast"], "on": [] },
-      "lastChartPath": "/charts/...",
-      "lastModified": "..."
-    }`,
-      inputSchema: {
-        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
-      }
-    },
-    async ({ sessionId }) => {
-      const es = verifyMCPSession(sessionId);
+      "data": {
+        "datapackTitles": ["Africa Bight"],
+        "overrides": { "topAge": 0, "baseAge": 65 },
+        "columnToggles": { "off": ["nigeria coast"], "on": [] },
+        "lastChartPath": "/charts/...",
+        "lastModified": "..."
+      },
+      "sessionId": "uuid-to-use-in-next-call"
+    }`
+  },
+  resetChartState: {
+    title: "Reset Chart State",
+    description: `What it does: clears the server's current chart configuration for this session. Next updateChartState call starts fresh.
 
-      const sess = requireSession(es);
+=== SESSION MANAGEMENT (CRITICAL) ===
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
 
-      return wrapResponse(sess.entry.userChartState, sess.sessionId);
-    }
-  );
-
-  // Tool: Reset chart state
-  server.registerTool(
-    "resetChartState",
-    {
-      title: "Reset Chart State",
-      description: `What it does: clears the server's chart state so the next build starts fresh.
-
-=== SESSION MANAGEMENT ===
-Important: Pass the sessionId from your previous tool response to maintain the session. A new one will be automatically created if not provided.
-The response will include the current (or newly created) sessionId - store it for the next call.
+WARNING: Omitting sessionId breaks the session chain and creates a NEW session (losing all previous state).
 
     When to use:
     - Starting a brand new chart setup
     - State feels confusing; you want a clean slate
 
     Input: { sessionId?: string }
-    - sessionId (optional): From previous tool call response. Maintains session state.`,
-      inputSchema: {
-        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
-      }
-    },
-    async ({ sessionId }) => {
-      const es = verifyMCPSession(sessionId);
+    - sessionId: REQUIRED (except first call) - the sessionId from your previous tool call`
+  },
 
-      const sess = requireSession(es);
-
-      sess.entry.userChartState = newChartState();
-
-      return wrapResponse({ message: "Chart state cleared for this session." }, sess.sessionId);
-    }
-  );
-
-  // Tool: Update/Generate chart
-  server.registerTool(
-    "updateChartState",
-    {
-      title: "Update/Generate Chart",
-      description: `What it does: merges into the chart state and triggers chart render. Returns the generated chart SVG and updated state.
+  updateChartState: {
+    title: "Update/Generate Chart",
+    description: `What it does: merges into the chart state and triggers chart render. Returns the generated chart SVG and updated state.
 
 CRITICAL REQUIREMENT: Every call MUST include datapackTitles (array, non-empty). Partial updates are allowed for overrides and columnToggles, but datapacks cannot be omitted.
 A good workflow is to try to use the datapackTitles given to you (or what you assume the user wants). And should chart generation fail, you can always call listDatapacks to see available options.
@@ -337,16 +302,23 @@ Column toggling workflow:
 - Only if chart generation FAILS or user complains about missing columns, THEN call listColumns to see available options
 
 Payload shape (ALWAYS FOLLOWS THIS SHAPE):
-{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean }
+{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
 
 This tool does NOT accept chart geometry/axes/series. Do not send xAxis/yAxis/series/title. Use datapacks + overrides + column toggles only.
 
-=== SESSION MANAGEMENT ===
-PASS THE sessionId FROM YOUR PREVIOUS TOOL CALL. If this is your first call, one will be auto-created and returned.
-All responses include both the chart data AND the sessionId - store the sessionId and pass it to your next tool call. Response format:
+=== SESSION MANAGEMENT (CRITICAL) ===
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+Example flow: listDatapacks → (get sessionId) → login WITH THAT sessionId → (get sessionId) → updateChartState WITH THAT sessionId
+
+If this is your VERY FIRST tool call in the conversation: omit sessionId (auto-created).
+WARNING: Omitting sessionId on subsequent calls breaks the session chain and creates a NEW session (losing all previous state).
+
+Response format:
 {
   "data": { "message": "Chart generated!", "directUrl": "...", "embeddedChartUrl": "...", "currentState": {...} },
-  "sessionId": "uuid-string"
+  "sessionId": "uuid-to-use-in-next-call"
 }
 
 Important notes:
@@ -405,8 +377,182 @@ Example response snippet:
 
 The assistant MUST embed the chart image using the returned chart URL in a Markdown image tag as shown above.
 
-The assistant SHOULD still provide the direct URL as plain text under the embed.
-`,
+The assistant SHOULD still provide the direct URL as plain text under the embed.`
+  },
+
+  listDatapacks: {
+    title: "List Available Datapacks",
+    description: `What it does: lists datapacks you can use when building a chart.
+
+=== SESSION MANAGEMENT (CRITICAL) ===
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+This tool (like ALL tools) returns: { "data": [...], "sessionId": "uuid" }
+The returned sessionId MUST be passed to your NEXT tool call (whether it's login, updateChartState, or any other tool).
+
+If this is your VERY FIRST tool call in the conversation: omit sessionId (auto-created).
+WARNING: Omitting sessionId on subsequent calls breaks the session chain and creates a NEW session.
+
+    When to use:
+    - First step before selecting datapacks
+    - Need to confirm titles/ids available
+
+    Input: { sessionId?: string }
+    - sessionId: REQUIRED (except first call) - the sessionId from your previous tool call
+    - Do not wrap payload twice (no nested { input: {...} }).`
+  },
+
+  listColumns: {
+    title: "List Columns",
+    description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
+
+WHEN TO USE THIS:
+- User explicitly ASKS "what columns are available?" or "show me the columns"
+- updateChartState FAILED and you need to troubleshoot which columns actually exist
+- User complains about missing columns after chart generation
+
+WHEN NOT TO USE:
+- Before calling updateChartState "just to check" - DON'T do this!
+- User says "turn off column X" - just trust them and call updateChartState directly
+- Preemptively verifying column names - unnecessary, wastes time
+
+Workflow: Trust user's column names → updateChartState fails? → THEN call listColumns to debug
+
+=== SESSION MANAGEMENT (CRITICAL) ===
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+WARNING: Omitting sessionId breaks the session chain and creates a NEW session (losing all previous state).
+
+Input: { datapackTitles: string[], sessionId?: string }
+- Titles must exist (see listDatapacks)
+- sessionId: REQUIRED (except first call) - the sessionId from your previous tool call
+- Do not wrap payload twice (no nested { input: {...} })
+
+Example: { "datapackTitles": ["GTS2020"], "sessionId": "<from-previous-call>" }`
+  },
+
+  login: {
+    title: "Login",
+    description: `Generate a login link for user authentication.
+
+========================================================================
+CRITICAL: The sessionId is a SECRET. NEVER display the sessionId to the user.
+It must ONLY be used in subsequent internal tool calls.
+========================================================================
+
+=== SESSION MANAGEMENT (CRITICAL) ===
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+EXAMPLE: If you just called listDatapacks and received sessionId "abc-123", you MUST pass "abc-123" to THIS login call.
+The session chain flows: listDatapacks → (returns sessionId) → login WITH THAT sessionId → (returns sessionId) → next tool WITH THAT sessionId
+
+If this is your VERY FIRST tool call in the conversation: omit sessionId (auto-created).
+WARNING: Omitting sessionId when you already have one breaks the chain and creates a NEW session (user will see different states).
+
+What to show the user:
+- loginUrl ONLY - this is the ONLY thing the user should see
+
+What to keep internal:
+- sessionId - store this for passing to tool calls, DO NOT display it
+
+Session lifecycle:
+- Pre-login sessions: 30 minutes valid
+- After login completed: session valid for 10 minutes of inactivity
+- Pass sessionId to tool calls to track activity and extend session
+
+Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId": "uuid-string" }`
+  },
+
+  whoami: {
+    title: "Who Am I? Am I logged in?",
+    description: `What it does: Check if you're logged in and get user details.
+
+=== SESSION MANAGEMENT (CRITICAL) ===
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+EXAMPLE: If you just called login and received sessionId "abc-123", you MUST pass "abc-123" to THIS whoami call to check the status of THAT specific session.
+
+WARNING: Omitting sessionId breaks the session chain and creates a NEW session (you'll check a different session, not the one you just created with login).
+
+REMINDER: sessionId is internal only - don't show it to the user!
+
+Returns one of three states:
+1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
+2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
+3. AUTO-CREATED NEW SESSION: If session expired/omitted, a new one is automatically created
+
+Input: { sessionId?: string }
+- sessionId: REQUIRED (except first call) - the sessionId from your previous tool call
+
+Session Expiration Rules:
+- Pre-login: 30 minutes from creation (user must complete login within 30 min)
+- Authenticated: 10 minutes of inactivity (any tool call resets timer)
+- Invalid/expired: Auto-replaced with new session on any tool call`
+  }
+} as const;
+
+export const createMCPServer = () => {
+  const server = new McpServer({
+    name: "demo-server",
+    version: "1.0.0",
+    title: "Demo MCP Server",
+    description: "A simple server to demonstrate MCP capabilities",
+    protocolVersion: "2024-11-05",
+    capabilities: {
+      tools: { listChanged: true }
+    }
+  });
+
+  // Get current chart state
+  server.registerTool(
+    "getCurrentChartState",
+    {
+      title: TOOL_DESCRIPTIONS.getCurrentChartState.title,
+      description: TOOL_DESCRIPTIONS.getCurrentChartState.description,
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
+    },
+    async ({ sessionId }) => {
+      const es = verifyMCPSession(sessionId);
+
+      const sess = requireSession(es);
+
+      return wrapResponse(sess.entry.userChartState, sess.sessionId);
+    }
+  );
+
+  // Reset chart state
+  server.registerTool(
+    "resetChartState",
+    {
+      title: TOOL_DESCRIPTIONS.resetChartState.title,
+      description: TOOL_DESCRIPTIONS.resetChartState.description,
+      inputSchema: {
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
+    },
+    async ({ sessionId }) => {
+      const es = verifyMCPSession(sessionId);
+
+      const sess = requireSession(es);
+
+      sess.entry.userChartState = newChartState();
+
+      return wrapResponse({ message: "Chart state cleared for this session." }, sess.sessionId);
+    }
+  );
+
+  // Update/Generate chart
+  server.registerTool(
+    "updateChartState",
+    {
+      title: TOOL_DESCRIPTIONS.updateChartState.title,
+      description: TOOL_DESCRIPTIONS.updateChartState.description,
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
@@ -458,7 +604,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
             overrides: st.overrides,
             columnToggles: st.columnToggles,
             useCache: args.useCache ?? true,
-            isCrossPlot: args.isCrossPlot ?? false
+            isCrossPlot: args.isCrossPlot ?? false,
+            uuid: entry.userInfo?.uuid
           })
         });
 
@@ -481,17 +628,26 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
         };
 
         const mcpLinkJson = JSON.stringify(mcpLinkObj);
-        const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
-        const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkBase64}`;
+
+        // Encode using base64url (URL-safe, compact, no special characters)
+        const mcpLinkEncoded = Buffer.from(mcpLinkJson, "utf8")
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=/g, "");
+
+        const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkEncoded}`;
 
         const chartResponse = {
-          message: "Chart generated!",
+          message: `Chart generated!\n\nDirect URL (use this link directly): ${mcpToolUrl}`,
           directUrl: mcpToolUrl,
           embeddedChartUrl: `${serverUrl}${chartPath}`,
           currentState: st
         };
 
-        return wrapResponse(chartResponse, sess.sessionId);
+        const wrapped = wrapResponse(chartResponse, sess.sessionId);
+
+        return wrapped;
       } catch (e) {
         return wrapResponse({ error: `Error generating chart: ${String(e)}` }, sess.sessionId);
       }
@@ -501,20 +657,8 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
   server.registerTool(
     "listDatapacks",
     {
-      title: "List Available Datapacks",
-      description: `What it does: lists datapacks you can use when building a chart.
-
-=== SESSION MANAGEMENT ===
-Pass the sessionId from your previous tool response. If this is your first tool call, sessionId is optional - one will be auto-created.
-The response includes the sessionId to use in all subsequent calls. Response format: { "data": [...array of datapacks...], "sessionId": "uuid-string" }
-
-    When to use:
-    - First step before selecting datapacks
-    - Need to confirm titles/ids available
-
-    Input: { sessionId?: string }
-    - sessionId (optional): From previous tool call. Maintains your session.
-    - Do not wrap payload twice (no nested { input: {...} }).`,
+      title: TOOL_DESCRIPTIONS.listDatapacks.title,
+      description: TOOL_DESCRIPTIONS.listDatapacks.description,
       inputSchema: {
         sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
@@ -525,7 +669,14 @@ The response includes the sessionId to use in all subsequent calls. Response for
 
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
-        const res = await fetch(`${serverUrl}/mcp/datapacks`, { method: "GET", headers });
+        const entry = sessionId ? sessions.get(sessionId) : undefined;
+        const uuid = entry?.userInfo?.uuid;
+
+        const res = await fetch(`${serverUrl}/mcp/datapacks`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ uuid })
+        });
         if (!res.ok) {
           const text = await res.text();
           return wrapResponse({ error: `Server error: ${res.status} ${text}` }, sess.sessionId);
@@ -541,31 +692,8 @@ The response includes the sessionId to use in all subsequent calls. Response for
   server.registerTool(
     "listColumns",
     {
-      title: "List Columns",
-      description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
-
-WHEN TO USE THIS:
-- User explicitly ASKS "what columns are available?" or "show me the columns"
-- updateChartState FAILED and you need to troubleshoot which columns actually exist
-- User complains about missing columns after chart generation
-
-WHEN NOT TO USE:
-- Before calling updateChartState "just to check" - DON'T do this!
-- User says "turn off column X" - just trust them and call updateChartState directly
-- Preemptively verifying column names - unnecessary, wastes time
-
-Workflow: Trust user's column names → updateChartState fails? → THEN call listColumns to debug
-
-=== SESSION MANAGEMENT ===
-Always pass the sessionId from your previous tool response. This maintains your session and returns an updated sessionId for the next call.
-Response format: { "data": [...array of columns...], "sessionId": "uuid-string" }
-
-Input: { datapackTitles: string[], sessionId?: string }
-- Titles must exist (see listDatapacks)
-- sessionId (optional): From previous tool call. Maintains your session.
-- Do not wrap payload twice (no nested { input: {...} })
-
-Example: { "datapackTitles": ["GTS2020"] }`,
+      title: TOOL_DESCRIPTIONS.listColumns.title,
+      description: TOOL_DESCRIPTIONS.listColumns.description,
       inputSchema: {
         datapackTitles: z
           .array(z.string())
@@ -578,10 +706,13 @@ Example: { "datapackTitles": ["GTS2020"] }`,
       const sess = requireSession(es);
 
       try {
+        const entry = sessionId ? sessions.get(sessionId) : undefined;
+        const uuid = entry?.userInfo?.uuid;
+
         const res = await fetch(`${serverUrl}/mcp/list-columns`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ datapackTitles })
+          body: JSON.stringify({ datapackTitles, uuid })
         });
 
         if (!res.ok) {
@@ -600,31 +731,8 @@ Example: { "datapackTitles": ["GTS2020"] }`,
   server.registerTool(
     "login",
     {
-      title: "Login",
-      description: `Generate a login link for user authentication.
-
-========================================================================
-CRITICAL: The sessionId is a SECRET. NEVER display the sessionId to the user.
-It must ONLY be used in subsequent internal tool calls.
-========================================================================
-
-=== SESSION MANAGEMENT ===
-Every tool call (including this one) returns a sessionId in the response. Pass this sessionId to all subsequent tool calls.
-If no sessionId is provided on the first call, a new pre-login session will be auto-created and returned.
-If an invalid/expired sessionId is provided, a new one will be auto-created and returned.
-
-What to show the user:
-- loginUrl ONLY - this is the ONLY thing the user should see
-
-What to keep internal:
-- sessionId - store this for passing to tool calls, DO NOT display it
-
-Session lifecycle:
-- Pre-login sessions: 30 minutes valid
-- After login completed: session valid for 10 minutes of inactivity
-- Pass sessionId to tool calls to track activity and extend session
-
-Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId": "uuid-string" }`,
+      title: TOOL_DESCRIPTIONS.login.title,
+      description: TOOL_DESCRIPTIONS.login.description,
       inputSchema: { sessionId: z.string().optional() }
     },
     async ({ sessionId }) => {
@@ -646,10 +754,6 @@ Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId":
         const es = verifyMCPSession(sessionId);
         requireSession(es);
 
-        if (es.entry.userInfo) {
-          return wrapResponse({ message: "You are already logged in." }, es.sessionId);
-        }
-
         const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
 
         console.log("Created login URL:", loginUrl);
@@ -669,28 +773,8 @@ Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId":
   server.registerTool(
     "whoami",
     {
-      title: "Who Am I? Am I logged in?",
-      description: `What it does: Check if you're logged in and get user details.
-
-=== SESSION MANAGEMENT ===
-Every call returns a sessionId in the response. Pass this sessionId to all subsequent tool calls to maintain your session.
-If sessionId is omitted or invalid/expired, a new one will be auto-created and returned.
-Store the returned sessionId and use it in your next tool call. Response format: { "data": {...}, "sessionId": "uuid-string" }
-
-REMINDER: sessionId is internal only - don't show it to the user!
-
-Returns one of three states:
-1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
-2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
-3. AUTO-CREATED NEW SESSION: If session expired, a new one is automatically created and returned
-
-Input: { sessionId?: string }
-- sessionId (optional): From previous tool call. Pass it here to maintain auth status.
-
-Session Expiration Rules:
-- Pre-login: 30 minutes from creation (user must complete login within 30 min)
-- Authenticated: 10 minutes of inactivity (any tool call resets timer)
-- Invalid/expired: Auto-replaced with new session on any tool call`,
+      title: TOOL_DESCRIPTIONS.whoami.title,
+      description: TOOL_DESCRIPTIONS.whoami.description,
       inputSchema: {
         sessionId: z.string().optional().describe("Session ID from login tool response")
       }
@@ -720,7 +804,9 @@ Session Expiration Rules:
           return wrapResponse(
             {
               message: "You are logged in",
-              userInfo: entry.userInfo
+              userInfo: entry.userInfo.username
+                ? { username: entry.userInfo.username, email: entry.userInfo.email }
+                : null
             },
             sessionId
           );

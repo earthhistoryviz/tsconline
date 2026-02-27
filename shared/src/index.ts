@@ -85,6 +85,7 @@ export type CachedChartRequest = {
 export type MCPLinkParams = {
   datapacks: string[];
   chartHash: string;
+  uuid?: string;
 };
 
 export type CachedChartResponseInfo = {
@@ -2265,9 +2266,12 @@ export function assertWorkshopDatapackDownloadResponse(
 export function assertMCPLinkParams(o: any): asserts o is MCPLinkParams {
   if (!o || typeof o !== "object") throw new Error("MCPLinkParams must be a non-null object");
   if (!Array.isArray(o.datapacks)) throwError("MCPLinkParams", "datapacks", "array", o.datapacks);
-
   if (typeof o.chartHash !== "string") {
     throwError("MCPLinkParams", "chartHash", "string", o.chartHash);
+  }
+
+  if (o.uuid !== undefined && typeof o.uuid !== "string") {
+    throwError("MCPLinkParams", "uuid", "string", o.uuid);
   }
 }
 

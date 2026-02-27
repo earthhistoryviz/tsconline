@@ -575,6 +575,8 @@
             "loading-subheader": "Please wait while we process your report."
         },
         "errors": {
+            "MCP_DATAPACK_ACCESS_DENIED": "Access denied to the requested datapack. Please ensure you are logged in.",
+            "MCP_LINK_PROCESSING_ERROR": "Error processing MCP link. Please ensure the link is correct and try again.",
             "REGISTER_WORKSHOP_FAILED": "Unable to register for workshop. Please try again later.",
             "NO_FILES_TO_DOWNLOAD": "No files to download.",
             "USER_DATAPACK_UPLOAD_FAILED": "Unable to upload user datapack. Please try again later.",
