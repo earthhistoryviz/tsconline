@@ -92,8 +92,9 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
     const allDatapacks = [...publicDatapacks, ...officialDatapacks, ...userDatapacks];
     const requestedDatapacks = allDatapacks.filter((dp) => datapackTitles.includes(dp.title));
 
-    if (requestedDatapacks.length === 0) {
-      reply.status(404).send({ error: "No matching datapacks found" });
+    const missingDatapacks = datapackTitles.filter((dp) => !requestedDatapacks.some((rdp) => rdp.title === dp));
+    if (missingDatapacks.length > 0) {
+      reply.status(404).send({ error: `No matching datapacks found for titles: ${missingDatapacks.join(", ")}` });
       return;
     }
 

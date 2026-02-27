@@ -329,15 +329,21 @@ export const loadMcpChartLink = action("loadMCPChartLink", async (parsedState: M
   if (!datapacks || datapacks.length === 0) {
     throw new Error("No datapacks specified in MCP link");
   }
-
+  console.log("parsedhash:", chartHash);
+  // Fetch both public and user's private datapacks metadata
   await generalActions.fetchAllPublicDatapacksMetadata();
+  while (state.isInitializing) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  if (state.isLoggedIn && state.skeletonStates.privateUserDatapacksLoading) {
+    await generalActions.fetchUserDatapacksMetadata();
+  }
 
   const controller = new AbortController();
   const datapackConfigs: DatapackConfigForChartRequest[] = [];
 
   for (const title of datapacks) {
     const metadata = state.datapackMetadata.find((dp) => dp.title === title);
-
     if (!metadata) {
       const datapackList = datapacks.join(", ");
       displayServerError(
@@ -373,7 +379,7 @@ export const loadMcpChartLink = action("loadMCPChartLink", async (parsedState: M
     } as DatapackConfigForChartRequest);
   }
 
-  const route = `/cached-chart/${encodeURIComponent(chartHash)}`;
+  const route = `/cached-chart/${chartHash}`;
   const response = await fetcher(route, {
     method: "GET",
     credentials: "include"

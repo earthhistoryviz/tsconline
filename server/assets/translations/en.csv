@@ -388,6 +388,8 @@ translation.report-bug.return-to-homepage,to return to the homepage.
 translation.report-bug.second,second
 translation.report-bug.loading-header,Sending your report...
 translation.report-bug.loading-subheader,Please wait while we process your report.
+translation.errors.MCP_DATAPACK_ACCESS_DENIED,Access denied to the requested datapack. Please ensure you are logged in.
+translation.errors.MCP_LINK_PROCESSING_ERROR,Error processing MCP link. Please ensure the link is correct and try again.
 translation.errors.REGISTER_WORKSHOP_FAILED,Unable to register for workshop. Please try again later.
 translation.errors.NO_FILES_TO_DOWNLOAD,No files to download.
 translation.errors.USER_DATAPACK_UPLOAD_FAILED,Unable to upload user datapack. Please try again later.

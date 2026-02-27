@@ -147,7 +147,7 @@ function requireSession(es: { sessionId: string; entry: SessionEntry; internalNo
 }
 
 // Helper to wrap tool responses with sessionId
-function wrapResponse(content: unknown, sessionId: string) {
+function wrapResponse(content: unknown, sessionId: string): { content: Array<{ type: "text"; text: string }> } {
   return {
     content: [
       {
@@ -232,13 +232,17 @@ const updateChartArgsSchema = z.object({
 const TOOL_DESCRIPTIONS = {
   getCurrentChartState: {
     title: "Get Current Chart State",
-      description: `What it does: returns the server's current chart configuration (datapacks, merged overrides, column toggles, last chart path/time).
+    description: `What it does: returns the server's current chart configuration (datapacks, merged overrides, column toggles, last chart path/time).
 
 === SESSION MANAGEMENT (CRITICAL) ===
-This tool call (like ALL tool calls) returns: { "data": {...}, "sessionId": "uuid" }
-ALWAYS pass the sessionId from your PREVIOUS tool call to THIS call.
-If this is your first call: omit sessionId (a new session will be auto-created).
-If sessionId is omitted/invalid: a NEW session is created (breaks continuity with previous calls).
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+This tool (like ALL tools) returns: { "data": {...}, "sessionId": "uuid" }
+The sessionId flows through: listDatapacks → login → whoami → updateChartState → (etc)
+
+If this is your VERY FIRST tool call in the conversation: omit sessionId (auto-created).
+WARNING: Omitting sessionId on subsequent calls breaks the session chain and creates a NEW session (losing all previous state).
 
     When to use:
     - Before incremental changes (see what's set)
@@ -265,22 +269,22 @@ If sessionId is omitted/invalid: a NEW session is created (breaks continuity wit
     description: `What it does: clears the server's current chart configuration for this session. Next updateChartState call starts fresh.
 
 === SESSION MANAGEMENT (CRITICAL) ===
-This tool call (like ALL tool calls) returns: { "data": {...}, "sessionId": "uuid" }
-ALWAYS pass the sessionId from your PREVIOUS tool call to THIS call.
-If sessionId is omitted/invalid: a NEW session is created (breaks continuity with previous calls).
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+WARNING: Omitting sessionId breaks the session chain and creates a NEW session (losing all previous state).
 
     When to use:
     - Starting a brand new chart setup
     - State feels confusing; you want a clean slate
 
     Input: { sessionId?: string }
-    - sessionId: REQUIRED (except first call) - the sessionId from your previous tool call`,
+    - sessionId: REQUIRED (except first call) - the sessionId from your previous tool call`
   },
-  
-    "updateChartState":
-    {
-      title: "Update/Generate Chart",
-      description: `What it does: merges into the chart state and triggers chart render. Returns the generated chart SVG and updated state.
+
+  updateChartState: {
+    title: "Update/Generate Chart",
+    description: `What it does: merges into the chart state and triggers chart render. Returns the generated chart SVG and updated state.
 
 CRITICAL REQUIREMENT: Every call MUST include datapackTitles (array, non-empty). Partial updates are allowed for overrides and columnToggles, but datapacks cannot be omitted.
 A good workflow is to try to use the datapackTitles given to you (or what you assume the user wants). And should chart generation fail, you can always call listDatapacks to see available options.
@@ -303,10 +307,13 @@ Payload shape (ALWAYS FOLLOWS THIS SHAPE):
 This tool does NOT accept chart geometry/axes/series. Do not send xAxis/yAxis/series/title. Use datapacks + overrides + column toggles only.
 
 === SESSION MANAGEMENT (CRITICAL) ===
-This tool call (like ALL tool calls) returns: { "data": {...}, "sessionId": "uuid" }
-ALWAYS pass the sessionId from your PREVIOUS tool call to THIS call.
-If this is your first call: omit sessionId (a new session will be auto-created).
-If sessionId is omitted/invalid: a NEW session is created (breaks continuity with previous calls).
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+Example flow: listDatapacks → (get sessionId) → login WITH THAT sessionId → (get sessionId) → updateChartState WITH THAT sessionId
+
+If this is your VERY FIRST tool call in the conversation: omit sessionId (auto-created).
+WARNING: Omitting sessionId on subsequent calls breaks the session chain and creates a NEW session (losing all previous state).
 
 Response format:
 {
@@ -375,13 +382,17 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
 
   listDatapacks: {
     title: "List Available Datapacks",
-      description: `What it does: lists datapacks you can use when building a chart.
+    description: `What it does: lists datapacks you can use when building a chart.
 
 === SESSION MANAGEMENT (CRITICAL) ===
-This tool call (like ALL tool calls) returns: { "data": [...], "sessionId": "uuid" }
-ALWAYS pass the sessionId from your PREVIOUS tool call to THIS call.
-If this is your first call: omit sessionId (a new session will be auto-created).
-If sessionId is omitted/invalid: a NEW session is created (breaks continuity with previous calls).
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+This tool (like ALL tools) returns: { "data": [...], "sessionId": "uuid" }
+The returned sessionId MUST be passed to your NEXT tool call (whether it's login, updateChartState, or any other tool).
+
+If this is your VERY FIRST tool call in the conversation: omit sessionId (auto-created).
+WARNING: Omitting sessionId on subsequent calls breaks the session chain and creates a NEW session.
 
     When to use:
     - First step before selecting datapacks
@@ -394,7 +405,7 @@ If sessionId is omitted/invalid: a NEW session is created (breaks continuity wit
 
   listColumns: {
     title: "List Columns",
-      description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
+    description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
 
 WHEN TO USE THIS:
 - User explicitly ASKS "what columns are available?" or "show me the columns"
@@ -409,9 +420,10 @@ WHEN NOT TO USE:
 Workflow: Trust user's column names → updateChartState fails? → THEN call listColumns to debug
 
 === SESSION MANAGEMENT (CRITICAL) ===
-This tool call (like ALL tool calls) returns: { "data": [...], "sessionId": "uuid" }
-ALWAYS pass the sessionId from your PREVIOUS tool call to THIS call.
-If sessionId is omitted/invalid: a NEW session is created (breaks continuity with previous calls).
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+WARNING: Omitting sessionId breaks the session chain and creates a NEW session (losing all previous state).
 
 Input: { datapackTitles: string[], sessionId?: string }
 - Titles must exist (see listDatapacks)
@@ -423,7 +435,7 @@ Example: { "datapackTitles": ["GTS2020"], "sessionId": "<from-previous-call>" }`
 
   login: {
     title: "Login",
-      description: `Generate a login link for user authentication.
+    description: `Generate a login link for user authentication.
 
 ========================================================================
 CRITICAL: The sessionId is a SECRET. NEVER display the sessionId to the user.
@@ -431,12 +443,14 @@ It must ONLY be used in subsequent internal tool calls.
 ========================================================================
 
 === SESSION MANAGEMENT (CRITICAL) ===
-This tool call (like ALL tool calls) returns: { "data": {...}, "sessionId": "uuid" }
-ALWAYS pass the sessionId from your PREVIOUS tool call to THIS call.
-If this is your first call: omit sessionId (a new session will be auto-created).
-If sessionId is omitted/invalid: a NEW session is created (breaks continuity with previous calls).
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
 
-IMPORTANT: If you already have a sessionId from a previous tool call (like listDatapacks), PASS IT HERE to maintain the same session. Do NOT create a new session by omitting the sessionId.
+EXAMPLE: If you just called listDatapacks and received sessionId "abc-123", you MUST pass "abc-123" to THIS login call.
+The session chain flows: listDatapacks → (returns sessionId) → login WITH THAT sessionId → (returns sessionId) → next tool WITH THAT sessionId
+
+If this is your VERY FIRST tool call in the conversation: omit sessionId (auto-created).
+WARNING: Omitting sessionId when you already have one breaks the chain and creates a NEW session (user will see different states).
 
 What to show the user:
 - loginUrl ONLY - this is the ONLY thing the user should see
@@ -453,13 +467,16 @@ Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId":
   },
 
   whoami: {
-      title: "Who Am I? Am I logged in?",
-      description: `What it does: Check if you're logged in and get user details.
+    title: "Who Am I? Am I logged in?",
+    description: `What it does: Check if you're logged in and get user details.
 
 === SESSION MANAGEMENT (CRITICAL) ===
-This tool call (like ALL tool calls) returns: { "data": {...}, "sessionId": "uuid" }
-ALWAYS pass the sessionId from your PREVIOUS tool call to THIS call.
-If sessionId is omitted/invalid: a NEW session is created (breaks continuity with previous calls).
+Session continuity is MANDATORY across ALL tool calls in a conversation.
+After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
+
+EXAMPLE: If you just called login and received sessionId "abc-123", you MUST pass "abc-123" to THIS whoami call to check the status of THAT specific session.
+
+WARNING: Omitting sessionId breaks the session chain and creates a NEW session (you'll check a different session, not the one you just created with login).
 
 REMINDER: sessionId is internal only - don't show it to the user!
 
@@ -496,7 +513,7 @@ export const createMCPServer = () => {
     {
       title: TOOL_DESCRIPTIONS.getCurrentChartState.title,
       description: TOOL_DESCRIPTIONS.getCurrentChartState.description,
-       inputSchema: {
+      inputSchema: {
         sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
     },
@@ -611,17 +628,26 @@ export const createMCPServer = () => {
         };
 
         const mcpLinkJson = JSON.stringify(mcpLinkObj);
-        const mcpLinkBase64 = Buffer.from(mcpLinkJson).toString("base64");
-        const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkBase64}`;
+
+        // Encode using base64url (URL-safe, compact, no special characters)
+        const mcpLinkEncoded = Buffer.from(mcpLinkJson, "utf8")
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=/g, "");
+
+        const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkEncoded}`;
 
         const chartResponse = {
-          message: "Chart generated!",
+          message: `Chart generated!\n\nDirect URL (use this link directly): ${mcpToolUrl}`,
           directUrl: mcpToolUrl,
           embeddedChartUrl: `${serverUrl}${chartPath}`,
           currentState: st
         };
 
-        return wrapResponse(chartResponse, sess.sessionId);
+        const wrapped = wrapResponse(chartResponse, sess.sessionId);
+
+        return wrapped;
       } catch (e) {
         return wrapResponse({ error: `Error generating chart: ${String(e)}` }, sess.sessionId);
       }
@@ -728,10 +754,6 @@ export const createMCPServer = () => {
         const es = verifyMCPSession(sessionId);
         requireSession(es);
 
-        if (es.entry.userInfo) {
-          return wrapResponse({ message: "You are already logged in." }, es.sessionId);
-        }
-
         const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
 
         console.log("Created login URL:", loginUrl);
@@ -782,7 +804,9 @@ export const createMCPServer = () => {
           return wrapResponse(
             {
               message: "You are logged in",
-              userInfo: entry.userInfo
+              userInfo: entry.userInfo.username
+                ? { username: entry.userInfo.username, email: entry.userInfo.email }
+                : null
             },
             sessionId
           );

@@ -303,7 +303,7 @@ describe("mcpRenderChartWithEdits", () => {
     await mcpRenderChartWithEdits(req, reply);
 
     expect(reply.status).toHaveBeenCalledWith(404);
-    expect(reply.send).toHaveBeenCalledWith({ error: "No matching datapacks found" });
+    expect(reply.send).toHaveBeenCalledWith({ error: "No matching datapacks found for titles: none" });
   });
 
   it("returns 500 when generateChartWithEdits throws", async () => {
