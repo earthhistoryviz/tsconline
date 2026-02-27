@@ -4,7 +4,8 @@ import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
-import { MCPLinkParams } from "@tsconline/shared";
+import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType } from "@tsconline/shared";
+import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType } from "./mcp-helper.js";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -492,6 +493,34 @@ Session Expiration Rules:
 - Pre-login: 30 minutes from creation (user must complete login within 30 min)
 - Authenticated: 10 minutes of inactivity (any tool call resets timer)
 - Invalid/expired: Auto-replaced with new session on any tool call`
+  },
+  uploadDatapack: {
+    title: "Upload Datapack",
+    description: `Upload a datapack file to the server as well as meta data, profile picture, and optional pdf files. The user uploads the datapack file, optional profile picture, and optional pdf files to the AI, the AI saves the file at some internal storage and serves the HTTP/HTTPS URL.
+
+    When to use:
+    - user asks to upload a datapack
+    - user provides the datapack file, optional profile picture, and optional pdf files
+
+
+    Input:
+    - datapackFile: The datapack file to upload 
+    - datapackFileName: The name of the datapack file. If not provided, the AI should try to send filename from the user uploaded datapack. 
+    - title: The title of the datapack
+    - description: The description of the datapack
+    - datapackImageUri: A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded.
+    - pdfFilesUris: Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded.
+    - contact: The contact of the datapack (optional)
+    - date: The date of the datapack (optional)
+    - tags: The tags of the datapack (optional)
+    - notes: The notes of the datapack (optional)
+    - priority: An integer priority of the datapack (optional)
+    
+    Note about file Uploads:
+    - A user will upload a datapack file. The user may also upload a profile picture and a number of attached pdfs. If there is confusion of which file is the datapack, profile picture, or pdfs, the AI should ask the user to clarify. 
+    - Do not generate fake tags, references or notes unless a user prompts you to do so.
+    
+    `
   }
 } as const;
 
@@ -639,7 +668,6 @@ export const createMCPServer = () => {
         const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkEncoded}`;
 
         const chartResponse = {
-          message: `Chart generated!\n\nDirect URL (use this link directly): ${mcpToolUrl}`,
           directUrl: mcpToolUrl,
           embeddedChartUrl: `${serverUrl}${chartPath}`,
           currentState: st
@@ -677,6 +705,7 @@ export const createMCPServer = () => {
           headers,
           body: JSON.stringify({ uuid })
         });
+        console.log("listDatapacks response status:", res.status);
         if (!res.ok) {
           const text = await res.text();
           return wrapResponse({ error: `Server error: ${res.status} ${text}` }, sess.sessionId);
@@ -821,6 +850,203 @@ export const createMCPServer = () => {
         }
       } catch (e) {
         return wrapResponse({ error: `Error checking user info: ${String(e)}` }, sessionId || "");
+      }
+    }
+  );
+
+  server.registerTool(
+    "uploadDatapack",
+    {
+      title: TOOL_DESCRIPTIONS.uploadDatapack.title,
+      description: TOOL_DESCRIPTIONS.uploadDatapack.description,
+
+      inputSchema: {
+        sessionId: z
+          .string()
+          .describe("The session ID of the user. If not provided, the user will not be authenticated."),
+        datapackUri: z
+          .string()
+          .url()
+          .describe("A HTTP or HTTPS URL of the datapack file uploaded to cloud storage by the AI."),
+        datapackImageUri: z
+          .string()
+          .url()
+          .optional()
+          .describe(
+            "A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded."
+          ),
+        datapackFileName: z
+          .string()
+          .optional()
+          .describe("The name of the datapack file. If not provided, the name will be extracted from the URL."),
+        pdfFilesUris: z
+          .array(z.string().url())
+          .optional()
+          .describe(
+            "Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded."
+          ),
+        title: z.string().describe("The title of the datapack"),
+        description: z.string().describe("The description of the datapack"),
+        contact: z.string().optional().describe("The contact of the datapack (optional)"),
+        date: z.string().optional().describe("The date of the datapack (optional)"),
+        tags: z.array(z.string()).optional().describe("String array of tags of the datapack (optional)"),
+        priority: z.number().optional().describe("The priority of the datapack (optional)"),
+        references: z.array(z.string()).optional().describe("String array of references of the datapack (optional)"),
+        notes: z.string().optional().describe("The notes of the datapack (optional)")
+      }
+    },
+    async ({
+      sessionId,
+      datapackUri,
+      datapackFileName,
+      title,
+      description,
+      contact,
+      notes,
+      tags,
+      references,
+      priority,
+      datapackImageUri,
+      pdfFilesUris
+    }): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> => {
+      //Update session activity
+      if (!sessionId) {
+        return wrapResponse({ error: "No session ID provided. Please login again." }, sessionId || "");
+      }
+
+      const es = verifyMCPSession(sessionId);
+      const sess = requireSession(es);
+
+      const entry = sess.entry;
+      const user = entry.userInfo;
+      const uuid = user?.uuid;
+
+      if (!uuid) {
+        return wrapResponse({ error: "User UUID not found." }, sess.sessionId);
+      }
+
+      //Check if description is provided
+      if (description.length === 0 || title.length === 0) {
+        return wrapResponse({ error: "Description and title are required." }, sess.sessionId);
+      }
+
+      try {
+        //fetch file form datapackUri
+        const [arrayBuffer, datapackMimeType] = await fetchFileFromUrl(datapackUri);
+        const datapackBuffer = Buffer.from(arrayBuffer);
+
+        //todo: assert datapackMimeType is a valid datapack mime type
+
+        let profilePictureBuffer: Buffer | undefined;
+        let profilePictureMimeType: string | null = null;
+        let profilePictureExtension: string | undefined;
+        if (datapackImageUri) {
+          const [profilePictureArrayBuffer, rawMimeType] = await fetchFileFromUrl(datapackImageUri);
+          profilePictureBuffer = Buffer.from(profilePictureArrayBuffer);
+          profilePictureMimeType = assertValidImageMimeType(rawMimeType);
+          profilePictureExtension = getImageFileExtension(profilePictureMimeType);
+        }
+
+        const pdfBuffers: Buffer[] = [];
+        const pdfMimeTypes: string[] = [];
+        const pdfExtensions: string[] = [];
+        let hasFiles = false;
+        if (pdfFilesUris && pdfFilesUris.length > 0) {
+          hasFiles = true;
+          for (const pdfUri of pdfFilesUris) {
+            const [pdfArrayBuffer, rawMimeType] = await fetchFileFromUrl(pdfUri);
+            pdfBuffers.push(Buffer.from(pdfArrayBuffer));
+            pdfMimeTypes.push(assertPdfMimeType(rawMimeType));
+            pdfExtensions.push(".pdf");
+          }
+        }
+
+        const authoredBy = entry.userInfo?.username ?? "";
+
+        const datapackType: DatapackType = {
+          type: "user",
+          uuid: uuid
+        };
+
+        const metadata: DatapackMetadata = {
+          description,
+          title,
+          originalFileName: datapackFileName ?? "default-datapack.txt",
+          storedFileName: datapackFileName ?? "default-datapack.txt",
+          size: datapackBuffer.length.toString(),
+          date: new Date().toISOString().split("T")[0] ?? "",
+          authoredBy,
+          tags: tags ?? [],
+          references: references ?? [],
+          isPublic: false,
+          priority: priority ?? 0,
+          hasFiles: hasFiles,
+          ...datapackType,
+          ...(contact != null && contact !== "" && { contact }),
+          ...(notes != null && notes !== "" && { notes })
+        };
+
+        assertDatapackMetadata(metadata);
+
+        const formData = new FormData();
+        const filename = metadata.storedFileName;
+        formData.append(
+          "datapack",
+          new Blob([datapackBuffer], { type: datapackMimeType ?? undefined }) as unknown as Blob,
+          filename
+        );
+        formData.append("title", metadata.title);
+        formData.append("description", metadata.description);
+        formData.append("references", JSON.stringify(metadata.references));
+        formData.append("tags", JSON.stringify(metadata.tags));
+        formData.append("authoredBy", metadata.authoredBy);
+        formData.append("isPublic", metadata.isPublic.toString());
+        formData.append("uuid", metadata.uuid);
+        formData.append("type", metadata.type);
+        formData.append("priority", metadata.priority.toString());
+        if (profilePictureBuffer && profilePictureMimeType && profilePictureExtension) {
+          const profileFilename = `profile-picture${profilePictureExtension}`;
+          formData.append(
+            "datapack-image",
+            new Blob([profilePictureBuffer], { type: profilePictureMimeType }) as unknown as Blob,
+            profileFilename
+          );
+        }
+
+        formData.append("hasFiles", metadata.hasFiles.toString());
+        if (hasFiles) {
+          pdfBuffers.forEach((pdfBuffer, index) => {
+            formData.append(
+              "pdfFiles[]",
+              new Blob([pdfBuffer], { type: pdfMimeTypes[index] }) as unknown as Blob,
+              `attachment-${index}.pdf`
+            );
+          });
+        }
+        if (metadata.notes) formData.append("notes", metadata.notes);
+        if (metadata.contact) formData.append("contact", metadata.contact);
+        if (metadata.date) formData.append("date", metadata.date);
+
+        const uploadResponse = await fetch(`${serverUrl}/mcp/upload-datapack`, {
+          method: "POST",
+          headers: { "User-ID": uuid },
+          body: formData
+        });
+
+        if (!uploadResponse.ok) {
+          return wrapResponse(
+            {
+              error: `Failed to upload datapack: ${uploadResponse.status} ${uploadResponse.statusText}`
+            },
+            sess.sessionId
+          );
+        }
+
+        const data = await uploadResponse.json();
+        return wrapResponse({ message: `Datapack uploaded: ${data.message}` }, sess.sessionId);
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : String(e);
+        return wrapResponse({ error: `Upload failed: ${errorMsg}` }, sess.sessionId);
       }
     }
   );

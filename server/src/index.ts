@@ -1,4 +1,4 @@
-import fastify, { FastifyRequest } from "fastify";
+import fastify, { FastifyReply, FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
@@ -80,6 +80,18 @@ const activeUsers = new Gauge({
 });
 
 const ipSet = new Set<string>();
+
+//IP restrict access to mcp routes
+server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
+  if (request.url.startsWith("/mcp")) {
+    const allowedIPs = ["127.0.0.1", "::1"];
+    if (!allowedIPs.includes(request.ip)) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+  }
+});
+
 server.addHook("onRequest", async (request: FastifyRequest & { startTime?: [number, number] }) => {
   request.startTime = process.hrtime();
   const ip = request.ip;
@@ -283,6 +295,7 @@ server.post("/mcp/datapacks", looseRateLimit, mcpRoutes.mcpListDatapacks);
 server.post("/mcp/list-columns", looseRateLimit, mcpRoutes.mcpListColumns);
 server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderChartWithEdits);
 server.post("/mcp/user-info", moderateRateLimit, mcpRoutes.mcpUserInfoProxy);
+server.post("/mcp/upload-datapack", moderateRateLimit, mcpRoutes.mcpUploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);

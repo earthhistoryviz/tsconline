@@ -293,8 +293,13 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
 };
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
+// request.user is set by preHandler: verifySession (browser) or verifyMcpUploadAuth (MCP)
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
+  const user = request.user;
+  if (!user?.uuid) {
+    reply.status(401).send({ error: "Unauthorized" });
+    return;
+  }
   try {
     const result = await processAndUploadDatapack(user.uuid, request.parts());
     if (result.code !== 200) {
@@ -302,7 +307,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   } catch (e) {
-    reply.status(500).send({ error: "Error uploading datapack" });
+    reply.status(500).send({ error: `Error uploading datapack` });
   }
   reply.send({ message: "Datapack uploaded" });
 };
