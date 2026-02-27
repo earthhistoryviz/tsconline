@@ -20,7 +20,10 @@ vi.mock("../src/settings-generation/build-settings.js", () => ({
   generateChartWithEdits: vi.fn(),
   listColumns: vi.fn()
 }));
+<<<<<<< HEAD
 vi.mock("../src/database.js", () => ({ findUser: vi.fn() }));
+=======
+>>>>>>> cf3a56aa7d372e24ea23c0a7017197283bef51ba
 vi.mock("../src/upload-datapack.js", () => ({
   processAndUploadDatapack: vi.fn().mockResolvedValue({ code: 200, message: "success" })
 }));
