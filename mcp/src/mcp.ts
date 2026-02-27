@@ -493,6 +493,34 @@ Session Expiration Rules:
 - Pre-login: 30 minutes from creation (user must complete login within 30 min)
 - Authenticated: 10 minutes of inactivity (any tool call resets timer)
 - Invalid/expired: Auto-replaced with new session on any tool call`
+  },
+  uploadDatapack: {
+title: "Upload Datapack",
+      description: `Upload a datapack file to the server as well as meta data, profile picture, and optional pdf files. The user uploads the datapack file, optional profile picture, and optional pdf files to the AI, the AI saves the file at some internal storage and serves the HTTP/HTTPS URL.
+
+    When to use:
+    - user asks to upload a datapack
+    - user provides the datapack file, optional profile picture, and optional pdf files
+
+
+    Input:
+    - datapackFile: The datapack file to upload 
+    - datapackFileName: The name of the datapack file. If not provided, the AI should try to send filename from the user uploaded datapack. 
+    - title: The title of the datapack
+    - description: The description of the datapack
+    - datapackImageUri: A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded.
+    - pdfFilesUris: Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded.
+    - contact: The contact of the datapack (optional)
+    - date: The date of the datapack (optional)
+    - tags: The tags of the datapack (optional)
+    - notes: The notes of the datapack (optional)
+    - priority: An integer priority of the datapack (optional)
+    
+    Note about file Uploads:
+    - A user will upload a datapack file. The user may also upload a profile picture and a number of attached pdfs. If there is confusion of which file is the datapack, profile picture, or pdfs, the AI should ask the user to clarify. 
+    - Do not generate fake tags, references or notes unless a user prompts you to do so.
+    
+    `
   }
 } as const;
 
@@ -829,32 +857,8 @@ export const createMCPServer = () => {
   server.registerTool(
     "uploadDatapack",
     {
-      title: "Upload Datapack",
-      description: `Upload a datapack file to the server as well as meta data, profile picture, and optional pdf files. The user uploads the datapack file, optional profile picture, and optional pdf files to the AI, the AI saves the file at some internal storage and serves the HTTP/HTTPS URL.
-
-    When to use:
-    - user asks to upload a datapack
-    - user provides the datapack file, optional profile picture, and optional pdf files
-
-
-    Input:
-    - datapackFile: The datapack file to upload 
-    - datapackFileName: The name of the datapack file. If not provided, the AI should try to send filename from the user uploaded datapack. 
-    - title: The title of the datapack
-    - description: The description of the datapack
-    - datapackImageUri: A HTTP or HTTPS URL of the profile picture file uploaded to cloud storage by the AI. If not provided, the profile picture will not be uploaded.
-    - pdfFilesUris: Array of HTTP or HTTPS URLs of the pdf files uploaded to cloud storage by the AI. If not provided, the pdf files will not be uploaded.
-    - contact: The contact of the datapack (optional)
-    - date: The date of the datapack (optional)
-    - tags: The tags of the datapack (optional)
-    - notes: The notes of the datapack (optional)
-    - priority: An integer priority of the datapack (optional)
-    
-    Note about file Uploads:
-    - A user will upload a datapack file. The user may also upload a profile picture and a number of attached pdfs. If there is confusion of which file is the datapack, profile picture, or pdfs, the AI should ask the user to clarify. 
-    - Do not generate fake tags, references or notes unless a user prompts you to do so.
-    
-    `,
+      title: TOOL_DESCRIPTIONS.uploadDatapack.title,
+      description: TOOL_DESCRIPTIONS.uploadDatapack.description,
 
       inputSchema: {
         sessionId: z
@@ -907,28 +911,23 @@ export const createMCPServer = () => {
     }) => {
       //Update session activity
       if (!sessionId) {
-        return {
-          content: [{ type: "text", text: `Error: No session ID provided. Please login again.` }],
-          isError: true
-        };
+        return wrapResponse({ error: "No session ID provided. Please login again." }, sessionId || "");
       }
 
-      const v = verifyMCPSession(sessionId);
-      if ("response" in v) return v.response;
+      const es = verifyMCPSession(sessionId);
+      const sess = requireSession(es);
 
-      //neel uuid 7b9cf389-f0ef-4fbc-a82e-37046cb61bac
-
-      const entry = v.entry;
+      const entry = sess.entry;
       const user = entry.userInfo;
       const uuid = user?.uuid;
 
       if (!uuid) {
-        return { content: [{ type: "text", text: `Error: User UUID not found.` }], isError: true };
+        return wrapResponse({ error: "User UUID not found." }, sess.sessionId);
       }
 
       //Check if description is provided
       if (description.length === 0 || title.length === 0) {
-        return { content: [{ type: "text", text: `Error: Description and title are required.` }], isError: true };
+        return wrapResponse({ error: "Description and title are required." }, sess.sessionId);
       }
 
       try {
@@ -1035,26 +1034,19 @@ export const createMCPServer = () => {
         });
 
         if (!uploadResponse.ok) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Failed to upload datapack: ${uploadResponse.status} ${uploadResponse.statusText}`
-              }
-            ],
-            isError: true
-          };
+          return wrapResponse(
+            {
+              error: `Failed to upload datapack: ${uploadResponse.status} ${uploadResponse.statusText}`
+            },
+            sess.sessionId
+          );
         }
 
         const data = await uploadResponse.json();
-        return { content: [{ type: "text", text: `Datapack uploaded: ${data.message}` }] };
+        return wrapResponse({ message: `Datapack uploaded: ${data.message}` }, sess.sessionId);
       } catch (e) {
-        //print the stack trace
-        if (e instanceof Error) {
-          return { content: [{ type: "text", text: `Upload failed: ${e.message}` }], isError: true };
-        } else {
-          return { content: [{ type: "text", text: `Upload failed: ${String(e)}` }], isError: true };
-        }
+        const errorMsg = e instanceof Error ? e.message : String(e);
+        return wrapResponse({ error: `Upload failed: ${errorMsg}` }, sess.sessionId);
       }
     }
   );
