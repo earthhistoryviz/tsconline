@@ -495,8 +495,8 @@ Session Expiration Rules:
 - Invalid/expired: Auto-replaced with new session on any tool call`
   },
   uploadDatapack: {
-title: "Upload Datapack",
-      description: `Upload a datapack file to the server as well as meta data, profile picture, and optional pdf files. The user uploads the datapack file, optional profile picture, and optional pdf files to the AI, the AI saves the file at some internal storage and serves the HTTP/HTTPS URL.
+    title: "Upload Datapack",
+    description: `Upload a datapack file to the server as well as meta data, profile picture, and optional pdf files. The user uploads the datapack file, optional profile picture, and optional pdf files to the AI, the AI saves the file at some internal storage and serves the HTTP/HTTPS URL.
 
     When to use:
     - user asks to upload a datapack
@@ -668,7 +668,6 @@ export const createMCPServer = () => {
         const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkEncoded}`;
 
         const chartResponse = {
-          message: `Chart generated!\n\nDirect URL (use this link directly): ${mcpToolUrl}`,
           directUrl: mcpToolUrl,
           embeddedChartUrl: `${serverUrl}${chartPath}`,
           currentState: st
@@ -706,6 +705,7 @@ export const createMCPServer = () => {
           headers,
           body: JSON.stringify({ uuid })
         });
+        console.log("listDatapacks response status:", res.status);
         if (!res.ok) {
           const text = await res.text();
           return wrapResponse({ error: `Server error: ${res.status} ${text}` }, sess.sessionId);
