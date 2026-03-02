@@ -1154,6 +1154,12 @@ export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: 
 export const setLoadingDatapacks = action("setLoadingDatapacks", (loading: boolean) => {
   state.loadingDatapacks = loading;
 });
+export const setLoadingInternalDatapackWhenNoDatapacksSelected = action(
+  "setLoadingInternalDatapackWhenNoDatapacksSelected",
+  (loading: boolean) => {
+    state.loadingInternalDatapackWhenNoDatapacksSelected = loading;
+  }
+);
 export const setIsInitializing = action("setIsInitializing", (initializing: boolean) => {
   state.isInitializing = initializing;
 });

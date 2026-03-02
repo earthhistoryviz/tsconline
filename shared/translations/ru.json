@@ -147,6 +147,10 @@
             "signin": "Уже есть аккаунт? Войдите",
             "email-sent": "Письмо отправлено. Проверьте почту для подтверждения аккаунта."
         },
+        "mcpHome": {
+            "loginSuccessful": "Вход успешен",
+            "returnToAgent": "Пожалуйста, верните вашему агенту"
+        },
         "title": {
             "about": "О нас",
             "main": "TimeScale Creator Online",

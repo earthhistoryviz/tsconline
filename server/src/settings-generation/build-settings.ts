@@ -39,9 +39,6 @@ export type FlattenedColumn = {
 };
 
 /**
- * Simplified column schema for AI to understand available columns
- */
-/**
  * Merge multiple datapack column trees into a single root column.
  * Replicates frontend worker logic to ensure consistency.
  */
