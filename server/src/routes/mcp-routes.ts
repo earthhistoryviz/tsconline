@@ -158,3 +158,28 @@ export async function mcpUserInfoProxy(request: FastifyRequest, reply: FastifyRe
   const data = await res.json();
   return reply.code(res.status).send(data);
 }
+
+// route called by frontend to create a new mcp session entry - need to pass in auth token here to get through to mcp server
+export async function mcpCreateSession(request: FastifyRequest, reply: FastifyReply) {
+
+  // if there is no session UUID, the user is not logged in
+  const sessionUuid = request.session?.get?.("uuid");
+  if (!sessionUuid) return reply.code(401).send({ error: "Not logged in" });
+
+  // get trusted auth token the mcp server expects with each request call
+  const token = process.env.MCP_AUTH_TOKEN;
+  if (!token) return reply.code(500).send({ error: "Missing MCP_AUTH_TOKEN" });
+
+  // base mcp url
+  const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
+
+  // continue call to mcp server with the additional auth token passed in
+  const res = await fetch(`${base}/messages/create-session`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  // wait and return reponse from request call
+  const data = await res.json();
+  return reply.code(res.status).send(data);
+}

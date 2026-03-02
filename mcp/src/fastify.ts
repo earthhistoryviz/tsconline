@@ -272,6 +272,19 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     reply.code(200).send({ ok: true, sessionId });
   });
 
+  app.post("/messages/create-session", async (_req, reply) => {
+    const sessionId = randomUUID(); // generate new sessionid for this new entry we are making
+
+    // create that new entry in the mcp sessions mapping (userInfo undefined for now)
+    sessions.set(sessionId, {
+      createdAt: Date.now(),
+      lastActivity: Date.now(),
+      userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+    });
+
+    return reply.send({ sessionId });
+  });
+
   if (enableHealth) {
     app.get("/messages/health", async (_req, reply) => {
       reply.send({

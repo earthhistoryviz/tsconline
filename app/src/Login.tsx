@@ -161,6 +161,44 @@ export const Login: React.FC = observer(() => {
     await handleLogin(false, formData);
   };
   const { t } = useTranslation();
+
+  // function add mcp session from tsconline to agent
+  const handleCreateMcpSession = async () => {
+    try {
+      setLoading(true);
+      const res = await fetcher("/mcp/create-session", { // route called to make new entry in the mcp mapping
+        method: "POST",
+        credentials: "include"
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
+        return;
+      }
+
+      const sessionId = json.sessionId as string | undefined; // previous call will return sessionID that was created for that entry
+      if (!sessionId) {
+        actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
+        return;
+      }
+      await fetcher("/mcp/user-info", { // populate that entry that the passed in sessionId maps to in order add the current userInfo
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          sessionId,
+          userInfo: { ...state.user, historyEntries: [] }
+        })
+      });
+
+      await navigator.clipboard.writeText(sessionId); // also copy that sessionId to clipboard for copy-paste purposes
+      actions.pushSnackbar("GeoGPT session ID copied to clipboard", "success");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box className="login-box">
       <Avatar sx={{ bgcolor: theme.palette.backgroundColor.main }}>
@@ -203,6 +241,17 @@ export const Login: React.FC = observer(() => {
               disabled={!state.cookieConsent}>
               {t("login.signin")}
             </TSCButton>
+            {state.isLoggedIn && ( // dont render button if not logged in
+              <TSCButton
+                fullWidth
+                variant="outlined"
+                sx={{ mb: 1 }}
+                disabled={!state.cookieConsent || loading}
+                onClick={handleCreateMcpSession}
+              >
+                Copy GeoGPT Session ID
+              </TSCButton>
+            )}
             <Grid container className="grid-container">
               <Grid item xs>
                 <Link href="/forgot-password">{t("login.forgot-password")}</Link>
