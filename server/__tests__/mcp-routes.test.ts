@@ -1,5 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from "vitest";
+import type { FastifyInstance } from "fastify";
+import fastify from "fastify";
+import fastifyMultipart from "@fastify/multipart";
+import formAutoContent from "form-auto-content";
 import type { FastifyRequest, FastifyReply } from "fastify";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants.js";
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -16,13 +21,18 @@ vi.mock("../src/settings-generation/build-settings.js", () => ({
   listColumns: vi.fn()
 }));
 vi.mock("../src/database.js", () => ({ findUser: vi.fn() }));
+vi.mock("../src/upload-datapack.js", () => ({
+  processAndUploadDatapack: vi.fn().mockResolvedValue({ code: 200, message: "success" })
+}));
 
 import {
   mcpListDatapacks,
   mcpListColumns,
   mcpRenderChartWithEdits,
-  mcpUserInfoProxy
+  mcpUserInfoProxy,
+  mcpUploadDatapack
 } from "../src/routes/mcp-routes.js";
+import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../src/user/user-handler.js";
 import { extractMetadataFromDatapack } from "../src/util.js";
@@ -498,5 +508,117 @@ describe("mcpUserInfoProxy", () => {
     // Expect code 200 for success
     expect(reply.code).toHaveBeenCalledWith(200);
     expect(reply.send).toHaveBeenCalledWith({ ok: true, sessionId: "sid123" });
+  });
+});
+
+describe("mcpUploadDatapack (route)", () => {
+  let app: FastifyInstance;
+  let formData: ReturnType<typeof formAutoContent>;
+  let formHeaders: Record<string, string>;
+  const uuid = "123e4567-e89b-12d3-a456-426614174000";
+  const processAndUploadDatapack = vi.mocked(uploadDatapack.processAndUploadDatapack);
+
+  const createForm = (json: Record<string, unknown> = {}) => {
+    if (!("datapack" in json)) {
+      json.datapack = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.dpk",
+          contentType: "text/plain"
+        }
+      };
+    }
+    if (!(DATAPACK_PROFILE_PICTURE_FILENAME in json)) {
+      json[DATAPACK_PROFILE_PICTURE_FILENAME] = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.jpg",
+          contentType: "image/jpeg"
+        }
+      };
+    }
+    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
+    formHeaders = { "user-id": uuid, ...(formData.headers as Record<string, string>) };
+  };
+
+  beforeAll(async () => {
+    app = fastify({ exposeHeadRoutes: false });
+    await app.register(fastifyMultipart, {
+      limits: { fieldNameSize: 100, fileSize: 1024 * 1024 * 60 }
+    });
+    app.post("/mcp/upload-datapack", mcpUploadDatapack);
+    await app.listen({ host: "127.0.0.1", port: 0 });
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(() => {
+    createForm();
+    processAndUploadDatapack.mockResolvedValue({ code: 200, message: "success" });
+  });
+
+  it("returns 401 if user-id header is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/mcp/upload-datapack",
+      headers: formData.headers as Record<string, string>,
+      payload: formData.body
+    });
+    expect(response.statusCode).toBe(401);
+    expect(await response.json()).toEqual({ error: "Unauthorized" });
+    expect(processAndUploadDatapack).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 if user-id header is empty", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/mcp/upload-datapack",
+      headers: { "user-id": "  ", ...(formData.headers as Record<string, string>) },
+      payload: formData.body
+    });
+    expect(response.statusCode).toBe(401);
+    expect(await response.json()).toEqual({ error: "Unauthorized" });
+    expect(processAndUploadDatapack).not.toHaveBeenCalled();
+  });
+
+  it("returns 200 if the datapack is successfully uploaded", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/mcp/upload-datapack",
+      headers: formHeaders,
+      payload: formData.body
+    });
+    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
+    expect(response.statusCode).toBe(200);
+    expect(processAndUploadDatapack).toHaveBeenCalledOnce();
+  });
+
+  it("replies with non-200 if processAndUploadDatapack returns an operation result", async () => {
+    const operationResult = { code: 500, message: "Error" };
+    processAndUploadDatapack.mockResolvedValueOnce(operationResult);
+    const response = await app.inject({
+      method: "POST",
+      url: "/mcp/upload-datapack",
+      headers: formHeaders,
+      payload: formData.body
+    });
+    expect((await response.json()).error).toBe(operationResult.message);
+    expect(response.statusCode).toBe(operationResult.code);
+    expect(processAndUploadDatapack).toHaveBeenCalledOnce();
+  });
+
+  it("returns 500 if processAndUploadDatapack throws", async () => {
+    processAndUploadDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/mcp/upload-datapack",
+      headers: formHeaders,
+      payload: formData.body
+    });
+    expect((await response.json()).error).toBe("Error uploading datapack");
+    expect(response.statusCode).toBe(500);
+    expect(processAndUploadDatapack).toHaveBeenCalledOnce();
   });
 });

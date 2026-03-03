@@ -2700,12 +2700,15 @@ __metadata:
     "@fastify/rate-limit": "npm:^9.1.0"
     "@modelcontextprotocol/sdk": "npm:^1.17.0"
     "@tsconline/shared": "npm:1.0.0"
+    "@types/formdata": "npm:^0"
     "@types/node": "npm:^24.1.0"
     "@types/ws": "npm:^8.18.1"
     chalk: "npm:^5.4.1"
     concurrently: "npm:^9.2.1"
     dotenv: "npm:^17.2.3"
     fastify: "npm:4.27.0"
+    form-data: "npm:^4.0.5"
+    formdata: "npm:^0.10.4"
     node-fetch: "npm:^3.3.2"
     nodemon: "npm:^3.1.10"
     typescript: "npm:5.2.2"
@@ -3258,6 +3261,24 @@ __metadata:
   version: 2.0.7
   resolution: "@types/file-saver@npm:2.0.7"
   checksum: c3d1cd80eab1214767922cabac97681f3fb688e82b74890450d70deaca49537949bbc96d80d363d91e8f0a4752c7164909cc8902d9721c5c4809baafc42a3801
+  languageName: node
+  linkType: hard
+
+"@types/form-data@npm:^2.5.2":
+  version: 2.5.2
+  resolution: "@types/form-data@npm:2.5.2"
+  dependencies:
+    form-data: "npm:*"
+  checksum: fb38ae90b671dc912152a01143d7342aac273650c0efa6c866d490913fc83d32e8b96e87bd2d6a737e2c8975cc3d63322d702f77935f68fb838c32662dc616fb
+  languageName: node
+  linkType: hard
+
+"@types/formdata@npm:^0":
+  version: 0.10.4
+  resolution: "@types/formdata@npm:0.10.4"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 3861b8b19907ef3c6192bffaa8335bd9d19fe5ab6f049d61e4a335b70440138ef96f94e7e7fb3de7a66a8f57d03169f453ac98cc3dbeccf43da748137892ee48
   languageName: node
   linkType: hard
 
@@ -4139,6 +4160,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"File@npm:^0.10.2":
+  version: 0.10.2
+  resolution: "File@npm:0.10.2"
+  dependencies:
+    mime: "npm:>= 0.0.0"
+  checksum: 1848e1ce27fcc10e3edbe774738215ff54dffba3c3d5fbef4c217d57bb5416da8ba5dfeebdd2bf055c459e78fbddad3db0a4f5e7b598bbd2e2400d959da93430
+  languageName: node
+  linkType: hard
+
+"FileList@npm:^0.10.2":
+  version: 0.10.2
+  resolution: "FileList@npm:0.10.2"
+  checksum: 865d077f4718012581d0aae9487324596d8b548442a43a22b76b9a9890af1abb594c6053bb0ef0ae905bf6a9ce0181aadb210d2dbf5eb7693164d57803291036
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:1":
   version: 1.1.1
   resolution: "abbrev@npm:1.1.1"
@@ -4890,6 +4927,13 @@ __metadata:
     base64-js: "npm:^1.3.1"
     ieee754: "npm:^1.2.1"
   checksum: b6bc68237ebf29bdacae48ce60e5e28fc53ae886301f2ad9496618efac49427ed79096750033e7eab1897a4f26ae374ace49106a5758f38fb70c78c9fda2c3b1
+  languageName: node
+  linkType: hard
+
+"bufferjs@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "bufferjs@npm:2.0.0"
+  checksum: c51da7610838a9e6c5f85675a02be7234cfff4bce1aa37dfe1d83c6ba127b171b1872c78c90a690c61e3970793e308ef996b057c4ef351815c2efbe3870f0381
   languageName: node
   linkType: hard
 
@@ -7253,6 +7297,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"filereader@npm:^0.10.3":
+  version: 0.10.3
+  resolution: "filereader@npm:0.10.3"
+  checksum: 70d42f71379d6a7a2faea8abf3f08cb3d8b941f4702a1d50417631225ea820ca711d5cd8c5f473858fd024d45194d055822025f934f076eceb0eaac9b99a1ee3
+  languageName: node
+  linkType: hard
+
 "fill-range@npm:^7.1.1":
   version: 7.1.1
   resolution: "fill-range@npm:7.1.1"
@@ -7348,6 +7399,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"foreachasync@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "foreachasync@npm:3.0.0"
+  checksum: 21bd394f1db54a89a03b5351a07abe318ebb90756364adefafcfccf98c37b92cbe6b95f09909e0c398661f7ccccfa05119d7dbe4c2c58a680e7cdfd7d9009fca
+  languageName: node
+  linkType: hard
+
 "foreground-child@npm:^3.1.0":
   version: 3.1.1
   resolution: "foreground-child@npm:3.1.1"
@@ -7365,6 +7423,19 @@ __metadata:
     fast-querystring: "npm:^1.0.0"
     form-data: "npm:^4.0.0"
   checksum: dea1635e47a2d5bfdfcfdfce6f76d9140208fd1eda2ff318e7ccd8db5337e79ea384b54b55a5fc27b508313a3d71a619aebff0a401d77211764413537769de53
+  languageName: node
+  linkType: hard
+
+"form-data@npm:*, form-data@npm:^4.0.5":
+  version: 4.0.5
+  resolution: "form-data@npm:4.0.5"
+  dependencies:
+    asynckit: "npm:^0.4.0"
+    combined-stream: "npm:^1.0.8"
+    es-set-tostringtag: "npm:^2.1.0"
+    hasown: "npm:^2.0.2"
+    mime-types: "npm:^2.1.12"
+  checksum: 52ecd6e927c8c4e215e68a7ad5e0f7c1031397439672fd9741654b4a94722c4182e74cc815b225dcb5be3f4180f36428f67c6dd39eaa98af0dcfdd26c00c19cd
   languageName: node
   linkType: hard
 
@@ -7387,6 +7458,20 @@ __metadata:
   dependencies:
     fetch-blob: "npm:^3.1.2"
   checksum: 9b5001d2edef3c9449ac3f48bd4f8cc92e7d0f2e7c1a5c8ba555ad4e77535cc5cf621fabe49e97f304067037282dd9093b9160a3cb533e46420b446c4e6bc06f
+  languageName: node
+  linkType: hard
+
+"formdata@npm:^0.10.4":
+  version: 0.10.4
+  resolution: "formdata@npm:0.10.4"
+  dependencies:
+    File: "npm:^0.10.2"
+    FileList: "npm:^0.10.2"
+    bufferjs: "npm:^2.0.0"
+    filereader: "npm:^0.10.3"
+    foreachasync: "npm:^3.0.0"
+    remedial: "npm:^1.0.7"
+  checksum: f926c595d090e2c95ac1f99f523929deecb343bc71eeb000ad119076b00497b4c9fbec7823800dc943cb1dbf939e674a0b895342ba41e64f8d651cdf469dfe2b
   languageName: node
   linkType: hard
 
@@ -9967,6 +10052,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mime@npm:>= 0.0.0":
+  version: 4.1.0
+  resolution: "mime@npm:4.1.0"
+  bin:
+    mime: bin/cli.js
+  checksum: 154c06eeaf803c4a87f44b3dbd3fafc50afed7154f9ea2d2dde4ae464be33a7c6943de6981d636abd5da3523d2bd66ee1ad2adb2e4c2e7a2fe5e0075bcde62d5
+  languageName: node
+  linkType: hard
+
 "mime@npm:^1.3.4":
   version: 1.6.0
   resolution: "mime@npm:1.6.0"
@@ -12026,6 +12120,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"remedial@npm:^1.0.7":
+  version: 1.0.8
+  resolution: "remedial@npm:1.0.8"
+  checksum: 41e23a7d656fd696678e4f648e57ece5c9e13c097094e8ac6e173990a0665a24d8e50cbb39d458af3b0d58cfbd7811fc0840c4646d10ce3285fe5819b1c82375
+  languageName: node
+  linkType: hard
+
 "rename-keys@npm:^1.1.2":
   version: 1.2.0
   resolution: "rename-keys@npm:1.2.0"
@@ -13733,6 +13834,7 @@ __metadata:
   dependencies:
     "@playwright/test": "npm:^1.55.1"
     "@types/eslint": "npm:^8"
+    "@types/form-data": "npm:^2.5.2"
     "@types/node": "npm:^20.11.28"
     "@typescript-eslint/eslint-plugin": "npm:^7.0.2"
     "@typescript-eslint/parser": "npm:^7.0.2"
@@ -13745,6 +13847,7 @@ __metadata:
     eslint-plugin-check-file: "npm:^2.7.1"
     eslint-plugin-react: "npm:^7.33.2"
     fastify: "npm:^4.27.0"
+    form-data: "npm:^4.0.5"
     playwright: "npm:^1.55.1"
     prettier: "npm:^3.2.5"
     typescript: "npm:5.2.2"
