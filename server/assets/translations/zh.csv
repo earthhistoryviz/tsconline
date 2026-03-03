@@ -32,6 +32,8 @@ translation.signup.username,用户名
 translation.signup.password,密码
 translation.signup.signin,已有账户？登陆
 translation.signup.email-sent,已发送电子邮件。请检查您的电子邮件以验证您的账户
+translation.mcpHome.loginSuccessful,登录成功
+translation.mcpHome.returnToAgent,请返回您的代理人处
 translation.title.about,关于我们
 translation.title.main,Time Scale Creator 在线版
 translation.title.settings,设置
