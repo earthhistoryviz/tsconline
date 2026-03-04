@@ -33,7 +33,7 @@ export interface SessionEntry {
 export const sessions = new Map<string, SessionEntry>();
 
 const PRE_LOGIN_TTL_MS = 30 * 60 * 1000; // login link valid for 30 min
-const AUTHENTICATED_INACTIVITY_TTL_MS = 10 * 60 * 1000; // session lasts 10 minutes since last active
+const AUTHENTICATED_INACTIVITY_TTL_MS = 4 * 60 * 60 * 1000; // session lasts 4 hours since last active
 const MAX_CONCURRENT_LOGIN_REQUESTS = 10; // rate limit: max 10 pre-login sessions
 
 // Cleanup expired sessions every 1 minute
