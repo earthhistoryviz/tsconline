@@ -15,8 +15,13 @@ dotenv.config({
 });
 
 const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
+
 const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:5173`;
 const internalServerUrl = `http://127.0.0.1:3000`;
+
+//for MCP route requests, use the internal server url so we can restrict IPs 
+const internalServerUrl = `http://127.0.0.1:3000`;
+
 
 // Single session map: sessionId -> { userInfo?, createdAt, lastActivity }
 export interface SessionEntry {
