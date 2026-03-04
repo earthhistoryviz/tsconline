@@ -15,7 +15,12 @@ dotenv.config({
 });
 
 const serverUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3000`;
+
 const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:5173`;
+
+//for MCP route requests, use the internal server url so we can restrict IPs 
+const internalServerUrl = `http://127.0.0.1:3000`;
+
 
 // Single session map: sessionId -> { userInfo?, createdAt, lastActivity }
 export interface SessionEntry {
@@ -625,7 +630,7 @@ export const createMCPServer = () => {
 
       // Generate chart with THIS SESSION'S state
       try {
-        const res = await fetch(`${serverUrl}/mcp/render-chart-with-edits`, {
+        const res = await fetch(`${internalServerUrl}/mcp/render-chart-with-edits`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -700,7 +705,7 @@ export const createMCPServer = () => {
         const entry = sessionId ? sessions.get(sessionId) : undefined;
         const uuid = entry?.userInfo?.uuid;
 
-        const res = await fetch(`${serverUrl}/mcp/datapacks`, {
+        const res = await fetch(`${internalServerUrl}/mcp/datapacks`, {
           method: "POST",
           headers,
           body: JSON.stringify({ uuid })
@@ -738,7 +743,7 @@ export const createMCPServer = () => {
         const entry = sessionId ? sessions.get(sessionId) : undefined;
         const uuid = entry?.userInfo?.uuid;
 
-        const res = await fetch(`${serverUrl}/mcp/list-columns`, {
+        const res = await fetch(`${internalServerUrl}/mcp/list-columns`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ datapackTitles, uuid })
@@ -1027,7 +1032,7 @@ export const createMCPServer = () => {
         if (metadata.contact) formData.append("contact", metadata.contact);
         if (metadata.date) formData.append("date", metadata.date);
 
-        const uploadResponse = await fetch(`${serverUrl}/mcp/upload-datapack`, {
+        const uploadResponse = await fetch(`${internalServerUrl}/mcp/upload-datapack`, {
           method: "POST",
           headers: { "User-ID": uuid },
           body: formData
