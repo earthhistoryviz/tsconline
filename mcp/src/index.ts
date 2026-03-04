@@ -73,8 +73,6 @@ mcpServer.addHook("onRequest", async (req, reply) => {
     return reply.code(401).send({ error: "Invalid or missing sessionId" });
   }
 
-  console.log("token is missing", token);
-
   // Everything else requires token
   return reply.code(401).send({ error: "Unauthorized" });
 });
