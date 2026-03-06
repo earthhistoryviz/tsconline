@@ -82,16 +82,14 @@ export const Login: React.FC = observer(() => {
         await actions.sessionCheck();
         if (mcpSession) {
           try {
-            // Avoid sending large history payloads; MCP only needs identity/role info
-            const userInfo = { ...state.user, historyEntries: [] };
-            await fetcher("/messages/user-info", {
+            await fetcher("/mcp/user-info", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
               },
+              credentials: "include",
               body: JSON.stringify({
-                sessionId: mcpSession,
-                userInfo
+                sessionId: mcpSession
               })
             });
           } catch (e) {
@@ -103,7 +101,13 @@ export const Login: React.FC = observer(() => {
         } else {
           actions.removeAllErrors();
           actions.pushSnackbar("Successfully signed in", "success");
-          navigate("/");
+          // dynamic redirection based on if we have an mcp session or not
+          if (mcpSession) {
+            actions.logout();
+            navigate("/mcp_home");
+          } else {
+            navigate("/");
+          }
         }
       } else {
         const message = await response.json();

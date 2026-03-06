@@ -9,7 +9,7 @@ export async function initialize() {
     if (state.skipInitialization) {
       return;
     }
-    actions.sessionCheck();
+    await actions.sessionCheck();
     actions.fetchAllPublicDatapacksMetadata();
     actions.fetchPresets();
 
