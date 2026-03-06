@@ -146,7 +146,6 @@ export type State = {
   prevConfig: Config;
   presets: Presets;
   loadingDatapacks: boolean;
-  loadingInternalDatapackWhenNoDatapacksSelected: boolean;
   datapackMetadata: DatapackMetadata[]; // all datapacks on the server, loaded on page load
   datapacks: Datapack[]; // all datapacks on the server, not loaded on page load
   skeletonStates: {
@@ -326,7 +325,6 @@ export const state = observable<State>({
   },
   presets: {},
   loadingDatapacks: false,
-  loadingInternalDatapackWhenNoDatapacksSelected: false,
   datapackMetadata: [],
   datapacks: [],
   skeletonStates: {
