@@ -104,7 +104,7 @@ export const setChartTab = action("setChartTab", (chartTab: typeof state.chartTa
 });
 
 function areSettingsValidForGeneration(options?: { from?: string }) {
-  if (!state.config.datapacks || !state.settingsTabs.columns) {
+  if (!state.config.datapacks || !state.settingsTabs.columns || state.config.datapacks.length === 0) {
     generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
     return false;
   }
@@ -157,31 +157,6 @@ export const compileChartRequest = action(
       from?: string;
     }
   ) => {
-    // Auto-load internal datapack if none selected
-    if (state.config.datapacks.length === 0 && !state.loadingInternalDatapackWhenNoDatapacksSelected) {
-      const INTERNAL_DATAPACK_TITLE = "TimeScale Creator Internal Datapack";
-      generalActions.setLoadingInternalDatapackWhenNoDatapacksSelected(true);
-      generalActions.setLoadingDatapacks(true);
-      const internalDatapack = await generalActions.fetchDatapack({
-        isPublic: true,
-        title: INTERNAL_DATAPACK_TITLE,
-        type: "official"
-      });
-      if (internalDatapack) {
-        generalActions.addDatapack(internalDatapack);
-        const internalDatapackConfig = {
-          storedFileName: internalDatapack.storedFileName,
-          title: INTERNAL_DATAPACK_TITLE,
-          isPublic: internalDatapack.isPublic,
-          type: "official" as const
-        };
-        await generalActions.processDatapackConfig([internalDatapackConfig], { silent: true });
-        generalActions.setLoadingDatapacks(false);
-      } else {
-        console.warn("Failed to load internal datapack");
-        generalActions.setUnsavedDatapackConfig([]);
-      }
-    }
     // asserts column is not null
     if (!areSettingsValidForGeneration(options)) return;
     state.showSuggestedAgePopup = false;
@@ -232,11 +207,6 @@ export const compileChartRequest = action(
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
       generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
-      if (state.loadingInternalDatapackWhenNoDatapacksSelected) {
-        generalActions.setUnsavedDatapackConfig([]);
-        await actions.processDatapackConfig([]);
-        generalActions.setLoadingInternalDatapackWhenNoDatapacksSelected(false);
-      }
     }
   }
 );
