@@ -63,12 +63,13 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   //check seralized URL params for a given chart state from MCP
   // Right now, gets a public datapack title only. Then needs to create a DatapackConfigForChartRequest from that title, somehow getting the stored file name.
   useEffect(() => {
+    // Guard against multiple calls (React strict mode can cause double calls)
+    if (isLoadingCachedChart.current) return;
+
     let mounted = true;
     (async () => {
       try {
         if (!mounted) return;
-
-        isLoadingCachedChart.current = true;
 
         const urlParams = new URLSearchParams(window.location.search);
         if (!urlParams.toString()) {
@@ -79,11 +80,29 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
           actions.pushSnackbar("No mcpChartState parameter found in URL.", "warning");
           return;
         }
+
+        // Set loading flag before any async operations
+        isLoadingCachedChart.current = true;
+
         let parsedState = null;
         try {
-          const decodedState = atob(chartStateParam);
+          // Decode base64url (convert back to standard base64, add padding, then decode)
+          let base64 = chartStateParam.replace(/-/g, "+").replace(/_/g, "/");
+          // Add padding if needed
+          const padding = 4 - (base64.length % 4);
+          if (padding !== 4) {
+            base64 += "=".repeat(padding);
+          }
+
+          // Decode base64 to UTF-8 string (browser native)
+          const binaryString = atob(base64);
+          const decodedState = new TextDecoder().decode(
+            new Uint8Array(binaryString.split("").map((c) => c.charCodeAt(0)))
+          );
           parsedState = JSON.parse(decodedState);
+          console.log("Parsed chart state from URL:", parsedState);
         } catch (error) {
+          console.error("Failed to parse chartState:", error);
           actions.pushSnackbar("Error parsing chartState from URL.", "warning");
           return;
         }
