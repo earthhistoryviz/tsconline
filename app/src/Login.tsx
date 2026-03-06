@@ -193,7 +193,7 @@ export const Login: React.FC = observer(() => {
       });
 
       await navigator.clipboard.writeText(sessionId); // also copy that sessionId to clipboard for copy-paste purposes
-      actions.pushSnackbar("GeoGPT session ID copied to clipboard", "success");
+      actions.pushSnackbar("GeoGPT session ID created and copied. Paste it into GeoGPT chat.", "success");
     } finally {
       setLoading(false);
     }
@@ -249,7 +249,7 @@ export const Login: React.FC = observer(() => {
                 disabled={!state.cookieConsent || loading}
                 onClick={handleCreateMcpSession}
               >
-                Copy GeoGPT Session ID
+                Create New GeoGPT Session
               </TSCButton>
             )}
             <Grid container className="grid-container">

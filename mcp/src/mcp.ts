@@ -654,6 +654,64 @@ If you see "not found": session expired, call login() again.`,
     }
   );
 
+  server.registerTool(
+    "useGeoGPTSession",
+    {
+      title: "Use GeoGPT Session",
+      description: `Use a GeoGPT session ID pasted by the user.
+
+  When a user pastes a GeoGPT session ID from TSC Online into chat, call this tool with that sessionId.
+  If valid, this confirms which TSC Online user the session belongs to.
+  After a successful call, reuse that same sessionId for future authenticated tool calls in this conversation.
+
+  Input: { sessionId: string }`,
+      inputSchema: {
+        sessionId: z.string().describe("GeoGPT session ID pasted by the user from TSC Online")
+      }
+    },
+    async ({ sessionId }) => {
+      const entry = sessions.get(sessionId);
+
+      if (!entry) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "GeoGPT session not found or expired. Please copy a new session ID from TSC Online and try again."
+            }
+          ]
+        };
+      }
+
+      if (!entry.userInfo) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "GeoGPT session exists but is not authenticated yet. Please create a new session from TSC Online and try again."
+            }
+          ]
+        };
+      }
+
+      entry.lastActivity = Date.now();
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `GeoGPT session connected successfully.
+
+  Logged in user:
+  ${JSON.stringify(entry.userInfo, null, 2)}
+
+  Use this same sessionId for future authenticated tool calls in this conversation.`
+          }
+        ]
+      };
+    }
+  );
+
   server.registerResource(
     "greeting",
     new ResourceTemplate("greeting://{name}", { list: undefined }),
