@@ -169,7 +169,6 @@ export async function mcpUserInfoProxy(request: FastifyRequest, reply: FastifyRe
 
 // route called by frontend to create a new mcp session entry - need to pass in auth token here to get through to mcp server
 export async function mcpCreateSession(request: FastifyRequest, reply: FastifyReply) {
-
   // if there is no session UUID, the user is not logged in
   const sessionUuid = request.session?.get?.("uuid");
   if (!sessionUuid) return reply.code(401).send({ error: "Not logged in" });

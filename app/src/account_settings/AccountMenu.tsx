@@ -36,7 +36,8 @@ export const AccountMenu = observer(() => {
   const handleCreateMcpSession = async () => {
     try {
       setLoading(true);
-      const res = await fetcher("/mcp/create-session", { // route called to make new entry in the mcp mapping
+      const res = await fetcher("/mcp/create-session", {
+        // route called to make new entry in the mcp mapping
         method: "POST",
         credentials: "include"
       });
@@ -52,12 +53,13 @@ export const AccountMenu = observer(() => {
         actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
         return;
       }
-      await fetcher("/mcp/user-info", { // populate that entry that the passed in sessionId maps to - in order add the current userInfo
+      await fetcher("/mcp/user-info", {
+        // populate that entry that the passed in sessionId maps to - in order add the current userInfo
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          sessionId,
+          sessionId
         })
       });
 
