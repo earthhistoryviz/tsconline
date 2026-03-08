@@ -31,7 +31,7 @@ import {
   mcpRenderChartWithEdits,
   mcpUserInfoProxy,
   mcpUploadDatapack,
-  mcpCreateSession,
+  mcpCreateSession
 } from "../src/routes/mcp-routes.js";
 import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
