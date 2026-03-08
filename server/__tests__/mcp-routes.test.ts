@@ -30,7 +30,8 @@ import {
   mcpListColumns,
   mcpRenderChartWithEdits,
   mcpUserInfoProxy,
-  mcpUploadDatapack
+  mcpUploadDatapack,
+  mcpCreateSession,
 } from "../src/routes/mcp-routes.js";
 import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
@@ -620,5 +621,63 @@ describe("mcpUploadDatapack (route)", () => {
     expect((await response.json()).error).toBe("Error uploading datapack");
     expect(response.statusCode).toBe(500);
     expect(processAndUploadDatapack).toHaveBeenCalledOnce();
+  });
+});
+
+describe("mcpCreateSession", () => {
+  it("returns 401 when session uuid is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue(undefined) }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpCreateSession(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Not logged in" });
+  });
+
+  it("returns 500 when MCP_AUTH_TOKEN is missing", async () => {
+    delete process.env.MCP_AUTH_TOKEN;
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpCreateSession(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(500);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing MCP_AUTH_TOKEN" });
+  });
+
+  it("forwards to MCP /messages/create-session with Bearer token", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    delete process.env.DOMAIN;
+
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: vi.fn().mockResolvedValue({ sessionId: "sid123" })
+    }) as unknown as typeof fetch;
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpCreateSession(req, reply);
+
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/messages/create-session", {
+      method: "POST",
+      headers: { Authorization: "Bearer token123" }
+    });
+
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ sessionId: "sid123" });
   });
 });

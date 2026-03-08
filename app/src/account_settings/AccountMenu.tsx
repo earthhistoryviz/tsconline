@@ -127,7 +127,7 @@ export const AccountMenu = observer(() => {
           <ListItemIcon>
             <ContentCopyIcon fontSize="small" color="icon" />
           </ListItemIcon>
-          Create New GeoGPT Session
+          {t("login.create-geogpt-session")}
         </MenuItem>
         <MenuItem onClick={() => navigate("/signup")}>
           <ListItemIcon>

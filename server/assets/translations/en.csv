@@ -59,6 +59,7 @@ translation.login.username,Username
 translation.login.password,Password
 translation.login.tooltip,Account Settings
 translation.login.profile,Profile
+translation.login.create-geogpt-session,Create New GeoGPT Session
 translation.login.add,Add another account
 translation.login.logout,Logout
 translation.login.admin,Admin
