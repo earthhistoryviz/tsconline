@@ -165,7 +165,11 @@ export default observer(function App() {
   const checkLoadingDatapacks = () => {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
     const isOnDatapackPath = location.pathname === "/datapacks";
-    if (state.loadingDatapacks && !(isOnDatapackPath || isOnDatapacksTab)) return true;
+    if (
+      state.loadingDatapacks &&
+      (!(isOnDatapackPath || isOnDatapacksTab))
+    )
+      return true;
     return false;
   };
   // Get query string after route if one exists
