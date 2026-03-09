@@ -23,7 +23,6 @@ import { getDatapackFromArray, purifyChartContent } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
 import { fetchUserHistoryMetadata } from "./user-actions";
 import { backendUrl } from "../../util/constant";
-import { actions } from "..";
 
 export const handlePopupResponse = action(
   "handlePopupResponse",
