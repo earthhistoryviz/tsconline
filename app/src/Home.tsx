@@ -103,20 +103,6 @@ export const Home = observer(function Home() {
       <ChartCreationSteps ref={scrollRef} />
       <LandingPageCards />
       <Carousel />
-      {import.meta.env.DEV && (
-        <div className="bottom-button">
-          <TSCButton
-            className="remove-cache-button"
-            style={{
-              fontSize: theme.typography.pxToRem(12)
-            }}
-            onClick={async () => {
-              actions.removeCache();
-            }}>
-            {t("button.remove-cache")}
-          </TSCButton>
-        </div>
-      )}
       <Attribution>
         <a href="https://iconscout.com/lottie-animations/down-arrow" className="text-underline font-size-sm">
           Down Arrow
