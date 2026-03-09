@@ -32,8 +32,6 @@ import {
 import { useNavigate } from "react-router";
 
 export const Home = observer(function Home() {
-  const { actions } = useContext(context);
-  const theme = useTheme();
   const [hoveringGetStarted, setHoveringGetStarted] = useState(false);
   const { t } = useTranslation();
   const scrollRef = createRef<HTMLDivElement>();

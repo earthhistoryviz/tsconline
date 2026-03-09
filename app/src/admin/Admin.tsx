@@ -68,7 +68,7 @@ export const Admin = observer(function Admin() {
     setTabIndex(newValue);
   };
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
-  
+
   const ClearCacheSection = observer(function ClearCacheSection() {
     return (
       <Box display="flex" m="10px">
