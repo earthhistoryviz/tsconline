@@ -82,8 +82,10 @@ const activeUsers = new Gauge({
 const ipSet = new Set<string>();
 
 server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
+  const path = request.url.split("?")[0];
   if (
     request.url.startsWith("/mcp") &&
+    path !== "/mcp" &&
     !request.url.startsWith("/mcp/user-info") &&
     !request.url.startsWith("/mcp/create-session")
   ) {
