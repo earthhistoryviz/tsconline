@@ -326,12 +326,12 @@ export async function generateChartWithEdits(
   columnToggles: ColumnToggles
 ): Promise<string> {
   const normalizedOverrides: SchemaOverrides = (overrides as unknown as { overrides?: SchemaOverrides })?.overrides
-    ? ((overrides as unknown as { overrides?: SchemaOverrides }).overrides ?? {})
-    : (overrides ?? {});
+    ? (overrides as unknown as { overrides?: SchemaOverrides }).overrides ?? {}
+    : overrides ?? {};
   const normalizedToggles: ColumnToggles = (columnToggles as unknown as { columnToggles?: ColumnToggles })
     ?.columnToggles
-    ? ((columnToggles as unknown as { columnToggles?: ColumnToggles }).columnToggles ?? {})
-    : (columnToggles ?? {});
+    ? (columnToggles as unknown as { columnToggles?: ColumnToggles }).columnToggles ?? {}
+    : columnToggles ?? {};
 
   const { columnRoot, chartSettings } = extractSettingsComponents(datapacks);
   const primaryUnit = datapacks[0] && datapacks.length > 0 ? datapacks[0].ageUnits : "Ma";
