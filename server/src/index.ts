@@ -81,9 +81,8 @@ const activeUsers = new Gauge({
 
 const ipSet = new Set<string>();
 
-//IP restrict access to mcp routes
 server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
-  if (request.url.startsWith("/mcp")) {
+  if (request.url.startsWith("/mcp") && !request.url.startsWith("/mcp/user-info")) {
     const allowedIPs = ["127.0.0.1", "::1"];
     if (!allowedIPs.includes(request.ip)) {
       reply.status(401).send({ error: "Unauthorized access" });
