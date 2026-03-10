@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
@@ -11,14 +11,19 @@ import PersonAdd from "@mui/icons-material/PersonAdd";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import Logout from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useNavigate } from "react-router";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+import { fetcher } from "../util";
+import { ErrorCodes } from "../util/error-codes";
+
 export const AccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -26,6 +31,43 @@ export const AccountMenu = observer(() => {
   };
   const handleClose = () => {
     setAnchorEl(null);
+  };
+  // function add mcp session from tsconline to agent
+  const handleCreateMcpSession = async () => {
+    try {
+      setLoading(true);
+      const res = await fetcher("/mcp/create-session", {
+        // route called to make new entry in the mcp mapping
+        method: "POST",
+        credentials: "include"
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
+        return;
+      }
+
+      const sessionId = json.sessionId as string | undefined; // previous call will return sessionID that was created for that entry
+      if (!sessionId) {
+        actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
+        return;
+      }
+      await fetcher("/mcp/user-info", {
+        // populate that entry that the passed in sessionId maps to - in order add the current userInfo
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          sessionId
+        })
+      });
+
+      await navigator.clipboard.writeText(sessionId); // also copy that sessionId to clipboard for copy-paste purposes
+      actions.pushSnackbar("GeoGPT session ID created and copied. Paste it into GeoGPT chat.", "success");
+    } finally {
+      setLoading(false);
+    }
   };
   const navigate = useNavigate();
   const { state, actions } = useContext(context);
@@ -81,6 +123,12 @@ export const AccountMenu = observer(() => {
           <Avatar /> {t("login.profile")}
         </MenuItem>
         <Divider />
+        <MenuItem onClick={handleCreateMcpSession} disabled={loading}>
+          <ListItemIcon>
+            <ContentCopyIcon fontSize="small" color="icon" />
+          </ListItemIcon>
+          {t("login.create-geogpt-session")}
+        </MenuItem>
         <MenuItem onClick={() => navigate("/signup")}>
           <ListItemIcon>
             <PersonAdd fontSize="small" color="icon" />

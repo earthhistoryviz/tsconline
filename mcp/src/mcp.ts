@@ -474,6 +474,9 @@ Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId":
   whoami: {
     title: "Who Am I? Am I logged in?",
     description: `What it does: Check if you're logged in and get user details.
+    If the user pastes a GeoGPT session ID from TSC Online into chat, call this tool with that sessionId.
+    If valid, this confirms which logged-in user that session belongs to.
+    After a successful call, continue using that same sessionId for future authenticated tool calls in this conversation.
 
 === SESSION MANAGEMENT (CRITICAL) ===
 Session continuity is MANDATORY across ALL tool calls in a conversation.
