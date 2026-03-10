@@ -24,10 +24,13 @@ export type SchemaOverrides = Partial<{
   enHideBlockLable: boolean;
 }>;
 
-export type ColumnToggles = {
-  on?: string[];
-  off?: string[];
-};
+export type ColumnToggles = Record<
+  string,
+  {
+    on?: boolean;
+    width?: number;
+  }
+>;
 
 export type FlattenedColumn = {
   id: string;
@@ -200,15 +203,23 @@ function extractSettingsComponents(datapacks: Datapack[]): {
 }
 
 function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
-  const toLowerSet = (arr?: string[]) => new Set((arr ?? []).map((v) => v.toLowerCase()));
-  const idsOn = toLowerSet(toggles.on);
-  const idsOff = toLowerSet(toggles.off);
+  const normalizedToggles = new Map(
+    Object.entries(toggles).map(([columnId, settings]) => [columnId.toLowerCase(), settings])
+  );
 
   const visit = (col: ColumnInfo) => {
     const candidates = [col.name, col.editName].filter((v): v is string => Boolean(v)).map((v) => v.toLowerCase());
 
-    if (candidates.some((id) => idsOn.has(id))) col.on = true;
-    if (candidates.some((id) => idsOff.has(id))) col.on = false;
+    const matchedId = candidates.find((id) => normalizedToggles.has(id));
+    const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
+
+    if (settings?.on !== undefined) {
+      col.on = settings.on;
+    }
+
+    if (settings?.width !== undefined && "width" in col) {
+      (col as ColumnInfo & { width?: number }).width = settings.width;
+    }
 
     if (col.children) {
       col.children.forEach(visit);
@@ -315,17 +326,17 @@ export async function generateChartWithEdits(
   columnToggles: ColumnToggles
 ): Promise<string> {
   const normalizedOverrides: SchemaOverrides = (overrides as unknown as { overrides?: SchemaOverrides })?.overrides
-    ? (overrides as unknown as { overrides?: SchemaOverrides }).overrides ?? {}
-    : overrides ?? {};
+    ? ((overrides as unknown as { overrides?: SchemaOverrides }).overrides ?? {})
+    : (overrides ?? {});
   const normalizedToggles: ColumnToggles = (columnToggles as unknown as { columnToggles?: ColumnToggles })
     ?.columnToggles
-    ? (columnToggles as unknown as { columnToggles?: ColumnToggles }).columnToggles ?? {}
-    : columnToggles ?? {};
+    ? ((columnToggles as unknown as { columnToggles?: ColumnToggles }).columnToggles ?? {})
+    : (columnToggles ?? {});
 
   const { columnRoot, chartSettings } = extractSettingsComponents(datapacks);
   const primaryUnit = datapacks[0] && datapacks.length > 0 ? datapacks[0].ageUnits : "Ma";
 
-  if (normalizedToggles.on?.length || normalizedToggles.off?.length) {
+  if (Object.keys(normalizedToggles).length > 0) {
     applyTogglesToColumnInfo(columnRoot, normalizedToggles);
   }
 

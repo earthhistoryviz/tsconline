@@ -68,9 +68,14 @@ export const cleanupInterval = setInterval(
 interface ChartState {
   datapackTitles: string[];
   overrides: Record<string, unknown>;
-  columnToggles: { on?: string[]; off?: string[] };
+  columnToggles: Record<string, MCPColumnToggleSettings>;
   lastChartPath?: string;
   lastModified?: Date;
+}
+
+interface MCPColumnToggleSettings {
+  on?: boolean;
+  width?: number;
 }
 
 function newChartState(): ChartState {
@@ -215,12 +220,14 @@ const overridesSchema = z
   })
   .passthrough();
 
-const columnToggleSchema = z
+const singleColumnToggleSchema = z
   .object({
-    on: z.array(z.string()).optional(),
-    off: z.array(z.string()).optional()
+    on: z.boolean().optional(),
+    width: z.number().optional()
   })
   .passthrough();
+
+const columnToggleSchema = z.record(z.string(), singleColumnToggleSchema);
 
 const updateChartArgsSchema = z.object({
   datapackTitles: datapackTitlesSchema,
@@ -262,7 +269,7 @@ WARNING: Omitting sessionId on subsequent calls breaks the session chain and cre
       "data": {
         "datapackTitles": ["Africa Bight"],
         "overrides": { "topAge": 0, "baseAge": 65 },
-        "columnToggles": { "off": ["nigeria coast"], "on": [] },
+        "columnToggles": {"nigeria coast": { "on": false, "width": 25 }, "events": { "on": true }},
         "lastChartPath": "/charts/...",
         "lastModified": "..."
       },
@@ -298,16 +305,16 @@ If you are suspicious of a given chart name or are unsure which datapacks to use
 When to use:
 - First chart or changing datapacks: provide datapackTitles (required).
 - Adjust time/settings: provide overrides (object, optional). Only known keys have guaranteed effect; unknown keys are accepted but may be ignored by the renderer.
-- Toggle columns: provide columnToggles with on/off arrays (optional). Just use the column names the user gives you - assume they're correct. Case-insensitive; exclusive on/off (adding to off removes from on).
+- Toggle columns: provide columnToggles as an object keyed by column id/name (optional). Each key maps to per-column settings such as { on?: boolean, width?: number }. Just use the column names the user gives you - assume they're correct. Case-insensitive.
 - Debugging: always set useCache to true
 
 Column toggling workflow:
-- If user says "turn off column X": just do it with { columnToggles: { off: ["X"] } }
+- If user says "turn off column X": just do it with { columnToggles: { "X": { "on": false } } } 
 - Don't pre-emptively call listColumns to verify names
 - Only if chart generation FAILS or user complains about missing columns, THEN call listColumns to see available options
 
 Payload shape (ALWAYS FOLLOWS THIS SHAPE):
-{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
+{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: Record<string, { on?: boolean; width?: number }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
 
 This tool does NOT accept chart geometry/axes/series. Do not send xAxis/yAxis/series/title. Use datapacks + overrides + column toggles only.
 
@@ -350,13 +357,18 @@ Example 3 (toggle columns by id, change overrides):
 {
   "datapackTitles": ["GTS2020"],
   "overrides": { "topAge": 5, "baseAge": 150 },
-  "columnToggles": { "on": ["column-id-1"], "off": ["column-id-2"] },
+  "columnToggles": {
+    "column-id-1": { "on": true, "width": 25 },
+    "column-id-2": { "on": false }
+  },
   "useCache": true
 }
 
+
 These are just examples for changing datapacks, overrides, and column toggles. You can mix and match as needed.
 
-Remember: datapack settings will persist across calls until resetChartState is used. If a column is toggled off, it stays off until explicitly toggled on again. Same with toggling it on.
+Remember: datapack settings will persist across calls until resetChartState is used. If a column is set to { "on": false }, it stays off until explicitly changed again.
+If a column width is set, it remains until explicitly changed again.
 The point is you only have to include the changes you want to make; the rest of the state is preserved automatically.
 
 AUTO-DISPLAY REQUIREMENT (default behavior):
@@ -609,23 +621,16 @@ export const createMCPServer = () => {
         ...(args.overrides ?? {})
       };
 
-      const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
-      const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
+      const normalizedIncoming = Object.fromEntries(
+        Object.entries(args.columnToggles ?? {}).map(([columnId, settings]) => [columnId.toLowerCase(), settings])
+      ) as Record<string, MCPColumnToggleSettings>;
 
-      const currentOff = new Set((st.columnToggles.off ?? []).map((id) => id.toLowerCase()));
-      const currentOn = new Set((st.columnToggles.on ?? []).map((id) => id.toLowerCase()));
-
-      for (const id of incomingOff) {
-        currentOn.delete(id);
-        currentOff.add(id);
+      for (const [columnId, settings] of Object.entries(normalizedIncoming)) {
+        st.columnToggles[columnId] = {
+          ...(st.columnToggles[columnId] ?? {}),
+          ...settings
+        };
       }
-      for (const id of incomingOn) {
-        currentOff.delete(id);
-        currentOn.add(id);
-      }
-
-      st.columnToggles.off = Array.from(currentOff);
-      st.columnToggles.on = Array.from(currentOn);
 
       // Generate chart with THIS SESSION'S state
       try {
