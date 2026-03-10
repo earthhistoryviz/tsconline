@@ -12,7 +12,7 @@
     "@tsconline/shared": "1.0.0",
     "chalk": "^5.4.1",
     "dotenv": "^17.2.3",
-    "fastify": "4.27.0",
+    "fastify": "5.7.3",
     "form-data": "^4.0.5",
     "formdata": "^0.10.4",
     "node-fetch": "^3.3.2",
