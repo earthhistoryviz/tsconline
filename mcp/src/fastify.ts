@@ -82,7 +82,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
   cleanupTimer.unref();
 
   // STREAMABLE HTTP
-  app.post("/mcp", async (req, reply) => {
+  app.post("/streamable-http", async (req, reply) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     const body = req.body as unknown;
 
@@ -129,7 +129,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     await transport.handleRequest(req.raw, reply.raw, body);
   });
 
-  app.get("/mcp", async (req, reply) => {
+  app.get("/streamable-http", async (req, reply) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     if (!sessionId) {
       reply.code(400).send("Missing Mcp-Session-Id");
@@ -151,7 +151,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     await transport.handleRequest(req.raw, reply.raw);
   });
 
-  app.delete("/mcp", async (req, reply) => {
+  app.delete("/streamable-http", async (req, reply) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     if (!sessionId) {
       reply.code(400).send("Missing Mcp-Session-Id");
