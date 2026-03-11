@@ -3,7 +3,7 @@ import { observer } from "mobx-react-lite";
 import { AdminUserConfig } from "./AdminUserConfig";
 import { useContext, useEffect } from "react";
 import { context } from "../state";
-import { PersonOutline, DataObject, School } from "@mui/icons-material";
+import { PersonOutline, DataObject, School, Construction } from "@mui/icons-material";
 import { useState } from "react";
 import Color from "color";
 import "./Admin.css";
@@ -12,7 +12,7 @@ import { AdminDatapackConfig } from "./AdminDatapackConfig";
 import { AdminWorkshop } from "./AdminWorkshop";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { usePopupBlocker } from "../util/blocker";
-import { TSCYesNoPopup } from "../components";
+import { TSCYesNoPopup, TSCButton } from "../components";
 
 const AdminTab = styled(Tab)(({ theme }) => ({
   textTransform: "none",
@@ -68,6 +68,20 @@ export const Admin = observer(function Admin() {
     setTabIndex(newValue);
   };
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
+
+  const ClearCacheSection = observer(function ClearCacheSection() {
+    return (
+      <Box display="flex" m="10px">
+        <TSCButton
+          onClick={async () => {
+            await actions.removeCache();
+          }}>
+          Clear Cache
+        </TSCButton>
+      </Box>
+    );
+  });
+
   const tabs = [
     {
       tabName: "Users",
@@ -80,6 +94,10 @@ export const Admin = observer(function Admin() {
     {
       tabName: "Workshops",
       component: <AdminWorkshop />
+    },
+    {
+      tabName: "Maintenance",
+      component: <ClearCacheSection />
     }
   ];
   return (
@@ -102,6 +120,7 @@ export const Admin = observer(function Admin() {
           <AdminTab icon={<PersonOutline />} iconPosition="start" label={tabs[0].tabName} />
           <AdminTab icon={<DataObject />} iconPosition="start" label={tabs[1].tabName} />
           <AdminTab icon={<School />} iconPosition="start" label={tabs[2].tabName} />
+          <AdminTab icon={<Construction />} iconPosition="start" label={tabs[3].tabName} />
         </AdminTabs>
         <Box display="flex" flexDirection="column" flexGrow={1} m="10px">
           <Typography variant="h5">{tabs[tabIndex].tabName}</Typography>
