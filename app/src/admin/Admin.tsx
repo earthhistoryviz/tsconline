@@ -3,7 +3,7 @@ import { observer } from "mobx-react-lite";
 import { AdminUserConfig } from "./AdminUserConfig";
 import { useContext, useEffect } from "react";
 import { context } from "../state";
-import { PersonOutline, DataObject, School, DeleteSweep } from "@mui/icons-material";
+import { PersonOutline, DataObject, School, Construction } from "@mui/icons-material";
 import { useState } from "react";
 import Color from "color";
 import "./Admin.css";
@@ -96,7 +96,7 @@ export const Admin = observer(function Admin() {
       component: <AdminWorkshop />
     },
     {
-      tabName: "Clear Cache",
+      tabName: "Maintenance",
       component: <ClearCacheSection />
     }
   ];
@@ -120,7 +120,7 @@ export const Admin = observer(function Admin() {
           <AdminTab icon={<PersonOutline />} iconPosition="start" label={tabs[0].tabName} />
           <AdminTab icon={<DataObject />} iconPosition="start" label={tabs[1].tabName} />
           <AdminTab icon={<School />} iconPosition="start" label={tabs[2].tabName} />
-          <AdminTab icon={<DeleteSweep />} iconPosition="start" label={tabs[3].tabName} />
+          <AdminTab icon={<Construction />} iconPosition="start" label={tabs[3].tabName} />
         </AdminTabs>
         <Box display="flex" flexDirection="column" flexGrow={1} m="10px">
           <Typography variant="h5">{tabs[tabIndex].tabName}</Typography>
