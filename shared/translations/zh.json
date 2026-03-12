@@ -9,6 +9,7 @@
             "password": "密码",
             "tooltip": "账户设置",
             "profile": "个人主页",
+            "create-geogpt-session": "创建新的 GeoGPT 会话",
             "add": "添加账户",
             "logout": "退出登陆",
             "admin": "管理员",
@@ -37,6 +38,10 @@
             "password": "密码",
             "signin": "已有账户？登陆",
             "email-sent": "已发送电子邮件。请检查您的电子邮件以验证您的账户"
+        },
+        "mcpHome": {
+            "loginSuccessful": "登录成功",
+            "returnToAgent": "请返回您的代理人处"
         },
         "title": {
             "about": "关于我们",

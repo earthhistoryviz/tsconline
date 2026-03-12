@@ -46,39 +46,6 @@ test.beforeEach(async ({ page }) => {
   await page.locator(".qsg-datapacks").click();
   await page.waitForTimeout(1000);
 
-  // Clear any auto-loaded datapacks by clicking their selection circles
-  try {
-    // Target the specific selected datapack with checkmark (css-1oo4k8z indicates selected)
-    const selectedDatapackDiv = page.locator("div[class*='_cc_w61hf_'][class*='css-1oo4k8z']").first();
-
-    if (await selectedDatapackDiv.isVisible({ timeout: 2000 })) {
-      console.log("Found selected datapack, clicking to deselect...");
-      await selectedDatapackDiv.click();
-      await page.waitForTimeout(500);
-
-      // Confirm the deselection
-      const confirmButton = page.locator("text=Confirm Selection");
-      if (await confirmButton.isVisible({ timeout: 3000 })) {
-        console.log("Clicking Confirm Selection...");
-        await confirmButton.click();
-
-        // Wait for datapack processing to complete
-        await page
-          .locator("text=Loading Datapacks")
-          .waitFor({ state: "hidden", timeout: 5000 })
-          .catch(() => {
-            console.log("No loading indicator found");
-          });
-        await page.waitForTimeout(1000);
-        console.log("Datapack clearing completed");
-      }
-    } else {
-      console.log("No selected datapack found to clear");
-    }
-  } catch (error) {
-    console.log("Clear auto-loaded datapack failed:", error);
-  }
-
   await expect(page.locator("text=Africa Bight")).toBeVisible();
 });
 
@@ -295,7 +262,7 @@ test("check if new window button works", async ({ page, context }) => {
   const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
 
   await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart/preview");
+  expect(newPage.url()).toContain("/chart-view/preview");
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
   const newWindowButtonPrev = await newPage.locator(".new-window-button");
@@ -303,7 +270,8 @@ test("check if new window button works", async ({ page, context }) => {
   await newPage.close();
 });
 
-//add a test if the updates work
+//generate a test with MCPlink state in the window params
+
 test("check sync of preview with window", async ({ page, context }) => {
   await generateBasicChart(page);
   const newWindowButton = await page.locator(".new-window-button");
@@ -311,7 +279,7 @@ test("check sync of preview with window", async ({ page, context }) => {
   const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
 
   await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart/preview");
+  expect(newPage.url()).toContain("/chart-view/preview");
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
   //bring first page to front and make an update
@@ -347,7 +315,7 @@ test("test locking of preview window", async ({ page, context }) => {
   const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
 
   await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart/preview");
+  expect(newPage.url()).toContain("/chart-view/preview");
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
   await expect(newPage.locator(".lock-button")).toBeVisible();
@@ -377,3 +345,102 @@ test("test locking of preview window", async ({ page, context }) => {
   await newPage.locator(".lock-button").click();
   await expect(newPage.locator("text=Greater NW Shelf")).toBeVisible({ timeout: 10000 });
 });
+
+test("load cached chart from MCP link state in window params", async ({ page }) => {
+  const testChartHash = "mocked-chart-hash";
+  const testChartContent = await fs.readFile(path.resolve(dirname, "charts.test.ts-snapshots", "chart.svg"), "utf-8");
+
+  // Create MCP link state with Africa Bight datapack and the test chart hash
+  const mcpLinkState = {
+    datapacks: ["Africa Bight"],
+    chartHash: testChartHash
+  };
+
+  // Encode the state to base64
+  const encodedState = btoa(JSON.stringify(mcpLinkState));
+
+  // Mock the API responses for cached chart metadata and chart content
+  await page.route(`**/cached-chart/**`, async (route) => {
+    if (route.request().url().includes(testChartHash)) {
+      await route.fulfill({
+        status: 200,
+        body: JSON.stringify({
+          chartpath: `/charts/${testChartHash}/chart.svg`,
+          hash: testChartHash,
+          settingspath: `charts/${testChartHash}/settings.tsc`
+        })
+      });
+    } else {
+      await route.abort();
+    }
+  });
+
+  // Mock the SVG chart fetch
+  await page.route(`**/charts/**/*.svg`, async (route) => {
+    if (route.request().url().includes(testChartHash)) {
+      await route.fulfill({
+        status: 200,
+        body: testChartContent,
+        contentType: "image/svg+xml"
+      });
+    } else {
+      await route.continue();
+    }
+  });
+  // mock the fetchSettings API call
+
+  await page.route(`**/settingsXml/**`, async (route) => {
+    if (route.request().url().includes(testChartHash)) {
+      const settingsContent = await fs.readFile(
+        path.resolve(dirname, "charts.test.ts-snapshots", "basicSettings.tsc"),
+        "utf-8"
+      );
+
+      await route.fulfill({
+        status: 200,
+        body: settingsContent,
+        contentType: "application/xml"
+      });
+    } else {
+      await route.abort();
+    }
+  });
+
+  // Navigate to chart page with MCP link params
+  await page.goto(`http://localhost:5173/chart-view?mcpChartState=${encodedState}`);
+
+  // Wait for the page to load
+  await page.waitForTimeout(7000);
+
+  //if confirm datapack selection button appears, click it
+  const confirmButton = page.locator("id=confirm-datapack-selection");
+
+  //wait for 5 seconds to allow chart to load
+  await page.waitForTimeout(5000);
+
+  if (await confirmButton.isVisible({ timeout: 3000 })) {
+    await confirmButton.click();
+    await page.waitForTimeout(2000);
+  }
+
+  // Verify that the chart content is loaded and displayed
+  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 15000 });
+
+  //expect no error message about wrong settings. Error will be a snackbar with text "Invalid settings response received from server. Please try again later."
+  const errorMessage = page.locator("text=Invalid settings response received from server. Please try again later.");
+  await expect(errorMessage).toBeHidden();
+
+  // Verify the SVG chart is rendered
+  const chartSvg = page.locator(".react-transform-component svg");
+  await expect(chartSvg).toBeVisible();
+
+  // Verify key chart elements are present
+  await expect(chartSvg.locator("text=9")).toBeVisible();
+
+  //click settings, expect input to be 12 for baseAge
+  await page.locator("text=SETTINGS").click();
+  const baseAgeInput = page.locator('input[value="12"]');
+  await expect(baseAgeInput).toBeVisible();
+});
+
+//future PR test that popoff preview works with MCP link

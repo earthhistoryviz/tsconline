@@ -1,0 +1,15 @@
+.mcp-home-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.mcp-home-title {
+  margin: 0.5rem 0;
+}
+
+.mcp-home-text {
+  font-size: 1.25rem;
+}

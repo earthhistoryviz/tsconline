@@ -6,6 +6,7 @@ translation.login.username,用户名
 translation.login.password,密码
 translation.login.tooltip,账户设置
 translation.login.profile,个人主页
+translation.login.create-geogpt-session,创建新的 GeoGPT 会话
 translation.login.add,添加账户
 translation.login.logout,退出登陆
 translation.login.admin,管理员
@@ -32,6 +33,8 @@ translation.signup.username,用户名
 translation.signup.password,密码
 translation.signup.signin,已有账户？登陆
 translation.signup.email-sent,已发送电子邮件。请检查您的电子邮件以验证您的账户
+translation.mcpHome.loginSuccessful,登录成功
+translation.mcpHome.returnToAgent,请返回您的代理人处
 translation.title.about,关于我们
 translation.title.main,Time Scale Creator 在线版
 translation.title.settings,设置

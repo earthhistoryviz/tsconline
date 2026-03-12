@@ -235,7 +235,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     };
     try {
       localStorage.setItem("chartPreview", JSON.stringify(snapshot));
-      window.open("/chart/preview", "_blank");
+      window.open("/chart-view/preview", "_blank");
     } catch (err) {
       actions.pushSnackbar("Unable to open preview", "warning");
       console.error("Failed to open preview", err);
@@ -298,7 +298,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
-        {location.pathname == "/chart" && <NewWindowButton />}
+        {location.pathname == "/chart-view" && <NewWindowButton />}
         {(actionChartOptions || []).map(({ icon, label, onClick }) => {
           return (
             <Box key={label}>
@@ -321,7 +321,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <DownloadButton svgRef={svgRef} altSaveOptions={altSaveOptions} />
       </div>
       <div className="flex-row" ref={helpRef}>
-        {location.pathname == "/chart/preview" && <LockButton />}
+        {location.pathname == "/chart-view/preview" && <LockButton />}
         <HelpButton />
       </div>
     </div>

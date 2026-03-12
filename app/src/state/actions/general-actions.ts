@@ -668,7 +668,7 @@ export const processDatapackConfig = action(
         };
       });
     } catch (e) {
-      console.error(e);
+      console.error("DatapackConfigFail: ", e);
       if (!silent) {
         setIsProcessingDatapacks(false);
       }
@@ -723,27 +723,34 @@ export const setDatapackConfig = action(
   }
 );
 
-const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | null> => {
-  const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
-    method: "GET"
-  });
-  let settingsXml;
-  try {
-    settingsXml = await res.text();
-  } catch (e) {
-    //couldn't get settings from server
-    displayServerError(null, ErrorCodes.INVALID_SETTINGS_RESPONSE, ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]);
+export const fetchSettingsXML = action(
+  "fetchSettingsXML",
+  async (settingsPath: string): Promise<ChartInfoTSC | null> => {
+    const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
+      method: "GET"
+    });
+    let settingsXml;
+    try {
+      settingsXml = await res.text();
+    } catch (e) {
+      //couldn't get settings from server
+      displayServerError(
+        null,
+        ErrorCodes.INVALID_SETTINGS_RESPONSE,
+        ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]
+      );
+      return null;
+    }
+    try {
+      const settingsJson = xmlToJson(settingsXml);
+      return settingsJson;
+    } catch (e) {
+      //couldn't parse settings
+      displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
+    }
     return null;
   }
-  try {
-    const settingsJson = xmlToJson(settingsXml);
-    return settingsJson;
-  } catch (e) {
-    //couldn't parse settings
-    displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
-  }
-  return null;
-};
+);
 
 /**
  * Removes cache in public dir on server
@@ -969,6 +976,15 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
   return image;
 });
 
+export const getStoredFileName = action("getStoredFileName", (datapackTitle: string) => {
+  // gets the stored file name for a datapack title that exists in state.datapack
+  const datapack = state.datapacks.find((dp) => dp.title === datapackTitle);
+  if (!datapack) {
+    throw new Error("Datapack not found");
+  }
+  return datapack.storedFileName;
+});
+
 export async function getRecaptchaToken(token: string) {
   try {
     const recaptchaToken = await executeRecaptcha(token);
@@ -1138,6 +1154,12 @@ export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: 
 export const setLoadingDatapacks = action("setLoadingDatapacks", (loading: boolean) => {
   state.loadingDatapacks = loading;
 });
+export const setLoadingInternalDatapackWhenNoDatapacksSelected = action(
+  "setLoadingInternalDatapackWhenNoDatapacksSelected",
+  (loading: boolean) => {
+    state.loadingInternalDatapackWhenNoDatapacksSelected = loading;
+  }
+);
 export const setIsInitializing = action("setIsInitializing", (initializing: boolean) => {
   state.isInitializing = initializing;
 });

@@ -3,11 +3,13 @@
   "type": "module",
   "dependencies": {
     "concurrently": "^8.2.2",
-    "fastify": "^4.27.0"
+    "fastify": "^4.27.0",
+    "form-data": "^4.0.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
     "@types/eslint": "^8",
+    "@types/form-data": "^2.5.2",
     "@types/node": "^20.11.28",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
@@ -55,7 +57,8 @@
     "coverage:ci": "vitest run --coverage --no-color",
     "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color; yarn playwright test --reporter=html",
     "coverage": "vitest run --coverage",
-    "clean-packages": "yarn dlx syncpack fix-mismatches && yarn dedupe"
+    "clean-packages": "yarn dlx syncpack fix-mismatches && yarn dedupe",
+    "inspector": "npx @modelcontextprotocol/inspector"
   },
   "workspaces": [
     "app",

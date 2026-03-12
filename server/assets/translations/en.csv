@@ -59,6 +59,7 @@ translation.login.username,Username
 translation.login.password,Password
 translation.login.tooltip,Account Settings
 translation.login.profile,Profile
+translation.login.create-geogpt-session,Create New GeoGPT Session
 translation.login.add,Add another account
 translation.login.logout,Logout
 translation.login.admin,Admin
@@ -85,6 +86,8 @@ translation.signup.username,Username
 translation.signup.password,Password
 translation.signup.signin,Already have an account? Sign in
 translation.signup.email-sent,Email sent. Please check your email to verify your account.
+translation.mcpHome.loginSuccessful,Login Successful
+translation.mcpHome.returnToAgent,Please return to your Agent
 translation.title.about,About
 translation.title.main,Time Scale Creator Online
 translation.title.settings,Settings
@@ -386,6 +389,8 @@ translation.report-bug.return-to-homepage,to return to the homepage.
 translation.report-bug.second,second
 translation.report-bug.loading-header,Sending your report...
 translation.report-bug.loading-subheader,Please wait while we process your report.
+translation.errors.MCP_DATAPACK_ACCESS_DENIED,Access denied to the requested datapack. Please ensure you are logged in.
+translation.errors.MCP_LINK_PROCESSING_ERROR,Error processing MCP link. Please ensure the link is correct and try again.
 translation.errors.REGISTER_WORKSHOP_FAILED,Unable to register for workshop. Please try again later.
 translation.errors.NO_FILES_TO_DOWNLOAD,No files to download.
 translation.errors.USER_DATAPACK_UPLOAD_FAILED,Unable to upload user datapack. Please try again later.

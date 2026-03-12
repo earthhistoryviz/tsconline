@@ -9,17 +9,21 @@ import {
   assertChartProgressUpdate,
   isCompleteProgress,
   isErrorProgress,
-  isTempDatapack
+  isTempDatapack,
+  DatapackConfigForChartRequest,
+  MCPLinkParams,
+  assertCachedChartResponseInfo
 } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { ChartSettings, ChartTabState } from "../../types";
+import { ChartSettings, ChartTabState, DatapackFetchParams } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray, purifyChartContent } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
 import { fetchUserHistoryMetadata } from "./user-actions";
 import { backendUrl } from "../../util/constant";
+import { actions } from "..";
 
 export const handlePopupResponse = action(
   "handlePopupResponse",
@@ -100,7 +104,7 @@ export const setChartTab = action("setChartTab", (chartTab: typeof state.chartTa
 });
 
 function areSettingsValidForGeneration(options?: { from?: string }) {
-  if (!state.config.datapacks || state.config.datapacks.length === 0 || !state.settingsTabs.columns) {
+  if (!state.config.datapacks || !state.settingsTabs.columns) {
     generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
     return false;
   }
@@ -153,13 +157,38 @@ export const compileChartRequest = action(
       from?: string;
     }
   ) => {
+    // Auto-load internal datapack if none selected
+    if (state.config.datapacks.length === 0 && !state.loadingInternalDatapackWhenNoDatapacksSelected) {
+      const INTERNAL_DATAPACK_TITLE = "TimeScale Creator Internal Datapack";
+      generalActions.setLoadingInternalDatapackWhenNoDatapacksSelected(true);
+      generalActions.setLoadingDatapacks(true);
+      const internalDatapack = await generalActions.fetchDatapack({
+        isPublic: true,
+        title: INTERNAL_DATAPACK_TITLE,
+        type: "official"
+      });
+      if (internalDatapack) {
+        generalActions.addDatapack(internalDatapack);
+        const internalDatapackConfig = {
+          storedFileName: internalDatapack.storedFileName,
+          title: INTERNAL_DATAPACK_TITLE,
+          isPublic: internalDatapack.isPublic,
+          type: "official" as const
+        };
+        await generalActions.processDatapackConfig([internalDatapackConfig], { silent: true });
+        generalActions.setLoadingDatapacks(false);
+      } else {
+        console.warn("Failed to load internal datapack");
+        generalActions.setUnsavedDatapackConfig([]);
+      }
+    }
     // asserts column is not null
     if (!areSettingsValidForGeneration(options)) return;
     state.showSuggestedAgePopup = false;
     if (options && options.from === "/crossplot") {
-      navigate("/chart?from=crossplot");
+      navigate("/chart-view?from=crossplot");
     } else {
-      navigate("/chart");
+      navigate("/chart-view");
     }
     //set the loading screen and make sure the chart isn't up
     savePreviousSettings();
@@ -203,6 +232,11 @@ export const compileChartRequest = action(
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
       generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
+      if (state.loadingInternalDatapackWhenNoDatapacksSelected) {
+        generalActions.setUnsavedDatapackConfig([]);
+        await actions.processDatapackConfig([]);
+        generalActions.setLoadingInternalDatapackWhenNoDatapacksSelected(false);
+      }
     }
   }
 );
@@ -287,4 +321,103 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
       resolve(undefined);
     }
   });
+});
+
+export const loadMcpChartLink = action("loadMCPChartLink", async (parsedState: MCPLinkParams) => {
+  const datapacks = parsedState.datapacks;
+  const chartHash = parsedState.chartHash;
+  if (!datapacks || datapacks.length === 0) {
+    throw new Error("No datapacks specified in MCP link");
+  }
+  console.log("parsedhash:", chartHash);
+  // Fetch both public and user's private datapacks metadata
+  await generalActions.fetchAllPublicDatapacksMetadata();
+  while (state.isInitializing) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  if (state.isLoggedIn && state.skeletonStates.privateUserDatapacksLoading) {
+    await generalActions.fetchUserDatapacksMetadata();
+  }
+
+  const controller = new AbortController();
+  const datapackConfigs: DatapackConfigForChartRequest[] = [];
+
+  for (const title of datapacks) {
+    const metadata = state.datapackMetadata.find((dp) => dp.title === title);
+    if (!metadata) {
+      const datapackList = datapacks.join(", ");
+      displayServerError(
+        null,
+        ErrorCodes.MCP_DATAPACK_ACCESS_DENIED,
+        ErrorMessages[ErrorCodes.MCP_DATAPACK_ACCESS_DENIED].replace("{{datapacks}}", datapackList)
+      );
+      return;
+    }
+
+    // Build fetch params directly from metadata (uuid only exists for user/workshop types)
+    const fetchParams: DatapackFetchParams = {
+      title: metadata.title,
+      type: metadata.type,
+      isPublic: metadata.isPublic,
+      ...((metadata.type === "user" || metadata.type === "workshop") && { uuid: metadata.uuid })
+    } as DatapackFetchParams;
+
+    const fetchedDatapack = await generalActions.fetchDatapack(fetchParams, { signal: controller.signal });
+    if (!fetchedDatapack) {
+      throw new Error(`Failed to fetch datapack: ${title}`);
+    }
+
+    generalActions.addDatapack(fetchedDatapack);
+
+    // Build datapack config directly from metadata
+    datapackConfigs.push({
+      title: metadata.title,
+      type: metadata.type,
+      isPublic: metadata.isPublic,
+      storedFileName: metadata.storedFileName,
+      ...((metadata.type === "user" || metadata.type === "workshop") && { uuid: metadata.uuid })
+    } as DatapackConfigForChartRequest);
+  }
+
+  const route = `/cached-chart/${chartHash}`;
+  const response = await fetcher(route, {
+    method: "GET",
+    credentials: "include"
+  });
+  if (response.ok) {
+    const cachedChartInfo = await response.json();
+    assertCachedChartResponseInfo(cachedChartInfo);
+
+    const fetchedSettings = await generalActions.fetchSettingsXML(cachedChartInfo.settingspath);
+
+    if (state.isInitializing) {
+      generalActions.pushSnackbar("Loading MCP Chart", "info");
+      while (state.isInitializing) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+
+    //fetch settings and apply datapack configs.
+    if (fetchedSettings) {
+      generalActions.applySettings(fetchedSettings);
+      state.prevSettings = JSON.parse(JSON.stringify(state.settings));
+
+      await generalActions.processDatapackConfig(datapackConfigs, { settings: fetchedSettings });
+    } else {
+      throw new Error("Failed to fetch settings XML for cached chart");
+    }
+
+    const content = await (await fetcher(cachedChartInfo.chartpath)).text();
+    generalActions.setChartTabState(state.chartTab.state, {
+      chartContent: purifyChartContent(content),
+      chartHash: cachedChartInfo.hash,
+      madeChart: true,
+      matchesSettings: true,
+      chartLoading: false
+    });
+  } else if (response.status === 404) {
+    throw new Error("Failed to fetch chart from server");
+    return;
+  }
+  //end function
 });

@@ -59,6 +59,7 @@ translation.login.username,Имя пользователя
 translation.login.password,Пароль
 translation.login.tooltip,Настройки аккаунта
 translation.login.profile,Профиль
+translation.login.create-geogpt-session,Создать новую сессию GeoGPT
 translation.login.add,Добавить аккаунт
 translation.login.logout,Выйти
 translation.login.admin,Админ
@@ -85,6 +86,8 @@ translation.signup.username,Имя пользователя
 translation.signup.password,Пароль
 translation.signup.signin,Уже есть аккаунт? Войдите
 translation.signup.email-sent,Письмо отправлено. Проверьте почту для подтверждения аккаунта.
+translation.mcpHome.loginSuccessful,Вход успешен
+translation.mcpHome.returnToAgent,Пожалуйста, верните вашему агенту
 translation.title.about,О нас
 translation.title.main,TimeScale Creator Online
 translation.title.settings,Настройки
