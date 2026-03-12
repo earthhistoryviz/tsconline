@@ -67,7 +67,7 @@ export async function areDropboxDatapacksDifferent(access_token: string): Promis
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      path: "/TSC online supporting files/datapacks",
+      path: "/TSC online supporting files/datapacks"
     })
   });
   if (!response.ok) {
