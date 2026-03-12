@@ -118,6 +118,7 @@
             "password": "Password",
             "tooltip": "Account Settings",
             "profile": "Profile",
+            "create-geogpt-session": "Create New GeoGPT Session",
             "add": "Add another account",
             "logout": "Logout",
             "admin": "Admin",

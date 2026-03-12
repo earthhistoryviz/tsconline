@@ -82,7 +82,11 @@ const activeUsers = new Gauge({
 const ipSet = new Set<string>();
 
 server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
-  if (request.url.startsWith("/mcp") && !request.url.startsWith("/mcp/user-info")) {
+  if (
+    request.url.startsWith("/mcp") &&
+    !request.url.startsWith("/mcp/user-info") &&
+    !request.url.startsWith("/mcp/create-session")
+  ) {
     const allowedIPs = ["127.0.0.1", "::1"];
     if (!allowedIPs.includes(request.ip)) {
       reply.status(401).send({ error: "Unauthorized access" });
@@ -294,6 +298,7 @@ server.post("/mcp/datapacks", looseRateLimit, mcpRoutes.mcpListDatapacks);
 server.post("/mcp/list-columns", looseRateLimit, mcpRoutes.mcpListColumns);
 server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderChartWithEdits);
 server.post("/mcp/user-info", moderateRateLimit, mcpRoutes.mcpUserInfoProxy);
+server.post("/mcp/create-session", strictRateLimit, mcpRoutes.mcpCreateSession);
 server.post("/mcp/upload-datapack", moderateRateLimit, mcpRoutes.mcpUploadDatapack);
 
 //fetches json object of requested settings file
