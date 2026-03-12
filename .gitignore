@@ -18,5 +18,3 @@ test-results/
 # Documentation here: https://yarnpkg.com/features/zero-installs
 .pnp.*
 
-.vscode/.gitignore
-shared/tsconfig.tsbuildinfo
