@@ -1100,6 +1100,7 @@ export const setDefaultUserState = action(() => {
     username: "",
     email: "",
     pictureUrl: "",
+    geogptChatUrl: "",
     isAdmin: false,
     accountType: "",
     isGoogleUser: false,
