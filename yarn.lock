@@ -2669,7 +2669,7 @@ __metadata:
     google-auth-library: "npm:^9.8.0"
     js-levenshtein: "npm:^1.1.6"
     jsdom: "npm:^24.0.0"
-    kysely: "npm:^0.27.3"
+    kysely: "npm:^0.28.14"
     lodash: "npm:^4.17.23"
     md5: "npm:^2.3.0"
     mysql2: "npm:^3.14.1"
@@ -9180,10 +9180,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kysely@npm:^0.27.3":
-  version: 0.27.3
-  resolution: "kysely@npm:0.27.3"
-  checksum: baa0b7219dc2ccf85be7931098f0b49f60d39ee61a11d455c32919694e42de2e96f7d8179a8d35755ea40877a4b9eb02e8f45817c1997c3ad1c7dec533ef3586
+"kysely@npm:^0.28.14":
+  version: 0.28.14
+  resolution: "kysely@npm:0.28.14"
+  checksum: d76ff120c4c295091e0c8ecf9f2fb920547247d0cf6f0cf0098cb6d85fd77f18da09ddd18345477a527b82eddc087a145783772fc0e09e9280239fb87df83be9
   languageName: node
   linkType: hard
 
