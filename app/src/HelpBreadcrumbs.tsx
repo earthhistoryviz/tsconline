@@ -1,4 +1,4 @@
-import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
+import { Breadcrumbs, Link, Stack } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
 import { useTheme } from "@mui/material/styles";
 import { getHelpKeysFromPath } from "./state/non-action-util";
@@ -63,12 +63,6 @@ export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> = ({ markdown
           ))}
         </Breadcrumbs>
       </Stack>
-
-      {breadcrumbs.length > 0 && (
-        <div>
-          <Typography variant="h4">{breadcrumbs[breadcrumbs.length - 1].title}</Typography>
-        </div>
-      )}
     </Stack>
   );
 };
