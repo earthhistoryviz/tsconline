@@ -49,7 +49,7 @@ export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> = ({ markdown
     <Stack spacing={2}>
       <Stack spacing={2}>
         <Breadcrumbs
-          separator={<span style={{ color: theme.palette.button.main }}>{">"}</span>}
+          separator={<span style={{ color: theme.palette.button.main, margin: "0 0.35rem" }}>{">"}</span>}
           sx={{ color: theme.palette.button.main }}>
           {breadcrumbs.map((breadcrumb: Breadcrumb, index: number) => (
             <Link

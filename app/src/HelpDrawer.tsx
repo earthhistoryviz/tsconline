@@ -30,7 +30,9 @@ function NavItem({
   pathname: string;
   parentPath?: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const isParent = isMarkdownParent(markdownParent);
+  const isTopLevel = parentPath === "";
+  const [open, setOpen] = useState(isParent && isTopLevel);
   const navigate = useNavigate();
   const { selectedMarkdown } = useContext(HelpDrawerContext);
   const isSelected = selectedMarkdown === markdownParent ? "selected-help-accordion" : "";
@@ -45,7 +47,6 @@ function NavItem({
   const handleClick = () => {
     navigate(`/help${formattedPath}`);
   };
-  const isParent = isMarkdownParent(markdownParent);
   const containsSelectedChild =
     selectedMarkdown && isParent && doesMarkdownTreeContainFile(markdownParent, selectedMarkdown) ? { opacity: 1 } : {};
   return (
