@@ -2569,7 +2569,7 @@ __metadata:
     i18next-browser-languagedetector: "npm:^8.0.0"
     i18next-http-backend: "npm:^2.6.1"
     js-big-decimal: "npm:^2.0.7"
-    jspdf: "npm:^4.2.0"
+    jspdf: "npm:^4.2.1"
     lodash: "npm:^4.17.23"
     lottie-web: "npm:^5.12.2"
     material-ui-popup-state: "npm:^5.3.1"
@@ -9098,9 +9098,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jspdf@npm:^4.2.0":
-  version: 4.2.0
-  resolution: "jspdf@npm:4.2.0"
+"jspdf@npm:^4.2.1":
+  version: 4.2.1
+  resolution: "jspdf@npm:4.2.1"
   dependencies:
     "@babel/runtime": "npm:^7.28.6"
     canvg: "npm:^3.0.11"
@@ -9118,7 +9118,7 @@ __metadata:
       optional: true
     html2canvas:
       optional: true
-  checksum: 2c31dfce3ea6d7f839d551bb152bb24a26d6bd2093f7b2b3dd1227438446dbca22edb239ad2899328defaa24860f94a7582ed782d26dace136f6462d8101c0ce
+  checksum: 594dd7c1f34a3d9c48e555be2a8e664b5875c2709e1e83490a0fe20d953b35d96193ecbeaba4aa751020d2b63c8c8a82bb91c73660a775d6f8b2bef4f9ca11b0
   languageName: node
   linkType: hard
 
