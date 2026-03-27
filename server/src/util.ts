@@ -94,26 +94,61 @@ export async function verifySymlink(symlink: string): Promise<boolean> {
  * @returns
  */
 export function deleteDirectory(directoryPath: string): string {
-  // Check if the directory exists
-  if (fs.existsSync(directoryPath)) {
-    fs.readdirSync(directoryPath).forEach((file) => {
-      const currentPath = path.join(directoryPath, file);
-
-      // Check if the current path is a directory
-      if (fs.lstatSync(currentPath).isDirectory()) {
-        deleteDirectory(currentPath);
-      } else {
-        // Delete the file
-        fs.unlinkSync(currentPath);
-        console.log(`Deleted file: ${currentPath}`);
-      }
-    });
-    // Delete the now-empty directory
-    fs.rmdirSync(directoryPath);
-    return `Directory ${directoryPath} successfully deleted`;
-  } else {
+  const stats = deleteDirectoryWithStats(directoryPath);
+  if (!stats.found) {
     return `Directory not found: ${directoryPath}`;
   }
+  return `Directory ${directoryPath} successfully deleted`;
+}
+
+export type DirectoryDeletionStats = {
+  found: boolean;
+  filesDeleted: number;
+  bytesDeleted: number;
+  directoriesDeleted: number;
+};
+
+/**
+ * Recursively deletes a directory while capturing deletion stats.
+ */
+export function deleteDirectoryWithStats(directoryPath: string): DirectoryDeletionStats {
+  const initialStats: DirectoryDeletionStats = {
+    found: false,
+    filesDeleted: 0,
+    bytesDeleted: 0,
+    directoriesDeleted: 0
+  };
+
+  if (!fs.existsSync(directoryPath)) {
+    return initialStats;
+  }
+
+  const stats: DirectoryDeletionStats = {
+    ...initialStats,
+    found: true
+  };
+
+  fs.readdirSync(directoryPath).forEach((file) => {
+    const currentPath = path.join(directoryPath, file);
+
+    if (fs.lstatSync(currentPath).isDirectory()) {
+      const childStats = deleteDirectoryWithStats(currentPath);
+      stats.filesDeleted += childStats.filesDeleted;
+      stats.bytesDeleted += childStats.bytesDeleted;
+      stats.directoriesDeleted += childStats.directoriesDeleted;
+      return;
+    }
+
+    const fileSize = fs.statSync(currentPath).size;
+    fs.unlinkSync(currentPath);
+    stats.filesDeleted += 1;
+    stats.bytesDeleted += fileSize;
+    console.log(`Deleted file: ${currentPath}`);
+  });
+
+  fs.rmdirSync(directoryPath);
+  stats.directoriesDeleted += 1;
+  return stats;
 }
 
 /**

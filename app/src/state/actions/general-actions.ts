@@ -764,7 +764,22 @@ export const removeCache = action("removeCache", async () => {
   try {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
-    pushSnackbar("Successfully removed cache of recently generated charts", "success");
+    const removeCacheDetails = msg as {
+      megabytesDeleted?: unknown;
+      filesDeleted?: unknown;
+    };
+    const megabytesDeleted =
+      typeof removeCacheDetails.megabytesDeleted === "number" ? removeCacheDetails.megabytesDeleted : null;
+    const filesDeleted = typeof removeCacheDetails.filesDeleted === "number" ? removeCacheDetails.filesDeleted : null;
+
+    if (megabytesDeleted !== null && filesDeleted !== null) {
+      pushSnackbar(
+        `Successfully removed cache of recently generated charts (${megabytesDeleted.toFixed(2)} MB across ${filesDeleted} files)`,
+        "success"
+      );
+    } else {
+      pushSnackbar("Successfully removed cache of recently generated charts", "success");
+    }
   } catch (e) {
     displayServerError(e, msg, "Server could not remove cache");
     return;
