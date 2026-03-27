@@ -94,11 +94,26 @@ export async function verifySymlink(symlink: string): Promise<boolean> {
  * @returns
  */
 export function deleteDirectory(directoryPath: string): string {
-  const stats = deleteDirectoryWithStats(directoryPath);
-  if (!stats.found) {
+  // Check if the directory exists
+  if (fs.existsSync(directoryPath)) {
+    fs.readdirSync(directoryPath).forEach((file) => {
+      const currentPath = path.join(directoryPath, file);
+
+      // Check if the current path is a directory
+      if (fs.lstatSync(currentPath).isDirectory()) {
+        deleteDirectory(currentPath);
+      } else {
+        // Delete the file
+        fs.unlinkSync(currentPath);
+        console.log(`Deleted file: ${currentPath}`);
+      }
+    });
+    // Delete the now-empty directory
+    fs.rmdirSync(directoryPath);
+    return `Directory ${directoryPath} successfully deleted`;
+  } else {
     return `Directory not found: ${directoryPath}`;
   }
-  return `Directory ${directoryPath} successfully deleted`;
 }
 
 export type DirectoryDeletionStats = {
