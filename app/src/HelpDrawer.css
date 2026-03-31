@@ -26,7 +26,10 @@
   margin-bottom: 0.75rem;
 }
 
-/* Restore markdown list defaults inside help content. */
+.markdown-wrapper > * {
+  padding-bottom: 50px;
+}
+
 .markdown-wrapper ul,
 .markdown-wrapper ol {
   padding-left: 2.5rem;
@@ -179,4 +182,17 @@
 }
 .help-accordion-leaf {
   margin-left: 14.4px;
+}
+
+@media (max-width: 960px) {
+  .help-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .help-container > :first-child {
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--divider);
+  }
 }
