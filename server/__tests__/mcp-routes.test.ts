@@ -140,13 +140,22 @@ describe("mcpListDatapacks", () => {
 });
 
 describe("mcpListColumns", () => {
-  it("returns flattened columns for valid datapacks", async () => {
+  it("returns minimal column tree for valid datapacks", async () => {
     const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip" }];
-    const mockColumns = [{ id: "c1", name: "Col", path: "Col", on: true, enableTitle: true, type: "zone" }];
+    // Simulate a minimal SimpleColumn[]
+    const mockSimpleTree = [
+      {
+        name: "Zone",
+        editName: "Zone",
+        children: [
+          { name: "Subzone", editName: "Subzone" }
+        ]
+      }
+    ];
 
     (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
     (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
-    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockColumns);
+    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockSimpleTree);
 
     const req = { body: { datapackTitles: ["GTS2020"] } } as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -154,7 +163,7 @@ describe("mcpListColumns", () => {
     await mcpListColumns(req, reply);
 
     expect(listColumns).toHaveBeenCalledWith(mockDatapacks);
-    expect(reply.send).toHaveBeenCalledWith(mockColumns);
+    expect(reply.send).toHaveBeenCalledWith(mockSimpleTree);
   });
 
   it("returns 400 when datapackTitles is missing", async () => {

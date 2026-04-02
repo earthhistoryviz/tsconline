@@ -7,7 +7,6 @@ translation.login.password,密码
 translation.login.tooltip,账户设置
 translation.login.profile,个人主页
 translation.login.create-geogpt-session,创建新的 GeoGPT 会话
-translation.login.open-geogpt-chat,打开 GeoGPT 聊天
 translation.login.add,添加账户
 translation.login.logout,退出登陆
 translation.login.admin,管理员

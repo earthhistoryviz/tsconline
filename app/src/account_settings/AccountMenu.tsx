@@ -33,13 +33,6 @@ export const AccountMenu = observer(() => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const handleOpenGeoGptChat = () => {
-    if (!geogptChatUrl) {
-      return;
-    }
-
-    window.open(geogptChatUrl, "_blank", "noopener,noreferrer");
-  };
   // function add mcp session from tsconline to agent
   const handleCreateMcpSession = async () => {
     try {
@@ -73,6 +66,12 @@ export const AccountMenu = observer(() => {
 
       await navigator.clipboard.writeText(sessionId); // also copy that sessionId to clipboard for copy-paste purposes
       actions.pushSnackbar("GeoGPT session ID created and copied. Paste it into GeoGPT chat.", "success");
+
+      if (!geogptChatUrl) {
+        return;
+      }
+
+      window.open(geogptChatUrl, "_blank", "noopener,noreferrer");
     } finally {
       setLoading(false);
     }
@@ -138,14 +137,6 @@ export const AccountMenu = observer(() => {
           </ListItemIcon>
           {t("login.create-geogpt-session")}
         </MenuItem>
-        {geogptChatUrl && (
-          <MenuItem onClick={handleOpenGeoGptChat}>
-            <ListItemIcon>
-              <OpenInNewIcon fontSize="small" color="icon" />
-            </ListItemIcon>
-            {t("login.open-geogpt-chat")}
-          </MenuItem>
-        )}
         <MenuItem onClick={() => navigate("/signup")}>
           <ListItemIcon>
             <PersonAdd fontSize="small" color="icon" />
