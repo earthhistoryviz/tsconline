@@ -10,7 +10,7 @@ import "./Admin.css";
 import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AdminDatapackConfig } from "./AdminDatapackConfig";
 import { AdminWorkshop } from "./AdminWorkshop";
-import { loadRecaptcha, removeRecaptcha } from "../util";
+import { fetcher, loadRecaptcha, removeRecaptcha } from "../util";
 import { usePopupBlocker } from "../util/blocker";
 import { TSCYesNoPopup, TSCButton } from "../components";
 
@@ -70,14 +70,56 @@ export const Admin = observer(function Admin() {
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
 
   const ClearCacheSection = observer(function ClearCacheSection() {
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const [cacheStats, setCacheStats] = useState<{
+      found: boolean;
+      files: number;
+      bytes: number;
+      megabytes: number;
+      directories: number;
+    } | null>(null);
+
+    const fetchCacheStats = async () => {
+      setIsLoadingStats(true);
+      try {
+        const response = await fetcher("/cache-stats", { method: "GET" });
+        const data = await response.json();
+        if (response.ok) {
+          setCacheStats(data);
+        } else {
+          setCacheStats(null);
+        }
+      } catch {
+        setCacheStats(null);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    useEffect(() => {
+      fetchCacheStats();
+    }, []);
+
     return (
-      <Box display="flex" m="10px">
-        <TSCButton
-          onClick={async () => {
-            await actions.removeCache();
-          }}>
-          Clear Cache
-        </TSCButton>
+      <Box display="flex" flexDirection="column" m="10px" gap="10px">
+        <Typography variant="body2" color="text.secondary">
+          {isLoadingStats && "Loading cache statistics..."}
+          {!isLoadingStats && !cacheStats && "Unable to load cache statistics."}
+          {!isLoadingStats &&
+            cacheStats &&
+            (cacheStats.found
+              ? `Current cache size: ${cacheStats.megabytes.toFixed(2)} MB across ${cacheStats.files} files in ${cacheStats.directories} directories`
+              : "Current cache size: 0.00 MB (cache directory not found)")}
+        </Typography>
+        <Box display="flex" gap="10px" alignItems="center">
+          <TSCButton
+            onClick={async () => {
+              await actions.removeCache();
+              await fetchCacheStats();
+            }}>
+            Clear Cache
+          </TSCButton>
+        </Box>
       </Box>
     );
   });

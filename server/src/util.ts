@@ -123,6 +123,13 @@ export type DirectoryDeletionStats = {
   directoriesDeleted: number;
 };
 
+export type DirectoryStats = {
+  found: boolean;
+  files: number;
+  bytes: number;
+  directories: number;
+};
+
 /**
  * Recursively deletes a directory while capturing deletion stats.
  */
@@ -163,6 +170,46 @@ export function deleteDirectoryWithStats(directoryPath: string): DirectoryDeleti
 
   fs.rmdirSync(directoryPath);
   stats.directoriesDeleted += 1;
+  return stats;
+}
+
+/**
+ * Recursively calculates directory stats without modifying files.
+ */
+export function getDirectoryStats(directoryPath: string): DirectoryStats {
+  const initialStats: DirectoryStats = {
+    found: false,
+    files: 0,
+    bytes: 0,
+    directories: 0
+  };
+
+  if (!fs.existsSync(directoryPath)) {
+    return initialStats;
+  }
+
+  const stats: DirectoryStats = {
+    ...initialStats,
+    found: true,
+    directories: 1
+  };
+
+  fs.readdirSync(directoryPath).forEach((file) => {
+    const currentPath = path.join(directoryPath, file);
+
+    if (fs.lstatSync(currentPath).isDirectory()) {
+      const childStats = getDirectoryStats(currentPath);
+      stats.files += childStats.files;
+      stats.bytes += childStats.bytes;
+      stats.directories += childStats.directories;
+      return;
+    }
+
+    const fileSize = fs.statSync(currentPath).size;
+    stats.files += 1;
+    stats.bytes += fileSize;
+  });
+
   return stats;
 }
 
