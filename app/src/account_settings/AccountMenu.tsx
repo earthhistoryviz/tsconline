@@ -10,7 +10,6 @@ import Tooltip from "@mui/material/Tooltip";
 import PersonAdd from "@mui/icons-material/PersonAdd";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import Logout from "@mui/icons-material/Logout";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PersonIcon from "@mui/icons-material/Person";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useNavigate } from "react-router";

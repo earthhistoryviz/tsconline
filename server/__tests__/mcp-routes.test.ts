@@ -147,9 +147,7 @@ describe("mcpListColumns", () => {
       {
         name: "Zone",
         editName: "Zone",
-        children: [
-          { name: "Subzone", editName: "Subzone" }
-        ]
+        children: [{ name: "Subzone", editName: "Subzone" }]
       }
     ];
 

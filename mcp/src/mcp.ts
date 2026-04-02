@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 import type { SharedUser } from "@tsconline/shared";
 import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType } from "@tsconline/shared";
 import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType } from "./mcp-helper.js";
-import { TOOL_DESCRIPTIONS } from "./toolDescriptions.js";
+import { TOOL_DESCRIPTIONS } from "./tool-descriptions.js";
 
 // We use the .env file from server cause mcp is a semi-lazy-parasite of server
 dotenv.config({
@@ -251,7 +251,6 @@ const updateChartArgsSchema = z.object({
     .optional()
     .describe("INTERNAL ONLY: Session ID from login() - tracks user activity, extends session timeout")
 });
-
 
 export const createMCPServer = () => {
   const server = new McpServer({
@@ -801,7 +800,12 @@ export const createMCPServer = () => {
           let details = `${uploadResponse.status} ${uploadResponse.statusText}`;
           try {
             const errorJson = await uploadResponse.json();
-            if (errorJson && typeof errorJson === "object" && "error" in errorJson && typeof errorJson.error === "string") {
+            if (
+              errorJson &&
+              typeof errorJson === "object" &&
+              "error" in errorJson &&
+              typeof errorJson.error === "string"
+            ) {
               details = errorJson.error;
             }
           } catch {
