@@ -116,6 +116,103 @@ export function deleteDirectory(directoryPath: string): string {
   }
 }
 
+export type DirectoryDeletionStats = {
+  found: boolean;
+  filesDeleted: number;
+  bytesDeleted: number;
+  directoriesDeleted: number;
+};
+
+export type DirectoryStats = {
+  found: boolean;
+  files: number;
+  bytes: number;
+  directories: number;
+};
+
+/**
+ * Recursively deletes a directory while capturing deletion stats.
+ */
+export function deleteDirectoryWithStats(directoryPath: string): DirectoryDeletionStats {
+  const initialStats: DirectoryDeletionStats = {
+    found: false,
+    filesDeleted: 0,
+    bytesDeleted: 0,
+    directoriesDeleted: 0
+  };
+
+  if (!fs.existsSync(directoryPath)) {
+    return initialStats;
+  }
+
+  const stats: DirectoryDeletionStats = {
+    ...initialStats,
+    found: true
+  };
+
+  fs.readdirSync(directoryPath).forEach((file) => {
+    const currentPath = path.join(directoryPath, file);
+
+    if (fs.lstatSync(currentPath).isDirectory()) {
+      const childStats = deleteDirectoryWithStats(currentPath);
+      stats.filesDeleted += childStats.filesDeleted;
+      stats.bytesDeleted += childStats.bytesDeleted;
+      stats.directoriesDeleted += childStats.directoriesDeleted;
+      return;
+    }
+
+    const fileSize = fs.statSync(currentPath).size;
+    fs.unlinkSync(currentPath);
+    stats.filesDeleted += 1;
+    stats.bytesDeleted += fileSize;
+    console.log(`Deleted file: ${currentPath}`);
+  });
+
+  fs.rmdirSync(directoryPath);
+  stats.directoriesDeleted += 1;
+  return stats;
+}
+
+/**
+ * Recursively calculates directory stats without modifying files.
+ */
+export function getDirectoryStats(directoryPath: string): DirectoryStats {
+  const initialStats: DirectoryStats = {
+    found: false,
+    files: 0,
+    bytes: 0,
+    directories: 0
+  };
+
+  if (!fs.existsSync(directoryPath)) {
+    return initialStats;
+  }
+
+  const stats: DirectoryStats = {
+    ...initialStats,
+    found: true,
+    directories: 1
+  };
+
+  fs.readdirSync(directoryPath).forEach((file) => {
+    const currentPath = path.join(directoryPath, file);
+
+    if (fs.lstatSync(currentPath).isDirectory()) {
+      const childStats = getDirectoryStats(currentPath);
+      stats.files += childStats.files;
+      stats.bytes += childStats.bytes;
+      stats.directories += childStats.directories;
+      return;
+    }
+
+    const fileSize = fs.statSync(currentPath).size;
+    stats.files += 1;
+    stats.bytes += fileSize;
+  });
+
+  return stats;
+}
+
 /**
  * copy a directory from src to destination recursively
  * @param src

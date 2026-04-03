@@ -3,16 +3,16 @@ import { observer } from "mobx-react-lite";
 import { AdminUserConfig } from "./AdminUserConfig";
 import { useContext, useEffect } from "react";
 import { context } from "../state";
-import { PersonOutline, DataObject, School } from "@mui/icons-material";
+import { PersonOutline, DataObject, School, Construction } from "@mui/icons-material";
 import { useState } from "react";
 import Color from "color";
 import "./Admin.css";
 import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AdminDatapackConfig } from "./AdminDatapackConfig";
 import { AdminWorkshop } from "./AdminWorkshop";
-import { loadRecaptcha, removeRecaptcha } from "../util";
+import { fetcher, loadRecaptcha, removeRecaptcha } from "../util";
 import { usePopupBlocker } from "../util/blocker";
-import { TSCYesNoPopup } from "../components";
+import { TSCYesNoPopup, TSCButton } from "../components";
 
 const AdminTab = styled(Tab)(({ theme }) => ({
   textTransform: "none",
@@ -68,6 +68,62 @@ export const Admin = observer(function Admin() {
     setTabIndex(newValue);
   };
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
+
+  const ClearCacheSection = observer(function ClearCacheSection() {
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const [cacheStats, setCacheStats] = useState<{
+      found: boolean;
+      files: number;
+      bytes: number;
+      megabytes: number;
+      directories: number;
+    } | null>(null);
+
+    const fetchCacheStats = async () => {
+      setIsLoadingStats(true);
+      try {
+        const response = await fetcher("/cache-stats", { method: "GET" });
+        const data = await response.json();
+        if (response.ok) {
+          setCacheStats(data);
+        } else {
+          setCacheStats(null);
+        }
+      } catch {
+        setCacheStats(null);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    useEffect(() => {
+      fetchCacheStats();
+    }, []);
+
+    return (
+      <Box display="flex" flexDirection="column" m="10px" gap="10px">
+        <Typography variant="body2" color="text.secondary">
+          {isLoadingStats && "Loading cache statistics..."}
+          {!isLoadingStats && !cacheStats && "Unable to load cache statistics."}
+          {!isLoadingStats &&
+            cacheStats &&
+            (cacheStats.found
+              ? `Current cache size: ${cacheStats.megabytes.toFixed(2)} MB across ${cacheStats.files} files in ${cacheStats.directories} directories`
+              : "Current cache size: 0.00 MB (cache directory not found)")}
+        </Typography>
+        <Box display="flex" gap="10px" alignItems="center">
+          <TSCButton
+            onClick={async () => {
+              await actions.removeCache();
+              await fetchCacheStats();
+            }}>
+            Clear Cache
+          </TSCButton>
+        </Box>
+      </Box>
+    );
+  });
+
   const tabs = [
     {
       tabName: "Users",
@@ -80,6 +136,10 @@ export const Admin = observer(function Admin() {
     {
       tabName: "Workshops",
       component: <AdminWorkshop />
+    },
+    {
+      tabName: "Maintenance",
+      component: <ClearCacheSection />
     }
   ];
   return (
@@ -102,6 +162,7 @@ export const Admin = observer(function Admin() {
           <AdminTab icon={<PersonOutline />} iconPosition="start" label={tabs[0].tabName} />
           <AdminTab icon={<DataObject />} iconPosition="start" label={tabs[1].tabName} />
           <AdminTab icon={<School />} iconPosition="start" label={tabs[2].tabName} />
+          <AdminTab icon={<Construction />} iconPosition="start" label={tabs[3].tabName} />
         </AdminTabs>
         <Box display="flex" flexDirection="column" flexGrow={1} m="10px">
           <Typography variant="h5">{tabs[tabIndex].tabName}</Typography>
