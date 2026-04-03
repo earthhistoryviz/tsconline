@@ -7,6 +7,11 @@ import { DOMParser } from "@xmldom/xmldom";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+async function removeAutoLoadedDatapack(page: Page) {
+  await page.getByRole("button", { name: "Deselect All" }).click();
+  await page.getByRole("button", { name: "Confirm Selection" }).click();
+}
+
 async function generateBasicChart(page: Page) {
   const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
   const addButton = container.locator(".add-circle");
@@ -45,6 +50,7 @@ test.beforeEach(async ({ page }) => {
   // Navigate to datapacks page
   await page.locator(".qsg-datapacks").click();
   await page.waitForTimeout(1000);
+  await removeAutoLoadedDatapack(page);
 
   await expect(page.locator("text=Africa Bight")).toBeVisible();
 });
