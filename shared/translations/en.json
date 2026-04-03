@@ -119,6 +119,7 @@
             "tooltip": "Account Settings",
             "profile": "Profile",
             "create-geogpt-session": "Create New GeoGPT Session",
+            "open-geogpt-chat": "Open GeoGPT Chat",
             "add": "Add another account",
             "logout": "Logout",
             "admin": "Admin",

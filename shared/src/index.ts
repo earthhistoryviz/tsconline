@@ -54,6 +54,7 @@ export type SharedUser = {
   username: string;
   email: string;
   pictureUrl: string | null;
+  geogptChatUrl?: string;
   isGoogleUser: boolean;
   isAdmin: boolean;
   accountType: string;
@@ -1133,6 +1134,8 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (typeof o.username !== "string") throwError("User", "username", "string", o.username);
   if (typeof o.email !== "string") throwError("User", "email", "string", o.email);
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
+  if (o.geogptChatUrl != undefined && typeof o.geogptChatUrl !== "string")
+    throwError("User", "geogptChatUrl", "string", o.geogptChatUrl);
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
   if (typeof o.accountType !== "string") throwError("User", "accountType", "string", o.accountType);
