@@ -9,7 +9,7 @@ import { saveChartHistory } from "../user/chart-history.js";
 import { assetconfigs } from "../util.js";
 import { queue, maxQueueSize } from "../index.js";
 import { deleteUserDatapack } from "../user/user-handler.js";
-import { mkdir, writeFile, readFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 
 export class ChartGenerationError extends Error {
   public errorCode: number;
@@ -59,10 +59,6 @@ export async function generateChart(
   // console.log("Here is the settings file ", settings);
   await writeFile(settingsFile, settings);
   console.log("Successfully created and saved chart settings at", settingsFile);
-
-  const output = await readFile(settingsFile, "utf-8");
-
-  console.log("final output: ", output);
 
   let knownErrorCode = 0;
   let errorMessage = "";

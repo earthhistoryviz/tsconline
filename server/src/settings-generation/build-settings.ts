@@ -225,10 +225,18 @@ function extractSettingsComponents(datapacks: Datapack[]): {
   return { columnRoot, chartSettings };
 }
 
-function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
-  const normalizedToggles = new Map(
-    Object.entries(toggles).map(([columnId, settings]) => [columnId.toLowerCase(), settings])
-  );
+export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
+  const normalizedToggles = new Map<string, { on?: boolean; width?: number }>();
+
+  for (const [columnId, settings] of Object.entries(toggles)) {
+    const raw = columnId.toLowerCase();
+    normalizedToggles.set(raw, settings);
+
+    if (columnId.includes(":")) {
+      const suffix = columnId.split(":").slice(1).join(":").toLowerCase();
+      normalizedToggles.set(suffix, settings);
+    }
+  }
 
   const visit = (col: ColumnInfo) => {
     const candidates = getPossibleColumnIdentifiers(col);
