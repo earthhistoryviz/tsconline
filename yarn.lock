@@ -2556,7 +2556,7 @@ __metadata:
     "@types/react-dom": "npm:^18.0.10"
     "@types/xmldom": "npm:^0.1.34"
     "@vitejs/plugin-react": "npm:^4.2.1"
-    "@xmldom/xmldom": "npm:^0.9.8"
+    "@xmldom/xmldom": "npm:^0.9.9"
     ag-grid-community: "npm:^32.0.1"
     ag-grid-react: "npm:^32.0.1"
     clsx: "npm:^2.1.0"
@@ -2570,7 +2570,7 @@ __metadata:
     i18next-http-backend: "npm:^2.6.1"
     js-big-decimal: "npm:^2.0.7"
     jspdf: "npm:^4.2.1"
-    lodash: "npm:^4.17.23"
+    lodash: "npm:^4.18.1"
     lottie-web: "npm:^5.12.2"
     material-ui-popup-state: "npm:^5.3.1"
     mobx: "npm:^6.8.0"
@@ -2653,7 +2653,7 @@ __metadata:
     "@types/pump": "npm:^1.1.3"
     "@types/validator": "npm:^13"
     "@types/ws": "npm:^8.18.1"
-    "@xmldom/xmldom": "npm:^0.9.8"
+    "@xmldom/xmldom": "npm:^0.9.9"
     adm-zip: "npm:^0.5.16"
     archiver: "npm:^7.0.1"
     async-mutex: "npm:^0.5.0"
@@ -2670,7 +2670,7 @@ __metadata:
     js-levenshtein: "npm:^1.1.6"
     jsdom: "npm:^24.0.0"
     kysely: "npm:^0.28.14"
-    lodash: "npm:^4.17.23"
+    lodash: "npm:^4.18.1"
     md5: "npm:^2.3.0"
     mysql2: "npm:^3.14.1"
     nearest-color: "npm:^0.4.4"
@@ -3960,10 +3960,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmldom/xmldom@npm:^0.9.8":
-  version: 0.9.8
-  resolution: "@xmldom/xmldom@npm:0.9.8"
-  checksum: 5f88d27a50bb624b0b46b8359853e1a3501217e743b132c5cbe76115646bb4b7a2128c1f0c32f045c7b452689f5206e9bba7d7292c6c13a81eed5e43c2e5ec7c
+"@xmldom/xmldom@npm:^0.9.9":
+  version: 0.9.9
+  resolution: "@xmldom/xmldom@npm:0.9.9"
+  checksum: 292e4a25e7c6c87001475184f413cd38cb07b25d013d33294cf2eacec72c450ccd3f58a0140e0a72462647dc78d808263006aae1952d6a00a3fd521b0bdb11b0
   languageName: node
   linkType: hard
 
@@ -9260,9 +9260,9 @@ __metadata:
   linkType: hard
 
 "lodash-es@npm:^4.17.21":
-  version: 4.17.23
-  resolution: "lodash-es@npm:4.17.23"
-  checksum: 1feae200df22eb0bd93ca86d485e77784b8a9fb1d13e91b66e9baa7a7e5e04be088c12a7e20c2250fc0bd3db1bc0ef0affc7d9e3810b6af2455a3c6bf6dde59e
+  version: 4.18.1
+  resolution: "lodash-es@npm:4.18.1"
+  checksum: 8bfad225ef09ef42b04283cdaf7830efcc2ba29ae41b56501c74422155ee1ccaa1f0f6e8319def3451a1fe54dec501c8e4bee622bae2b2d98ac993731e0a5cce
   languageName: node
   linkType: hard
 
@@ -9273,10 +9273,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.15, lodash@npm:^4.17.21, lodash@npm:^4.17.23":
-  version: 4.17.23
-  resolution: "lodash@npm:4.17.23"
-  checksum: 82504c88250f58da7a5a4289f57a4f759c44946c005dd232821c7688b5fcfbf4a6268f6a6cdde4b792c91edd2f3b5398c1d2a0998274432cff76def48735e233
+"lodash@npm:^4.17.15, lodash@npm:^4.17.21, lodash@npm:^4.18.1":
+  version: 4.18.1
+  resolution: "lodash@npm:4.18.1"
+  checksum: 306fea53dfd39dad1f03d45ba654a2405aebd35797b673077f401edb7df2543623dc44b9effbb98f69b32152295fff725a4cec99c684098947430600c6af0c3f
   languageName: node
   linkType: hard
 
@@ -10978,9 +10978,9 @@ __metadata:
   linkType: hard
 
 "path-to-regexp@npm:^8.0.0":
-  version: 8.2.0
-  resolution: "path-to-regexp@npm:8.2.0"
-  checksum: 23378276a172b8ba5f5fb824475d1818ca5ccee7bbdb4674701616470f23a14e536c1db11da9c9e6d82b82c556a817bbf4eee6e41b9ed20090ef9427cbb38e13
+  version: 8.4.2
+  resolution: "path-to-regexp@npm:8.4.2"
+  checksum: 70fd2cbce0b962cbcf4d312af07818bfce2bae11c09cf3bd86be99c0e30168238a1a7b02b18b452e73f075897df04597d30d63e56da7be41eecfc37998693389
   languageName: node
   linkType: hard
 
