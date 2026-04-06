@@ -41,6 +41,29 @@ export type FlattenedColumn = {
   type: string;
 };
 
+type ColumnInfoWithPossibleIds = ColumnInfo & {
+  _id?: string;
+  id?: string;
+  originalTscId?: string;
+};
+
+function getPossibleColumnIdentifiers(col: ColumnInfo): string[] {
+  const withIds = col as ColumnInfoWithPossibleIds;
+  const explicitIds = [withIds.originalTscId, withIds._id, withIds.id]
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) => {
+      const rawValue = value.toLowerCase();
+      const suffix = value.includes(":") ? value.split(":").slice(1).join(":").toLowerCase() : rawValue;
+      return [rawValue, suffix];
+    });
+
+  const displayIds = [col.name, col.editName]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.toLowerCase());
+
+  return Array.from(new Set([...displayIds, ...explicitIds]));
+}
+
 /**
  * Merge multiple datapack column trees into a single root column.
  * Replicates frontend worker logic to ensure consistency.
@@ -208,8 +231,7 @@ function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles
   );
 
   const visit = (col: ColumnInfo) => {
-    const candidates = [col.name, col.editName].filter((v): v is string => Boolean(v)).map((v) => v.toLowerCase());
-
+    const candidates = getPossibleColumnIdentifiers(col);
     const matchedId = candidates.find((id) => normalizedToggles.has(id));
     const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
 
@@ -217,8 +239,8 @@ function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles
       col.on = settings.on;
     }
 
-    if (settings?.width !== undefined && "width" in col) {
-      (col as ColumnInfo & { width?: number }).width = settings.width;
+    if (settings?.width !== undefined) {
+      col.width = settings.width;
     }
 
     if (col.children) {
@@ -346,7 +368,11 @@ export async function generateChartWithEdits(
 
   validateChartSettings(chartSettings, primaryUnit);
 
-  return jsonToXml(columnRoot, chartSettings);
+  const xml = jsonToXml(columnRoot, chartSettings);
+
+  //console.log("FINAL XML:\n", xml);
+
+  return xml;
 }
 
 function flattenColumnsInternal(columns: ColumnInfo[], parentPath: string): FlattenedColumn[] {
