@@ -238,8 +238,8 @@ export function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string 
       xml += `font-family: ${fontTarget.fontFace};`;
       xml += ` font-size: ${fontTarget.size};`;
       if (fontTarget.italic) xml += ` font-style: italic;`;
-      if (fontTarget.bold) xml += ` font-weight: bold;`;
-      xml += ` fill: ${fontTarget.color};`;
+      if (fontTarget.bold) xml += `font-weight: bold;`;
+      xml += `fill: ${fontTarget.color};`;
       xml += `</font>\n`;
     }
   }

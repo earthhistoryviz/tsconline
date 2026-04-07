@@ -1,6 +1,11 @@
 import { describe, test, expect, it } from "vitest";
-import { roundToDecimalPlace, calculateAutoScale, checkUserAllowedDownloadDatapack } from "../src/util";
-import { DatapackMetadata, SharedUser, getWorkshopUUIDFromWorkshopId } from "../src";
+import {
+  roundToDecimalPlace,
+  calculateAutoScale,
+  checkUserAllowedDownloadDatapack,
+  getWorkshopUUIDFromWorkshopId
+} from "../src/util";
+import { DatapackMetadata, SharedUser } from "../src";
 
 describe("roundToDecimalPlace tests", () => {
   test.each([
