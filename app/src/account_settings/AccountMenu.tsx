@@ -65,12 +65,19 @@ export const AccountMenu = observer(() => {
 
       await navigator.clipboard.writeText(sessionId); // also copy that sessionId to clipboard for copy-paste purposes
       actions.pushSnackbar("GeoGPT session ID created and copied. Paste it into GeoGPT chat.", "success");
+
+      if (!geogptChatUrl) {
+        return;
+      }
+
+      window.open(geogptChatUrl, "_blank", "noopener,noreferrer");
     } finally {
       setLoading(false);
     }
   };
   const navigate = useNavigate();
   const { state, actions } = useContext(context);
+  const geogptChatUrl = state.user.geogptChatUrl;
   const theme = useTheme();
   return (
     <>
