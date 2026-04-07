@@ -1,7 +1,8 @@
 import type { MCPChartState } from "@tsconline/shared";
-import { ColumnInfo } from "@tsconline/shared";
+import { ColumnInfo, defaultColumnRoot } from "@tsconline/shared";
 import type { State } from "../state/state";
 import type { ChartSettings } from "../types";
+import { getDatapackFromArray } from "../state/non-action-util";
 
 /**
  * Extracts the current chart state from the app's state object
@@ -9,26 +10,29 @@ import type { ChartSettings } from "../types";
  */
 export type ExtractedChartState = MCPChartState;
 
-/**
- * Recursively collects column names that are toggled on/off
- */
-function collectColumnStatesFromTree(
-  column: ColumnInfo,
-  onColumns: Set<string>,
-  offColumns: Set<string>
-): void {
-  if (column.on) {
-    onColumns.add(column.name);
-  } else {
-    offColumns.add(column.name);
-  }
-
-  // Process children recursively
+function collectColumnOnMap(column: ColumnInfo, onMap: Map<string, boolean>): void {
+  onMap.set(column.name, column.on);
   if (column.children && Array.isArray(column.children)) {
     for (const childColumn of column.children) {
-      collectColumnStatesFromTree(childColumn, onColumns, offColumns);
+      collectColumnOnMap(childColumn, onMap);
     }
   }
+}
+
+function collectDefaultColumnOnMap(state: State): Map<string, boolean> {
+  const defaultOnMap = new Map<string, boolean>();
+
+  // Include built-in default columns from the shared chart root.
+  collectColumnOnMap(defaultColumnRoot, defaultOnMap);
+
+  // Include each selected datapack's original column defaults.
+  for (const datapackRef of state.config.datapacks) {
+    const datapack = getDatapackFromArray(datapackRef, state.datapacks);
+    if (!datapack?.columnInfo) continue;
+    collectColumnOnMap(datapack.columnInfo, defaultOnMap);
+  }
+
+  return defaultOnMap;
 }
 
 /**
@@ -64,17 +68,29 @@ export function extractCurrentChartState(state: State): ExtractedChartState {
     }
   }
 
-  // Extract column toggles (on/off states)
+  // Extract column toggles as deltas from default state to keep payload small.
   if (state.settingsTabs.columns) {
-    const onColumns = new Set<string>();
-    const offColumns = new Set<string>();
+    const currentOnMap = new Map<string, boolean>();
+    collectColumnOnMap(state.settingsTabs.columns, currentOnMap);
 
-    // Traverse the tree and collect column states
-    collectColumnStatesFromTree(state.settingsTabs.columns, onColumns, offColumns);
+    const defaultOnMap = collectDefaultColumnOnMap(state);
+    const onDiff: string[] = [];
+    const offDiff: string[] = [];
+
+    for (const [columnName, isOn] of currentOnMap.entries()) {
+      if (columnName === defaultColumnRoot.name) continue;
+      const defaultIsOn = defaultOnMap.get(columnName);
+
+      // Unknown columns (e.g. user-added) are included as explicit state.
+      if (defaultIsOn === undefined || defaultIsOn !== isOn) {
+        if (isOn) onDiff.push(columnName);
+        else offDiff.push(columnName);
+      }
+    }
 
     chartState.columnToggles = {
-      on: Array.from(onColumns),
-      off: Array.from(offColumns)
+      ...(onDiff.length > 0 ? { on: onDiff } : {}),
+      ...(offDiff.length > 0 ? { off: offDiff } : {})
     };
   }
 

@@ -548,12 +548,25 @@ export const createMCPServer = () => {
         requireSession({ sessionId, entry });
 
         if (entry.userInfo) {
+          // User is authenticated - include their chart state
+          const hasChart = entry.userChartState.datapackTitles && entry.userChartState.datapackTitles.length > 0;
           return wrapResponse(
             {
-              message: "You are logged in",
+              message: hasChart
+                ? `You are logged in as ${entry.userInfo.username}. You have a chart in progress.`
+                : `You are logged in as ${entry.userInfo.username}. No chart started yet.`,
               userInfo: entry.userInfo.username
                 ? { username: entry.userInfo.username, email: entry.userInfo.email }
-                : null
+                : null,
+              chartState: {
+                hasChart: hasChart,
+                datapackTitles: entry.userChartState.datapackTitles,
+                overrides: entry.userChartState.overrides,
+                columnToggles: entry.userChartState.columnToggles,
+                message: hasChart
+                  ? "You were working with these datapacks and settings. Ready to continue or make changes?"
+                  : "Start by selecting a datapack. I can show you what's available."
+              }
             },
             sessionId
           );

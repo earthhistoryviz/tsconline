@@ -193,6 +193,17 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
     title: "List Available Datapacks",
     description: `What it does: lists datapacks you can use when building a chart.
 
+WHEN TO CALL THIS:
+- User asks "what datapacks are available?"
+- After whoami returns an empty chart state (user has session but no chart started)
+- User wants to see options before selecting datapacks
+
+COMMON FLOW:
+1. User pastes a TSCOnline sessionId
+2. You call whoami with that sessionId
+3. If no chart (empty datapackTitles), tell user "Let me show you available datapacks" then call this
+4. Display the options and ask which they want to work with
+
 === SESSION MANAGEMENT (CRITICAL) ===
 Session continuity is MANDATORY across ALL tool calls in a conversation.
 After your first tool call, EVERY subsequent call MUST include the sessionId returned by the IMMEDIATELY PREVIOUS tool call response, REGARDLESS of which specific tool was called.
@@ -303,11 +314,15 @@ Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId":
   },
 
   whoami: {
-    title: "Who Am I? Am I logged in?",
-    description: `What it does: Check if you're logged in and get user details.
-    If the user pastes a GeoGPT session ID from TSC Online into chat, call this tool with that sessionId.
-    If valid, this confirms which logged-in user that session belongs to.
-    After a successful call, continue using that same sessionId for future authenticated tool calls in this conversation.
+    title: "Who Am I? Am I logged in? What chart am I working on?",
+    description: `What it does: Check if you're logged in, get user details, AND retrieve the current chart state you're working on.
+
+TSCONLINE SESSION RECOGNITION - THIS IS KEY:
+- When a user pastes a GeoGPT session ID from TSC Online, call this tool with that sessionId.
+- This will tell you EXACTLY what chart they were working on (datapacks, settings, column states).
+- RESPOND BASED ON CHART STATE:
+  • If userChartState.datapackTitles is NON-EMPTY: Say something like "Great! I can see you were working with [datapacks]. Here's what's configured: [overrides]. Let's continue from there or make changes."
+  • If userChartState.datapackTitles is EMPTY: Say something like "I see you have a session but no chart started yet. What datapacks would you like to work with?" Then call listDatapacks to show options.
 
 === SESSION MANAGEMENT (CRITICAL) ===
 Session continuity is MANDATORY across ALL tool calls in a conversation.
@@ -320,12 +335,13 @@ WARNING: Omitting sessionId breaks the session chain and creates a NEW session (
 REMINDER: sessionId is internal only - don't show it to the user!
 
 Returns one of three states:
-1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
-2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
-3. AUTO-CREATED NEW SESSION: If session expired/omitted, a new one is automatically created
+1. LOGGED IN + CHART STATE: Returns user object + userChartState object with datapacks/settings/columns → session is authenticated and ready
+2. LOGGED IN + EMPTY CHART: Returns user object but empty userChartState → user is ready to start a chart, consider calling listDatapacks
+3. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
+4. SESSION NOT FOUND: Auto-replaced with new session on next tool call
 
 Input: { sessionId?: string }
-- sessionId: REQUIRED (except first call) - the sessionId from your previous tool call
+- sessionId: REQUIRED (except first call) - the sessionId from your previous tool call (especially when user pastes a TSCOnline session ID)
 
 Session Expiration Rules:
 - Pre-login: 30 minutes from creation (user must complete login within 30 min)
