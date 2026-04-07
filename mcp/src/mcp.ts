@@ -3,8 +3,14 @@ import z from "zod";
 import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
-import type { SharedUser } from "@tsconline/shared";
-import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType } from "@tsconline/shared";
+import type { SharedUser, MCPChartState } from "@tsconline/shared";
+import {
+  MCPLinkParams,
+  assertDatapackMetadata,
+  DatapackMetadata,
+  DatapackType,
+  newMCPChartState
+} from "@tsconline/shared";
 import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType } from "./mcp-helper.js";
 import { TOOL_DESCRIPTIONS } from "./tool-descriptions.js";
 
@@ -27,7 +33,7 @@ export interface SessionEntry {
   userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
   createdAt: number;
   lastActivity: number;
-  userChartState: ChartState;
+  userChartState: MCPChartState;
 }
 
 export const sessions = new Map<string, SessionEntry>();
@@ -59,26 +65,13 @@ export const cleanupInterval = setInterval(
   1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
-// Chart state management - tracks current chart configuration
-interface ChartState {
-  datapackTitles: string[];
-  overrides: Record<string, unknown>;
-  columnToggles: { on?: string[]; off?: string[] };
-  lastChartPath?: string;
-  lastModified?: Date;
-}
-
-function newChartState(): ChartState {
-  return { datapackTitles: [], overrides: {}, columnToggles: {} };
-}
-
 function createSession(): { sessionId: string; entry: SessionEntry } {
   const sessionId = randomUUID();
   const entry: SessionEntry = {
     createdAt: Date.now(),
     lastActivity: Date.now(),
     userInfo: undefined,
-    userChartState: newChartState()
+    userChartState: newMCPChartState()
   };
 
   sessions.set(sessionId, entry);
@@ -298,7 +291,7 @@ export const createMCPServer = () => {
 
       const sess = requireSession(es);
 
-      sess.entry.userChartState = newChartState();
+      sess.entry.userChartState = newMCPChartState();
 
       return wrapResponse({ message: "Chart state cleared for this session." }, sess.sessionId);
     }

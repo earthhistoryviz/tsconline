@@ -672,7 +672,8 @@ describe("mcpCreateSession", () => {
     }) as unknown as typeof fetch;
 
     const req = {
-      session: { get: vi.fn().mockReturnValue("u123") }
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: undefined
     } as unknown as FastifyRequest;
 
     const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -682,6 +683,43 @@ describe("mcpCreateSession", () => {
     expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/messages/create-session", {
       method: "POST",
       headers: { Authorization: "Bearer token123" }
+    });
+
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ sessionId: "sid123" });
+  });
+
+  it("forwards userChartState to MCP /messages/create-session when provided", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    delete process.env.DOMAIN;
+
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: vi.fn().mockResolvedValue({ sessionId: "sid123" })
+    }) as unknown as typeof fetch;
+
+    const userChartState = {
+      datapackTitles: ["GTS2020"],
+      overrides: { topAge_Ma: 0, baseAge_Ma: 541 },
+      columnToggles: { on: ["Periods"], off: ["Epochs"] }
+    };
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: { userChartState }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpCreateSession(req, reply);
+
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/messages/create-session", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer token123",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ userChartState })
     });
 
     expect(reply.code).toHaveBeenCalledWith(200);

@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { DatapackMetadata, ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
+import type { MCPCreateSessionRequest } from "@tsconline/shared";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../user/user-handler.js";
 import { extractMetadataFromDatapack } from "../util.js";
@@ -180,10 +181,23 @@ export async function mcpCreateSession(request: FastifyRequest, reply: FastifyRe
   // base mcp url
   const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
 
+  // Extract chart state from request body if provided
+  const { userChartState } = (request.body ?? {}) as MCPCreateSessionRequest;
+
+  // Build request body for MCP server
+  const mcpRequestBody: Record<string, unknown> = {};
+  if (userChartState) {
+    mcpRequestBody.userChartState = userChartState;
+  }
+
   // continue call to mcp server with the additional auth token passed in
   const res = await fetch(`${base}/messages/create-session`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` }
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(Object.keys(mcpRequestBody).length > 0 ? { "Content-Type": "application/json" } : {})
+    },
+    ...(Object.keys(mcpRequestBody).length > 0 && { body: JSON.stringify(mcpRequestBody) })
   });
 
   // wait and return reponse from request call
