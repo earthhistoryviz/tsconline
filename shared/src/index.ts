@@ -106,6 +106,11 @@ export type MCPCreateSessionRequest = {
   userChartState?: MCPChartState;
 };
 
+export type MCPUpdateSessionChartStateRequest = {
+  sessionId: string;
+  userChartState: MCPChartState;
+};
+
 export function newMCPChartState(): MCPChartState {
   return { datapackTitles: [], overrides: {}, columnToggles: {} };
 }

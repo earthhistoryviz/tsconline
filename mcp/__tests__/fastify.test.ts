@@ -625,6 +625,61 @@ describe("registerMCPRoutes", () => {
     });
   });
 
+  describe("/messages/update-chart-state", () => {
+    it("rejects missing bearer token", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/update-chart-state");
+      const reply = makeReply();
+
+      await handler(makeReq({ body: { sessionId: "sid-1", userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} } } }), reply);
+
+      expect(reply.statusCode).toBe(401);
+      expect(reply.payload).toEqual({ error: "Missing or invalid Bearer token" });
+    });
+
+    it("updates chart state for valid existing session", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const { sessions } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const now = Date.now();
+      sessions.set("sid-1", {
+        userInfo: makeSharedUser(),
+        createdAt: now - 1000,
+        lastActivity: now - 1000,
+        userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+      });
+
+      const handler = app.find("POST", "/messages/update-chart-state");
+      const reply = makeReply();
+      const userChartState = {
+        datapackTitles: ["Africa Bight"],
+        overrides: { topAge_Ma: 0, baseAge_Ma: 65 },
+        columnToggles: { off: ["Epochs"] }
+      };
+
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer token123" },
+          body: { sessionId: "sid-1", userChartState }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ ok: true, sessionId: "sid-1" });
+
+      const entry = sessions.get("sid-1");
+      expect(entry?.userChartState).toEqual(userChartState);
+      expect(entry?.lastActivity).toBeGreaterThanOrEqual(now);
+    });
+  });
+
   it("cleanup timer reaps expired sessions (streamable + legacy) and onClose cleans everything", async () => {
     vi.useFakeTimers();
 

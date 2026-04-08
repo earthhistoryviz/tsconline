@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { DatapackMetadata, ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
-import type { MCPCreateSessionRequest } from "@tsconline/shared";
+import type { MCPCreateSessionRequest, MCPUpdateSessionChartStateRequest } from "@tsconline/shared";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../user/user-handler.js";
 import { extractMetadataFromDatapack } from "../util.js";
@@ -201,6 +201,34 @@ export async function mcpCreateSession(request: FastifyRequest, reply: FastifyRe
   });
 
   // wait and return reponse from request call
+  const data = await res.json();
+  return reply.code(res.status).send(data);
+}
+
+// route called by frontend to update chart state for an existing mcp session entry
+export async function mcpUpdateSessionChartState(request: FastifyRequest, reply: FastifyReply) {
+  const sessionUuid = request.session?.get?.("uuid");
+  if (!sessionUuid) return reply.code(401).send({ error: "Not logged in" });
+
+  const { sessionId, userChartState } = (request.body ?? {}) as Partial<MCPUpdateSessionChartStateRequest>;
+  if (!sessionId || !userChartState) {
+    return reply.code(400).send({ error: "Missing sessionId or userChartState" });
+  }
+
+  const token = process.env.MCP_AUTH_TOKEN;
+  if (!token) return reply.code(500).send({ error: "Missing MCP_AUTH_TOKEN" });
+
+  const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
+
+  const res = await fetch(`${base}/messages/update-chart-state`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ sessionId, userChartState })
+  });
+
   const data = await res.json();
   return reply.code(res.status).send(data);
 }

@@ -10,7 +10,7 @@ import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { createMCPServer, sessions } from "./mcp.js";
 
 import { newMCPChartState } from "@tsconline/shared";
-import type { SharedUser, MCPCreateSessionRequest } from "@tsconline/shared";
+import type { SharedUser, MCPCreateSessionRequest, MCPUpdateSessionChartStateRequest } from "@tsconline/shared";
 
 export interface MCPRoutesOptions {
   streamableTtlMs?: number; // default 15m
@@ -302,6 +302,38 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     });
 
     return reply.send({ sessionId });
+  });
+
+  app.post("/messages/update-chart-state", async (req, reply) => {
+    const authHeader = req.headers.authorization;
+    const expectedToken = process.env.MCP_AUTH_TOKEN;
+
+    if (!expectedToken || !authHeader?.startsWith("Bearer ")) {
+      reply.code(401).send({ error: "Missing or invalid Bearer token" });
+      return;
+    }
+
+    const token = authHeader.slice(7);
+    if (token !== expectedToken) {
+      reply.code(401).send({ error: "Invalid Bearer token" });
+      return;
+    }
+
+    const { sessionId, userChartState } = (req.body ?? {}) as Partial<MCPUpdateSessionChartStateRequest>;
+    if (!sessionId || !userChartState) {
+      reply.code(400).send({ error: "Missing sessionId or userChartState" });
+      return;
+    }
+
+    const entry = sessions.get(sessionId);
+    if (!entry) {
+      reply.code(400).send({ error: "Invalid or expired session" });
+      return;
+    }
+
+    entry.userChartState = userChartState;
+    entry.lastActivity = Date.now();
+    reply.code(200).send({ ok: true, sessionId });
   });
 
   if (enableHealth) {
