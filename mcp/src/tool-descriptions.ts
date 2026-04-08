@@ -29,7 +29,7 @@ WARNING: Omitting sessionId on subsequent calls breaks the session chain and cre
       "data": {
         "datapackTitles": ["Africa Bight"],
         "overrides": { "topAge": 0, "baseAge": 65 },
-        "columnToggles": { "off": ["nigeria coast"], "on": [] },
+        "columnToggles": {"nigeria coast": { "on": false, "width": 25 }, "events": { "on": true }},
         "lastChartPath": "/charts/...",
         "lastModified": "..."
       },
@@ -68,8 +68,8 @@ WARNING: Omitting sessionId breaks the session chain and creates a NEW session (
 **You MUST use ONLY the name property from listColumns for column toggles.**
 **NEVER use slashes, paths, or concatenated names.**
 
-CORRECT: { columnToggles: { on: ["Moon", "Mars"] } }
-INCORRECT: { columnToggles: { on: ["Planetary Time Scale/Moon"] } }
+CORRECT: { columnToggles:  {"Moon": {"on": true} } }
+INCORRECT: { columnToggles: { "Planetary Time Scale/Moon": {"on": true} } }
 
 When the user requests a focus on a topic (e.g., "dinosaurs"), you MUST search all column names in listColumns for relevant matches (including partial, plural, or related terms) and turn on ALL that apply. Do not just toggle a single exact match—find and enable all columns related to the topic.
 
@@ -99,11 +99,11 @@ If you are suspicious of a given chart name or are unsure which datapacks to use
 When to use:
 - First chart or changing datapacks: provide datapackTitles (required).
 - Adjust time/settings: provide overrides (object, optional). Only known keys have guaranteed effect; unknown keys are accepted but may be ignored by the renderer.
-- Toggle columns: provide columnToggles with on/off arrays (optional). Just use the column names the user gives you - assume they're correct. Case-insensitive; exclusive on/off (adding to off removes from on).
+- Toggle columns: provide columnToggles as an object keyed by column id/name (optional). Each key maps to per-column settings such as { on?: boolean, width?: number }. Just use the column names the user gives you - assume they're correct. Case-insensitive.
 - Debugging: always set useCache to true
 
 Column toggling workflow:
-- If user says "turn off column X": just do it with { columnToggles: { off: ["X"] } }
+- If user says "turn off column X": just do it with { columnToggles: { "X": { "on": false } } } 
 - Don't pre-emptively call listColumns to verify names
 - Only if chart generation FAILS or user complains about missing columns, or user is exploring and asking for help learning/focusing on an area of a datapack, THEN call listColumns to see available options
 - When putting column names in on/off toggles, you MUST use the name property from listColumns output exactly as shown (case-insensitive, no paths, no concatenation, no slashes). Just the name.
@@ -111,7 +111,7 @@ Column toggling workflow:
 NEVER change or adjust the time scale (topAge/baseAge/unitsPerMY) unless the user explicitly asks for a time range or scale change. Never default to 0–4500 Ma unless explicitly requested.
 
 Payload shape (ALWAYS FOLLOWS THIS SHAPE):
-{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
+{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: Record<string, { on?: boolean; width?: number }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
 
 This tool does NOT accept chart geometry/axes/series. Do not send xAxis/yAxis/series/title. Use datapacks + overrides + column toggles only.
 
@@ -154,13 +154,17 @@ Example 3 (toggle columns by id, change overrides):
 {
   "datapackTitles": ["GTS2020"],
   "overrides": { "topAge": 5, "baseAge": 150 },
-  "columnToggles": { "on": ["column-id-1"], "off": ["column-id-2"] },
+  "columnToggles": {
+    "column-id-1": { "on": true, "width": 25 },
+    "column-id-2": { "on": false }
+  },
   "useCache": true
 }
 
 These are just examples for changing datapacks, overrides, and column toggles. You can mix and match as needed.
 
-Remember: datapack settings will persist across calls until resetChartState is used. If a column is toggled off, it stays off until explicitly toggled on again. Same with toggling it on.
+Remember: datapack settings will persist across calls until resetChartState is used. If a column is set to { "on": false }, it stays off until explicitly changed again.
+If a column width is set, it remains until explicitly changed again.
 The point is you only have to include the changes you want to make; the rest of the state is preserved automatically.
 
 AUTO-DISPLAY REQUIREMENT (default behavior):
