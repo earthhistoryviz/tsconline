@@ -56,7 +56,6 @@ export async function generateChart(
   });
 
   await mkdir(chartDir, { recursive: true });
-  // console.log("Here is the settings file ", settings);
   await writeFile(settingsFile, settings);
   console.log("Successfully created and saved chart settings at", settingsFile);
 

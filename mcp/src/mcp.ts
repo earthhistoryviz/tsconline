@@ -342,6 +342,8 @@ useCache behavior: it should ALWAYS be true for predictable results, no matter w
 Don't invent chart structure from thin air; always build incrementally from existing state. The only exception is the first call after resetChartState, which starts fresh.
 Follow these patterns ALWAYS (don't invent stuff):
 
+Width can be any number but as a range, small: 40, medium : 80, large: 120. These are not hard set. If the user asks for specific width, you can follow that. 
+
 Example 1 (minimal/default/basic):
 { "datapackTitles": ["Africa Bight"] }
 

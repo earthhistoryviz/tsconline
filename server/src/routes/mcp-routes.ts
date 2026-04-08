@@ -100,7 +100,6 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
     }
 
     const settingsXml = await generateChartWithEdits(requestedDatapacks, overrides, columnToggles);
-    //console.log("FINAL XML:\n", settingsXml);
 
     const chartRequest: ChartRequest = {
       settings: settingsXml,

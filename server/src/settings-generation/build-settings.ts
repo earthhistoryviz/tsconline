@@ -378,8 +378,6 @@ export async function generateChartWithEdits(
 
   const xml = jsonToXml(columnRoot, chartSettings);
 
-  //console.log("FINAL XML:\n", xml);
-
   return xml;
 }
 
