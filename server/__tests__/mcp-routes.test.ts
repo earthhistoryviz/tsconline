@@ -31,7 +31,8 @@ import {
   mcpRenderChartWithEdits,
   mcpUserInfoProxy,
   mcpUploadDatapack,
-  mcpCreateSession
+  mcpCreateSession,
+  mcpUpdateSessionChartState
 } from "../src/routes/mcp-routes.js";
 import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
@@ -724,5 +725,76 @@ describe("mcpCreateSession", () => {
 
     expect(reply.code).toHaveBeenCalledWith(200);
     expect(reply.send).toHaveBeenCalledWith({ sessionId: "sid123" });
+  });
+});
+
+describe("mcpUpdateSessionChartState", () => {
+  it("returns 401 when session uuid is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue(undefined) },
+      body: { sessionId: "sid123", userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} } }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Not logged in" });
+  });
+
+  it("returns 400 when body is missing required fields", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing sessionId or userChartState" });
+  });
+
+  it("forwards chart state update to MCP with Bearer token", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    delete process.env.DOMAIN;
+
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: vi.fn().mockResolvedValue({ ok: true, sessionId: "sid123" })
+    }) as unknown as typeof fetch;
+
+    const userChartState = {
+      datapackTitles: ["GTS2020"],
+      overrides: { topAge_Ma: 0 },
+      columnToggles: { off: ["Epochs"] }
+    };
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: { sessionId: "sid123", userChartState }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/messages/update-chart-state", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer token123",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sessionId: "sid123", userChartState })
+    });
+
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ ok: true, sessionId: "sid123" });
   });
 });

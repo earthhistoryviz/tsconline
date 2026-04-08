@@ -34,17 +34,14 @@ export const AccountMenu = observer(() => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  // function add mcp session from tsconline to agent
   const handleCreateMcpSession = async () => {
     try {
       setLoading(true);
 
-      // Extract current chart state from app state
       const userChartState = extractCurrentChartState(state);
       const createSessionPayload: MCPCreateSessionRequest = { userChartState };
 
       const res = await fetcher("/mcp/create-session", {
-        // route called to make new entry in the mcp mapping, passing current chart state
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -62,6 +59,9 @@ export const AccountMenu = observer(() => {
         actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
         return;
       }
+
+      actions.setGeoGPTSessionId(sessionId);
+
       await fetcher("/mcp/user-info", {
         // populate that entry that the passed in sessionId maps to - in order add the current userInfo
         method: "POST",

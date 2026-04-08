@@ -14,6 +14,7 @@ import {
   MCPLinkParams,
   assertCachedChartResponseInfo
 } from "@tsconline/shared";
+import type { MCPUpdateSessionChartStateRequest } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -23,6 +24,7 @@ import { getDatapackFromArray, purifyChartContent } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
 import { fetchUserHistoryMetadata } from "./user-actions";
 import { backendUrl } from "../../util/constant";
+import { extractCurrentChartState } from "../../util/chart-state-extractor";
 
 export const handlePopupResponse = action(
   "handlePopupResponse",
@@ -202,6 +204,9 @@ export const compileChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: false
       });
+
+      await syncGeoGPTSessionChartState();
+
       generalActions.removeAllErrors();
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
@@ -209,6 +214,28 @@ export const compileChartRequest = action(
     }
   }
 );
+
+const syncGeoGPTSessionChartState = action("syncGeoGPTSessionChartState", async () => {
+  const sessionId = state.user.geogptSessionId;
+  if (!sessionId) return;
+
+  try {
+    const userChartState = extractCurrentChartState(state);
+    const payload: MCPUpdateSessionChartStateRequest = {
+      sessionId,
+      userChartState
+    };
+
+    await fetcher("/mcp/update-chart-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    console.warn("Failed to sync chart state to GeoGPT session:", error);
+  }
+});
 
 const savePreviousSettings = action("savePreviousSettings", () => {
   state.prevSettings = JSON.parse(JSON.stringify(state.settings));

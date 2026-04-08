@@ -235,6 +235,7 @@ export const state = observable<State>({
     email: "",
     pictureUrl: "",
     geogptChatUrl: "",
+    geogptSessionId: "",
     isGoogleUser: false,
     isAdmin: false,
     accountType: "",
