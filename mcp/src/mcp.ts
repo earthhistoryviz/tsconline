@@ -22,6 +22,9 @@ const frontendUrl = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http
 //for MCP route requests, use the internal server url so we can restrict IPs
 const internalServerUrl = `http://127.0.0.1:3000`;
 
+//temp user uuid for all temp user datapack uploads
+const tempUserUuid = process.env.TMP_USR_SESSION_ID;
+
 // Single session map: sessionId -> { userInfo?, createdAt, lastActivity }
 export interface SessionEntry {
   userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
@@ -651,7 +654,10 @@ export const createMCPServer = () => {
 
       const entry = sess.entry;
       const user = entry.userInfo;
-      const uuid = user?.uuid;
+      const uuid = user?.uuid ?? tempUserUuid;
+
+      console.log("uuid", uuid);
+      console.log("tempUserUuid", tempUserUuid);
 
       if (!uuid) {
         return wrapResponse({ error: "User UUID not found." }, sess.sessionId);
@@ -724,7 +730,9 @@ export const createMCPServer = () => {
           }
         }
 
-        const authoredBy = entry.userInfo?.username ?? "";
+        let authoredBy = entry.userInfo?.username ?? "";
+
+        if (uuid === tempUserUuid) authoredBy = "tempuser";
 
         const datapackType: DatapackType = {
           type: "user",
@@ -789,6 +797,8 @@ export const createMCPServer = () => {
         if (metadata.notes) formData.append("notes", metadata.notes);
         if (metadata.contact) formData.append("contact", metadata.contact);
         if (metadata.date) formData.append("date", metadata.date);
+        if (uuid === tempUserUuid) formData.append("sessionId", sess.sessionId);
+        
 
         const uploadResponse = await fetch(`${internalServerUrl}/mcp/upload-datapack`, {
           method: "POST",
