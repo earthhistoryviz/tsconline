@@ -59,6 +59,7 @@ export async function doesDatapackFolderExistInAllUUIDDirectories(uuid: string, 
  * @returns
  */
 export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> {
+
   const directories = await getAllUserDatapackDirectories(uuid);
   const datapacksArray: Datapack[] = [];
   for (const directory of directories) {

@@ -380,7 +380,8 @@ export const createMCPServer = () => {
             columnToggles: st.columnToggles,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false,
-            uuid: entry.userInfo?.uuid
+            uuid: entry.userInfo?.uuid,
+            sessionId: args.sessionId
           })
         });
 
@@ -450,10 +451,22 @@ export const createMCPServer = () => {
         console.log("temp user uuid", tempUserUuid);
         console.log("uuid", uuid);
 
+        //only if uuid is the temp user uuid, then sessionId is required
+        let body: { uuid?: string, sessionId?: string };
+        if (uuid === tempUserUuid) {
+          if (!sessionId) {
+            return wrapResponse({ error: "sessionId is required" }, sess.sessionId);
+          }
+          body = { uuid, sessionId };
+        } else {
+          body = { uuid };
+        }
+
+
         const res = await fetch(`${internalServerUrl}/mcp/datapacks`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ uuid })
+          body: JSON.stringify(body)
         });
         if (!res.ok) {
           const text = await res.text();

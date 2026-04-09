@@ -18,11 +18,16 @@ import { processAndUploadDatapack } from "../upload-datapack.js";
  */
 export async function mcpListDatapacks(_request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { uuid } = (_request.body ?? {}) as { uuid?: string };
+    const { uuid, sessionId } = (_request.body ?? {}) as { uuid?: string, sessionId?: string };
 
     const publicDatapacks = await loadPublicUserDatapacks();
     const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
-    const userDatapacks = uuid ? await fetchAllUsersDatapacks(uuid) : [];
+    let userDatapacks = uuid ? await fetchAllUsersDatapacks(uuid) : [];
+
+    if (uuid === process.env.TMP_USR_SESSION_ID) {
+      //filter out datapacks that do not have a sessionId and sessionId is not the temp user sessionId
+      userDatapacks = userDatapacks.filter((dp) => dp.sessionId === sessionId);
+    }
     
     console.log("uuid", uuid);
     console.log( uuid === process.env.TMP_USR_SESSION_ID);
@@ -76,7 +81,8 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       columnToggles = {},
       useCache,
       isCrossPlot,
-      uuid
+      uuid,
+      sessionId
     } = (_request.body ?? {}) as {
       datapackTitles?: string[];
       overrides?: SchemaOverrides;
@@ -84,6 +90,7 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       useCache?: boolean;
       isCrossPlot?: boolean;
       uuid?: string;
+      sessionId?: string;
     };
 
     if (!datapackTitles || !Array.isArray(datapackTitles) || datapackTitles.length === 0) {
@@ -93,7 +100,11 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
 
     const publicDatapacks = await loadPublicUserDatapacks();
     const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
-    const userDatapacks = uuid ? await fetchAllUsersDatapacks(uuid) : [];
+    let userDatapacks = uuid ? await fetchAllUsersDatapacks(uuid) : [];
+    if (uuid === process.env.TMP_USR_SESSION_ID) {
+      //filter out datapacks that do not have a sessionId and sessionId is not the temp user sessionId
+      userDatapacks = userDatapacks.filter((dp) => dp.sessionId === sessionId);
+    }
     
     const allDatapacks = [...publicDatapacks, ...officialDatapacks, ...userDatapacks];
     const requestedDatapacks = allDatapacks.filter((dp) => datapackTitles.includes(dp.title));
