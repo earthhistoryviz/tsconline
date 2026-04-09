@@ -273,14 +273,15 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
       return;
     }
 
-    // Verify session is in pre-login state (no userInfo yet)
-    if (entry.userInfo) {
+    // Allow login upgrades from temp user -> real user, but block re-auth for already real users.
+    const tempUserUuid = process.env.TMP_USR_SESSION_ID;
+    if (entry.userInfo && (!tempUserUuid || entry.userInfo.uuid !== tempUserUuid)) {
       reply.code(400).send({ error: "Session already authenticated" });
-      console.log("Session already has userInfo for sessionId:", sessionId, entry.userInfo);
+      console.log("Session already has non-temp userInfo for sessionId:", sessionId, entry.userInfo);
       return;
     }
 
-    // Transition session from pre-login to authenticated
+    // Transition session from temp/pre-login state to authenticated
     entry.userInfo = userInfo;
     entry.lastActivity = Date.now();
     reply.code(200).send({ ok: true, sessionId });

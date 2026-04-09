@@ -77,8 +77,6 @@ export const processAndUploadDatapack = async (
     return [];
   });
 
-  console.log("user", user);
-
   if ((!uuid || !user || !user[0]) && uuid !== "official") {
     return { code: 404, message: "Error finding user" };
   }

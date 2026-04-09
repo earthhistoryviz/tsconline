@@ -23,6 +23,10 @@ export async function mcpListDatapacks(_request: FastifyRequest, reply: FastifyR
     const publicDatapacks = await loadPublicUserDatapacks();
     const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
     const userDatapacks = uuid ? await fetchAllUsersDatapacks(uuid) : [];
+    
+    console.log("uuid", uuid);
+    console.log( uuid === process.env.TMP_USR_SESSION_ID);
+    console.log("userDatapacks", userDatapacks);
     const combined = [...publicDatapacks, ...officialDatapacks, ...userDatapacks];
     const datapackMetadata: DatapackMetadata[] = combined.map((dp) => extractMetadataFromDatapack(dp));
     reply.send(datapackMetadata);
@@ -90,6 +94,7 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
     const publicDatapacks = await loadPublicUserDatapacks();
     const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
     const userDatapacks = uuid ? await fetchAllUsersDatapacks(uuid) : [];
+    
     const allDatapacks = [...publicDatapacks, ...officialDatapacks, ...userDatapacks];
     const requestedDatapacks = allDatapacks.filter((dp) => datapackTitles.includes(dp.title));
 

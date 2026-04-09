@@ -24,6 +24,9 @@ const internalServerUrl = `http://127.0.0.1:3000`;
 
 //temp user uuid for all temp user datapack uploads
 const tempUserUuid = process.env.TMP_USR_SESSION_ID;
+if (!tempUserUuid) {
+  throw new Error("Missing TMP_USR_SESSION_ID for MCP temp user");
+}
 
 // Single session map: sessionId -> { userInfo?, createdAt, lastActivity }
 export interface SessionEntry {
@@ -71,6 +74,18 @@ interface ChartState {
   lastModified?: Date;
 }
 
+//create a temp shared user object for the temp user
+const tempSharedUser: SharedUser = {
+  uuid: process.env.TMP_USR_SESSION_ID ?? "",
+  username: process.env.TMP_USR_USERNAME ?? "tempuser",
+  email: process.env.TMP_USR_EMAIL ?? "tempuser@tsconline.internal",
+  isGoogleUser: false,
+  isAdmin: false,
+  accountType: "default",
+  historyEntries: [],
+  pictureUrl: null,
+};
+
 function newChartState(): ChartState {
   return { datapackTitles: [], overrides: {}, columnToggles: {} };
 }
@@ -80,7 +95,7 @@ function createSession(): { sessionId: string; entry: SessionEntry } {
   const entry: SessionEntry = {
     createdAt: Date.now(),
     lastActivity: Date.now(),
-    userInfo: undefined,
+    userInfo: tempSharedUser,
     userChartState: newChartState()
   };
 
@@ -425,11 +440,15 @@ export const createMCPServer = () => {
     async ({ sessionId }) => {
       const es = verifyMCPSession(sessionId);
       const sess = requireSession(es);
+      const uuid = sess.entry.userInfo?.uuid;
+
 
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
-        const entry = sessionId ? sessions.get(sessionId) : undefined;
-        const uuid = entry?.userInfo?.uuid;
+
+        console.log("LIST DATAPACKS DEBUGGING");
+        console.log("temp user uuid", tempUserUuid);
+        console.log("uuid", uuid);
 
         const res = await fetch(`${internalServerUrl}/mcp/datapacks`, {
           method: "POST",
@@ -496,8 +515,8 @@ export const createMCPServer = () => {
     },
     async ({ sessionId }) => {
       try {
-        // Rate limit: check number of pre-login sessions
-        const preLoginCount = Array.from(sessions.values()).filter((entry) => entry.userInfo === undefined).length;
+        // Rate limit: check number of pre-login sessions using temp user uuid
+        const preLoginCount = Array.from(sessions.values()).filter((entry) => entry.userInfo?.uuid !== tempUserUuid).length;
 
         if (preLoginCount >= MAX_CONCURRENT_LOGIN_REQUESTS) {
           const es = verifyMCPSession(sessionId);
@@ -655,9 +674,6 @@ export const createMCPServer = () => {
       const entry = sess.entry;
       const user = entry.userInfo;
       const uuid = user?.uuid ?? tempUserUuid;
-
-      console.log("uuid", uuid);
-      console.log("tempUserUuid", tempUserUuid);
 
       if (!uuid) {
         return wrapResponse({ error: "User UUID not found." }, sess.sessionId);

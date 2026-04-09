@@ -130,6 +130,7 @@ export type DatapackMetadata = {
   datapackImage?: string;
   priority: number;
   hasFiles: boolean;
+  sessionId?: string;
 } & DatapackType;
 
 export type BaseDatapackProps = {
@@ -1092,7 +1093,8 @@ export function extractDatapackMetadataFromDatapack(o: Datapack): DatapackMetada
     tags,
     references,
     isPublic,
-    priority
+    priority,
+    sessionId
   } = o;
   const datapackMetadata = {
     description,
@@ -1107,6 +1109,7 @@ export function extractDatapackMetadataFromDatapack(o: Datapack): DatapackMetada
     isPublic,
     priority,
     hasFiles,
+    sessionId,
     ...extractDatapackType(o)
   };
   assertDatapackMetadata(datapackMetadata);
@@ -1488,7 +1491,8 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
     "contact",
     "notes",
     "isPublic",
-    "priority"
+    "priority",
+    "sessionId"
   ];
   for (const key in o) {
     if (!validKeys.includes(key)) {
@@ -1509,6 +1513,7 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
   if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
   if ("isPublic" in o && typeof o.isPublic !== "boolean") return false;
   if ("priority" in o && typeof o.priority !== "number") return false;
+  if ("sessionId" in o && typeof o.sessionId !== "string") return false;
   return true;
 }
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
@@ -1538,6 +1543,7 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (typeof o.priority !== "number") throwError("DatapackMetadata", "priority", "number", o.priority);
   if (typeof o.hasFiles !== "boolean") throwError("DatapackMetadata", "hasFiles", "boolean", o.hasFiles);
   assertDatapackType(o);
+
 }
 export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
   if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");
