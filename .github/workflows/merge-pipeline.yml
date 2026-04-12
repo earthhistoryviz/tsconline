@@ -497,6 +497,7 @@ jobs:
     needs: wait-for-checks
     if: github.event.pull_request.merged == false && github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    environment: pr-preview
     steps:
       - name: Checkout CODEOWNERS file from main branch
         uses: Bhacaz/checkout-files@v2
@@ -616,6 +617,12 @@ jobs:
               cd "$HELP_DIR"
               git pull origin main
               cd "$TSCONLINE_DIR"
+            fi
+
+            if grep -q '^GEOGPT_CHAT_URL=' "$PR_PREVIEW_DIR/server/.env"; then
+              sed -i 's|^GEOGPT_CHAT_URL=.*|GEOGPT_CHAT_URL="${{ vars.GEOGPT_CHAT_URL }}"|' "$PR_PREVIEW_DIR/server/.env"
+            else
+              echo 'GEOGPT_CHAT_URL="${{ vars.GEOGPT_CHAT_URL }}"' >> "$PR_PREVIEW_DIR/server/.env"
             fi
 
             unzip -q -o "build-artifacts.zip" -d "$PR_PREVIEW_DIR"

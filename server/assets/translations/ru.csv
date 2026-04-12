@@ -60,6 +60,7 @@ translation.login.password,Пароль
 translation.login.tooltip,Настройки аккаунта
 translation.login.profile,Профиль
 translation.login.create-geogpt-session,Создать новую сессию GeoGPT
+translation.login.open-geogpt-chat,Открыть чат GeoGPT
 translation.login.add,Добавить аккаунт
 translation.login.logout,Выйти
 translation.login.admin,Админ

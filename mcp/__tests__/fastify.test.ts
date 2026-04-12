@@ -235,7 +235,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const handler = app.find("POST", "/mcp");
+      const handler = app.find("POST", "/streamable-http");
       const reply = makeReply();
 
       await handler(makeReq({ body: { method: "not-initialize" } }), reply);
@@ -252,7 +252,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const handler = app.find("POST", "/mcp");
+      const handler = app.find("POST", "/streamable-http");
       const reply = makeReply();
 
       await handler(makeReq({ headers: { "mcp-session-id": "nope" }, body: { any: true } }), reply);
@@ -267,7 +267,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const post = app.find("POST", "/mcp");
+      const post = app.find("POST", "/streamable-http");
 
       // initialize
       const initReply = makeReply();
@@ -296,7 +296,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const handler = app.find("GET", "/mcp");
+      const handler = app.find("GET", "/streamable-http");
       const reply = makeReply();
       await handler(makeReq(), reply);
 
@@ -308,7 +308,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const handler = app.find("GET", "/mcp");
+      const handler = app.find("GET", "/streamable-http");
       const reply = makeReply();
       await handler(makeReq({ headers: { "mcp-session-id": "missing" } }), reply);
 
@@ -320,10 +320,10 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const post = app.find("POST", "/mcp");
+      const post = app.find("POST", "/streamable-http");
       await post(makeReq({ body: { method: "initialize" } }), makeReply());
 
-      const get = app.find("GET", "/mcp");
+      const get = app.find("GET", "/streamable-http");
       const reply = makeReply();
       await get(makeReq({ headers: { "mcp-session-id": "streamable-uuid-1" } }), reply);
 
@@ -336,7 +336,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const del = app.find("DELETE", "/mcp");
+      const del = app.find("DELETE", "/streamable-http");
       const reply = makeReply();
       await del(makeReq(), reply);
 
@@ -348,7 +348,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const del = app.find("DELETE", "/mcp");
+      const del = app.find("DELETE", "/streamable-http");
       const reply = makeReply();
       await del(makeReq({ headers: { "mcp-session-id": "nope" } }), reply);
 
@@ -360,10 +360,10 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
-      const post = app.find("POST", "/mcp");
+      const post = app.find("POST", "/streamable-http");
       await post(makeReq({ body: { method: "initialize" } }), makeReply());
 
-      const del = app.find("DELETE", "/mcp");
+      const del = app.find("DELETE", "/streamable-http");
       const reply = makeReply();
       await del(makeReq({ headers: { "mcp-session-id": "streamable-uuid-1" } }), reply);
 
@@ -376,7 +376,7 @@ describe("registerMCPRoutes", () => {
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance, { streamableTtlMs: 5, legacySseTtlMs: 50_000 });
 
-      const post = app.find("POST", "/mcp");
+      const post = app.find("POST", "/streamable-http");
       await post(makeReq({ body: { method: "initialize" } }), makeReply());
 
       const closeSpy = vi.spyOn(lastStreamableTransport!, "close");
@@ -599,7 +599,7 @@ describe("registerMCPRoutes", () => {
     });
 
     // create streamable session
-    const postMcp = app.find("POST", "/mcp");
+    const postMcp = app.find("POST", "/streamable-http");
     await postMcp(makeReq({ body: { method: "initialize" } }), makeReply());
 
     // create legacy sse session

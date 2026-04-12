@@ -2,7 +2,13 @@ import fastify, { FastifyReply, FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
+import {
+  deleteDirectoryWithStats,
+  getDirectoryStats,
+  checkFileExists,
+  assetconfigs,
+  loadAssetConfigs
+} from "./util.js";
 import * as routes from "./routes/routes.js";
 import * as mcpRoutes from "./routes/mcp-routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
@@ -253,11 +259,42 @@ await server.register(fastifyWebsocket);
 // removes the cached public/cts directory
 server.post("/removecache", async (request, reply) => {
   try {
-    const msg = deleteDirectory(assetconfigs.chartsDirectory);
-    reply.send({ message: msg });
+    const stats = deleteDirectoryWithStats(assetconfigs.chartsDirectory);
+    const megabytesDeleted = Number((stats.bytesDeleted / (1024 * 1024)).toFixed(2));
+    const message = stats.found
+      ? `Directory ${assetconfigs.chartsDirectory} successfully deleted`
+      : `Directory not found: ${assetconfigs.chartsDirectory}`;
+
+    reply.send({
+      message,
+      filesDeleted: stats.filesDeleted,
+      bytesDeleted: stats.bytesDeleted,
+      megabytesDeleted,
+      directoriesDeleted: stats.directoriesDeleted
+    });
   } catch (error) {
     reply.send({
       error: `Error deleting directory ${assetconfigs.chartsDirectory} with error: ${error}`
+    });
+  }
+});
+
+// reports stats for the cached public/cts directory
+server.get("/cache-stats", async (_request, reply) => {
+  try {
+    const stats = getDirectoryStats(assetconfigs.chartsDirectory);
+    const megabytes = Number((stats.bytes / (1024 * 1024)).toFixed(2));
+
+    reply.send({
+      found: stats.found,
+      files: stats.files,
+      bytes: stats.bytes,
+      megabytes,
+      directories: stats.directories
+    });
+  } catch (error) {
+    reply.send({
+      error: `Error getting cache stats for ${assetconfigs.chartsDirectory} with error: ${error}`
     });
   }
 });

@@ -31,7 +31,7 @@ export const Settings = observer(function Settings() {
 
   return (
     <div className="settings-container" style={{ background: theme.palette.backgroundColor.main }}>
-      <Box bgcolor="dark.main" className="settings-tabs-side-bar">
+      <Box bgcolor="secondaryBackground.main" className="settings-tabs-side-bar">
         <Box>
           <Typography className="settings-header-title" variant="h5" paddingTop="10px" paddingBottom="10px">
             {t("settings.header")}
