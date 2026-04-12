@@ -1,4 +1,4 @@
-import { Box, Link } from "@mui/material";
+import { Box, Link, useMediaQuery, IconButton, Drawer } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { useContext, useEffect, useState } from "react";
 import { context } from "./state";
@@ -7,6 +7,8 @@ import { useLocation, useNavigate } from "react-router";
 import Grid from "@mui/material/Grid";
 import { StyledScrollbar } from "./components";
 import rehypeRaw from "rehype-raw";
+import { Menu } from "@mui/icons-material";
+import React from "react";
 
 //The Pages for the help
 import { HelpDrawer, HelpDrawerContext } from "./HelpDrawer";
@@ -59,6 +61,8 @@ export const Help = observer(function Help() {
   } as MarkdownParent);
   const currentPath = useLocation().pathname;
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [menuDrawerOpen, setMenuDrawerOpen] = React.useState(false);
   const keys = getHelpKeysFromPath(currentPath);
   useEffect(() => {
     if (tourName) {
@@ -125,28 +129,71 @@ export const Help = observer(function Help() {
     }
   }
   return (
-    <Grid container className="help-container" sx={background}>
-      <Grid item>
-        <StyledScrollbar style={{ borderRight: `1px solid ${theme.palette.divider}` }}>
-          <HelpDrawerContext.Provider
-            value={{
-              selectedMarkdown: markdownContent
-            }}>
-            <HelpDrawer markdownParent={markdownParent} />
-          </HelpDrawerContext.Provider>
-        </StyledScrollbar>
+    <>
+      <Grid container className="help-container" sx={background}>
+        {!isMobile && (
+          <Grid item>
+            <StyledScrollbar style={{ borderRight: `1px solid ${theme.palette.divider}` }}>
+              <HelpDrawerContext.Provider
+                value={{
+                  selectedMarkdown: markdownContent
+                }}>
+                <HelpDrawer markdownParent={markdownParent} />
+              </HelpDrawerContext.Provider>
+            </StyledScrollbar>
+          </Grid>
+        )}
+        <Grid item className="markdown-wrapper" paddingLeft={isMobile ? "0px" : "20px"}>
+          <StyledScrollbar>
+            {isMobile && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "12px",
+                  marginRight: "4px"
+                }}>
+                <BreadcrumbsWrapper markdownParent={markdownParent} />
+                <IconButton onClick={() => setMenuDrawerOpen(true)} sx={{ ml: "auto" }}>
+                  <Menu />
+                </IconButton>
+              </Box>
+            )}
+            {!isMobile && <BreadcrumbsWrapper markdownParent={markdownParent} />}
+            {isMarkdownFile(markdownContent) ? (
+              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownContent.markdown}</ReactMarkdown>
+            ) : (
+              <MarkdownParentComponent markdownParent={markdownContent} />
+            )}
+          </StyledScrollbar>
+        </Grid>
       </Grid>
-      <Grid item className="markdown-wrapper" paddingLeft="20px">
-        <StyledScrollbar>
-          <BreadcrumbsWrapper markdownParent={markdownParent} />
-          {isMarkdownFile(markdownContent) ? (
-            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownContent.markdown}</ReactMarkdown>
-          ) : (
-            <MarkdownParentComponent markdownParent={markdownContent} />
-          )}
-        </StyledScrollbar>
-      </Grid>
-    </Grid>
+      {isMobile && (
+        <Drawer
+          anchor="left"
+          PaperProps={{
+            sx: {
+              borderRight: "2px solid",
+              borderColor: "divider",
+              bgcolor: theme.palette.dark.main,
+              backgroundImage: "linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15))",
+              marginTop: "var(--nav-bar-height)"
+            }
+          }}
+          open={menuDrawerOpen}
+          onClose={() => setMenuDrawerOpen(false)}>
+          <div style={{ padding: "16px", height: "100%", overflow: "auto" }}>
+            <HelpDrawerContext.Provider
+              value={{
+                selectedMarkdown: markdownContent
+              }}>
+              <HelpDrawer markdownParent={markdownParent} />
+            </HelpDrawerContext.Provider>
+          </div>
+        </Drawer>
+      )}
+    </>
   );
 });
 

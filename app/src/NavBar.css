@@ -41,3 +41,10 @@
 .nav-bar {
   height: var(--nav-bar-height);
 }
+
+/* Mobile help navbar transparency */
+.nav-bar.MuiAppBar-root {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
