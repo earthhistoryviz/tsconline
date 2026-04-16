@@ -298,13 +298,14 @@ If you are suspicious of a given chart name or are unsure which datapacks to use
 When to use:
 - First chart or changing datapacks: provide datapackTitles (required).
 - Adjust time/settings: provide overrides (object, optional). Only known keys have guaranteed effect; unknown keys are accepted but may be ignored by the renderer.
-- Toggle columns: provide columnToggles with on/off arrays (optional). Just use the column names the user gives you - assume they're correct. Case-insensitive; exclusive on/off (adding to off removes from on).
+- Toggle columns: provide columnToggles with on/off arrays (optional). Column ids are case-insensitive; exclusive on/off (adding to off removes from on).
 - Debugging: always set useCache to true
 
 Column toggling workflow:
-- If user says "turn off column X": just do it with { columnToggles: { off: ["X"] } }
-- Don't pre-emptively call listColumns to verify names
-- Only if chart generation FAILS or user complains about missing columns, THEN call listColumns to see available options
+- If user gives exact column ids/names (example: "turn off column X"), call this tool directly.
+- If user asks for a concept/topic (example: "show planets", "focus on glaciation", "show isotope columns") and does NOT provide exact column ids, call listColumns FIRST for the selected datapacks, then map the concept to matching ids/paths, then call this tool with those ids in columnToggles.
+- If concept matching is ambiguous, ask one short clarification question before toggling.
+- If chart generation fails or user reports missing columns, call listColumns to troubleshoot and retry.
 
 Payload shape (ALWAYS FOLLOWS THIS SHAPE):
 { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
@@ -410,19 +411,26 @@ WARNING: Omitting sessionId on subsequent calls breaks the session chain and cre
 
   listColumns: {
     title: "List Columns",
-    description: `What it does: returns a flat list of column ids and metadata for the given datapacks.
+    description: `What it does: returns a flat list of column ids and hierarchy paths for the given datapacks.
 
 WHEN TO USE THIS:
-- User explicitly ASKS "what columns are available?" or "show me the columns"
-- updateChartState FAILED and you need to troubleshoot which columns actually exist
+- User explicitly asks "what columns are available?" or "show me the columns"
+- User asks for a topic/concept (for example planets, glaciation, extinction, sea level, isotope) but does not provide exact column ids
+- updateChartState failed and you need to troubleshoot which columns actually exist
 - User complains about missing columns after chart generation
 
 WHEN NOT TO USE:
-- Before calling updateChartState "just to check" - DON'T do this!
-- User says "turn off column X" - just trust them and call updateChartState directly
-- Preemptively verifying column names - unnecessary, wastes time
+- User provided exact column ids/names and your next step is simply toggling on/off
 
-Workflow: Trust user's column names → updateChartState fails? → THEN call listColumns to debug
+Recommended concept workflow:
+1) listDatapacks (if datapack unclear)
+2) listColumns for chosen datapacks
+3) Match concept keywords against id/path
+4) updateChartState with matched ids via columnToggles
+
+Output shape:
+- id: stable column id for toggling
+- path: full hierarchy path for semantic matching/context
 
 === SESSION MANAGEMENT (CRITICAL) ===
 Session continuity is MANDATORY across ALL tool calls in a conversation.
