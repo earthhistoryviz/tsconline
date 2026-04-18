@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from "react-router";
 import Grid from "@mui/material/Grid";
 import { StyledScrollbar } from "./components";
 import rehypeRaw from "rehype-raw";
-import { Menu } from "@mui/icons-material";
+import ListIcon from "@mui/icons-material/List";
 import React from "react";
 
 //The Pages for the help
@@ -156,7 +156,7 @@ export const Help = observer(function Help() {
                 }}>
                 <BreadcrumbsWrapper markdownParent={markdownParent} />
                 <IconButton onClick={() => setMenuDrawerOpen(true)} sx={{ ml: "auto" }}>
-                  <Menu />
+                  <ListIcon />
                 </IconButton>
               </Box>
             )}
