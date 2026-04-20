@@ -50,12 +50,6 @@ export const AccountMenu = observer(() => {
 
   const createMcpSession = async () => {
     const shouldAutoOpen = state.user.settings.geogptAutoOpen;
-    let pendingGeoGPTTab: Window | null = null;
-
-    // Open early (synchronous, during click) so popup blockers allow it.
-    if (shouldAutoOpen) {
-      pendingGeoGPTTab = window.open(geogptChatUrl, "_blank");
-    }
 
     try {
       setLoading(true);
@@ -76,7 +70,9 @@ export const AccountMenu = observer(() => {
         return;
       }
 
-      await fetcher("/mcp/user-info", {
+      actions.setGeoGPTSessionId(sessionId);
+
+      const userInfoRes = await fetcher("/mcp/user-info", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -84,13 +80,22 @@ export const AccountMenu = observer(() => {
           sessionId
         })
       });
+      if (!userInfoRes.ok) {
+        actions.pushSnackbar("GeoGPT session created, but account sync failed.", "warning");
+      }
 
-      await navigator.clipboard.writeText(sessionId);
-      actions.setGeoGPTSessionId(sessionId);
-      actions.pushSnackbar("GeoGPT session ID created and copied. Paste it into GeoGPT chat.", "success");
+      try {
+        await navigator.clipboard.writeText(sessionId);
+        actions.pushSnackbar("GeoGPT session ID created and copied. Paste it into GeoGPT chat.", "success");
+      } catch {
+        actions.pushSnackbar("GeoGPT session ID created. Copy it from GeoGPT settings.", "warning");
+      }
 
-      if (shouldAutoOpen && !pendingGeoGPTTab) {
-        actions.pushSnackbar("GeoGPT opened but the tab may have been blocked by your browser.", "warning");
+      if (shouldAutoOpen) {
+        const geogptTab = window.open(geogptChatUrl, "_blank");
+        if (!geogptTab) {
+          actions.pushSnackbar("GeoGPT tab was blocked by your browser.", "warning");
+        }
       }
     } catch {
       actions.pushSnackbar("Failed to create GeoGPT session. Please try again later.", "warning");

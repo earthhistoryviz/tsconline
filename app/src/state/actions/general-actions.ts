@@ -1122,7 +1122,10 @@ export const setDefaultUserState = action(() => {
     uuid: "",
     settings: {
       darkMode: false,
-      language: "English"
+      language: "English",
+      geogptAutoOpen: false,
+      geogptTscOnlineCoWork: false,
+      geogptSettingsSeen: false
     },
     historyEntries: []
   };
