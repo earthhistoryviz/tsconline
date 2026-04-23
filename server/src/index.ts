@@ -91,7 +91,8 @@ server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply)
   if (
     request.url.startsWith("/mcp") &&
     !request.url.startsWith("/mcp/user-info") &&
-    !request.url.startsWith("/mcp/create-session")
+    !request.url.startsWith("/mcp/create-session") &&
+    !request.url.startsWith("/mcp/chart-state-sync")
   ) {
     const allowedIPs = ["127.0.0.1", "::1"];
     if (!allowedIPs.includes(request.ip)) {
@@ -337,6 +338,7 @@ server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderC
 server.post("/mcp/user-info", moderateRateLimit, mcpRoutes.mcpUserInfoProxy);
 server.post("/mcp/create-session", strictRateLimit, mcpRoutes.mcpCreateSession);
 server.post("/mcp/update-chart-state", moderateRateLimit, mcpRoutes.mcpUpdateSessionChartState);
+server.post("/mcp/request-chart-state", moderateRateLimit, mcpRoutes.mcpRequestSessionChartState);
 server.post("/mcp/upload-datapack", moderateRateLimit, mcpRoutes.mcpUploadDatapack);
 
 //fetches json object of requested settings file
@@ -408,6 +410,9 @@ server.get("/markdown-tree", moderateRateLimit, fetchMarkdownFiles);
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.get("/chart", { websocket: true }, routes.handleChartGeneration);
+
+// persistent channel used by MCP to request current chart state from the active TSCOnline client
+server.get("/mcp/chart-state-sync", { websocket: true }, mcpRoutes.handleMcpChartStateSync);
 
 // keeping this route non-user based for now
 server.get<{ Params: { chartHash: string } }>("/cached-chart/:chartHash", strictRateLimit, routes.fetchCachedFilePaths);

@@ -32,7 +32,8 @@ import {
   mcpUserInfoProxy,
   mcpUploadDatapack,
   mcpCreateSession,
-  mcpUpdateSessionChartState
+  mcpUpdateSessionChartState,
+  mcpRequestSessionChartState
 } from "../src/routes/mcp-routes.js";
 import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
@@ -796,5 +797,59 @@ describe("mcpUpdateSessionChartState", () => {
 
     expect(reply.code).toHaveBeenCalledWith(200);
     expect(reply.send).toHaveBeenCalledWith({ ok: true, sessionId: "sid123" });
+  });
+});
+
+describe("mcpRequestSessionChartState", () => {
+  it("returns 401 when bearer token is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      headers: {},
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing or invalid Bearer token" });
+  });
+
+  it("returns 400 when sessionId is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: {}
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing sessionId" });
+  });
+
+  it("returns 409 when there is no active websocket client", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(409);
+    expect(reply.send).toHaveBeenCalledWith({
+      ok: false,
+      sessionId: "sid123",
+      error: "No active TSCOnline websocket for this session"
+    });
   });
 });

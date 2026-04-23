@@ -272,6 +272,23 @@ export const createMCPServer = () => {
 
       const sess = requireSession(es);
 
+      // Ask TSCOnline to push its latest in-browser chart state for this session.
+      try {
+        const token = process.env.MCP_AUTH_TOKEN;
+        if (token) {
+          await fetch(`${internalServerUrl}/mcp/request-chart-state`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ sessionId: sess.sessionId })
+          });
+        }
+      } catch {
+        // Fall back to last known state if the client is offline/unreachable.
+      }
+
       return wrapResponse(sess.entry.userChartState, sess.sessionId);
     }
   );
