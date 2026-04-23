@@ -46,7 +46,7 @@ export const AccountMenu = observer(() => {
     setSettingsOpen(false);
   };
 
-  const geogptChatUrl = state.user.geogptChatUrl || "https://geogpt-sg.zero2x.org/";
+  const geogptChatUrl = state.user.geogptChatUrl;
 
   const createMcpSession = async () => {
     const shouldAutoOpen = state.user.settings.geogptAutoOpen;
@@ -164,18 +164,20 @@ export const AccountMenu = observer(() => {
           <Avatar /> {t("login.profile")}
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleCreateMcpSession} disabled={loading}>
-          <ListItemIcon>
-            <ContentCopyIcon fontSize="small" color="icon" />
-          </ListItemIcon>
-          {t("login.create-geogpt-session")}
-        </MenuItem>
-        <MenuItem onClick={handleOpenSettings}>
-          <ListItemIcon>
-            <SettingsIcon fontSize="small" color="icon" />
-          </ListItemIcon>
-          GeoGPT Settings
-        </MenuItem>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <MenuItem onClick={handleCreateMcpSession} disabled={loading} sx={{ flex: 1 }}>
+            <ListItemIcon>
+              <ContentCopyIcon fontSize="small" color="icon" />
+            </ListItemIcon>
+            {t("login.create-geogpt-session")}
+          </MenuItem>
+          <Divider orientation="vertical" flexItem />
+          <Tooltip title="GeoGPT Settings">
+            <IconButton onClick={handleOpenSettings} size="small" sx={{ mx: 1 }}>
+              <SettingsIcon fontSize="small" color="icon" />
+            </IconButton>
+          </Tooltip>
+        </Box>
         <MenuItem onClick={() => navigate("/signup")}>
           <ListItemIcon>
             <PersonAdd fontSize="small" color="icon" />
