@@ -3,12 +3,10 @@ import {
   arkL_datasets,
   arkL_events,
   arkL_intervals,
-  arkL_subdatasets,
   assertarkL_columnsArray,
   assertarkL_datasetsArray,
   assertarkL_eventsArray,
-  assertarkL_intervalsArray,
-  assertarkL_subdatasetsArray
+  assertarkL_intervalsArray
 } from "./schema.js";
 import { join } from "path";
 import { readFile, writeFile } from "fs/promises";
@@ -21,7 +19,6 @@ async function loadJSONS() {
   const eventsFilePath = join(outputDir, "arkL_events.json");
   const intervalsFilePath = join(outputDir, "arkL_intervals.json");
   const columnsFilePath = join(outputDir, "arkL_columns.json");
-  const subdatasetsFilePath = join(outputDir, "arkL_subdatasets.json");
   const datasets = JSON.parse(await readFile(datasetsFilePath, "utf8"));
   assertarkL_datasetsArray(datasets);
   const events = JSON.parse(await readFile(eventsFilePath, "utf8"));
@@ -30,14 +27,65 @@ async function loadJSONS() {
   assertarkL_intervalsArray(intervals);
   const columns = JSON.parse(await readFile(columnsFilePath, "utf8"));
   assertarkL_columnsArray(columns);
-  const subdatasets = JSON.parse(await readFile(subdatasetsFilePath, "utf8"));
-  assertarkL_subdatasetsArray(subdatasets);
-  return { datasets, events, intervals, columns, subdatasets };
+  return { datasets, events, intervals, columns };
 }
 
 type StringDict = { [key: string]: string[] };
 type StringDictSet = { [key: string]: Set<string> };
 type ProcessColumnOutput = { path: string; column: string; lines: string[]; sort: number };
+type LondonJsonRow = Record<string, unknown>;
+
+const jsonTableCache = new Map<string, LondonJsonRow[]>();
+
+function cleanText(value: unknown) {
+  if (value === null || value === undefined) return "";
+  return String(value).replace(/[\r\n]+/g, " ");
+}
+
+function getRowNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  return null;
+}
+
+function getIntervalLabel(interval: arkL_intervals, labelField?: string | null) {
+  if (labelField && labelField in interval) {
+    const value = interval[labelField as keyof arkL_intervals];
+    if (value !== null && value !== undefined && value !== "") {
+      return String(value);
+    }
+  }
+  if (interval.intervalx) {
+    if (interval.has_added_abv === "yes") {
+      return interval.intervalx.split(" ").slice(0, -1).join(" ") || interval.intervalx;
+    }
+    return interval.intervalx.replace(/\s*\([^)]+continued\)$/i, "");
+  }
+  return "";
+}
+
+function getPointPopup(row: LondonJsonRow) {
+  const popupValue =
+    row.popup ?? row.notes_2020 ?? row.notes_2004 ?? row.compilation_notes ?? row.note ?? row.label ?? row.name ?? row.eventx;
+  return cleanText(popupValue);
+}
+
+async function loadJsonTable(tableName: string): Promise<LondonJsonRow[]> {
+  if (jsonTableCache.has(tableName)) {
+    return jsonTableCache.get(tableName)!;
+  }
+  const filePath = join(outputDir, `${tableName}.json`);
+  try {
+    const rows = JSON.parse(await readFile(filePath, "utf8"));
+    if (Array.isArray(rows)) {
+      jsonTableCache.set(tableName, rows as LondonJsonRow[]);
+      return rows as LondonJsonRow[];
+    }
+  } catch {
+    // Missing pointdata tables are handled by skipping that column.
+  }
+  jsonTableCache.set(tableName, []);
+  return [];
+}
 
 async function processSequenceColumns(events: arkL_events[], columns: arkL_columns[], datasets: arkL_datasets[]) {
   const sequenceColumns: ProcessColumnOutput[] = [];
@@ -50,22 +98,14 @@ async function processSequenceColumns(events: arkL_events[], columns: arkL_colum
         continue;
       }
       // Add other column types (intervals but they have sequence types, but no info on SB, MFS, Major, Minor, etc.)
-      let sequenceEvents = [];
-      if (column.sub_columnE !== "" && column.sub_columnE !== null) {
-        const regex = new RegExp(column.sub_columnE!, "i");
-        sequenceEvents = events
-          .filter((event) => event.dataset_id === column.dataset_id && event.sub_columnE.match(regex) && event.age)
-          .sort((a, b) => a.age! - b.age!);
-      } else {
-        sequenceEvents = events
-          .filter((event) => event.dataset_id === column.dataset_id && event.age)
-          .sort((a, b) => a.age! - b.age!);
-      }
+      const sequenceEvents = events
+        .filter((event) => event.column_id === column.id && event.age !== null && event.age !== undefined)
+        .sort((a, b) => a.age! - b.age!);
       if (sequenceEvents.length === 0) {
         console.log(chalk.yellow("missing sequence events for " + column.columnx));
         continue;
       }
-      const colour = dataset.colour;
+      const colour = column.colour || dataset.colour;
       // which notes to use? Cenoz, Jur, Cret, multi?
       const popup = dataset.notes_Cenoz;
       let line = `${column.columnx}\tsequence\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
@@ -108,17 +148,9 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
         console.log(chalk.yellow("missing dataset id for " + column.columnx));
         continue;
       }
-      let dbEvents = [];
-      if (column.sub_columnE !== "" && column.sub_columnE !== null) {
-        const regex = new RegExp(column.sub_columnE!, "i");
-        dbEvents = events
-          .filter((event) => event.dataset_id === column.dataset_id && event.sub_columnE.match(regex) && event.age)
-          .sort((a, b) => a.age! - b.age!);
-      } else {
-        dbEvents = events
-          .filter((event) => event.dataset_id === column.dataset_id && event.age)
-          .sort((a, b) => a.age! - b.age!);
-      }
+      const dbEvents = events
+        .filter((event) => event.column_id === column.id && event.age !== null && event.age !== undefined)
+        .sort((a, b) => a.age! - b.age!);
       const lads = [];
       const fads = [];
       //add other event types (ex. turnover?)
@@ -137,7 +169,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
       }
 
       //some datatsets don't have event color even with event column (ex. calpionellids)
-      const colour = dataset.event_colour;
+      const colour = column.colour || dataset.event_colour || dataset.colour;
       //which notes to use? (Jur, Cret, etc.)
       const popup = dataset.notes_Jur;
       let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
@@ -173,12 +205,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
   return eventColumns;
 }
 
-async function processBlockColumns(
-  datasets: arkL_datasets[],
-  columns: arkL_columns[],
-  intervals: arkL_intervals[],
-  subdatasets: arkL_subdatasets[]
-) {
+async function processBlockColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
   const blockColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
     if (
@@ -192,45 +219,16 @@ async function processBlockColumns(
         console.log(chalk.yellow("missing dataset id for " + column.columnx));
         continue;
       }
-      let regex = new RegExp(column.interval_type!, "i");
-      //% in sql is wildcard, so match anything
-      if (column.interval_type === "%") {
-        regex = new RegExp(".*", "i");
-      }
-      let dbIntervals = [];
-      if (column.colshare) {
-        const subs = subdatasets.filter((subdataset) => subdataset.colshare === column.colshare).map((item) => item.id);
-        dbIntervals = intervals
-          .filter(
-            (interval) =>
-              interval.subdataset_id && subs.includes(interval.subdataset_id) && interval.interval_type?.match(regex)
-          )
-          .sort((a, b) => a.base_age2020! - b.base_age2020!);
-      } else if (column.subdataset_id) {
-        dbIntervals = intervals
-          .filter(
-            (interval) =>
-              interval.dataset_id === column.dataset_id &&
-              interval.interval_type?.match(regex) &&
-              interval.subdataset_id === column.subdataset_id
-          )
-          .sort((a, b) => a.base_age2020! - b.base_age2020!);
-      } else {
-        dbIntervals = intervals
-          .filter(
-            (interval) =>
-              interval.dataset_id === column.dataset_id &&
-              interval.interval_type?.match(regex) &&
-              interval.subdataset === ""
-          )
-          .sort((a, b) => a.base_age2020! - b.base_age2020!);
-      }
+      const dbIntervals = intervals
+        .filter((interval) => interval.column_id === column.id && interval.base_age !== null && interval.base_age !== undefined)
+        .sort((a, b) => a.base_age2020! - b.base_age2020!);
       if (dbIntervals.length === 0) {
         console.log(chalk.yellow("no blocks found for " + column.columnx));
         continue;
       }
       const popup = dataset.notes_Jur;
-      let line = `${column.columnx}\tblock\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
+      const columnColour = column.colour || dataset.colour || "";
+      let line = `${column.columnx}\tblock\t${column.width || ""}\t${columnColour}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
       columnLines.push(line);
       line = `\tTOP\t${dbIntervals[0]!.top_age === null ? 0 : dbIntervals[0]!.top_age}`;
       columnLines.push(line);
@@ -239,14 +237,15 @@ async function processBlockColumns(
         if (inter.base_age === null) continue;
         //if col_if_not_intvx is defined, it indicates the label that appears on TSC.
         //ex. block_label
-        if (column.col_if_not_intvx !== "" && column.col_if_not_intvx !== null) {
+        if (column.field_if_not_intvx !== "" && column.field_if_not_intvx !== null) {
           //ex. CN Zone name
-          if (inter[column.col_if_not_intvx as keyof arkL_intervals] === null) {
+          if (inter[column.field_if_not_intvx as keyof arkL_intervals] === null) {
             continue;
           }
-          line = `\t${inter[column.col_if_not_intvx as keyof arkL_intervals]}\t${inter.base_age}\t\t${inter.interval_notes !== null ? inter.interval_notes.replace(/[\r\n]+/g, " ") : ""}\t${inter.colour || ""}`;
-        } else
-          line = `\t${inter.intervalx}\t${inter.base_age}\t\t${inter.interval_notes !== null ? inter.interval_notes.replace(/[\r\n]+/g, " ") : ""}\t${inter.colour || ""}`;
+          line = `\t${inter[column.field_if_not_intvx as keyof arkL_intervals]}\t${inter.base_age}\t\t${cleanText(inter.interval_notes)}\t${inter.colour || columnColour}`;
+        } else {
+          line = `\t${getIntervalLabel(inter)}\t${inter.base_age}\t\t${cleanText(inter.interval_notes)}\t${inter.colour || columnColour}`;
+        }
         columnLines.push(line);
       }
       columnLines.push("");
@@ -301,7 +300,6 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
       let chronLabelIntervals = [];
       let chronSeriesIntervals = [];
 
-      const regex = new RegExp(column.interval_type!, "i");
       const path = column.path || "";
       if (path === null || path === "") {
         console.log(chalk.yellow("missing path for " + column.columnx));
@@ -309,12 +307,7 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
       }
 
       chronIntervals = intervals
-        .filter(
-          (interval) =>
-            interval.dataset_id === column.dataset_id &&
-            interval.interval_type?.match(regex) &&
-            (interval.subdataset === "" || interval.subdataset === null)
-        )
+        .filter((interval) => interval.column_id === column.id && interval.base_age2020 !== null)
         .sort((a, b) => a.base_age2020! - b.base_age2020!);
       if (chronIntervals.length === 0) {
         console.log(chalk.yellow("no chron intervals found for " + column.columnx));
@@ -324,11 +317,7 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
       chronLabelIntervals = chronLabelColumn
         ? intervals
             .filter(
-              (interval) =>
-                interval.dataset_id === column.dataset_id &&
-                interval.interval_type?.match(chronLabelColumn.interval_type!) &&
-                interval.subdataset === "" &&
-                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+              (interval) => interval.column_id === chronLabelColumn.id && interval.base_age2020 !== null
             )
             .sort((a, b) => a.base_age2020! - b.base_age2020!)
         : [];
@@ -340,11 +329,7 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
       chronSeriesIntervals = chronSeriesColumn
         ? intervals
             .filter(
-              (interval) =>
-                interval.dataset_id === column.dataset_id &&
-                interval.interval_type?.match(chronSeriesColumn.interval_type!) &&
-                interval.subdataset === "" &&
-                interval[column.col_if_not_intvx as keyof arkL_intervals] !== null
+              (interval) => interval.column_id === chronSeriesColumn.id && interval.base_age2020 !== null
             )
             .sort((a, b) => a.base_age2020! - b.base_age2020!)
         : [];
@@ -354,7 +339,7 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
       }
 
       const popup = dataset.notes_Jur;
-      let line = `${column.columnx}\tchron\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${
+      let line = `${column.columnx}\tchron\t${column.width || ""}\t${column.colour || dataset.colour || ""}\tnotitle\toff\t${
         popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""
       }`;
       columnLines.push(line);
@@ -435,12 +420,8 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
 
         // Remove any " (word continued)" at the end of the label, e.g. "C1r.2r (Matuyama continued)" -> "C1r.2r"
         let chronPopup = "";
-        if (
-          chronInter.preset_duration_notes !== null &&
-          chronInter.preset_duration_notes !== undefined &&
-          chronInter.preset_duration_notes !== ""
-        ) {
-          chronPopup = String(chronInter.preset_duration_notes).replace(/[\r\n]+/g, " ");
+        if (chronInter.compilation_notes !== null && chronInter.compilation_notes !== undefined && chronInter.compilation_notes !== "") {
+          chronPopup = String(chronInter.compilation_notes).replace(/[\r\n]+/g, " ");
         } else {
           chronPopup = chronInter.intervalx.replace(/[\r\n]+/g, " ") || "";
           chronPopup = chronInter.has_added_abv
@@ -464,6 +445,59 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
     }
   }
   return chronColumns;
+}
+
+async function processPointDataColumns(datasets: arkL_datasets[], columns: arkL_columns[]) {
+  const pointColumns: ProcessColumnOutput[] = [];
+  for (const column of columns) {
+    if (column.column_type !== "pointdata") continue;
+
+    const pointTableName = column.pointdata_table || "arkL_events";
+    const sourceRows = await loadJsonTable(pointTableName);
+    const rows = pointTableName === "arkL_events" ? sourceRows.filter((row) => row.column_id === column.id) : sourceRows;
+    const valueField = column.field_if_not_intvx || "pointdata1";
+    const points = rows
+      .map((row) => {
+        const age = getRowNumber(row.age ?? row.age2020 ?? row.age2020_uncorrected);
+        const xVal = getRowNumber(row[valueField] ?? row.pointdata1 ?? row.pointdata2);
+        if (age === null || xVal === null) return null;
+        return {
+          age,
+          xVal,
+          popup: getPointPopup(row)
+        };
+      })
+      .filter((point): point is { age: number; xVal: number; popup: string } => point !== null)
+      .sort((a, b) => a.age - b.age);
+
+    if (points.length === 0) {
+      console.log(chalk.yellow("missing point data for " + column.columnx));
+      continue;
+    }
+
+    const dataset = datasets.find((item) => item.id === column.dataset_id);
+    const columnColour = column.colour || dataset?.colour || "";
+    const isOpenCurve = /open/i.test(`${column.column_subtype ?? ""} ${column.columnx ?? ""}`);
+    const fillColour = isOpenCurve ? "255/255/255" : columnColour;
+    const popup = cleanText(dataset?.notes_Jur ?? dataset?.notes_Cenoz ?? "");
+    const columnLines: string[] = [];
+    columnLines.push(`${column.columnx}\tpoint\t${column.width || ""}\t${columnColour}\t\toff\t${popup}`);
+    columnLines.push(`nopoints\t${columnColour || "0/0/0"}\t${fillColour}`);
+    for (const point of points) {
+      columnLines.push(`\t${point.age}\t${point.xVal}\t${point.popup}`);
+    }
+    columnLines.push("");
+
+    if (column.path && column.columnx) {
+      pointColumns.push({
+        path: column.path,
+        column: column.columnx,
+        lines: columnLines,
+        sort: column.sort ?? 0
+      });
+    }
+  }
+  return pointColumns;
 }
 
 const organizeColumn = (entries: ProcessColumnOutput[], pathDict: StringDictSet, linesDict: StringDict) => {
@@ -575,7 +609,7 @@ export async function generateAndWriteConfig(fileName: string) {
 
 export async function generateLondonDatapack(): Promise<File | undefined> {
   try {
-    const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
+    const { datasets, events, intervals, columns } = await loadJSONS();
     const date = new Date();
     const formattedDate = `${date.getDate().toString().padStart(2, "0")}${date.toLocaleString("en-US", { month: "short" })}${date.getFullYear()}`;
     const fileName = `UCL_TSC_Chronostrat_${formattedDate}.txt`;
@@ -584,10 +618,11 @@ export async function generateLondonDatapack(): Promise<File | undefined> {
     const pathDict: StringDictSet = {};
     const linesDict: StringDict = {};
     const eventColumns = await processEventColumns(datasets, columns, events);
-    const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
+    const blockColumns = await processBlockColumns(datasets, columns, intervals);
     const sequenceColumns = await processSequenceColumns(events, columns, datasets);
     const chronColumns = await processChronColumns(datasets, columns, intervals);
-    const allColumns = [...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns].sort(
+    const pointColumns = await processPointDataColumns(datasets, columns);
+    const allColumns = [...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns, ...pointColumns].sort(
       (a, b) => a.sort - b.sort
     );
     organizeColumn(allColumns, pathDict, linesDict);
