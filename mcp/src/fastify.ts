@@ -59,7 +59,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
         body: JSON.stringify({ uuid: userUuid, sessionId })
       });
     } catch (err) {
-      console.warn(`Failed to clean temp datapacks for session ${sessionId}:`, err);
+      console.warn("Failed to clean temp datapacks for session %s:", sessionId, err);
     }
   };
 
