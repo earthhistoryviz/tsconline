@@ -1,5 +1,8 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { DatapackMetadata, ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
+import type { MCPCreateSessionRequest, MCPUpdateSessionChartStateRequest } from "@tsconline/shared";
+import { randomUUID } from "node:crypto";
+import type { WebSocket } from "ws";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../user/user-handler.js";
 import { extractMetadataFromDatapack } from "../util.js";
@@ -12,6 +15,102 @@ import {
   ColumnToggles
 } from "../settings-generation/build-settings.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
+
+type PendingChartStateRequest = {
+  resolve: (value: { ok: boolean; error?: string }) => void;
+  timeout: NodeJS.Timeout;
+};
+
+const mcpChartStateSockets = new Map<string, WebSocket>();
+const pendingChartStateRequests = new Map<string, PendingChartStateRequest>();
+
+function clearPendingChartStateRequest(requestId: string) {
+  const pending = pendingChartStateRequests.get(requestId);
+  if (!pending) return;
+  clearTimeout(pending.timeout);
+  pendingChartStateRequests.delete(requestId);
+}
+
+async function requestChartStateViaSocket(
+  sessionId: string,
+  timeoutMs = 10000
+): Promise<{ ok: boolean; error?: string }> {
+  const socket = mcpChartStateSockets.get(sessionId);
+  if (!socket || socket.readyState !== 1) {
+    return { ok: false, error: "No active TSCOnline websocket for this session" };
+  }
+
+  const requestId = randomUUID();
+
+  const resultPromise = new Promise<{ ok: boolean; error?: string }>((resolve) => {
+    const timeout = setTimeout(() => {
+      pendingChartStateRequests.delete(requestId);
+      resolve({ ok: false, error: "Timed out waiting for chart state response" });
+    }, timeoutMs);
+
+    pendingChartStateRequests.set(requestId, { resolve, timeout });
+  });
+
+  try {
+    socket.send(JSON.stringify({ type: "request-chart-state", requestId }));
+  } catch {
+    clearPendingChartStateRequest(requestId);
+    return { ok: false, error: "Failed to send chart state request over websocket" };
+  }
+
+  return resultPromise;
+}
+
+export async function handleMcpChartStateSync(socket: WebSocket, request: FastifyRequest) {
+  const sessionUuid = request.session?.get?.("uuid");
+  if (!sessionUuid) {
+    socket.close();
+    return;
+  }
+
+  let registeredSessionId: string | undefined;
+
+  socket.on("message", (rawMessage) => {
+    let message: unknown;
+    try {
+      message = JSON.parse(rawMessage.toString());
+    } catch {
+      return;
+    }
+
+    if (!message || typeof message !== "object") return;
+
+    const typed = message as { type?: string; sessionId?: string; requestId?: string; ok?: boolean; error?: string };
+
+    if (typed.type === "register" && typeof typed.sessionId === "string" && typed.sessionId.length > 0) {
+      const existing = mcpChartStateSockets.get(typed.sessionId);
+      if (existing && existing !== socket && existing.readyState === 1) {
+        existing.close();
+      }
+
+      registeredSessionId = typed.sessionId;
+      mcpChartStateSockets.set(typed.sessionId, socket);
+      return;
+    }
+
+    if (typed.type === "chart-state-response" && typeof typed.requestId === "string") {
+      const pending = pendingChartStateRequests.get(typed.requestId);
+      if (!pending) return;
+
+      clearPendingChartStateRequest(typed.requestId);
+      pending.resolve({ ok: typed.ok === true, ...(typed.error ? { error: typed.error } : {}) });
+    }
+  });
+
+  const cleanup = () => {
+    if (registeredSessionId && mcpChartStateSockets.get(registeredSessionId) === socket) {
+      mcpChartStateSockets.delete(registeredSessionId);
+    }
+  };
+
+  socket.on("close", cleanup);
+  socket.on("error", cleanup);
+}
 
 /**
  * MCP route: list datapacks (public + official + user's private if authenticated)
@@ -180,16 +279,85 @@ export async function mcpCreateSession(request: FastifyRequest, reply: FastifyRe
   // base mcp url
   const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
 
+  // Extract chart state from request body if provided
+  const { userChartState } = (request.body ?? {}) as MCPCreateSessionRequest;
+
+  // Build request body for MCP server
+  const mcpRequestBody: Record<string, unknown> = {};
+  if (userChartState) {
+    mcpRequestBody.userChartState = userChartState;
+  }
+
   // continue call to mcp server with the additional auth token passed in
   const res = await fetch(`${base}/messages/create-session`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` }
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(Object.keys(mcpRequestBody).length > 0 ? { "Content-Type": "application/json" } : {})
+    },
+    ...(Object.keys(mcpRequestBody).length > 0 && { body: JSON.stringify(mcpRequestBody) })
   });
 
   // wait and return reponse from request call
   const data = await res.json();
   return reply.code(res.status).send(data);
 }
+
+// route called by frontend to update chart state for an existing mcp session entry
+export async function mcpUpdateSessionChartState(request: FastifyRequest, reply: FastifyReply) {
+  const sessionUuid = request.session?.get?.("uuid");
+  if (!sessionUuid) return reply.code(401).send({ error: "Not logged in" });
+
+  const { sessionId, userChartState } = (request.body ?? {}) as Partial<MCPUpdateSessionChartStateRequest>;
+  if (!sessionId || !userChartState) {
+    return reply.code(400).send({ error: "Missing sessionId or userChartState" });
+  }
+
+  const token = process.env.MCP_AUTH_TOKEN;
+  if (!token) return reply.code(500).send({ error: "Missing MCP_AUTH_TOKEN" });
+
+  const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
+
+  const res = await fetch(`${base}/messages/update-chart-state`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ sessionId, userChartState })
+  });
+
+  const data = await res.json();
+  return reply.code(res.status).send(data);
+}
+
+// route called by mcp server to request fresh chart state from the active TSCOnline websocket client
+export async function mcpRequestSessionChartState(request: FastifyRequest, reply: FastifyReply) {
+  const authHeader = request.headers.authorization;
+  const expectedToken = process.env.MCP_AUTH_TOKEN;
+
+  if (!expectedToken || !authHeader?.startsWith("Bearer ")) {
+    return reply.code(401).send({ error: "Missing or invalid Bearer token" });
+  }
+
+  const token = authHeader.slice(7);
+  if (token !== expectedToken) {
+    return reply.code(401).send({ error: "Invalid Bearer token" });
+  }
+
+  const { sessionId } = (request.body ?? {}) as { sessionId?: string };
+  if (!sessionId) {
+    return reply.code(400).send({ error: "Missing sessionId" });
+  }
+
+  const result = await requestChartStateViaSocket(sessionId);
+  if (!result.ok) {
+    return reply.code(409).send({ ok: false, sessionId, error: result.error || "Unable to refresh chart state" });
+  }
+
+  return reply.code(200).send({ ok: true, sessionId });
+}
+
 export const mcpUploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
   // User-ID is sent by MCP client; header names are lowercased by Fastify
   const uuid = (request.headers["user-id"] ?? request.headers["User-ID"]) as string | undefined;

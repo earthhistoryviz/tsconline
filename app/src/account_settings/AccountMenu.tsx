@@ -17,9 +17,11 @@ import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import type { MCPCreateSessionRequest } from "@tsconline/shared";
 
 import { fetcher } from "../util";
 import { ErrorCodes } from "../util/error-codes";
+import { extractCurrentChartState } from "../util/chart-state-extractor";
 
 export const AccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -32,14 +34,18 @@ export const AccountMenu = observer(() => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  // function add mcp session from tsconline to agent
   const handleCreateMcpSession = async () => {
     try {
       setLoading(true);
+
+      const userChartState = extractCurrentChartState(state);
+      const createSessionPayload: MCPCreateSessionRequest = { userChartState };
+
       const res = await fetcher("/mcp/create-session", {
-        // route called to make new entry in the mcp mapping
         method: "POST",
-        credentials: "include"
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(createSessionPayload)
       });
 
       const json = await res.json();
@@ -53,6 +59,9 @@ export const AccountMenu = observer(() => {
         actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
         return;
       }
+
+      actions.setGeoGPTSessionId(sessionId);
+
       await fetcher("/mcp/user-info", {
         // populate that entry that the passed in sessionId maps to - in order add the current userInfo
         method: "POST",
