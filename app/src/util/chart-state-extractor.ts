@@ -96,4 +96,3 @@ export function extractCurrentChartState(state: State): ExtractedChartState {
 
   return chartState;
 }
-

@@ -31,7 +31,10 @@ function clearPendingChartStateRequest(requestId: string) {
   pendingChartStateRequests.delete(requestId);
 }
 
-async function requestChartStateViaSocket(sessionId: string, timeoutMs = 10000): Promise<{ ok: boolean; error?: string }> {
+async function requestChartStateViaSocket(
+  sessionId: string,
+  timeoutMs = 10000
+): Promise<{ ok: boolean; error?: string }> {
   const socket = mcpChartStateSockets.get(sessionId);
   if (!socket || socket.readyState !== 1) {
     return { ok: false, error: "No active TSCOnline websocket for this session" };
