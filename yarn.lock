@@ -2737,7 +2737,7 @@ __metadata:
     clsx: "npm:^2.1.0"
     color: "npm:^4.2.3"
     dayjs: "npm:^1.11.12"
-    dompurify: "npm:^3.3.2"
+    dompurify: "npm:^3.4.0"
     file-saver: "npm:^2.0.5"
     framer-motion: "npm:^11.15.0"
     i18next: "npm:^23.14.0"
@@ -2836,7 +2836,7 @@ __metadata:
     better-sqlite3: "npm:^9.4.4"
     chalk: "npm:^5.3.0"
     cors: "npm:^2.8.5"
-    dompurify: "npm:^3.3.2"
+    dompurify: "npm:^3.4.0"
     dotenv: "npm:^16.4.5"
     fastify: "npm:^4.27.0"
     form-auto-content: "npm:^3.2.1"
@@ -6282,15 +6282,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dompurify@npm:^3.3.2":
-  version: 3.3.3
-  resolution: "dompurify@npm:3.3.3"
+"dompurify@npm:^3.4.0":
+  version: 3.4.1
+  resolution: "dompurify@npm:3.4.1"
   dependencies:
     "@types/trusted-types": "npm:^2.0.7"
   dependenciesMeta:
     "@types/trusted-types":
       optional: true
-  checksum: 4cc9c539ed7136d46c6577613b8e20871c2b6165db01dfbd2a3c11c75f9e339c496ac6519a1c3190115def8cadae3720bef0417fc43fa28802c7407bab174da9
+  checksum: dcaf945376eff2a61841b205501b163b2c8ae9afe7251e68276b561d9fcf943cefc67e2631fdeae080b52a8b37c96e6beb7e6ae80ad8a83692ff67965dd6b4db
   languageName: node
   linkType: hard
 
