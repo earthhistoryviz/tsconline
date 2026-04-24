@@ -53,11 +53,13 @@ export const cleanupInterval = setInterval(
       const timeSinceLastActivity = now - entry.lastActivity;
 
       if (!isAuthenticated && timeSinceCreation > PRE_LOGIN_TTL_MS) {
+        void cleanupTempSessionDatapacks(sessionId, entry);
         sessions.delete(sessionId);
         continue;
       }
 
       if (isAuthenticated && timeSinceLastActivity > AUTHENTICATED_INACTIVITY_TTL_MS) {
+        void cleanupTempSessionDatapacks(sessionId, entry);
         sessions.delete(sessionId);
       }
     }
@@ -83,7 +85,7 @@ const tempSharedUser: SharedUser = {
   isAdmin: false,
   accountType: "default",
   historyEntries: [],
-  pictureUrl: null,
+  pictureUrl: null
 };
 
 function newChartState(): ChartState {
@@ -101,6 +103,20 @@ function createSession(): { sessionId: string; entry: SessionEntry } {
 
   sessions.set(sessionId, entry);
   return { sessionId, entry };
+}
+
+async function cleanupTempSessionDatapacks(sessionId: string, entry: SessionEntry): Promise<void> {
+  if (!tempUserUuid || !entry.userInfo || entry.userInfo.uuid !== tempUserUuid) return;
+
+  try {
+    await fetch(`${internalServerUrl}/mcp/delete-temp-session-datapacks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uuid: entry.userInfo.uuid, sessionId })
+    });
+  } catch (e) {
+    console.warn(`Failed cleaning temp datapacks for session ${sessionId}:`, e);
+  }
 }
 
 type SessionResult = { sessionId: string; entry: SessionEntry; internalNote?: string };
@@ -414,8 +430,32 @@ export const createMCPServer = () => {
 
         const mcpToolUrl = `${frontendUrl}/chart-view?mcpChartState=${mcpLinkEncoded}`;
 
+        const isTempUser = entry.userInfo?.uuid === tempUserUuid;
+        let includesPrivateDatapack = false;
+        if (isTempUser) {
+          try {
+            const datapacksRes = await fetch(`${internalServerUrl}/mcp/datapacks`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ uuid: entry.userInfo?.uuid, sessionId: sess.sessionId })
+            });
+            if (datapacksRes.ok) {
+              const datapacksJson = await datapacksRes.json();
+              if (Array.isArray(datapacksJson)) {
+                const selectedTitles = new Set(st.datapackTitles);
+                includesPrivateDatapack = (datapacksJson as DatapackMetadata[]).some(
+                  (dp) => selectedTitles.has(dp.title) && !dp.isPublic
+                );
+              }
+            }
+          } catch {
+            // If this check fails, keep directUrl behavior unchanged.
+          }
+        }
+
+        const hideDirectUrl = isTempUser && includesPrivateDatapack;
         const chartResponse = {
-          directUrl: mcpToolUrl,
+          ...(hideDirectUrl ? {} : { directUrl: mcpToolUrl }),
           embeddedChartUrl: `${serverUrl}${chartPath}`,
           currentState: st
         };
@@ -443,7 +483,6 @@ export const createMCPServer = () => {
       const sess = requireSession(es);
       const uuid = sess.entry.userInfo?.uuid;
 
-
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
 
@@ -452,7 +491,7 @@ export const createMCPServer = () => {
         console.log("uuid", uuid);
 
         //only if uuid is the temp user uuid, then sessionId is required
-        let body: { uuid?: string, sessionId?: string };
+        let body: { uuid?: string; sessionId?: string };
         if (uuid === tempUserUuid) {
           if (!sessionId) {
             return wrapResponse({ error: "sessionId is required" }, sess.sessionId);
@@ -461,7 +500,6 @@ export const createMCPServer = () => {
         } else {
           body = { uuid };
         }
-
 
         const res = await fetch(`${internalServerUrl}/mcp/datapacks`, {
           method: "POST",
@@ -529,7 +567,9 @@ export const createMCPServer = () => {
     async ({ sessionId }) => {
       try {
         // Rate limit: check number of pre-login sessions using temp user uuid
-        const preLoginCount = Array.from(sessions.values()).filter((entry) => entry.userInfo?.uuid !== tempUserUuid).length;
+        const preLoginCount = Array.from(sessions.values()).filter(
+          (entry) => entry.userInfo?.uuid !== tempUserUuid
+        ).length;
 
         if (preLoginCount >= MAX_CONCURRENT_LOGIN_REQUESTS) {
           const es = verifyMCPSession(sessionId);
@@ -827,7 +867,6 @@ export const createMCPServer = () => {
         if (metadata.contact) formData.append("contact", metadata.contact);
         if (metadata.date) formData.append("date", metadata.date);
         if (uuid === tempUserUuid) formData.append("sessionId", sess.sessionId);
-        
 
         const uploadResponse = await fetch(`${internalServerUrl}/mcp/upload-datapack`, {
           method: "POST",

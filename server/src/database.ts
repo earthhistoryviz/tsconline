@@ -164,23 +164,23 @@ export async function createUser(newUser: NewUser) {
 /** Sentinel userId for the env-configured temp user when no row exists in `users`. */
 const SYNTHETIC_TEMP_USER_ID = -1;
 
-
 export async function findUser(criteria: Partial<User>) {
   const tempUserUuid = process.env.TMP_USR_SESSION_ID;
   if (criteria.uuid && tempUserUuid && criteria.uuid === tempUserUuid) {
-    return [{
-      userId: SYNTHETIC_TEMP_USER_ID,
-      username: process.env.TMP_USR_USERNAME ?? "temp_user",
-      email: process.env.TMP_USR_EMAIL ?? "temp@tsconline.internal",
-      hashedPassword: null,
-      uuid: tempUserUuid,
-      pictureUrl: null,
-      emailVerified: 0,
-      invalidateSession: 0,
-      isAdmin: 0,
-      accountType: "default" as AccountType
-    } as User];
-
+    return [
+      {
+        userId: SYNTHETIC_TEMP_USER_ID,
+        username: process.env.TMP_USR_USERNAME ?? "temp_user",
+        email: process.env.TMP_USR_EMAIL ?? "temp@tsconline.internal",
+        hashedPassword: null,
+        uuid: tempUserUuid,
+        pictureUrl: null,
+        emailVerified: 0,
+        invalidateSession: 0,
+        isAdmin: 0,
+        accountType: "default" as AccountType
+      } as User
+    ];
   }
 
   let query = db.selectFrom("users");

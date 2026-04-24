@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { DatapackMetadata, ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../user/user-handler.js";
+import { deleteUserDatapack, fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../user/user-handler.js";
 import { extractMetadataFromDatapack } from "../util.js";
 import { generateChart } from "../chart-generation/generate-chart.js";
 import { findUser } from "../database.js";
@@ -18,7 +18,7 @@ import { processAndUploadDatapack } from "../upload-datapack.js";
  */
 export async function mcpListDatapacks(_request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { uuid, sessionId } = (_request.body ?? {}) as { uuid?: string, sessionId?: string };
+    const { uuid, sessionId } = (_request.body ?? {}) as { uuid?: string; sessionId?: string };
 
     const publicDatapacks = await loadPublicUserDatapacks();
     const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
@@ -28,9 +28,9 @@ export async function mcpListDatapacks(_request: FastifyRequest, reply: FastifyR
       //filter out datapacks that do not have a sessionId and sessionId is not the temp user sessionId
       userDatapacks = userDatapacks.filter((dp) => dp.sessionId === sessionId);
     }
-    
+
     console.log("uuid", uuid);
-    console.log( uuid === process.env.TMP_USR_SESSION_ID);
+    console.log(uuid === process.env.TMP_USR_SESSION_ID);
     console.log("userDatapacks", userDatapacks);
     const combined = [...publicDatapacks, ...officialDatapacks, ...userDatapacks];
     const datapackMetadata: DatapackMetadata[] = combined.map((dp) => extractMetadataFromDatapack(dp));
@@ -105,7 +105,7 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       //filter out datapacks that do not have a sessionId and sessionId is not the temp user sessionId
       userDatapacks = userDatapacks.filter((dp) => dp.sessionId === sessionId);
     }
-    
+
     const allDatapacks = [...publicDatapacks, ...officialDatapacks, ...userDatapacks];
     const requestedDatapacks = allDatapacks.filter((dp) => datapackTitles.includes(dp.title));
 
@@ -206,6 +206,31 @@ export async function mcpCreateSession(request: FastifyRequest, reply: FastifyRe
   const data = await res.json();
   return reply.code(res.status).send(data);
 }
+
+export async function mcpDeleteTempSessionDatapacks(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { uuid, sessionId } = (request.body ?? {}) as { uuid?: string; sessionId?: string };
+    const tempUserUuid = process.env.TMP_USR_SESSION_ID;
+
+    if (!uuid || !sessionId) {
+      return reply.code(400).send({ error: "Missing uuid or sessionId" });
+    }
+
+    if (!tempUserUuid || uuid !== tempUserUuid) {
+      return reply.code(400).send({ error: "Invalid temp user uuid" });
+    }
+
+    const userDatapacks = await fetchAllUsersDatapacks(uuid);
+    const sessionDatapacks = userDatapacks.filter((dp) => dp.sessionId === sessionId);
+
+    await Promise.allSettled(sessionDatapacks.map((dp) => deleteUserDatapack(uuid, dp.title)));
+
+    return reply.code(200).send({ deleted: sessionDatapacks.length });
+  } catch (err) {
+    return reply.code(500).send({ error: String(err) });
+  }
+}
+
 export const mcpUploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
   // User-ID is sent by MCP client; header names are lowercased by Fastify
   const uuid = (request.headers["user-id"] ?? request.headers["User-ID"]) as string | undefined;

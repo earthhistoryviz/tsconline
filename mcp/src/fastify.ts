@@ -46,6 +46,28 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
 
   const touchStreamable = (sid: string) => streamableLastSeen.set(sid, Date.now());
   const touchLegacy = (sid: string) => legacyLastActivity.set(sid, Date.now());
+  const internalServerUrl = "http://127.0.0.1:3000";
+
+  const cleanupTempSessionDatapacks = async (sessionId: string, userUuid?: string) => {
+    const tempUserUuid = process.env.TMP_USR_SESSION_ID;
+    if (!tempUserUuid || !userUuid || userUuid !== tempUserUuid) return;
+
+    try {
+      await fetch(`${internalServerUrl}/mcp/delete-temp-session-datapacks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uuid: userUuid, sessionId })
+      });
+    } catch (err) {
+      console.warn(`Failed to clean temp datapacks for session ${sessionId}:`, err);
+    }
+  };
+
+  const closeMcpSession = (sessionId: string) => {
+    const userUuid = sessions.get(sessionId)?.userInfo?.uuid;
+    sessions.delete(sessionId);
+    void cleanupTempSessionDatapacks(sessionId, userUuid);
+  };
 
   const cleanupTimer = setInterval(() => {
     const now = Date.now();
@@ -57,6 +79,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
         streamableSessions.delete(sid);
         streamableServers.delete(sid);
         t?.close().catch(() => {});
+        closeMcpSession(sid);
       }
     }
 
@@ -65,8 +88,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
         legacyLastActivity.delete(sid);
         legacySSESessions.delete(sid);
         legacyServers.delete(sid);
-        // Clean up associated session when MCP session expires
-        sessions.delete(sid);
+        closeMcpSession(sid);
 
         const res = legacySSEResponses.get(sid);
         legacySSEResponses.delete(sid);
@@ -122,7 +144,10 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
       const sid = transport.sessionId;
       if (sid) {
         touchStreamable(sid);
+        streamableSessions.delete(sid);
+        streamableLastSeen.delete(sid);
         streamableServers.delete(sid);
+        closeMcpSession(sid);
       }
     };
 
@@ -167,6 +192,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     streamableSessions.delete(sessionId);
     streamableLastSeen.delete(sessionId);
     streamableServers.delete(sessionId);
+    closeMcpSession(sessionId);
 
     await transport.close().catch(() => {});
     reply.code(204).send();
@@ -214,6 +240,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
       legacySSEResponses.delete(transport.sessionId);
       legacyLastActivity.delete(transport.sessionId);
       legacyServers.delete(transport.sessionId);
+      closeMcpSession(transport.sessionId);
     };
 
     // Clean up on socket close/error or client abort (this can mess up when deving w wsl so keep this)

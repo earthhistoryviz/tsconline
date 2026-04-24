@@ -121,7 +121,6 @@ export async function uploadUserDatapackHandler(
     tempUpload = true;
   }
 
-
   if (title === "__proto__" || title === "constructor" || title === "prototype" || title.trim() !== title) {
     await userUploadHandler(filepath, tempProfilePictureFilepath);
     return { code: 400, message: "Invalid title" };

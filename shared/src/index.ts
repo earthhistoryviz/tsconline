@@ -1543,7 +1543,6 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (typeof o.priority !== "number") throwError("DatapackMetadata", "priority", "number", o.priority);
   if (typeof o.hasFiles !== "boolean") throwError("DatapackMetadata", "hasFiles", "boolean", o.hasFiles);
   assertDatapackType(o);
-
 }
 export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
   if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");

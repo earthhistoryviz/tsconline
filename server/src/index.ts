@@ -336,6 +336,7 @@ server.post("/mcp/list-columns", looseRateLimit, mcpRoutes.mcpListColumns);
 server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderChartWithEdits);
 server.post("/mcp/user-info", moderateRateLimit, mcpRoutes.mcpUserInfoProxy);
 server.post("/mcp/create-session", strictRateLimit, mcpRoutes.mcpCreateSession);
+server.post("/mcp/delete-temp-session-datapacks", moderateRateLimit, mcpRoutes.mcpDeleteTempSessionDatapacks);
 server.post("/mcp/upload-datapack", moderateRateLimit, mcpRoutes.mcpUploadDatapack);
 
 //fetches json object of requested settings file
