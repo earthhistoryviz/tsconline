@@ -1,4 +1,4 @@
-import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
+import { Breadcrumbs, Link, Stack } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
 import { useTheme } from "@mui/material/styles";
 import { getHelpKeysFromPath } from "./state/non-action-util";
@@ -49,7 +49,7 @@ export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> = ({ markdown
     <Stack spacing={2}>
       <Stack spacing={2}>
         <Breadcrumbs
-          separator={<span style={{ color: theme.palette.button.main }}>{">"}</span>}
+          separator={<span style={{ color: theme.palette.button.main, margin: "0 0.35rem" }}>{">"}</span>}
           sx={{ color: theme.palette.button.main }}>
           {breadcrumbs.map((breadcrumb: Breadcrumb, index: number) => (
             <Link
@@ -63,12 +63,6 @@ export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> = ({ markdown
           ))}
         </Breadcrumbs>
       </Stack>
-
-      {breadcrumbs.length > 0 && (
-        <div>
-          <Typography variant="h4">{breadcrumbs[breadcrumbs.length - 1].title}</Typography>
-        </div>
-      )}
     </Stack>
   );
 };
