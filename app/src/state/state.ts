@@ -38,7 +38,15 @@ import type {
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
-import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
+import {
+  adjustScaleOfMarkers,
+  adjustScaleOfModels,
+  getInitialDarkMode,
+  getInitialGeoGPTAutoOpen,
+  getInitialGeoGPTSessionId,
+  getInitialGeoGPTSettingsSeen,
+  getInitialGeoGPTTscOnlineCoWork
+} from "./actions";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
@@ -242,8 +250,12 @@ export const state = observable<State>({
     workshopIds: [],
     settings: {
       darkMode: getInitialDarkMode(),
-      language: "English"
+      language: "English",
+      geogptAutoOpen: getInitialGeoGPTAutoOpen(),
+      geogptTscOnlineCoWork: getInitialGeoGPTTscOnlineCoWork(),
+      geogptSettingsSeen: getInitialGeoGPTSettingsSeen()
     },
+    geogptSessionId: getInitialGeoGPTSessionId(),
     historyEntries: []
   },
   admin: {

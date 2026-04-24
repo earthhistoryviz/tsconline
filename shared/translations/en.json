@@ -118,7 +118,7 @@
             "password": "Password",
             "tooltip": "Account Settings",
             "profile": "Profile",
-            "create-geogpt-session": "Create New GeoGPT Session",
+            "create-geogpt-session": "Start GeoGPT",
             "open-geogpt-chat": "Open GeoGPT Chat",
             "add": "Add another account",
             "logout": "Logout",

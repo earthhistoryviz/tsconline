@@ -12,49 +12,67 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import Logout from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate } from "react-router";
+import { GeoGPTSettingsPopup } from "./GeoGPTSettingsPopup";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 import { fetcher } from "../util";
-import { ErrorCodes } from "../util/error-codes";
 
 export const AccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   const open = Boolean(anchorEl);
+  const { state, actions } = useContext(context);
+  const navigate = useNavigate();
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
     setAnchorEl(null);
   };
-  // function add mcp session from tsconline to agent
-  const handleCreateMcpSession = async () => {
+
+  const handleOpenSettings = () => {
+    actions.setGeoGPTSettingsSeen(true);
+    setSettingsOpen(true);
+  };
+
+  const handleCloseSettings = () => {
+    setSettingsOpen(false);
+  };
+
+  const geogptChatUrl = state.user.geogptChatUrl;
+
+  const createMcpSession = async () => {
+    const shouldAutoOpen = state.user.settings.geogptAutoOpen;
+
     try {
       setLoading(true);
       const res = await fetcher("/mcp/create-session", {
-        // route called to make new entry in the mcp mapping
         method: "POST",
         credentials: "include"
       });
 
       const json = await res.json();
       if (!res.ok) {
-        actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
+        actions.pushSnackbar(json?.error || "Failed to create GeoGPT session. Please try again later.", "warning");
         return;
       }
 
-      const sessionId = json.sessionId as string | undefined; // previous call will return sessionID that was created for that entry
+      const sessionId = json.sessionId as string | undefined;
       if (!sessionId) {
-        actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
+        actions.pushSnackbar("GeoGPT session ID was not returned by the server.", "warning");
         return;
       }
-      await fetcher("/mcp/user-info", {
-        // populate that entry that the passed in sessionId maps to - in order add the current userInfo
+
+      actions.setGeoGPTSessionId(sessionId);
+
+      const userInfoRes = await fetcher("/mcp/user-info", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -62,22 +80,38 @@ export const AccountMenu = observer(() => {
           sessionId
         })
       });
-
-      await navigator.clipboard.writeText(sessionId); // also copy that sessionId to clipboard for copy-paste purposes
-      actions.pushSnackbar("GeoGPT session ID created and copied. Paste it into GeoGPT chat.", "success");
-
-      if (!geogptChatUrl) {
-        return;
+      if (!userInfoRes.ok) {
+        actions.pushSnackbar("GeoGPT session created, but account sync failed.", "warning");
       }
 
-      window.open(geogptChatUrl, "_blank", "noopener,noreferrer");
+      try {
+        await navigator.clipboard.writeText(sessionId);
+        actions.pushSnackbar("GeoGPT session ID created and copied. Paste it into GeoGPT chat.", "success");
+      } catch {
+        actions.pushSnackbar("GeoGPT session ID created. Copy it from GeoGPT settings.", "warning");
+      }
+
+      if (shouldAutoOpen) {
+        const geogptTab = window.open(geogptChatUrl, "_blank");
+        if (!geogptTab) {
+          actions.pushSnackbar("GeoGPT tab was blocked by your browser.", "warning");
+        }
+      }
+    } catch {
+      actions.pushSnackbar("Failed to create GeoGPT session. Please try again later.", "warning");
     } finally {
       setLoading(false);
     }
   };
-  const navigate = useNavigate();
-  const { state, actions } = useContext(context);
-  const geogptChatUrl = state.user.geogptChatUrl;
+
+  const handleCreateMcpSession = async () => {
+    if (!state.user.settings.geogptSettingsSeen) {
+      setSettingsOpen(true);
+      actions.setGeoGPTSettingsSeen(true);
+      return;
+    }
+    await createMcpSession();
+  };
   const theme = useTheme();
   return (
     <>
@@ -130,12 +164,20 @@ export const AccountMenu = observer(() => {
           <Avatar /> {t("login.profile")}
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleCreateMcpSession} disabled={loading}>
-          <ListItemIcon>
-            <ContentCopyIcon fontSize="small" color="icon" />
-          </ListItemIcon>
-          {t("login.create-geogpt-session")}
-        </MenuItem>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <MenuItem onClick={handleCreateMcpSession} disabled={loading} sx={{ flex: 1 }}>
+            <ListItemIcon>
+              <ContentCopyIcon fontSize="small" color="icon" />
+            </ListItemIcon>
+            {t("login.create-geogpt-session")}
+          </MenuItem>
+          <Divider orientation="vertical" flexItem />
+          <Tooltip title="GeoGPT Settings">
+            <IconButton onClick={handleOpenSettings} size="small" sx={{ mx: 1 }}>
+              <SettingsIcon fontSize="small" color="icon" />
+            </IconButton>
+          </Tooltip>
+        </Box>
         <MenuItem onClick={() => navigate("/signup")}>
           <ListItemIcon>
             <PersonAdd fontSize="small" color="icon" />
@@ -161,6 +203,14 @@ export const AccountMenu = observer(() => {
           {t("login.logout")}
         </MenuItem>
       </Menu>
+      <GeoGPTSettingsPopup
+        open={settingsOpen}
+        onClose={handleCloseSettings}
+        onGenerate={async () => {
+          await createMcpSession();
+          setSettingsOpen(false);
+        }}
+      />
     </>
   );
 });
