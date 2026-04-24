@@ -130,8 +130,6 @@ export async function runJavaChartGeneration(
     "-node",
     "-s",
     settingsFile,
-    "-ss",
-    settingsFile,
     "-d",
     ...datapacks,
     "-o",

@@ -63,9 +63,14 @@ export const cleanupInterval = setInterval(
 interface ChartState {
   datapackTitles: string[];
   overrides: Record<string, unknown>;
-  columnToggles: { on?: string[]; off?: string[] };
+  columnToggles: Record<string, MCPColumnToggleSettings>;
   lastChartPath?: string;
   lastModified?: Date;
+}
+
+interface MCPColumnToggleSettings {
+  on?: boolean;
+  width?: number;
 }
 
 function newChartState(): ChartState {
@@ -112,27 +117,6 @@ function verifyMCPSession(sessionId?: string): SessionResult {
 
   return { sessionId, entry };
 }
-
-/*
-function denyNeedLogin(es: { sessionId: string; internalNote?: string }) {
-  const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
-
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: `[SHOW TO USER]
-Please log in to continue:
-${loginUrl}
-
-[INTERNAL - DO NOT SHOW TO USER]
-sessionId: ${es.sessionId}
-(Store for tool calls. Valid 30 min until login, then 10 min of inactivity.)`
-      }
-    ]
-  };
-}
-*/
 
 function requireSession(es: { sessionId: string; entry: SessionEntry; internalNote?: string }): {
   entry: SessionEntry;
@@ -233,12 +217,14 @@ const overridesSchema = z
   })
   .passthrough();
 
-const columnToggleSchema = z
+const singleColumnToggleSchema = z
   .object({
-    on: z.array(z.string()).optional(),
-    off: z.array(z.string()).optional()
+    on: z.boolean().optional(),
+    width: z.number().optional()
   })
   .passthrough();
+
+const columnToggleSchema = z.record(z.string(), singleColumnToggleSchema);
 
 const updateChartArgsSchema = z.object({
   datapackTitles: datapackTitlesSchema,
@@ -333,23 +319,16 @@ export const createMCPServer = () => {
         ...(args.overrides ?? {})
       };
 
-      const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
-      const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
+      const normalizedIncoming = Object.fromEntries(
+        Object.entries(args.columnToggles ?? {}).map(([columnId, settings]) => [columnId.toLowerCase(), settings])
+      ) as Record<string, MCPColumnToggleSettings>;
 
-      const currentOff = new Set((st.columnToggles.off ?? []).map((id) => id.toLowerCase()));
-      const currentOn = new Set((st.columnToggles.on ?? []).map((id) => id.toLowerCase()));
-
-      for (const id of incomingOff) {
-        currentOn.delete(id);
-        currentOff.add(id);
+      for (const [columnId, settings] of Object.entries(normalizedIncoming)) {
+        st.columnToggles[columnId] = {
+          ...(st.columnToggles[columnId] ?? {}),
+          ...settings
+        };
       }
-      for (const id of incomingOn) {
-        currentOff.delete(id);
-        currentOn.add(id);
-      }
-
-      st.columnToggles.off = Array.from(currentOff);
-      st.columnToggles.on = Array.from(currentOn);
 
       // Generate chart with THIS SESSION'S state
       try {
