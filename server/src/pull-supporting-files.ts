@@ -136,7 +136,7 @@ export async function downloadJars(access_token: string) {
       description: "Jar file"
     },
     {
-      dropboxPath: `/VIP-Fall202g3 EarthHistoryVisualization/TSC online supporting files/${basename(assetconfigs.decryptionJar)}`,
+      dropboxPath: `/VIP-Fall2023 EarthHistoryVisualization/TSC online supporting files/${basename(assetconfigs.decryptionJar)}`,
       localPath: assetconfigs.decryptionJar,
       description: "Decryption jar file"
     }
