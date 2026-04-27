@@ -133,3 +133,60 @@ This comes with a problem where docker will change the ownership of files, preve
 sudo chown -R <user> <project-directory>
 ```
 
+## Working with GeoGPT (Local Dev)
+
+### 1. Expose your MCP server (ngrok)
+- Create an account: https://ngrok.com/  
+- Start your MCP server:
+```bash
+yarn dev
+```
+*(runs on http://localhost:3001)*
+
+- In another terminal:
+```bash
+ngrok http 3001
+```
+- Copy the public HTTPS URL ngrok gives you.
+
+---
+
+### 2. Create an MCP Tool in GeoGPT
+- Go to: https://geogpt-sg.zero2x.org/chatbox  
+- Navigate: **Agent Store → Agent Builder → Tools (MCP) → Create Tool (MCP)**  
+- Select **Self Deployed**
+- Enter:
+  - **URL:** `https://<your-ngrok-url>/streamable-http`
+  - **Request Header:** Replace `Bearer token` with your **MCP Auth token** (from Dropbox)
+- Save and confirm connection
+
+---
+
+### 3. Create Your Agent
+- Go to **Agents → Create New → Quickly → Advanced**
+- Add your MCP tool
+- Publish (keep it private)
+
+---
+
+### 4. Use with TSCOnline
+Add to your `.env`:
+```bash
+GEOGPT_CHAT_URL=<your-agent-url>
+```
+This lets you open GeoGPT directly with a session from TSCOnline.
+
+---
+
+### 5. MCP Inspector (optional)
+```bash
+cd mcp
+yarn inspector
+```
+*MCP Inspector is a simple UI to test and debug your MCP server locally.*
+
+---
+
+### Notes
+- MCP server runs on **port 3001**
+- Requires **MCP Auth token (from Dropbox)**

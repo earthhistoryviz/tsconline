@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Accordion, AccordionDetails, AccordionSummary, Box, List, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, List, Typography, useMediaQuery } from "@mui/material";
 import { createContext, useContext, useState } from "react";
 import { ArrowForwardIosSharp } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
@@ -30,11 +30,14 @@ function NavItem({
   pathname: string;
   parentPath?: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const isParent = isMarkdownParent(markdownParent);
+  const isTopLevel = parentPath === "";
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [open, setOpen] = useState(isMobile ? false : isParent && isTopLevel);
   const navigate = useNavigate();
   const { selectedMarkdown } = useContext(HelpDrawerContext);
   const isSelected = selectedMarkdown === markdownParent ? "selected-help-accordion" : "";
-  const theme = useTheme(); // Moved inside the component
 
   // Construct full path for navigation
   const formattedPath = generatePath(pathname, parentPath);
@@ -45,7 +48,6 @@ function NavItem({
   const handleClick = () => {
     navigate(`/help${formattedPath}`);
   };
-  const isParent = isMarkdownParent(markdownParent);
   const containsSelectedChild =
     selectedMarkdown && isParent && doesMarkdownTreeContainFile(markdownParent, selectedMarkdown) ? { opacity: 1 } : {};
   return (
