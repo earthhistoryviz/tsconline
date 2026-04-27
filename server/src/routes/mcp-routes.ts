@@ -54,8 +54,8 @@ export async function mcpListColumns(_request: FastifyRequest, reply: FastifyRep
       return;
     }
 
-    const flat = listColumns(requestedDatapacks);
-    reply.send(flat);
+    const names = [...new Set(listColumns(requestedDatapacks).map((column) => column.name))];
+    reply.send(names);
   } catch (err) {
     reply.status(500).send({ error: String(err) });
   }

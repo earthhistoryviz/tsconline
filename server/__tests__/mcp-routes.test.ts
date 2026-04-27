@@ -153,7 +153,7 @@ describe("mcpListColumns", () => {
     await mcpListColumns(req, reply);
 
     expect(listColumns).toHaveBeenCalledWith(mockDatapacks);
-    expect(reply.send).toHaveBeenCalledWith(mockColumns);
+    expect(reply.send).toHaveBeenCalledWith(["Col"]);
   });
 
   it("returns 400 when datapackTitles is missing", async () => {
@@ -233,7 +233,7 @@ describe("mcpListColumns", () => {
 
     expect(fetchAllUsersDatapacks).toHaveBeenCalledWith("user-456");
     expect(listColumns).toHaveBeenCalledWith(mockUserDp);
-    expect(reply.send).toHaveBeenCalledWith(mockColumns);
+    expect(reply.send).toHaveBeenCalledWith(["Col"]);
   });
 });
 

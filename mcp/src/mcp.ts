@@ -411,7 +411,7 @@ WARNING: Omitting sessionId on subsequent calls breaks the session chain and cre
 
   listColumns: {
     title: "List Columns",
-    description: `What it does: returns a flat list of column ids and hierarchy paths for the given datapacks.
+    description: `What it does: returns a compact list of unique column names for the given datapacks.
 
 WHEN TO USE THIS:
 - User explicitly asks "what columns are available?" or "show me the columns"
@@ -425,12 +425,11 @@ WHEN NOT TO USE:
 Recommended concept workflow:
 1) listDatapacks (if datapack unclear)
 2) listColumns for chosen datapacks
-3) Match concept keywords against id/path
-4) updateChartState with matched ids via columnToggles
+3) Match concept keywords against returned names
+4) updateChartState with matched names in columnToggles (names are accepted case-insensitively)
 
 Output shape:
-- id: stable column id for toggling
-- path: full hierarchy path for semantic matching/context
+- string[] of unique column names
 
 === SESSION MANAGEMENT (CRITICAL) ===
 Session continuity is MANDATORY across ALL tool calls in a conversation.
