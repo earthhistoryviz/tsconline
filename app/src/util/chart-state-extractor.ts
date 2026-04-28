@@ -10,29 +10,61 @@ import { getDatapackFromArray } from "../state/non-action-util";
  */
 export type ExtractedChartState = MCPChartState;
 
-function collectColumnOnMap(column: ColumnInfo, onMap: Map<string, boolean>): void {
-  onMap.set(column.name, column.on);
+function collectDefaultColumnMap(column: ColumnInfo, defaultMap: Map<string, ColumnInfo>): void {
+  defaultMap.set(column.name, column);
   if (column.children && Array.isArray(column.children)) {
     for (const childColumn of column.children) {
-      collectColumnOnMap(childColumn, onMap);
+      collectDefaultColumnMap(childColumn, defaultMap);
     }
   }
 }
 
-function collectDefaultColumnOnMap(state: State): Map<string, boolean> {
-  const defaultOnMap = new Map<string, boolean>();
+function collectDefaultColumnMaps(state: State): Map<string, ColumnInfo> {
+  const defaultColumnMap = new Map<string, ColumnInfo>();
 
-  // Include built-in default columns from the shared chart root.
-  collectColumnOnMap(defaultColumnRoot, defaultOnMap);
+  collectDefaultColumnMap(defaultColumnRoot, defaultColumnMap);
 
-  // Include each selected datapack's original column defaults.
   for (const datapackRef of state.config.datapacks) {
     const datapack = getDatapackFromArray(datapackRef, state.datapacks);
     if (!datapack?.columnInfo) continue;
-    collectColumnOnMap(datapack.columnInfo, defaultOnMap);
+    collectDefaultColumnMap(datapack.columnInfo, defaultColumnMap);
   }
 
-  return defaultOnMap;
+  return defaultColumnMap;
+}
+
+function collectRenderColumnSettings(
+  columnName: string,
+  state: State,
+  defaultColumnMap: Map<string, ColumnInfo>,
+  columnToggleSettings: Record<string, Record<string, unknown>>
+): void {
+  const renderColumn = state.settingsTabs.columnHashMap.get(columnName);
+  if (!renderColumn || renderColumn.name === defaultColumnRoot.name) return;
+
+  const defaultColumn = defaultColumnMap.get(renderColumn.name);
+  const settings: Record<string, unknown> = {};
+
+  if (defaultColumn === undefined || defaultColumn.on !== renderColumn.on) {
+    settings.on = renderColumn.on;
+  }
+  if (defaultColumn === undefined || defaultColumn.width !== renderColumn.width) {
+    settings.width = renderColumn.width;
+  }
+  if (defaultColumn === undefined || defaultColumn.show !== renderColumn.show) {
+    settings.show = renderColumn.show;
+  }
+  if (defaultColumn === undefined || defaultColumn.expanded !== renderColumn.expanded) {
+    settings.expanded = renderColumn.expanded;
+  }
+
+  if (Object.keys(settings).length > 0 || defaultColumn === undefined) {
+    columnToggleSettings[renderColumn.name] = settings;
+  }
+
+  for (const childName of renderColumn.children) {
+    collectRenderColumnSettings(childName, state, defaultColumnMap, columnToggleSettings);
+  }
 }
 
 /**
@@ -58,40 +90,32 @@ export function extractCurrentChartState(state: State): ExtractedChartState {
   if (state.settings.timeSettings) {
     const settings = state.settings as ChartSettings;
     for (const [unitKey, unitSettings] of Object.entries(settings.timeSettings)) {
-      const typedSettings = unitSettings as { baseStageAge?: number; topStageAge?: number };
+      const typedSettings = unitSettings as { baseStageAge?: number; topStageAge?: number; unitsPerMY?: number };
       if (typedSettings.baseStageAge !== undefined) {
         chartState.overrides[`baseAge_${unitKey}`] = typedSettings.baseStageAge;
       }
       if (typedSettings.topStageAge !== undefined) {
         chartState.overrides[`topAge_${unitKey}`] = typedSettings.topStageAge;
       }
+      if (typedSettings.unitsPerMY !== undefined) {
+        const existingUnitsPerMY = Array.isArray(chartState.overrides.unitsPerMY)
+          ? (chartState.overrides.unitsPerMY as Array<{ unit: string; value: number }>)
+          : [];
+        chartState.overrides.unitsPerMY = [...existingUnitsPerMY, { unit: unitKey, value: typedSettings.unitsPerMY }];
+      }
     }
   }
 
-  // Extract column toggles as deltas from default state to keep payload small.
-  if (state.settingsTabs.columns) {
-    const currentOnMap = new Map<string, boolean>();
-    collectColumnOnMap(state.settingsTabs.columns, currentOnMap);
+  // Extract column toggles with full properties as deltas from default state.
+  if (state.settingsTabs.renderColumns) {
+    const columnToggleSettings: Record<string, Record<string, unknown>> = {};
+    const defaultColumnMap = collectDefaultColumnMaps(state);
 
-    const defaultOnMap = collectDefaultColumnOnMap(state);
-    const onDiff: string[] = [];
-    const offDiff: string[] = [];
-
-    for (const [columnName, isOn] of currentOnMap.entries()) {
-      if (columnName === defaultColumnRoot.name) continue;
-      const defaultIsOn = defaultOnMap.get(columnName);
-
-      // Unknown columns (e.g. user-added) are included as explicit state.
-      if (defaultIsOn === undefined || defaultIsOn !== isOn) {
-        if (isOn) onDiff.push(columnName);
-        else offDiff.push(columnName);
-      }
+    for (const childName of state.settingsTabs.renderColumns.children) {
+      collectRenderColumnSettings(childName, state, defaultColumnMap, columnToggleSettings);
     }
 
-    chartState.columnToggles = {
-      ...(onDiff.length > 0 ? { on: onDiff } : {}),
-      ...(offDiff.length > 0 ? { off: offDiff } : {})
-    };
+    chartState.columnToggles = columnToggleSettings;
   }
 
   return chartState;

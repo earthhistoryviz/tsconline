@@ -695,7 +695,10 @@ describe("registerMCPRoutes", () => {
       const userChartState = {
         datapackTitles: ["Africa Bight"],
         overrides: { topAge_Ma: 0, baseAge_Ma: 65 },
-        columnToggles: { on: ["Period"], off: ["Epoch"] }
+        columnToggles: { 
+          "Period": { on: true },
+          "Epoch": { on: false }
+        }
       };
 
       await handler(makeReq({ body: { userChartState } }), reply);
@@ -809,7 +812,7 @@ describe("registerMCPRoutes", () => {
       const userChartState = {
         datapackTitles: ["Africa Bight"],
         overrides: { topAge_Ma: 0, baseAge_Ma: 65 },
-        columnToggles: { off: ["Epochs"] }
+        columnToggles: { "Epochs": { on: false } }
       };
 
       await handler(

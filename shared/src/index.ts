@@ -89,10 +89,14 @@ export type MCPLinkParams = {
   uuid?: string;
 };
 
-export type MCPColumnToggles = {
-  on?: string[];
-  off?: string[];
-};
+export interface MCPColumnToggleSettings {
+  on?: boolean;
+  width?: number;
+  show?: boolean;
+  expanded?: boolean;
+}
+
+export type MCPColumnToggles = Record<string, MCPColumnToggleSettings>;
 
 export type MCPChartState = {
   datapackTitles: string[];

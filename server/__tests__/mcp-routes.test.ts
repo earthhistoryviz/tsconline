@@ -290,7 +290,7 @@ describe("mcpRenderChartWithEdits", () => {
       body: {
         datapackTitles: ["GTS2020"],
         overrides: { topAge: 0, baseAge: 10 },
-        columnToggles: { off: ["stage-id"] }
+        columnToggles: { "stage-id": { on: false } }
       }
     } as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -300,7 +300,7 @@ describe("mcpRenderChartWithEdits", () => {
     expect(generateChartWithEdits).toHaveBeenCalledWith(
       mockDatapacks,
       { topAge: 0, baseAge: 10 },
-      { off: ["stage-id"] }
+      { "stage-id": { on: false } }
     );
     expect(generateChart).toHaveBeenCalled();
     expect(reply.send).toHaveBeenCalledWith(mockResult);
@@ -799,7 +799,10 @@ describe("mcpCreateSession", () => {
     const userChartState = {
       datapackTitles: ["GTS2020"],
       overrides: { topAge_Ma: 0, baseAge_Ma: 541 },
-      columnToggles: { on: ["Periods"], off: ["Epochs"] }
+      columnToggles: { 
+        "Periods": { on: true },
+        "Epochs": { on: false }
+      }
     };
 
     const req = {
@@ -870,7 +873,7 @@ describe("mcpUpdateSessionChartState", () => {
     const userChartState = {
       datapackTitles: ["GTS2020"],
       overrides: { topAge_Ma: 0 },
-      columnToggles: { off: ["Epochs"] }
+      columnToggles: { "Epochs": { on: false } }
     };
 
     const req = {
