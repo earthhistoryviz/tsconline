@@ -586,6 +586,45 @@ describe("registerMCPRoutes", () => {
     });
   });
 
+  describe("/messages/create-session", () => {
+    it("creates session with default empty chart state when body is missing", async () => {
+      const { sessions } = await import("../src/mcp.js");
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/create-session");
+      const reply = makeReply();
+
+      await handler(makeReq(), reply);
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ sessionId: "streamable-uuid-1" });
+      expect(sessions.get("streamable-uuid-1")).toMatchObject({
+        userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+      });
+    });
+
+    it("creates session with provided chart state", async () => {
+      const { sessions } = await import("../src/mcp.js");
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/create-session");
+      const reply = makeReply();
+      const userChartState = {
+        datapackTitles: ["Africa Bight"],
+        overrides: { topAge_Ma: 0, baseAge_Ma: 65 },
+        columnToggles: { on: ["Period"], off: ["Epoch"] }
+      };
+
+      await handler(makeReq({ body: { userChartState } }), reply);
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ sessionId: "streamable-uuid-1" });
+      expect(sessions.get("streamable-uuid-1")).toMatchObject({ userChartState });
+    });
+  });
+
   it("cleanup timer reaps expired sessions (streamable + legacy) and onClose cleans everything", async () => {
     vi.useFakeTimers();
 
