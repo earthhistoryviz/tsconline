@@ -65,7 +65,6 @@ export const cleanupInterval = setInterval(
   1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
-
 interface MCPColumnToggleSettings {
   on?: boolean;
   width?: number;
