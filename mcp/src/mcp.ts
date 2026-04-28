@@ -65,14 +65,6 @@ export const cleanupInterval = setInterval(
   1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
-// Chart state management - tracks current chart configuration
-interface ChartState {
-  datapackTitles: string[];
-  overrides: Record<string, unknown>;
-  columnToggles: Record<string, MCPColumnToggleSettings>;
-  lastChartPath?: string;
-  lastModified?: Date;
-}
 
 interface MCPColumnToggleSettings {
   on?: boolean;
