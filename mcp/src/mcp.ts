@@ -329,9 +329,11 @@ export const createMCPServer = () => {
         Object.entries(args.columnToggles ?? {}).map(([columnId, settings]) => [columnId.toLowerCase(), settings])
       ) as Record<string, MCPColumnToggleSettings>;
 
+      const columnToggles = st.columnToggles as Record<string, MCPColumnToggleSettings>;
+
       for (const [columnId, settings] of Object.entries(normalizedIncoming)) {
-        st.columnToggles[columnId] = {
-          ...(st.columnToggles[columnId] ?? {}),
+        columnToggles[columnId] = {
+          ...(columnToggles[columnId] ?? {}),
           ...settings
         };
       }
@@ -344,7 +346,7 @@ export const createMCPServer = () => {
           body: JSON.stringify({
             datapackTitles: st.datapackTitles,
             overrides: st.overrides,
-            columnToggles: st.columnToggles,
+            columnToggles,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false,
             uuid: entry.userInfo?.uuid
