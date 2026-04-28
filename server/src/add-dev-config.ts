@@ -46,15 +46,15 @@ async function processConfig({
     console.log(`Reading ${configType} config...`);
 
     let config: DatapackMetadata[];
+    let copyFirstLondonPackInfo: { src: string; originalFileName: string; title: string } | null = null;
+
     if (configType === "london") {
       config = await readLondonConfig();
       console.log(chalk.green(`${successSymbol} london config read successfully`));
 
       if (copyFirstLondonPack && config[0]) {
         const src = path.resolve(process.cwd(), "db", "london", "output", config[0].storedFileName);
-        const dest = path.join(assetconfigs.datapacksDirectory, config[0].originalFileName);
-        await copyFile(src, dest);
-        console.log(chalk.green(`Copied ${config[0].title} to assets/datapacks`));
+        copyFirstLondonPackInfo = { src, originalFileName: config[0].originalFileName, title: config[0].title };
       }
     } else {
       config = await readConfig(configPaths.dev);
@@ -62,6 +62,13 @@ async function processConfig({
     }
 
     await loadAssetConfigs();
+
+    // Now perform the copy if needed
+    if (copyFirstLondonPack && copyFirstLondonPackInfo) {
+      const dest = path.join(assetconfigs.datapacksDirectory, copyFirstLondonPackInfo.originalFileName);
+      await copyFile(copyFirstLondonPackInfo.src, dest);
+      console.log(chalk.green(`Copied ${copyFirstLondonPackInfo.title} to assets/datapacks`));
+    }
 
     for (const datapack of config) {
       console.log("\n======================================================================\n");
