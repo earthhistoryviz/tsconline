@@ -799,9 +799,9 @@ describe("mcpCreateSession", () => {
     const userChartState = {
       datapackTitles: ["GTS2020"],
       overrides: { topAge_Ma: 0, baseAge_Ma: 541 },
-      columnToggles: { 
-        "Periods": { on: true },
-        "Epochs": { on: false }
+      columnToggles: {
+        Periods: { on: true },
+        Epochs: { on: false }
       }
     };
 
@@ -873,7 +873,7 @@ describe("mcpUpdateSessionChartState", () => {
     const userChartState = {
       datapackTitles: ["GTS2020"],
       overrides: { topAge_Ma: 0 },
-      columnToggles: { "Epochs": { on: false } }
+      columnToggles: { Epochs: { on: false } }
     };
 
     const req = {
@@ -1159,9 +1159,12 @@ describe("mcpRequestSessionChartState", () => {
 describe("handleMcpChartStateSync", () => {
   it("closes socket when request session is missing", async () => {
     const socket = makeMockWebSocket();
-    await handleMcpChartStateSync(socket as unknown as Parameters<typeof handleMcpChartStateSync>[0], {
-      session: { get: vi.fn().mockReturnValue(undefined) }
-    } as unknown as FastifyRequest);
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue(undefined) }
+      } as unknown as FastifyRequest
+    );
 
     expect(socket.close).toHaveBeenCalled();
   });

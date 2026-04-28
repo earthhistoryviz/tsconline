@@ -79,10 +79,6 @@ interface MCPColumnToggleSettings {
   width?: number;
 }
 
-function newChartState(): ChartState {
-  return { datapackTitles: [], overrides: {}, columnToggles: {} };
-}
-
 function createSession(): { sessionId: string; entry: SessionEntry } {
   const sessionId = randomUUID();
   const entry: SessionEntry = {
