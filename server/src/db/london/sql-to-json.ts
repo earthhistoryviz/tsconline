@@ -109,7 +109,13 @@ async function exportRowsToJson(connection: mysql.Connection) {
 
   await fs.mkdir(outputDir, { recursive: true });
 
-  for (const tableName of tableNames) {
+  const [tableRows]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
+    `SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name REGEXP ? ORDER BY table_name`,
+    [londonDatabaseName, "^(arkL|arkZ|arkz)_"]
+  );
+  const exportTableNames = tableRows.map((row) => row.TABLE_NAME as string);
+
+  for (const tableName of exportTableNames) {
     // Get column metadata
     const [columns]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
       `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = ? AND table_name = ?`,

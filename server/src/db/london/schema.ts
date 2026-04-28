@@ -3,7 +3,6 @@ import { throwError } from "@tsconline/shared";
 export interface arkL_columns {
   age_max: number | null;
   age_min: number | null;
-  col_if_not_intvx: string | null;
   colour: string | null;
   colshare: string;
   column_subtype: string | null;
@@ -13,17 +12,21 @@ export interface arkL_columns {
   data_type: string | null;
   dataset: string | null;
   dataset_id: number | null;
+  field_if_not_intvx: string | null;
   id: number;
   interval_type: string | null;
   level: number | null;
   nevents: number | null;
+  parent_id: number | null;
   path: string | null;
-  pointdata_source: string | null;
-  reftoadd: string | null;
+  pointdata_table: string | null;
+  refstoadd: string | null;
   sort: number | null;
+  source_col_id: number | null;
   sub_columnE: string;
   subdataset: string | null;
   subdataset_id: number | null;
+  TSC_notes: string | null;
   width: number | null;
 }
 
@@ -31,7 +34,6 @@ export function assertarkL_columns(o: any): asserts o is arkL_columns {
   if (typeof o !== 'object' || o === null) throw new Error('Expected object');
     if (o.age_max !== null && typeof o.age_max !== "number") throwError("arkL_columns", "age_max", "number", o.age_max);
     if (o.age_min !== null && typeof o.age_min !== "number") throwError("arkL_columns", "age_min", "number", o.age_min);
-    if (o.col_if_not_intvx !== null && typeof o.col_if_not_intvx !== "string") throwError("arkL_columns", "col_if_not_intvx", "string", o.col_if_not_intvx);
     if (o.colour !== null && typeof o.colour !== "string") throwError("arkL_columns", "colour", "string", o.colour);
     if (typeof o.colshare !== "string") throwError("arkL_columns", "colshare", "string", o.colshare);
     if (o.column_subtype !== null && typeof o.column_subtype !== "string") throwError("arkL_columns", "column_subtype", "string", o.column_subtype);
@@ -41,17 +43,21 @@ export function assertarkL_columns(o: any): asserts o is arkL_columns {
     if (o.data_type !== null && typeof o.data_type !== "string") throwError("arkL_columns", "data_type", "string", o.data_type);
     if (o.dataset !== null && typeof o.dataset !== "string") throwError("arkL_columns", "dataset", "string", o.dataset);
     if (o.dataset_id !== null && typeof o.dataset_id !== "number") throwError("arkL_columns", "dataset_id", "number", o.dataset_id);
+    if (o.field_if_not_intvx !== null && typeof o.field_if_not_intvx !== "string") throwError("arkL_columns", "field_if_not_intvx", "string", o.field_if_not_intvx);
     if (typeof o.id !== "number") throwError("arkL_columns", "id", "number", o.id);
     if (o.interval_type !== null && typeof o.interval_type !== "string") throwError("arkL_columns", "interval_type", "string", o.interval_type);
     if (o.level !== null && typeof o.level !== "number") throwError("arkL_columns", "level", "number", o.level);
     if (o.nevents !== null && typeof o.nevents !== "number") throwError("arkL_columns", "nevents", "number", o.nevents);
+    if (o.parent_id !== null && typeof o.parent_id !== "number") throwError("arkL_columns", "parent_id", "number", o.parent_id);
     if (o.path !== null && typeof o.path !== "string") throwError("arkL_columns", "path", "string", o.path);
-    if (o.pointdata_source !== null && typeof o.pointdata_source !== "string") throwError("arkL_columns", "pointdata_source", "string", o.pointdata_source);
-    if (o.reftoadd !== null && typeof o.reftoadd !== "string") throwError("arkL_columns", "reftoadd", "string", o.reftoadd);
+    if (o.pointdata_table !== null && typeof o.pointdata_table !== "string") throwError("arkL_columns", "pointdata_table", "string", o.pointdata_table);
+    if (o.refstoadd !== null && typeof o.refstoadd !== "string") throwError("arkL_columns", "refstoadd", "string", o.refstoadd);
     if (o.sort !== null && typeof o.sort !== "number") throwError("arkL_columns", "sort", "number", o.sort);
+    if (o.source_col_id !== null && typeof o.source_col_id !== "number") throwError("arkL_columns", "source_col_id", "number", o.source_col_id);
     if (typeof o.sub_columnE !== "string") throwError("arkL_columns", "sub_columnE", "string", o.sub_columnE);
     if (o.subdataset !== null && typeof o.subdataset !== "string") throwError("arkL_columns", "subdataset", "string", o.subdataset);
     if (o.subdataset_id !== null && typeof o.subdataset_id !== "number") throwError("arkL_columns", "subdataset_id", "number", o.subdataset_id);
+    if (o.TSC_notes !== null && typeof o.TSC_notes !== "string") throwError("arkL_columns", "TSC_notes", "string", o.TSC_notes);
     if (o.width !== null && typeof o.width !== "number") throwError("arkL_columns", "width", "number", o.width);
 }
 
@@ -62,6 +68,8 @@ export function assertarkL_columnsArray(o: any[]): asserts o is arkL_columns[] {
 
 export interface arkL_datasets {
   added_abv: string | null;
+  age_max: number | null;
+  age_min: number | null;
   colour: string | null;
   compilation_notes: string | null;
   compilation_notes_Camb: string | null;
@@ -79,8 +87,6 @@ export interface arkL_datasets {
   id: number;
   interval_types: string | null;
   main_interval_type: string | null;
-  max_age: number | null;
-  min_age: number | null;
   notes_Camb: string | null;
   notes_Cenoz: string | null;
   notes_Cret: string | null;
@@ -100,6 +106,8 @@ export interface arkL_datasets {
 export function assertarkL_datasets(o: any): asserts o is arkL_datasets {
   if (typeof o !== 'object' || o === null) throw new Error('Expected object');
     if (o.added_abv !== null && typeof o.added_abv !== "string") throwError("arkL_datasets", "added_abv", "string", o.added_abv);
+    if (o.age_max !== null && typeof o.age_max !== "number") throwError("arkL_datasets", "age_max", "number", o.age_max);
+    if (o.age_min !== null && typeof o.age_min !== "number") throwError("arkL_datasets", "age_min", "number", o.age_min);
     if (o.colour !== null && typeof o.colour !== "string") throwError("arkL_datasets", "colour", "string", o.colour);
     if (o.compilation_notes !== null && typeof o.compilation_notes !== "string") throwError("arkL_datasets", "compilation_notes", "string", o.compilation_notes);
     if (o.compilation_notes_Camb !== null && typeof o.compilation_notes_Camb !== "string") throwError("arkL_datasets", "compilation_notes_Camb", "string", o.compilation_notes_Camb);
@@ -117,8 +125,6 @@ export function assertarkL_datasets(o: any): asserts o is arkL_datasets {
     if (typeof o.id !== "number") throwError("arkL_datasets", "id", "number", o.id);
     if (o.interval_types !== null && typeof o.interval_types !== "string") throwError("arkL_datasets", "interval_types", "string", o.interval_types);
     if (o.main_interval_type !== null && typeof o.main_interval_type !== "string") throwError("arkL_datasets", "main_interval_type", "string", o.main_interval_type);
-    if (o.max_age !== null && typeof o.max_age !== "number") throwError("arkL_datasets", "max_age", "number", o.max_age);
-    if (o.min_age !== null && typeof o.min_age !== "number") throwError("arkL_datasets", "min_age", "number", o.min_age);
     if (o.notes_Camb !== null && typeof o.notes_Camb !== "string") throwError("arkL_datasets", "notes_Camb", "string", o.notes_Camb);
     if (o.notes_Cenoz !== null && typeof o.notes_Cenoz !== "string") throwError("arkL_datasets", "notes_Cenoz", "string", o.notes_Cenoz);
     if (o.notes_Cret !== null && typeof o.notes_Cret !== "string") throwError("arkL_datasets", "notes_Cret", "string", o.notes_Cret);
@@ -149,7 +155,7 @@ export interface arkL_events {
   columnx: string | null;
   compilation_notesE: string | null;
   dataset: string | null;
-  dataset_id: number | null;
+  dataset_id: number;
   equation: string | null;
   event_display: string;
   event_type: string | null;
@@ -182,7 +188,6 @@ export interface arkL_events {
   sl_correction_applied: number | null;
   sort: number | null;
   stage: string | null;
-  sub_columnE: string;
   taxa: string | null;
   text_colour: string | null;
   TR_cycle: string | null;
@@ -204,7 +209,7 @@ export function assertarkL_events(o: any): asserts o is arkL_events {
     if (o.columnx !== null && typeof o.columnx !== "string") throwError("arkL_events", "columnx", "string", o.columnx);
     if (o.compilation_notesE !== null && typeof o.compilation_notesE !== "string") throwError("arkL_events", "compilation_notesE", "string", o.compilation_notesE);
     if (o.dataset !== null && typeof o.dataset !== "string") throwError("arkL_events", "dataset", "string", o.dataset);
-    if (o.dataset_id !== null && typeof o.dataset_id !== "number") throwError("arkL_events", "dataset_id", "number", o.dataset_id);
+    if (typeof o.dataset_id !== "number") throwError("arkL_events", "dataset_id", "number", o.dataset_id);
     if (o.equation !== null && typeof o.equation !== "string") throwError("arkL_events", "equation", "string", o.equation);
     if (typeof o.event_display !== "string") throwError("arkL_events", "event_display", "string", o.event_display);
     if (o.event_type !== null && typeof o.event_type !== "string") throwError("arkL_events", "event_type", "string", o.event_type);
@@ -237,7 +242,6 @@ export function assertarkL_events(o: any): asserts o is arkL_events {
     if (o.sl_correction_applied !== null && typeof o.sl_correction_applied !== "number") throwError("arkL_events", "sl_correction_applied", "number", o.sl_correction_applied);
     if (o.sort !== null && typeof o.sort !== "number") throwError("arkL_events", "sort", "number", o.sort);
     if (o.stage !== null && typeof o.stage !== "string") throwError("arkL_events", "stage", "string", o.stage);
-    if (typeof o.sub_columnE !== "string") throwError("arkL_events", "sub_columnE", "string", o.sub_columnE);
     if (o.taxa !== null && typeof o.taxa !== "string") throwError("arkL_events", "taxa", "string", o.taxa);
     if (o.text_colour !== null && typeof o.text_colour !== "string") throwError("arkL_events", "text_colour", "string", o.text_colour);
     if (o.TR_cycle !== null && typeof o.TR_cycle !== "string") throwError("arkL_events", "TR_cycle", "string", o.TR_cycle);
@@ -263,7 +267,7 @@ export interface arkL_intervals {
   base_event: string | null;
   base_id: number | null;
   block_label: string | null;
-  colour: string | null;
+  colour: string;
   column_id: number | null;
   columnx: string | null;
   compilation_notes: string | null;
@@ -280,11 +284,8 @@ export interface arkL_intervals {
   lithology_id: number | null;
   mfs: string | null;
   mfs_id: number | null;
-  parent_interval: string | null;
   polarity: string | null;
   pop_up_notes: string | null;
-  preset_duration: number | null;
-  preset_duration_notes: string | null;
   refstoadd: string | null;
   sort: number | null;
   stage: string | null;
@@ -307,7 +308,7 @@ export function assertarkL_intervals(o: any): asserts o is arkL_intervals {
     if (o.base_event !== null && typeof o.base_event !== "string") throwError("arkL_intervals", "base_event", "string", o.base_event);
     if (o.base_id !== null && typeof o.base_id !== "number") throwError("arkL_intervals", "base_id", "number", o.base_id);
     if (o.block_label !== null && typeof o.block_label !== "string") throwError("arkL_intervals", "block_label", "string", o.block_label);
-    if (o.colour !== null && typeof o.colour !== "string") throwError("arkL_intervals", "colour", "string", o.colour);
+    if (typeof o.colour !== "string") throwError("arkL_intervals", "colour", "string", o.colour);
     if (o.column_id !== null && typeof o.column_id !== "number") throwError("arkL_intervals", "column_id", "number", o.column_id);
     if (o.columnx !== null && typeof o.columnx !== "string") throwError("arkL_intervals", "columnx", "string", o.columnx);
     if (o.compilation_notes !== null && typeof o.compilation_notes !== "string") throwError("arkL_intervals", "compilation_notes", "string", o.compilation_notes);
@@ -324,11 +325,8 @@ export function assertarkL_intervals(o: any): asserts o is arkL_intervals {
     if (o.lithology_id !== null && typeof o.lithology_id !== "number") throwError("arkL_intervals", "lithology_id", "number", o.lithology_id);
     if (o.mfs !== null && typeof o.mfs !== "string") throwError("arkL_intervals", "mfs", "string", o.mfs);
     if (o.mfs_id !== null && typeof o.mfs_id !== "number") throwError("arkL_intervals", "mfs_id", "number", o.mfs_id);
-    if (o.parent_interval !== null && typeof o.parent_interval !== "string") throwError("arkL_intervals", "parent_interval", "string", o.parent_interval);
     if (o.polarity !== null && typeof o.polarity !== "string") throwError("arkL_intervals", "polarity", "string", o.polarity);
     if (o.pop_up_notes !== null && typeof o.pop_up_notes !== "string") throwError("arkL_intervals", "pop_up_notes", "string", o.pop_up_notes);
-    if (o.preset_duration !== null && typeof o.preset_duration !== "number") throwError("arkL_intervals", "preset_duration", "number", o.preset_duration);
-    if (o.preset_duration_notes !== null && typeof o.preset_duration_notes !== "string") throwError("arkL_intervals", "preset_duration_notes", "string", o.preset_duration_notes);
     if (o.refstoadd !== null && typeof o.refstoadd !== "string") throwError("arkL_intervals", "refstoadd", "string", o.refstoadd);
     if (o.sort !== null && typeof o.sort !== "number") throwError("arkL_intervals", "sort", "number", o.sort);
     if (o.stage !== null && typeof o.stage !== "string") throwError("arkL_intervals", "stage", "string", o.stage);
