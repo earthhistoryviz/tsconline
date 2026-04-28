@@ -65,7 +65,14 @@ function getIntervalLabel(interval: arkL_intervals, labelField?: string | null) 
 
 function getPointPopup(row: LondonJsonRow) {
   const popupValue =
-    row.popup ?? row.notes_2020 ?? row.notes_2004 ?? row.compilation_notes ?? row.note ?? row.label ?? row.name ?? row.eventx;
+    row.popup ??
+    row.notes_2020 ??
+    row.notes_2004 ??
+    row.compilation_notes ??
+    row.note ??
+    row.label ??
+    row.name ??
+    row.eventx;
   return cleanText(popupValue);
 }
 
@@ -220,7 +227,10 @@ async function processBlockColumns(datasets: arkL_datasets[], columns: arkL_colu
         continue;
       }
       const dbIntervals = intervals
-        .filter((interval) => interval.column_id === column.id && interval.base_age !== null && interval.base_age !== undefined)
+        .filter(
+          (interval) =>
+            interval.column_id === column.id && interval.base_age !== null && interval.base_age !== undefined
+        )
         .sort((a, b) => a.base_age2020! - b.base_age2020!);
       if (dbIntervals.length === 0) {
         console.log(chalk.yellow("no blocks found for " + column.columnx));
@@ -316,9 +326,7 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
 
       chronLabelIntervals = chronLabelColumn
         ? intervals
-            .filter(
-              (interval) => interval.column_id === chronLabelColumn.id && interval.base_age2020 !== null
-            )
+            .filter((interval) => interval.column_id === chronLabelColumn.id && interval.base_age2020 !== null)
             .sort((a, b) => a.base_age2020! - b.base_age2020!)
         : [];
       if (chronLabelIntervals.length === 0 && chronLabelColumn) {
@@ -328,9 +336,7 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
 
       chronSeriesIntervals = chronSeriesColumn
         ? intervals
-            .filter(
-              (interval) => interval.column_id === chronSeriesColumn.id && interval.base_age2020 !== null
-            )
+            .filter((interval) => interval.column_id === chronSeriesColumn.id && interval.base_age2020 !== null)
             .sort((a, b) => a.base_age2020! - b.base_age2020!)
         : [];
       if (chronSeriesIntervals.length === 0 && chronSeriesColumn) {
@@ -420,7 +426,11 @@ async function processChronColumns(datasets: arkL_datasets[], columns: arkL_colu
 
         // Remove any " (word continued)" at the end of the label, e.g. "C1r.2r (Matuyama continued)" -> "C1r.2r"
         let chronPopup = "";
-        if (chronInter.compilation_notes !== null && chronInter.compilation_notes !== undefined && chronInter.compilation_notes !== "") {
+        if (
+          chronInter.compilation_notes !== null &&
+          chronInter.compilation_notes !== undefined &&
+          chronInter.compilation_notes !== ""
+        ) {
           chronPopup = String(chronInter.compilation_notes).replace(/[\r\n]+/g, " ");
         } else {
           chronPopup = chronInter.intervalx.replace(/[\r\n]+/g, " ") || "";
@@ -454,7 +464,8 @@ async function processPointDataColumns(datasets: arkL_datasets[], columns: arkL_
 
     const pointTableName = column.pointdata_table || "arkL_events";
     const sourceRows = await loadJsonTable(pointTableName);
-    const rows = pointTableName === "arkL_events" ? sourceRows.filter((row) => row.column_id === column.id) : sourceRows;
+    const rows =
+      pointTableName === "arkL_events" ? sourceRows.filter((row) => row.column_id === column.id) : sourceRows;
     const valueField = column.field_if_not_intvx || "pointdata1";
     const points = rows
       .map((row) => {
