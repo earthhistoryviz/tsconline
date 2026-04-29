@@ -87,10 +87,11 @@ export async function handleMcpChartStateSync(socket: WebSocket, request: Fastif
     return;
   }
 
+  const reqMaybe = request as unknown as { ip?: string; headers?: Record<string, string | undefined> };
   console.info("[mcp-chart-state-sync] websocket connected", {
     sessionUuid,
-    requestIp: request.ip,
-    userAgent: request.headers["user-agent"]
+    requestIp: reqMaybe.ip ?? null,
+    userAgent: reqMaybe.headers?.["user-agent"] ?? null
   });
 
   let registeredSessionId: string | undefined;
