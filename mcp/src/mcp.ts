@@ -262,7 +262,7 @@ export const createMCPServer = () => {
       try {
         const token = process.env.MCP_AUTH_TOKEN;
         if (token) {
-          const response = await fetch(`${internalServerUrl}/mcp/request-chart-state`, {
+          await fetch(`${internalServerUrl}/mcp/request-chart-state`, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -270,25 +270,8 @@ export const createMCPServer = () => {
             },
             body: JSON.stringify({ sessionId: sess.sessionId })
           });
-          if (!response.ok) {
-            const responseText = await response.text().catch(() => "");
-            console.warn("[mcp-chart-state-sync] request-chart-state returned non-2xx", {
-              sessionId: sess.sessionId,
-              status: response.status,
-              statusText: response.statusText,
-              body: responseText
-            });
-          } else {
-            console.info("[mcp-chart-state-sync] request-chart-state accepted", {
-              sessionId: sess.sessionId,
-              status: response.status
-            });
-          }
         }
       } catch {
-        console.warn("[mcp-chart-state-sync] request-chart-state fetch failed", {
-          sessionId: sess.sessionId
-        });
         // Fall back to last known state if the client is offline/unreachable.
       }
 

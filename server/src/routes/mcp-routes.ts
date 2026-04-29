@@ -37,27 +37,13 @@ async function requestChartStateViaSocket(
 ): Promise<{ ok: boolean; error?: string }> {
   const socket = mcpChartStateSockets.get(sessionId);
   if (!socket || socket.readyState !== 1) {
-    console.warn("[mcp-chart-state-sync] no active websocket for session", {
-      sessionId,
-      hasSocket: Boolean(socket),
-      readyState: socket?.readyState
-    });
     return { ok: false, error: "No active TSCOnline websocket for this session" };
   }
 
   const requestId = randomUUID();
-  console.info("[mcp-chart-state-sync] sending chart-state request over websocket", {
-    sessionId,
-    requestId
-  });
 
   const resultPromise = new Promise<{ ok: boolean; error?: string }>((resolve) => {
     const timeout = setTimeout(() => {
-      console.warn("[mcp-chart-state-sync] timed out waiting for chart-state response", {
-        sessionId,
-        requestId,
-        timeoutMs
-      });
       pendingChartStateRequests.delete(requestId);
       resolve({ ok: false, error: "Timed out waiting for chart state response" });
     }, timeoutMs);
@@ -68,10 +54,6 @@ async function requestChartStateViaSocket(
   try {
     socket.send(JSON.stringify({ type: "request-chart-state", requestId }));
   } catch {
-    console.error("[mcp-chart-state-sync] failed to send chart-state request over websocket", {
-      sessionId,
-      requestId
-    });
     clearPendingChartStateRequest(requestId);
     return { ok: false, error: "Failed to send chart state request over websocket" };
   }
@@ -82,17 +64,9 @@ async function requestChartStateViaSocket(
 export async function handleMcpChartStateSync(socket: WebSocket, request: FastifyRequest) {
   const sessionUuid = request.session?.get?.("uuid");
   if (!sessionUuid) {
-    console.warn("[mcp-chart-state-sync] websocket opened without session uuid; closing");
     socket.close();
     return;
   }
-
-  const reqMaybe = request as unknown as { ip?: string; headers?: Record<string, string | undefined> };
-  console.info("[mcp-chart-state-sync] websocket connected", {
-    sessionUuid,
-    requestIp: reqMaybe.ip ?? null,
-    userAgent: reqMaybe.headers?.["user-agent"] ?? null
-  });
 
   let registeredSessionId: string | undefined;
 
@@ -111,36 +85,17 @@ export async function handleMcpChartStateSync(socket: WebSocket, request: Fastif
     if (typed.type === "register" && typeof typed.sessionId === "string" && typed.sessionId.length > 0) {
       const existing = mcpChartStateSockets.get(typed.sessionId);
       if (existing && existing !== socket && existing.readyState === 1) {
-        console.info("[mcp-chart-state-sync] replacing existing websocket for session", {
-          sessionId: typed.sessionId
-        });
         existing.close();
       }
 
       registeredSessionId = typed.sessionId;
       mcpChartStateSockets.set(typed.sessionId, socket);
-      console.info("[mcp-chart-state-sync] websocket registered for session", {
-        sessionId: typed.sessionId
-      });
       return;
     }
 
     if (typed.type === "chart-state-response" && typeof typed.requestId === "string") {
       const pending = pendingChartStateRequests.get(typed.requestId);
-      if (!pending) {
-        console.warn("[mcp-chart-state-sync] received response for unknown request", {
-          sessionUuid,
-          requestId: typed.requestId,
-          ok: typed.ok
-        });
-        return;
-      }
-
-      console.info("[mcp-chart-state-sync] received chart-state response", {
-        sessionUuid,
-        requestId: typed.requestId,
-        ok: typed.ok
-      });
+      if (!pending) return;
 
       clearPendingChartStateRequest(typed.requestId);
       pending.resolve({ ok: typed.ok === true, ...(typed.error ? { error: typed.error } : {}) });
@@ -150,9 +105,6 @@ export async function handleMcpChartStateSync(socket: WebSocket, request: Fastif
   const cleanup = () => {
     if (registeredSessionId && mcpChartStateSockets.get(registeredSessionId) === socket) {
       mcpChartStateSockets.delete(registeredSessionId);
-      console.info("[mcp-chart-state-sync] websocket cleaned up for session", {
-        sessionId: registeredSessionId
-      });
     }
   };
 
@@ -353,11 +305,7 @@ export async function mcpCreateSession(request: FastifyRequest, reply: FastifyRe
 
 // route called by frontend to update chart state for an existing mcp session entry
 export async function mcpUpdateSessionChartState(request: FastifyRequest, reply: FastifyReply) {
-  const incomingCookies = (request.headers as Record<string, unknown> | undefined)?.cookie ?? null;
-  console.info("[mcp-chart-state-sync] mcpUpdateSessionChartState called", { cookies: incomingCookies });
-
   const sessionUuid = request.session?.get?.("uuid");
-  console.info("[mcp-chart-state-sync] session uuid resolved in update handler", { sessionUuid });
   if (!sessionUuid) return reply.code(401).send({ error: "Not logged in" });
 
   const { sessionId, userChartState } = (request.body ?? {}) as Partial<MCPUpdateSessionChartStateRequest>;

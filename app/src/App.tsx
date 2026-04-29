@@ -114,15 +114,7 @@ export default observer(function App() {
       : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
     const ws = new WebSocket(`${wsBase}/mcp/chart-state-sync`);
 
-    console.info("[mcp-chart-state-sync] opening websocket from app", {
-      sessionId,
-      wsBase
-    });
-
     ws.onopen = () => {
-      console.info("[mcp-chart-state-sync] websocket opened, registering session", {
-        sessionId
-      });
       ws.send(JSON.stringify({ type: "register", sessionId }));
     };
 
@@ -139,32 +131,13 @@ export default observer(function App() {
         return;
       }
 
-      console.info("[mcp-chart-state-sync] app received chart-state request", {
-        sessionId,
-        requestId: message.requestId
-      });
-
       try {
         const userChartState = extractCurrentChartState(state);
-        console.info("[mcp-chart-state-sync] app extracted current chart state", {
-          sessionId,
-          requestId: message.requestId,
-          datapackTitles: userChartState.datapackTitles?.length ?? 0,
-          overrideCount: Object.keys(userChartState.overrides ?? {}).length,
-          columnToggleCount: Object.keys(userChartState.columnToggles ?? {}).length
-        });
         const res = await fetcher("/mcp/update-chart-state", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ sessionId, userChartState })
-        });
-
-        console.info("[mcp-chart-state-sync] app posted chart state update", {
-          sessionId,
-          requestId: message.requestId,
-          ok: res.ok,
-          status: res.status
         });
 
         ws.send(
@@ -176,11 +149,6 @@ export default observer(function App() {
           })
         );
       } catch (error) {
-        console.error("[mcp-chart-state-sync] app failed while handling chart-state request", {
-          sessionId,
-          requestId: message.requestId,
-          error: error instanceof Error ? error.message : String(error)
-        });
         ws.send(
           JSON.stringify({
             type: "chart-state-response",

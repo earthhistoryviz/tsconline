@@ -92,7 +92,8 @@ server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply)
     request.url.startsWith("/mcp") &&
     !request.url.startsWith("/mcp/user-info") &&
     !request.url.startsWith("/mcp/create-session") &&
-    !request.url.startsWith("/mcp/chart-state-sync")
+    !request.url.startsWith("/mcp/chart-state-sync") &&
+    !request.url.startsWith("/mcp/update-chart-state")
   ) {
     const allowedIPs = ["127.0.0.1", "::1"];
     if (!allowedIPs.includes(request.ip)) {
