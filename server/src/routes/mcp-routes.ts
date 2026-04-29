@@ -353,7 +353,11 @@ export async function mcpCreateSession(request: FastifyRequest, reply: FastifyRe
 
 // route called by frontend to update chart state for an existing mcp session entry
 export async function mcpUpdateSessionChartState(request: FastifyRequest, reply: FastifyReply) {
+  const incomingCookies = (request.headers as Record<string, unknown> | undefined)?.cookie ?? null;
+  console.info("[mcp-chart-state-sync] mcpUpdateSessionChartState called", { cookies: incomingCookies });
+
   const sessionUuid = request.session?.get?.("uuid");
+  console.info("[mcp-chart-state-sync] session uuid resolved in update handler", { sessionUuid });
   if (!sessionUuid) return reply.code(401).send({ error: "Not logged in" });
 
   const { sessionId, userChartState } = (request.body ?? {}) as Partial<MCPUpdateSessionChartStateRequest>;
