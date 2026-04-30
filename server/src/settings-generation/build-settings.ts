@@ -254,14 +254,10 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
     }
 
     if (settings?.backgroundColor !== undefined) {
-      try {
-        const [r = NaN, g = NaN, b = NaN] = Color(settings.backgroundColor).rgb().array();
-        col.rgb.r = Math.round(r);
-        col.rgb.g = Math.round(g);
-        col.rgb.b = Math.round(b);
-      } catch (err) {
-        // Ignore invalid color values and continue
-      }
+      const [r = NaN, g = NaN, b = NaN] = Color(settings.backgroundColor).rgb().array();
+      col.rgb.r = Math.round(r);
+      col.rgb.g = Math.round(g);
+      col.rgb.b = Math.round(b);
     }
 
     if (col.children) {
@@ -322,16 +318,14 @@ function applyOverridesToChartSettings(
   }
 
   const booleanFields: Array<
-    "noIndentPattern" | "negativeChk" | "doPopups" | "enEventColBG" | "enChartLegend" | "enPriority" | "enHideBlockLable"
-  > = [
-    "noIndentPattern",
-    "negativeChk",
-    "doPopups",
-    "enEventColBG",
-    "enChartLegend",
-    "enPriority",
-    "enHideBlockLable"
-  ];
+    | "noIndentPattern"
+    | "negativeChk"
+    | "doPopups"
+    | "enEventColBG"
+    | "enChartLegend"
+    | "enPriority"
+    | "enHideBlockLable"
+  > = ["noIndentPattern", "negativeChk", "doPopups", "enEventColBG", "enChartLegend", "enPriority", "enHideBlockLable"];
 
   for (const key of booleanFields) {
     const val = overrides[key];
