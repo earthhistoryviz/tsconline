@@ -15,7 +15,6 @@ export type SchemaOverrides = Partial<{
   baseAge: number;
   unitsPerMY: number | { unit: string; value: number }[];
   skipEmptyColumns: boolean;
-  backgroundColorColumnName: string;
   variableColors: string;
   noIndentPattern: boolean;
   negativeChk: boolean;
@@ -24,7 +23,6 @@ export type SchemaOverrides = Partial<{
   enChartLegend: boolean;
   enPriority: boolean;
   enHideBlockLable: boolean;
-  backgroundColor: string;
 }>;
 
 export type ColumnToggles = Record<
@@ -32,6 +30,7 @@ export type ColumnToggles = Record<
   {
     on?: boolean;
     width?: number;
+    backgroundColor?: string;
   }
 >;
 
@@ -229,7 +228,7 @@ function extractSettingsComponents(datapacks: Datapack[]): {
 }
 
 export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
-  const normalizedToggles = new Map<string, { on?: boolean; width?: number }>();
+  const normalizedToggles = new Map<string, { on?: boolean; width?: number; backgroundColor?: string }>();
 
   for (const [columnId, settings] of Object.entries(toggles)) {
     const raw = columnId.toLowerCase();
@@ -254,31 +253,22 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
       col.width = settings.width;
     }
 
-    if (col.children) {
-      col.children.forEach(visit);
-    }
-  };
-
-  visit(columnRoot);
-}
-
-function applyBackgroundColorToColumns(columnRoot: ColumnInfo, backgroundColorHex: string, columnName: string) {
-  const [r = NaN, g = NaN, b = NaN] = Color(backgroundColorHex).rgb().array();
-  const normalizedName = columnName.trim().toLowerCase();
-
-  const visit = (col: ColumnInfo) => {
-    const candidates = [col.name, col.editName].filter((v): v is string => Boolean(v)).map((v) => v.toLowerCase());
-
-    if (candidates.includes(normalizedName)) {
-      col.rgb.r = Math.round(r);
-      col.rgb.g = Math.round(g);
-      col.rgb.b = Math.round(b);
+    if (settings?.backgroundColor !== undefined) {
+      try {
+        const [r = NaN, g = NaN, b = NaN] = Color(settings.backgroundColor).rgb().array();
+        col.rgb.r = Math.round(r);
+        col.rgb.g = Math.round(g);
+        col.rgb.b = Math.round(b);
+      } catch (err) {
+        // Ignore invalid color values and continue
+      }
     }
 
     if (col.children) {
       col.children.forEach(visit);
     }
   };
+
   visit(columnRoot);
 }
 
@@ -393,17 +383,6 @@ export async function generateChartWithEdits(
 
   if (Object.keys(normalizedToggles).length > 0) {
     applyTogglesToColumnInfo(columnRoot, normalizedToggles);
-  }
-
-  if (normalizedOverrides.backgroundColor !== undefined) {
-    if (!normalizedOverrides.backgroundColorColumnName) {
-      throw new Error("backgroundColorColumnName is required when backgroundColor is provided");
-    }
-    applyBackgroundColorToColumns(
-      columnRoot,
-      normalizedOverrides.backgroundColor,
-      normalizedOverrides.backgroundColorColumnName
-    );
   }
 
   if (Object.keys(normalizedOverrides).length > 0) {

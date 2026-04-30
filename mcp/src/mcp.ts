@@ -71,6 +71,7 @@ interface ChartState {
 interface MCPColumnToggleSettings {
   on?: boolean;
   width?: number;
+  backgroundColor?: string;
 }
 
 function newChartState(): ChartState {
@@ -206,8 +207,6 @@ const overridesSchema = z
     baseAge: z.number().optional(),
     unitsPerMY: z.union([z.number(), z.array(z.object({ unit: z.string(), value: z.number() }))]).optional(),
     skipEmptyColumns: z.boolean().optional(),
-    backgroundColor: z.string().optional(),
-    backgroundColorColumnName: z.string().optional(),
     variableColors: z.string().optional(),
     noIndentPattern: z.boolean().optional(),
     negativeChk: z.boolean().optional(),
@@ -222,7 +221,8 @@ const overridesSchema = z
 const singleColumnToggleSchema = z
   .object({
     on: z.boolean().optional(),
-    width: z.number().optional()
+    width: z.number().optional(),
+    backgroundColor: z.string().optional()
   })
   .passthrough();
 

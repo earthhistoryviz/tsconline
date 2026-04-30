@@ -133,7 +133,7 @@ Response format:
 Important notes:
 - Do NOT wrap payload twice. In MCP Inspector's per-field input, enter {...} directly, not { overrides: {...} }.
 - Unknown override keys are allowed by the schema but may be silently ignored by the renderer.
-- Only these override keys are officially supported: topAge, baseAge, unitsPerMY, skipEmptyColumns, backgroundColor, variableColors, noIndentPattern, negativeChk, doPopups, enEventColBG, enChartLegend, enPriority, enHideBlockLable.
+- Only these override keys are officially supported: topAge, baseAge, unitsPerMY, skipEmptyColumns variableColors, noIndentPattern, negativeChk, doPopups, enEventColBG, enChartLegend, enPriority, enHideBlockLable.
 
 useCache behavior: it should ALWAYS be true for predictable results, no matter what. Setting to false may yield unexpected charts due to caching logic.
 
