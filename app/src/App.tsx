@@ -40,6 +40,8 @@ import { isDDEServer } from "./constants";
 import { PreviousLocationProvider } from "./providers/PreviousLocationProvider";
 import { ReportBug } from "./ReportBug";
 import { McpHome } from "./McpHome";
+import { fetcher } from "./util";
+import { extractCurrentChartState } from "./util/chart-state-extractor";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -102,6 +104,66 @@ export default observer(function App() {
       channel.close();
     };
   }, [state.chartTab.state]);
+
+  useEffect(() => {
+    const sessionId = state.user.geogptSessionId;
+    if (!state.isLoggedIn || !sessionId) return;
+
+    const wsBase = import.meta.env.DEV
+      ? "ws://localhost:3000"
+      : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
+    const ws = new WebSocket(`${wsBase}/mcp/chart-state-sync`);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "register", sessionId }));
+    };
+
+    ws.onmessage = async (event) => {
+      let payload: unknown;
+      try {
+        payload = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+
+      const message = payload as { type?: string; requestId?: string };
+      if (message.type !== "request-chart-state" || typeof message.requestId !== "string") {
+        return;
+      }
+
+      try {
+        const userChartState = extractCurrentChartState(state);
+        const res = await fetcher("/mcp/update-chart-state", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ sessionId, userChartState })
+        });
+
+        ws.send(
+          JSON.stringify({
+            type: "chart-state-response",
+            requestId: message.requestId,
+            ok: res.ok,
+            ...(res.ok ? {} : { error: `Failed to update chart state (${res.status})` })
+          })
+        );
+      } catch (error) {
+        ws.send(
+          JSON.stringify({
+            type: "chart-state-response",
+            requestId: message.requestId,
+            ok: false,
+            error: error instanceof Error ? error.message : "Unknown error"
+          })
+        );
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [state.isLoggedIn, state.user.geogptSessionId]);
 
   const getQsg = () => {
     switch (i18n.language) {

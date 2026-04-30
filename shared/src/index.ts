@@ -89,6 +89,34 @@ export type MCPLinkParams = {
   uuid?: string;
 };
 
+export interface MCPColumnToggleSettings {
+  on?: boolean;
+  width?: number;
+}
+
+export type MCPColumnToggles = Record<string, Partial<MCPColumnToggleSettings>>;
+
+export type MCPChartState = {
+  datapackTitles: string[];
+  overrides: Record<string, unknown>;
+  columnToggles: MCPColumnToggles;
+  lastChartPath?: string;
+  lastModified?: Date;
+};
+
+export type MCPCreateSessionRequest = {
+  userChartState?: MCPChartState;
+};
+
+export type MCPUpdateSessionChartStateRequest = {
+  sessionId: string;
+  userChartState: MCPChartState;
+};
+
+export function newMCPChartState(): MCPChartState {
+  return { datapackTitles: [], overrides: {}, columnToggles: {} };
+}
+
 export type CachedChartResponseInfo = {
   chartpath: string;
   settingspath: string;

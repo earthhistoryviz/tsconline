@@ -4,7 +4,8 @@ import {
   defaultChartSettingsInfoTSC,
   ChartSettingsInfoTSC,
   defaultColumnRootConstant,
-  FontsInfo
+  FontsInfo,
+  MCPColumnToggleSettings
 } from "@tsconline/shared";
 import _ from "lodash";
 import { jsonToXml } from "./settings-to-xml.js";
@@ -226,7 +227,20 @@ function extractSettingsComponents(datapacks: Datapack[]): {
 }
 
 export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
-  const normalizedToggles = new Map<string, { on?: boolean; width?: number }>();
+  const normalizedToggles = new Map<string, Partial<MCPColumnToggleSettings>>();
+
+  const columnToggleAppliers: Array<(col: ColumnInfo, settings: Partial<MCPColumnToggleSettings>) => void> = [
+    (col, settings) => {
+      if (settings.on !== undefined) {
+        col.on = settings.on;
+      }
+    },
+    (col, settings) => {
+      if (settings.width !== undefined) {
+        col.width = settings.width;
+      }
+    }
+  ];
 
   for (const [columnId, settings] of Object.entries(toggles)) {
     const raw = columnId.toLowerCase();
@@ -243,12 +257,10 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
     const matchedId = candidates.find((id) => normalizedToggles.has(id));
     const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
 
-    if (settings?.on !== undefined) {
-      col.on = settings.on;
-    }
-
-    if (settings?.width !== undefined) {
-      col.width = settings.width;
+    if (settings) {
+      for (const applyToggle of columnToggleAppliers) {
+        applyToggle(col, settings);
+      }
     }
 
     if (col.children) {
