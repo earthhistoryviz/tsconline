@@ -92,11 +92,9 @@ export type MCPLinkParams = {
 export interface MCPColumnToggleSettings {
   on?: boolean;
   width?: number;
-  show?: boolean;
-  expanded?: boolean;
 }
 
-export type MCPColumnToggles = Record<string, MCPColumnToggleSettings>;
+export type MCPColumnToggles = Record<string, Partial<MCPColumnToggleSettings>>;
 
 export type MCPChartState = {
   datapackTitles: string[];

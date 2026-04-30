@@ -27,9 +27,7 @@ describe("extractCurrentChartState", () => {
           name: defaultColumnRoot.name,
           children: [childName],
           on: true,
-          width: undefined,
-          show: true,
-          expanded: true
+          width: undefined
         },
         columnHashMap: new Map([
           [
@@ -55,7 +53,7 @@ describe("extractCurrentChartState", () => {
       unitsPerMY: [{ unit: "Ma", value: 4 }]
     });
     expect(extracted.columnToggles).toMatchObject({
-      [childName]: { on: false, width: 120, show: false, expanded: false }
+      [childName]: { on: false, width: 120 }
     });
   });
 });

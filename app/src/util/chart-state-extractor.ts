@@ -1,4 +1,4 @@
-import type { MCPChartState } from "@tsconline/shared";
+import type { MCPChartState, MCPColumnToggleSettings } from "@tsconline/shared";
 import { ColumnInfo, defaultColumnRoot } from "@tsconline/shared";
 import type { State } from "../state/state";
 import type { ChartSettings } from "../types";
@@ -37,13 +37,13 @@ function collectRenderColumnSettings(
   columnName: string,
   state: State,
   defaultColumnMap: Map<string, ColumnInfo>,
-  columnToggleSettings: Record<string, Record<string, unknown>>
+  columnToggleSettings: Record<string, Partial<MCPColumnToggleSettings>>
 ): void {
   const renderColumn = state.settingsTabs.columnHashMap.get(columnName);
   if (!renderColumn || renderColumn.name === defaultColumnRoot.name) return;
 
   const defaultColumn = defaultColumnMap.get(renderColumn.name);
-  const settings: Record<string, unknown> = {};
+  const settings: Partial<MCPColumnToggleSettings> = {};
 
   if (defaultColumn === undefined || defaultColumn.on !== renderColumn.on) {
     settings.on = renderColumn.on;
@@ -51,13 +51,6 @@ function collectRenderColumnSettings(
   if (defaultColumn === undefined || defaultColumn.width !== renderColumn.width) {
     settings.width = renderColumn.width;
   }
-  if (defaultColumn === undefined || defaultColumn.show !== renderColumn.show) {
-    settings.show = renderColumn.show;
-  }
-  if (defaultColumn === undefined || defaultColumn.expanded !== renderColumn.expanded) {
-    settings.expanded = renderColumn.expanded;
-  }
-
   if (Object.keys(settings).length > 0 || defaultColumn === undefined) {
     columnToggleSettings[renderColumn.name] = settings;
   }
@@ -108,7 +101,7 @@ export function extractCurrentChartState(state: State): ExtractedChartState {
 
   // Extract column toggles with full properties as deltas from default state.
   if (state.settingsTabs.renderColumns) {
-    const columnToggleSettings: Record<string, Record<string, unknown>> = {};
+    const columnToggleSettings: Record<string, Partial<MCPColumnToggleSettings>> = {};
     const defaultColumnMap = collectDefaultColumnMaps(state);
 
     for (const childName of state.settingsTabs.renderColumns.children) {

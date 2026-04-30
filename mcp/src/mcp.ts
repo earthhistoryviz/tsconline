@@ -3,7 +3,7 @@ import z from "zod";
 import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
-import type { SharedUser, MCPChartState } from "@tsconline/shared";
+import type { SharedUser, MCPChartState, MCPColumnToggleSettings } from "@tsconline/shared";
 import {
   MCPLinkParams,
   assertDatapackMetadata,
@@ -64,11 +64,6 @@ export const cleanupInterval = setInterval(
   },
   1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
-
-interface MCPColumnToggleSettings {
-  on?: boolean;
-  width?: number;
-}
 
 function createSession(): { sessionId: string; entry: SessionEntry } {
   const sessionId = randomUUID();
@@ -331,9 +326,9 @@ export const createMCPServer = () => {
 
       const normalizedIncoming = Object.fromEntries(
         Object.entries(args.columnToggles ?? {}).map(([columnId, settings]) => [columnId.toLowerCase(), settings])
-      ) as Record<string, MCPColumnToggleSettings>;
+      ) as Record<string, Partial<MCPColumnToggleSettings>>;
 
-      const columnToggles = st.columnToggles as Record<string, MCPColumnToggleSettings>;
+      const columnToggles = st.columnToggles;
 
       for (const [columnId, settings] of Object.entries(normalizedIncoming)) {
         columnToggles[columnId] = {
