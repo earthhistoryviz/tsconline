@@ -317,15 +317,15 @@ function applyOverridesToChartSettings(
     chartSettings.variableColors = overrides.variableColors;
   }
 
-  const booleanFields: Array<
-    | "noIndentPattern"
-    | "negativeChk"
-    | "doPopups"
-    | "enEventColBG"
-    | "enChartLegend"
-    | "enPriority"
-    | "enHideBlockLable"
-  > = ["noIndentPattern", "negativeChk", "doPopups", "enEventColBG", "enChartLegend", "enPriority", "enHideBlockLable"];
+  const booleanFields: (keyof SchemaOverrides)[] = [
+    "noIndentPattern",
+    "negativeChk",
+    "doPopups",
+    "enEventColBG",
+    "enChartLegend",
+    "enPriority",
+    "enHideBlockLable"
+  ];
 
   for (const key of booleanFields) {
     const val = overrides[key];
