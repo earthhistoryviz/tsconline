@@ -6,6 +6,7 @@ import {
   defaultColumnRootConstant,
   FontsInfo
 } from "@tsconline/shared";
+import Color from "color";
 import _ from "lodash";
 import { jsonToXml } from "./settings-to-xml.js";
 
@@ -14,6 +15,7 @@ export type SchemaOverrides = Partial<{
   baseAge: number;
   unitsPerMY: number | { unit: string; value: number }[];
   skipEmptyColumns: boolean;
+  backgroundColorColumnName: string;
   variableColors: string;
   noIndentPattern: boolean;
   negativeChk: boolean;
@@ -22,6 +24,7 @@ export type SchemaOverrides = Partial<{
   enChartLegend: boolean;
   enPriority: boolean;
   enHideBlockLable: boolean;
+  backgroundColor: string;
 }>;
 
 export type ColumnToggles = {
@@ -218,6 +221,26 @@ function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles
   visit(columnRoot);
 }
 
+function applyBackgroundColorToColumns(columnRoot: ColumnInfo, backgroundColorHex: string, columnName: string) {
+  const [r = NaN, g = NaN, b = NaN] = Color(backgroundColorHex).rgb().array();
+  const normalizedName = columnName.trim().toLowerCase();
+
+  const visit = (col: ColumnInfo) => {
+    const candidates = [col.name, col.editName].filter((v): v is string => Boolean(v)).map((v) => v.toLowerCase());
+
+    if (candidates.includes(normalizedName)) {
+      col.rgb.r = Math.round(r);
+      col.rgb.g = Math.round(g);
+      col.rgb.b = Math.round(b);
+    }
+
+    if (col.children) {
+      col.children.forEach(visit);
+    }
+  };
+  visit(columnRoot);
+}
+
 function applyOverridesToChartSettings(
   chartSettings: ChartSettingsInfoTSC,
   overrides: SchemaOverrides,
@@ -267,7 +290,9 @@ function applyOverridesToChartSettings(
     chartSettings.variableColors = overrides.variableColors;
   }
 
-  const booleanFields: (keyof SchemaOverrides)[] = [
+  const booleanFields: Array<
+    "noIndentPattern" | "negativeChk" | "doPopups" | "enEventColBG" | "enChartLegend" | "enPriority" | "enHideBlockLable"
+  > = [
     "noIndentPattern",
     "negativeChk",
     "doPopups",
@@ -327,6 +352,17 @@ export async function generateChartWithEdits(
 
   if (normalizedToggles.on?.length || normalizedToggles.off?.length) {
     applyTogglesToColumnInfo(columnRoot, normalizedToggles);
+  }
+
+  if (normalizedOverrides.backgroundColor !== undefined) {
+    if (!normalizedOverrides.backgroundColorColumnName) {
+      throw new Error("backgroundColorColumnName is required when backgroundColor is provided");
+    }
+    applyBackgroundColorToColumns(
+      columnRoot,
+      normalizedOverrides.backgroundColor,
+      normalizedOverrides.backgroundColorColumnName
+    );
   }
 
   if (Object.keys(normalizedOverrides).length > 0) {

@@ -222,6 +222,8 @@ const overridesSchema = z
     baseAge: z.number().optional(),
     unitsPerMY: z.union([z.number(), z.array(z.object({ unit: z.string(), value: z.number() }))]).optional(),
     skipEmptyColumns: z.boolean().optional(),
+    backgroundColor: z.string().optional(),
+    backgroundColorColumnName: z.string().optional(),
     variableColors: z.string().optional(),
     noIndentPattern: z.boolean().optional(),
     negativeChk: z.boolean().optional(),
