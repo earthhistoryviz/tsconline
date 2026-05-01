@@ -12,14 +12,11 @@ import {
   FormControlLabel,
   Button,
   Tooltip,
-  Divider,
-  Collapse
+  Divider
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SettingsIcon from "@mui/icons-material/Settings";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { observer } from "mobx-react-lite";
 import { context } from "../state";
 import { useTheme } from "@mui/material/styles";
@@ -34,8 +31,6 @@ export const GeoGPTSettingsPopup = observer(({ open, onClose, onGenerate }: GeoG
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const [copyStatus, setCopyStatus] = useState("");
-  const [showAutoOpenDetails, setShowAutoOpenDetails] = useState(false);
-  const [showCoWorkDetails, setShowCoWorkDetails] = useState(false);
   const sessionId = state.user.geogptSessionId || "";
 
   const handleCopySessionId = async () => {
@@ -60,8 +55,8 @@ export const GeoGPTSettingsPopup = observer(({ open, onClose, onGenerate }: GeoG
       <DialogContent>
         <Box mb={2}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              Current session ID
+            <Typography variant="body2" fontWeight={600}>
+              Current GeoGPT session ID
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "nowrap" }}>
@@ -93,113 +88,96 @@ export const GeoGPTSettingsPopup = observer(({ open, onClose, onGenerate }: GeoG
 
         <Divider sx={{ mb: 2 }} />
 
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" gutterBottom>
+            Use these settings to decide what happens when you create your next GeoGPT session.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            1. Turn on the options you want.
+            <br />
+            2. Click <strong>Generate GeoGPT Session</strong> with these settings to automatically copy the GeoGPT
+            session ID.
+            <br />
+            3. Paste the generated session ID into GeoGPT to link it with your account.
+          </Typography>
+        </Box>
+
+        <Divider sx={{ mb: 2 }} />
+
         <Box>
           <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <FormControlLabel
-                  sx={{ mr: 0 }}
-                  control={
-                    <Switch
-                      checked={state.user.settings.geogptAutoOpen}
-                      onChange={() => actions.setGeoGPTAutoOpen(!state.user.settings.geogptAutoOpen)}
-                      sx={{
-                        "& .MuiSwitch-switchBase.Mui-checked": {
-                          color: "#6693C9"
-                        },
-                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                          backgroundColor: "#6693C9",
-                          opacity: 1
-                        },
-                        "& .MuiSwitch-track": {
-                          backgroundColor: theme.palette.mode === "dark" ? "#5b6f89" : "#b7d0eb",
-                          opacity: 1
-                        }
-                      }}
-                    />
-                  }
-                  label="Open GeoGPT window automatically"
-                />
-                <Tooltip title="When enabled, creating a GeoGPT session immediately opens GeoGPT in a new tab.">
-                  <IconButton size="small" aria-label="Open GeoGPT window automatically info">
-                    <InfoOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Button
-                size="small"
-                color="inherit"
-                onClick={() => setShowAutoOpenDetails((prev) => !prev)}
-                endIcon={showAutoOpenDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}>
-                Read More
-              </Button>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <FormControlLabel
+                sx={{ mr: 0 }}
+                control={
+                  <Switch
+                    checked={state.user.settings.geogptTscOnlineCoWork}
+                    onChange={() => actions.setGeoGPTTscOnlineCoWork(!state.user.settings.geogptTscOnlineCoWork)}
+                    sx={{
+                      "& .MuiSwitch-switchBase.Mui-checked": {
+                        color: "#6693C9"
+                      },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                        backgroundColor: "#6693C9",
+                        opacity: 1
+                      },
+                      "& .MuiSwitch-track": {
+                        backgroundColor: theme.palette.mode === "dark" ? "#5b6f89" : "#b7d0eb",
+                        opacity: 1
+                      }
+                    }}
+                  />
+                }
+                label="Enable GeoGPT and TSCOnline co-work"
+              />
+              <Tooltip title="Reserved for upcoming GeoGPT and TSCOnline integration behavior.">
+                <IconButton size="small" aria-label="Enable GeoGPT and TSCOnline co-work info">
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
-            <Collapse in={showAutoOpenDetails} timeout="auto" unmountOnExit>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ml: 1 }}>
-                When enabled, creating a GeoGPT session will immediately open a new GeoGPT tab.
-              </Typography>
-            </Collapse>
           </Box>
 
           <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <FormControlLabel
-                  sx={{ mr: 0 }}
-                  control={
-                    <Switch
-                      checked={state.user.settings.geogptTscOnlineCoWork}
-                      onChange={() => actions.setGeoGPTTscOnlineCoWork(!state.user.settings.geogptTscOnlineCoWork)}
-                      sx={{
-                        "& .MuiSwitch-switchBase.Mui-checked": {
-                          color: "#6693C9"
-                        },
-                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                          backgroundColor: "#6693C9",
-                          opacity: 1
-                        },
-                        "& .MuiSwitch-track": {
-                          backgroundColor: theme.palette.mode === "dark" ? "#5b6f89" : "#b7d0eb",
-                          opacity: 1
-                        }
-                      }}
-                    />
-                  }
-                  label="Enable GeoGPT and TSCOnline co-work"
-                />
-                <Tooltip title="Reserved for upcoming GeoGPT and TSCOnline integration behavior.">
-                  <IconButton size="small" aria-label="Enable GeoGPT and TSCOnline co-work info">
-                    <InfoOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Button
-                size="small"
-                color="inherit"
-                onClick={() => setShowCoWorkDetails((prev) => !prev)}
-                endIcon={showCoWorkDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}>
-                Read More
-              </Button>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <FormControlLabel
+                sx={{ mr: 0 }}
+                control={
+                  <Switch
+                    checked={state.user.settings.geogptAutoOpen}
+                    onChange={() => actions.setGeoGPTAutoOpen(!state.user.settings.geogptAutoOpen)}
+                    sx={{
+                      "& .MuiSwitch-switchBase.Mui-checked": {
+                        color: "#6693C9"
+                      },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                        backgroundColor: "#6693C9",
+                        opacity: 1
+                      },
+                      "& .MuiSwitch-track": {
+                        backgroundColor: theme.palette.mode === "dark" ? "#5b6f89" : "#b7d0eb",
+                        opacity: 1
+                      }
+                    }}
+                  />
+                }
+                label="Open GeoGPT window automatically"
+              />
+              <Tooltip title="When enabled, creating a GeoGPT session immediately opens GeoGPT in a new tab.">
+                <IconButton size="small" aria-label="Open GeoGPT window automatically info">
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
-            <Collapse in={showCoWorkDetails} timeout="auto" unmountOnExit>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ml: 1 }}>
-                This option is for future GeoGPT / TSCOnline integrations. It does not change current behavior yet.
-              </Typography>
-            </Collapse>
           </Box>
         </Box>
 
         <Divider sx={{ mb: 2 }} />
 
         <Box>
-          <Typography variant="body2" gutterBottom>
-            This panel controls how GeoGPT and TSCOnline work together. Your GeoGPT session ID is copied automatically
-            when a session is generated, so you can paste it into GeoGPT and link it to your account.
-          </Typography>
           <Typography variant="body2" color="text.secondary">
-            Once you&apos;ve changed settings, press the button below to generate a GeoGPT session ID with these
-            settings. You can also use the GeoGPT button in the profile dropdown to create a session with the same saved
-            configuration.
+            You can also use the <strong>Start GeoGPT</strong> button in the profile dropdown to create a session with
+            the same saved configuration.
           </Typography>
         </Box>
       </DialogContent>
@@ -208,7 +186,7 @@ export const GeoGPTSettingsPopup = observer(({ open, onClose, onGenerate }: GeoG
           Close
         </Button>
         <Button variant="contained" onClick={onGenerate}>
-          Generate GeoGPT sessionID with these settings
+          Generate GeoGPT Session
         </Button>
       </DialogActions>
     </Dialog>
