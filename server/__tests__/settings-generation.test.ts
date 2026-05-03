@@ -17,9 +17,7 @@ const buildFakeColumn = (): ColumnInfo => ({
   children: [],
   parent: "Chart Root",
   units: "Ma",
-  columnDisplayType: "Facies",
-  show: true,
-  expanded: true
+  columnDisplayType: "Facies"
 });
 
 describe("build-settings applyTogglesToColumnInfo", () => {
