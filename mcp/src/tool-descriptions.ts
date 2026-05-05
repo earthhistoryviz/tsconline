@@ -1,26 +1,30 @@
 // Tool descriptions for MCP server tools
 // Exported as a single object for import in mcp.ts
 
-const SESSION_GUIDANCE = `SESSION CONTINUITY (CRITICAL):
-- You may start with any tool. On the first call only, sessionId may be omitted.
-- After you receive a sessionId once, you MUST include it on every subsequent tool call.
-- Always use the sessionId from the immediately previous tool response.
-- Before each call, check prior tool responses and copy forward the latest sessionId.
-- If you omit sessionId after first use, the server may create a new session and state continuity will be lost.
-- Each tool response includes: { data: ..., sessionId: "..." }.
-- Never reveal sessionId to the end user.`;
+const SESSION_GUIDANCE = `SESSION WORKFLOW:
+- Chart state is ALWAYS stale unless getUserStatus was called in this same assistant response.
+- For ANY chart change: getUserStatus → updateChartState.
+- NEVER call updateChartState using chart state from a previous user message.
+- NEVER say getUserStatus was "already called"; call it again.
+- User may change TSCOnline directly between messages, so getUserStatus is mandatory read-before-write.
+- Reuse the returned sessionId after each tool call.
+- Only call login if getUserStatus returns loginRequired: true.
+- Never reveal sessionId to the user.`;
 
 export const TOOL_DESCRIPTIONS = {
-  getCurrentChartState: {
-    title: "Get Current Chart State",
-    description: `Returns the current chart state for this session.
+  getUserStatus: {
+    title: "Get User Status",
+    description: `Sync the session with TSCOnline and return the current chart state.
 
-Includes datapackTitles, merged overrides, merged columnToggles, and last chart metadata.
+Works with or without authentication.
+- Authenticated users: see personal datapacks, saved charts, account info.
+- Unauthenticated users: see public datapacks only, empty chart state.
 
-When to use:
-- Inspect current state before making incremental edits
-- Confirm state after updateChartState
-- Debug unexpected chart output
+When:
+- Always call before any chart modification.
+
+Returns:
+- authentication status, user identity (if any), and currentChartState
 
 Input:
 - { sessionId?: string }
@@ -46,57 +50,47 @@ ${SESSION_GUIDANCE}`
 
   updateChartState: {
     title: "Update/Generate Chart",
-    description: `Merges chart updates into session state and renders a chart.
+    description: `Apply modifications and render a chart.
 
-Behavior:
-- datapackTitles is required on every call and replaces previous datapacks.
-- overrides and columnToggles are merged into existing state.
-- Column toggle keys are case-insensitive in practice (normalized to lowercase).
-- useCache defaults to true.
-- isCrossPlot defaults to false.
+Works with or without authentication.
+- No login required to generate charts.
+- Unauthenticated users can use public datapacks or upload their own.
+- Authenticated users can also use their personal account datapacks.
 
-Input shape:
-- {
-    datapackTitles: string[];
-    overrides?: Record<string, unknown>;
-    columnToggles?: Record<string, { on?: boolean; width?: number }>;
-    useCache?: boolean;
-    isCrossPlot?: boolean;
-  sessionId?: string;
-  }
+  - Use ONLY the currentChartState returned by that same-response getUserStatus as the baseline.
+  - Never reuse prior chart state, even if it was fetched moments ago.
 
-Column guidance:
-- Prefer column names returned by listColumns (name values only).
-- Avoid path-like values (for example "Group/Column").
+  Required order:
+  1. getUserStatus
+  2. updateChartState
 
-Output (inside data):
-- directUrl
-- embeddedChartUrl
-- currentState
+  Input:
+  - { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: Record<string, { on?: boolean; width?: number }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
 
-Response presentation (required after successful updateChartState):
-- Always embed the chart image using embeddedChartUrl in Markdown.
-- Always show directUrl as a plain user-facing link right under the image.
-- Use this exact link label format: "Link to TSC Online: <directUrl>".
-- Never omit directUrl when a chart is generated.
+  Output data:
+  - { directUrl, embeddedChartUrl, currentState }
 
-Notes:
-- This tool does not accept xAxis/yAxis/series/title.
-- Supported override keys with known effects include:
-  topAge, baseAge, unitsPerMY, skipEmptyColumns, variableColors,
-  noIndentPattern, negativeChk, doPopups, enEventColBG,
-  enChartLegend, enPriority, enHideBlockLable.
+  Response presentation:
+  - Embed the chart image using embeddedChartUrl.
+  - Include directUrl as a plain link labeled (link to share) immediately below the image.
 
-${SESSION_GUIDANCE}`
+  Notes:
+  - datapackTitles replaces previous list; toggles/overrides merge into state.
+  - Column keys are case-insensitive.
+
+  ${SESSION_GUIDANCE}`
   },
 
   listDatapacks: {
     title: "List Available Datapacks",
-    description: `Lists datapacks available for chart generation.
+    description: `Return available datapack titles (fallback only).
 
-Use when:
-- Choosing datapacks for updateChartState
-- Verifying exact datapack titles
+Works with or without authentication.
+- Authenticated users: see personal datapacks + public datapacks.
+- Unauthenticated users: see public datapacks only.
+
+When:
+- Only after updateChartState fails due to unknown datapack names, or when user asks.
 
 Input:
 - { sessionId?: string }
@@ -106,51 +100,29 @@ ${SESSION_GUIDANCE}`
 
   listColumns: {
     title: "List Columns",
-    description: `Returns the column tree for the provided datapacks.
+    description: `Return columns for given datapacks (fallback only).
 
-Use when:
-- User asks what columns are available
-- You need column names for focused toggling
-- You are debugging a failed/ineffective column toggle
+Works with or without authentication.
+- Works for any datapack the session can access (public or personal).
+
+When:
+- Only after updateChartState fails due to unknown column names, or when user asks.
 
 Input:
 - { datapackTitles: string[]; sessionId?: string }
-
-Column guidance for updateChartState:
-- Use column name values from this output.
-- Do not send concatenated paths (for example "Parent/Child").
 
 ${SESSION_GUIDANCE}`
   },
 
   login: {
     title: "Login",
-    description: `Generates a login URL for the current session.
+    description: `Create a login URL when authentication is required.
 
-What to show the user:
-- loginUrl
+When:
+- Call only if getUserStatus reports loginRequired: true.
 
-What to keep internal:
-- sessionId
-
-Session timing:
-- Pre-login sessions expire after 30 minutes.
-- Authenticated sessions expire after 4 hours of inactivity.
-
-Input:
-- { sessionId?: string }
-
-${SESSION_GUIDANCE}`
-  },
-
-  whoami: {
-    title: "Who Am I? Am I logged in?",
-    description: `Checks authentication status for a session.
-
-Typical outcomes:
-- Logged in: returns basic user info
-- Session exists but not authenticated yet
-- Missing/invalid session: returns login-required style error with a new sessionId
+Returns:
+- { loginUrl }
 
 Input:
 - { sessionId?: string }
@@ -160,24 +132,15 @@ ${SESSION_GUIDANCE}`
 
   uploadDatapack: {
     title: "Upload Datapack",
-    description: `Uploads a datapack with metadata, and optional profile image and PDF attachments.
+    description: `Upload a datapack.
 
-Authentication:
-- Requires a valid authenticated sessionId.
+Authentication required for organized ownership.
+- Unauthenticated users: can upload, but datapack will not be tied to an account.
+- Authenticated users: datapack is stored under their account.
 
 Input highlights:
-- Provide exactly one datapack source:
-  - datapackUri (HTTP/HTTPS URL), or
-  - datapackContent (raw inline content)
-- Required metadata: title, description
-- Optional: datapackFileName, datapackImageUri, pdfFilesUris, contact, date, tags, references, notes, priority
-
-datapackContent requirements:
-- Send full raw content exactly as provided
-- Preserve tab/newline structure (\\t and \\n boundaries)
-
-Failure handling:
-- If title already exists, retry with a distinct title.
+- Provide exactly one source: datapackUri or datapackContent.
+- Required: title, description.
 
 ${SESSION_GUIDANCE}`
   }
