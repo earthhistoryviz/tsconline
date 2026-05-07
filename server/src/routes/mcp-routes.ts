@@ -374,7 +374,6 @@ export async function mcpRequestSessionChartState(request: FastifyRequest, reply
   return reply.code(200).send({ ok: true, sessionId });
 }
 
-
 export async function mcpDeleteTempSessionDatapacks(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { uuid, sessionId } = (request.body ?? {}) as { uuid?: string; sessionId?: string };

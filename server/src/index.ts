@@ -338,12 +338,9 @@ server.post("/mcp/list-columns", looseRateLimit, mcpRoutes.mcpListColumns);
 server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderChartWithEdits);
 server.post("/mcp/user-info", moderateRateLimit, mcpRoutes.mcpUserInfoProxy);
 server.post("/mcp/create-session", strictRateLimit, mcpRoutes.mcpCreateSession);
-<<<<<<< HEAD
 server.post("/mcp/delete-temp-session-datapacks", moderateRateLimit, mcpRoutes.mcpDeleteTempSessionDatapacks);
-=======
 server.post("/mcp/update-chart-state", moderateRateLimit, mcpRoutes.mcpUpdateSessionChartState);
 server.post("/mcp/request-chart-state", moderateRateLimit, mcpRoutes.mcpRequestSessionChartState);
->>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
 server.post("/mcp/upload-datapack", moderateRateLimit, mcpRoutes.mcpUploadDatapack);
 
 //fetches json object of requested settings file

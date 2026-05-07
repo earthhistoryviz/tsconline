@@ -73,7 +73,6 @@ export const cleanupInterval = setInterval(
   1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
-<<<<<<< HEAD
 // Chart state management - tracks current chart configuration
 interface ChartState {
   datapackTitles: string[];
@@ -99,20 +98,13 @@ function newChartState(): ChartState {
   return { datapackTitles: [], overrides: {}, columnToggles: {} };
 }
 
-=======
->>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
 function createSession(): { sessionId: string; entry: SessionEntry } {
   const sessionId = randomUUID();
   const entry: SessionEntry = {
     createdAt: Date.now(),
     lastActivity: Date.now(),
-<<<<<<< HEAD
-    userInfo: tempSharedUser,
-    userChartState: newChartState()
-=======
     userInfo: undefined,
     userChartState: newMCPChartState()
->>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
   };
 
   sessions.set(sessionId, entry);
