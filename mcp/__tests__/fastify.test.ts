@@ -479,11 +479,7 @@ describe("registerMCPRoutes", () => {
       expect(reply.raw.write).not.toHaveBeenCalled();
     });
 
-<<<<<<< HEAD
-    it("GET /sse: keepAlive clears interval when write throws", async () => {
-=======
     it("GET /sse: keepAlive catches write errors and clears interval", async () => {
->>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
       vi.useFakeTimers();
 
       const app = new FakeFastify();
