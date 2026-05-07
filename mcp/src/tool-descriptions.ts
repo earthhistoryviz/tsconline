@@ -29,7 +29,7 @@ WARNING: Omitting sessionId on subsequent calls breaks the session chain and cre
       "data": {
         "datapackTitles": ["Africa Bight"],
         "overrides": { "topAge": 0, "baseAge": 65 },
-        "columnToggles": { "off": ["nigeria coast"], "on": [] },
+        "columnToggles": {"nigeria coast": { "on": false, "width": 25 }, "events": { "on": true }},
         "lastChartPath": "/charts/...",
         "lastModified": "..."
       },
@@ -68,8 +68,8 @@ WARNING: Omitting sessionId breaks the session chain and creates a NEW session (
 **You MUST use ONLY the name property from listColumns for column toggles.**
 **NEVER use slashes, paths, or concatenated names.**
 
-CORRECT: { columnToggles: { on: ["Moon", "Mars"] } }
-INCORRECT: { columnToggles: { on: ["Planetary Time Scale/Moon"] } }
+CORRECT: { columnToggles:  {"Moon": {"on": true} } }
+INCORRECT: { columnToggles: { "Planetary Time Scale/Moon": {"on": true} } }
 
 When the user requests a focus on a topic (e.g., "dinosaurs"), you MUST search all column names in listColumns for relevant matches (including partial, plural, or related terms) and turn on ALL that apply. Do not just toggle a single exact match—find and enable all columns related to the topic.
 
@@ -99,11 +99,11 @@ If you are suspicious of a given chart name or are unsure which datapacks to use
 When to use:
 - First chart or changing datapacks: provide datapackTitles (required).
 - Adjust time/settings: provide overrides (object, optional). Only known keys have guaranteed effect; unknown keys are accepted but may be ignored by the renderer.
-- Toggle columns: provide columnToggles with on/off arrays (optional). Just use the column names the user gives you - assume they're correct. Case-insensitive; exclusive on/off (adding to off removes from on).
+- Toggle columns: provide columnToggles as an object keyed by column id/name (optional). Each key maps to per-column settings such as { on?: boolean, width?: number }. Just use the column names the user gives you - assume they're correct. Case-insensitive.
 - Debugging: always set useCache to true
 
 Column toggling workflow:
-- If user says "turn off column X": just do it with { columnToggles: { off: ["X"] } }
+- If user says "turn off column X": just do it with { columnToggles: { "X": { "on": false } } } 
 - Don't pre-emptively call listColumns to verify names
 - Only if chart generation FAILS or user complains about missing columns, or user is exploring and asking for help learning/focusing on an area of a datapack, THEN call listColumns to see available options
 - When putting column names in on/off toggles, you MUST use the name property from listColumns output exactly as shown (case-insensitive, no paths, no concatenation, no slashes). Just the name.
@@ -111,7 +111,7 @@ Column toggling workflow:
 NEVER change or adjust the time scale (topAge/baseAge/unitsPerMY) unless the user explicitly asks for a time range or scale change. Never default to 0–4500 Ma unless explicitly requested.
 
 Payload shape (ALWAYS FOLLOWS THIS SHAPE):
-{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: { on?: string[]; off?: string[] }; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
+{ datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: Record<string, { on?: boolean; width?: number }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
 
 This tool does NOT accept chart geometry/axes/series. Do not send xAxis/yAxis/series/title. Use datapacks + overrides + column toggles only.
 
@@ -154,13 +154,17 @@ Example 3 (toggle columns by id, change overrides):
 {
   "datapackTitles": ["GTS2020"],
   "overrides": { "topAge": 5, "baseAge": 150 },
-  "columnToggles": { "on": ["column-id-1"], "off": ["column-id-2"] },
+  "columnToggles": {
+    "column-id-1": { "on": true, "width": 25 },
+    "column-id-2": { "on": false }
+  },
   "useCache": true
 }
 
 These are just examples for changing datapacks, overrides, and column toggles. You can mix and match as needed.
 
-Remember: datapack settings will persist across calls until resetChartState is used. If a column is toggled off, it stays off until explicitly toggled on again. Same with toggling it on.
+Remember: datapack settings will persist across calls until resetChartState is used. If a column is set to { "on": false }, it stays off until explicitly changed again.
+If a column width is set, it remains until explicitly changed again.
 The point is you only have to include the changes you want to make; the rest of the state is preserved automatically.
 
 AUTO-DISPLAY REQUIREMENT (default behavior):
@@ -192,6 +196,17 @@ The assistant SHOULD still provide the direct URL as plain text under the embed.
   listDatapacks: {
     title: "List Available Datapacks",
     description: `What it does: lists datapacks you can use when building a chart.
+
+WHEN TO CALL THIS:
+- User asks "what datapacks are available?"
+- After whoami returns an empty chart state (user has session but no chart started)
+- User wants to see options before selecting datapacks
+
+COMMON FLOW:
+1. User pastes a TSCOnline sessionId
+2. You call whoami with that sessionId
+3. If no chart (empty datapackTitles), tell user "Let me show you available datapacks" then call this
+4. Display the options and ask which they want to work with
 
 === SESSION MANAGEMENT (CRITICAL) ===
 Session continuity is MANDATORY across ALL tool calls in a conversation.
@@ -303,11 +318,15 @@ Response format: { "data": { "message": "...", "loginUrl": "..." }, "sessionId":
   },
 
   whoami: {
-    title: "Who Am I? Am I logged in?",
-    description: `What it does: Check if you're logged in and get user details.
-    If the user pastes a GeoGPT session ID from TSC Online into chat, call this tool with that sessionId.
-    If valid, this confirms which logged-in user that session belongs to.
-    After a successful call, continue using that same sessionId for future authenticated tool calls in this conversation.
+    title: "Who Am I? Am I logged in? What chart am I working on?",
+    description: `What it does: Check if you're logged in, get user details, AND retrieve the current chart state you're working on.
+
+TSCONLINE SESSION RECOGNITION - THIS IS KEY:
+- When a user pastes a GeoGPT session ID from TSC Online, call this tool with that sessionId.
+- This will tell you EXACTLY what chart they were working on (datapacks, settings, column states).
+- RESPOND BASED ON CHART STATE:
+  • If userChartState.datapackTitles is NON-EMPTY: Say something like "Great! I can see you were working with [datapacks]. Here's what's configured: [overrides]. Let's continue from there or make changes."
+  • If userChartState.datapackTitles is EMPTY: Say something like "I see you have a session but no chart started yet. What datapacks would you like to work with?" Then call listDatapacks to show options.
 
 === SESSION MANAGEMENT (CRITICAL) ===
 Session continuity is MANDATORY across ALL tool calls in a conversation.
@@ -320,12 +339,13 @@ WARNING: Omitting sessionId breaks the session chain and creates a NEW session (
 REMINDER: sessionId is internal only - don't show it to the user!
 
 Returns one of three states:
-1. LOGGED IN: Returns user object (username, email, isAdmin, etc.) → session is authenticated
-2. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
-3. AUTO-CREATED NEW SESSION: If session expired/omitted, a new one is automatically created
+1. LOGGED IN + CHART STATE: Returns user object + userChartState object with datapacks/settings/columns → session is authenticated and ready
+2. LOGGED IN + EMPTY CHART: Returns user object but empty userChartState → user is ready to start a chart, consider calling listDatapacks
+3. NOT YET AUTHENTICATED: Session exists but user hasn't completed login → show login link again or wait
+4. SESSION NOT FOUND: Auto-replaced with new session on next tool call
 
 Input: { sessionId?: string }
-- sessionId: REQUIRED (except first call) - the sessionId from your previous tool call
+- sessionId: REQUIRED (except first call) - the sessionId from your previous tool call (especially when user pastes a TSCOnline session ID)
 
 Session Expiration Rules:
 - Pre-login: 30 minutes from creation (user must complete login within 30 min)

@@ -619,10 +619,11 @@ jobs:
               cd "$TSCONLINE_DIR"
             fi
 
+            PR_VAR_VALUE='${{ vars.GEOGPT_CHAT_URL }}'
             if grep -q '^GEOGPT_CHAT_URL=' "$PR_PREVIEW_DIR/server/.env"; then
-              sed -i 's|^GEOGPT_CHAT_URL=.*|GEOGPT_CHAT_URL="${{ vars.GEOGPT_CHAT_URL }}"|' "$PR_PREVIEW_DIR/server/.env"
+              awk -v val="$PR_VAR_VALUE" 'BEGIN{q="\""} /^GEOGPT_CHAT_URL=/{print "GEOGPT_CHAT_URL=" q val q; next} {print}' "$PR_PREVIEW_DIR/server/.env" > "$PR_PREVIEW_DIR/server/.env.tmp" && mv "$PR_PREVIEW_DIR/server/.env.tmp" "$PR_PREVIEW_DIR/server/.env"
             else
-              echo 'GEOGPT_CHAT_URL="${{ vars.GEOGPT_CHAT_URL }}"' >> "$PR_PREVIEW_DIR/server/.env"
+              echo "GEOGPT_CHAT_URL=\"${{ vars.GEOGPT_CHAT_URL }}\"" >> "$PR_PREVIEW_DIR/server/.env"
             fi
 
             unzip -q -o "build-artifacts.zip" -d "$PR_PREVIEW_DIR"

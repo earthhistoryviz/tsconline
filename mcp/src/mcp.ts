@@ -3,8 +3,14 @@ import z from "zod";
 import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
-import type { SharedUser } from "@tsconline/shared";
-import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType } from "@tsconline/shared";
+import type { SharedUser, MCPChartState, MCPColumnToggleSettings } from "@tsconline/shared";
+import {
+  MCPLinkParams,
+  assertDatapackMetadata,
+  DatapackMetadata,
+  DatapackType,
+  newMCPChartState
+} from "@tsconline/shared";
 import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType } from "./mcp-helper.js";
 import { TOOL_DESCRIPTIONS } from "./tool-descriptions.js";
 
@@ -33,7 +39,7 @@ export interface SessionEntry {
   userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
   createdAt: number;
   lastActivity: number;
-  userChartState: ChartState;
+  userChartState: MCPChartState;
 }
 
 export const sessions = new Map<string, SessionEntry>();
@@ -67,6 +73,7 @@ export const cleanupInterval = setInterval(
   1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
+<<<<<<< HEAD
 // Chart state management - tracks current chart configuration
 interface ChartState {
   datapackTitles: string[];
@@ -92,13 +99,20 @@ function newChartState(): ChartState {
   return { datapackTitles: [], overrides: {}, columnToggles: {} };
 }
 
+=======
+>>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
 function createSession(): { sessionId: string; entry: SessionEntry } {
   const sessionId = randomUUID();
   const entry: SessionEntry = {
     createdAt: Date.now(),
     lastActivity: Date.now(),
+<<<<<<< HEAD
     userInfo: tempSharedUser,
     userChartState: newChartState()
+=======
+    userInfo: undefined,
+    userChartState: newMCPChartState()
+>>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
   };
 
   sessions.set(sessionId, entry);
@@ -146,27 +160,6 @@ function verifyMCPSession(sessionId?: string): SessionResult {
 
   return { sessionId, entry };
 }
-
-/*
-function denyNeedLogin(es: { sessionId: string; internalNote?: string }) {
-  const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
-
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: `[SHOW TO USER]
-Please log in to continue:
-${loginUrl}
-
-[INTERNAL - DO NOT SHOW TO USER]
-sessionId: ${es.sessionId}
-(Store for tool calls. Valid 30 min until login, then 10 min of inactivity.)`
-      }
-    ]
-  };
-}
-*/
 
 function requireSession(es: { sessionId: string; entry: SessionEntry; internalNote?: string }): {
   entry: SessionEntry;
@@ -267,12 +260,14 @@ const overridesSchema = z
   })
   .passthrough();
 
-const columnToggleSchema = z
+const singleColumnToggleSchema = z
   .object({
-    on: z.array(z.string()).optional(),
-    off: z.array(z.string()).optional()
+    on: z.boolean().optional(),
+    width: z.number().optional()
   })
   .passthrough();
+
+const columnToggleSchema = z.record(z.string(), singleColumnToggleSchema);
 
 const updateChartArgsSchema = z.object({
   datapackTitles: datapackTitlesSchema,
@@ -313,6 +308,23 @@ export const createMCPServer = () => {
 
       const sess = requireSession(es);
 
+      // Ask TSCOnline to push its latest in-browser chart state for this session.
+      try {
+        const token = process.env.MCP_AUTH_TOKEN;
+        if (token) {
+          await fetch(`${internalServerUrl}/mcp/request-chart-state`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ sessionId: sess.sessionId })
+          });
+        }
+      } catch {
+        // Fall back to last known state if the client is offline/unreachable.
+      }
+
       return wrapResponse(sess.entry.userChartState, sess.sessionId);
     }
   );
@@ -332,7 +344,7 @@ export const createMCPServer = () => {
 
       const sess = requireSession(es);
 
-      sess.entry.userChartState = newChartState();
+      sess.entry.userChartState = newMCPChartState();
 
       return wrapResponse({ message: "Chart state cleared for this session." }, sess.sessionId);
     }
@@ -367,23 +379,18 @@ export const createMCPServer = () => {
         ...(args.overrides ?? {})
       };
 
-      const incomingOff = new Set((args.columnToggles?.off ?? []).map((id) => id.toLowerCase()));
-      const incomingOn = new Set((args.columnToggles?.on ?? []).map((id) => id.toLowerCase()));
+      const normalizedIncoming = Object.fromEntries(
+        Object.entries(args.columnToggles ?? {}).map(([columnId, settings]) => [columnId.toLowerCase(), settings])
+      ) as Record<string, Partial<MCPColumnToggleSettings>>;
 
-      const currentOff = new Set((st.columnToggles.off ?? []).map((id) => id.toLowerCase()));
-      const currentOn = new Set((st.columnToggles.on ?? []).map((id) => id.toLowerCase()));
+      const columnToggles = st.columnToggles;
 
-      for (const id of incomingOff) {
-        currentOn.delete(id);
-        currentOff.add(id);
+      for (const [columnId, settings] of Object.entries(normalizedIncoming)) {
+        columnToggles[columnId] = {
+          ...(columnToggles[columnId] ?? {}),
+          ...settings
+        };
       }
-      for (const id of incomingOn) {
-        currentOff.delete(id);
-        currentOn.add(id);
-      }
-
-      st.columnToggles.off = Array.from(currentOff);
-      st.columnToggles.on = Array.from(currentOn);
 
       // Generate chart with THIS SESSION'S state
       try {
@@ -393,7 +400,7 @@ export const createMCPServer = () => {
           body: JSON.stringify({
             datapackTitles: st.datapackTitles,
             overrides: st.overrides,
-            columnToggles: st.columnToggles,
+            columnToggles,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false,
             uuid: entry.userInfo?.uuid,
@@ -630,12 +637,25 @@ export const createMCPServer = () => {
         requireSession({ sessionId, entry });
 
         if (entry.userInfo) {
+          // User is authenticated - include their chart state
+          const hasChart = entry.userChartState.datapackTitles && entry.userChartState.datapackTitles.length > 0;
           return wrapResponse(
             {
-              message: "You are logged in",
+              message: hasChart
+                ? `You are logged in as ${entry.userInfo.username}. You have a chart in progress.`
+                : `You are logged in as ${entry.userInfo.username}. No chart started yet.`,
               userInfo: entry.userInfo.username
                 ? { username: entry.userInfo.username, email: entry.userInfo.email }
-                : null
+                : null,
+              chartState: {
+                hasChart: hasChart,
+                datapackTitles: entry.userChartState.datapackTitles,
+                overrides: entry.userChartState.overrides,
+                columnToggles: entry.userChartState.columnToggles,
+                message: hasChart
+                  ? "You were working with these datapacks and settings. Ready to continue or make changes?"
+                  : "Start by selecting a datapack. I can show you what's available."
+              }
             },
             sessionId
           );

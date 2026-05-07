@@ -4,7 +4,8 @@ import {
   defaultChartSettingsInfoTSC,
   ChartSettingsInfoTSC,
   defaultColumnRootConstant,
-  FontsInfo
+  FontsInfo,
+  MCPColumnToggleSettings
 } from "@tsconline/shared";
 import _ from "lodash";
 import { jsonToXml } from "./settings-to-xml.js";
@@ -24,10 +25,13 @@ export type SchemaOverrides = Partial<{
   enHideBlockLable: boolean;
 }>;
 
-export type ColumnToggles = {
-  on?: string[];
-  off?: string[];
-};
+export type ColumnToggles = Record<
+  string,
+  {
+    on?: boolean;
+    width?: number;
+  }
+>;
 
 export type FlattenedColumn = {
   id: string;
@@ -37,6 +41,29 @@ export type FlattenedColumn = {
   enableTitle: boolean;
   type: string;
 };
+
+type ColumnInfoWithPossibleIds = ColumnInfo & {
+  _id?: string;
+  id?: string;
+  originalTscId?: string;
+};
+
+function getPossibleColumnIdentifiers(col: ColumnInfo): string[] {
+  const withIds = col as ColumnInfoWithPossibleIds;
+  const explicitIds = [withIds.originalTscId, withIds._id, withIds.id]
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) => {
+      const rawValue = value.toLowerCase();
+      const suffix = value.includes(":") ? value.split(":").slice(1).join(":").toLowerCase() : rawValue;
+      return [rawValue, suffix];
+    });
+
+  const displayIds = [col.name, col.editName]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.toLowerCase());
+
+  return Array.from(new Set([...displayIds, ...explicitIds]));
+}
 
 /**
  * Merge multiple datapack column trees into a single root column.
@@ -199,16 +226,42 @@ function extractSettingsComponents(datapacks: Datapack[]): {
   return { columnRoot, chartSettings };
 }
 
-function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
-  const toLowerSet = (arr?: string[]) => new Set((arr ?? []).map((v) => v.toLowerCase()));
-  const idsOn = toLowerSet(toggles.on);
-  const idsOff = toLowerSet(toggles.off);
+export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
+  const normalizedToggles = new Map<string, Partial<MCPColumnToggleSettings>>();
+
+  const columnToggleAppliers: Array<(col: ColumnInfo, settings: Partial<MCPColumnToggleSettings>) => void> = [
+    (col, settings) => {
+      if (settings.on !== undefined) {
+        col.on = settings.on;
+      }
+    },
+    (col, settings) => {
+      if (settings.width !== undefined) {
+        col.width = settings.width;
+      }
+    }
+  ];
+
+  for (const [columnId, settings] of Object.entries(toggles)) {
+    const raw = columnId.toLowerCase();
+    normalizedToggles.set(raw, settings);
+
+    if (columnId.includes(":")) {
+      const suffix = columnId.split(":").slice(1).join(":").toLowerCase();
+      normalizedToggles.set(suffix, settings);
+    }
+  }
 
   const visit = (col: ColumnInfo) => {
-    const candidates = [col.name, col.editName].filter((v): v is string => Boolean(v)).map((v) => v.toLowerCase());
+    const candidates = getPossibleColumnIdentifiers(col);
+    const matchedId = candidates.find((id) => normalizedToggles.has(id));
+    const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
 
-    if (candidates.some((id) => idsOn.has(id))) col.on = true;
-    if (candidates.some((id) => idsOff.has(id))) col.on = false;
+    if (settings) {
+      for (const applyToggle of columnToggleAppliers) {
+        applyToggle(col, settings);
+      }
+    }
 
     if (col.children) {
       col.children.forEach(visit);
@@ -325,7 +378,7 @@ export async function generateChartWithEdits(
   const { columnRoot, chartSettings } = extractSettingsComponents(datapacks);
   const primaryUnit = datapacks[0] && datapacks.length > 0 ? datapacks[0].ageUnits : "Ma";
 
-  if (normalizedToggles.on?.length || normalizedToggles.off?.length) {
+  if (Object.keys(normalizedToggles).length > 0) {
     applyTogglesToColumnInfo(columnRoot, normalizedToggles);
   }
 
@@ -335,7 +388,9 @@ export async function generateChartWithEdits(
 
   validateChartSettings(chartSettings, primaryUnit);
 
-  return jsonToXml(columnRoot, chartSettings);
+  const xml = jsonToXml(columnRoot, chartSettings);
+
+  return xml;
 }
 
 function flattenColumnsInternal(columns: ColumnInfo[], parentPath: string): FlattenedColumn[] {

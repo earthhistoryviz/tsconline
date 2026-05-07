@@ -479,7 +479,11 @@ describe("registerMCPRoutes", () => {
       expect(reply.raw.write).not.toHaveBeenCalled();
     });
 
+<<<<<<< HEAD
     it("GET /sse: keepAlive clears interval when write throws", async () => {
+=======
+    it("GET /sse: keepAlive catches write errors and clears interval", async () => {
+>>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
       vi.useFakeTimers();
 
       const app = new FakeFastify();
@@ -494,8 +498,13 @@ describe("registerMCPRoutes", () => {
       });
 
       await sse(req, reply);
+<<<<<<< HEAD
 
       vi.advanceTimersByTime(20);
+=======
+      vi.advanceTimersByTime(20);
+
+>>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
       expect(reply.raw.write).toHaveBeenCalled();
     });
 
@@ -555,7 +564,11 @@ describe("registerMCPRoutes", () => {
 
   describe("/messages/user-info", () => {
     it("missing bearer token => 401", async () => {
+<<<<<<< HEAD
       delete process.env.MCP_AUTH_TOKEN;
+=======
+      process.env.MCP_AUTH_TOKEN = "token123";
+>>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
@@ -576,7 +589,11 @@ describe("registerMCPRoutes", () => {
       const reply = makeReply();
       await handler(
         makeReq({
+<<<<<<< HEAD
           headers: { authorization: "Bearer wrong-token" },
+=======
+          headers: { authorization: "Bearer wrong" },
+>>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
           body: { sessionId: "sid-1", userInfo: makeSharedUser() }
         }),
         reply
@@ -603,6 +620,35 @@ describe("registerMCPRoutes", () => {
 
       expect(reply.statusCode).toBe(400);
       expect(reply.payload).toEqual({ error: "Invalid or expired session" });
+    });
+
+    it("already authenticated session => 400", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const { sessions } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      sessions.set("sid-auth", {
+        createdAt: Date.now() - 1000,
+        lastActivity: Date.now() - 1000,
+        userInfo: makeSharedUser({ uuid: "existing" }),
+        userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+      });
+
+      const handler = app.find("POST", "/messages/user-info");
+      const reply = makeReply();
+
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer token123" },
+          body: { sessionId: "sid-auth", userInfo: makeSharedUser({ uuid: "new" }) }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toEqual({ error: "Session already authenticated" });
     });
 
     it("valid session => sets userInfo and updates lastActivity", async () => {
@@ -683,6 +729,171 @@ describe("registerMCPRoutes", () => {
     expect(sessions.has("streamable-uuid-1")).toBe(true);
   });
 
+  describe("/messages/create-session", () => {
+    it("creates session with default empty chart state when body is missing", async () => {
+      const { sessions } = await import("../src/mcp.js");
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/create-session");
+      const reply = makeReply();
+
+      await handler(makeReq(), reply);
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ sessionId: "streamable-uuid-1" });
+      expect(sessions.get("streamable-uuid-1")).toMatchObject({
+        userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+      });
+    });
+
+    it("creates session with provided chart state", async () => {
+      const { sessions } = await import("../src/mcp.js");
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/create-session");
+      const reply = makeReply();
+      const userChartState = {
+        datapackTitles: ["Africa Bight"],
+        overrides: { topAge_Ma: 0, baseAge_Ma: 65 },
+        columnToggles: {
+          Period: { on: true },
+          Epoch: { on: false }
+        }
+      };
+
+      await handler(makeReq({ body: { userChartState } }), reply);
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ sessionId: "streamable-uuid-1" });
+      expect(sessions.get("streamable-uuid-1")).toMatchObject({ userChartState });
+    });
+  });
+
+  describe("/messages/update-chart-state", () => {
+    it("rejects missing bearer token", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/update-chart-state");
+      const reply = makeReply();
+
+      await handler(
+        makeReq({
+          body: { sessionId: "sid-1", userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} } }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(401);
+      expect(reply.payload).toEqual({ error: "Missing or invalid Bearer token" });
+    });
+
+    it("rejects invalid bearer token", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/update-chart-state");
+      const reply = makeReply();
+
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer wrong-token" },
+          body: { sessionId: "sid-1", userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} } }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(401);
+      expect(reply.payload).toEqual({ error: "Invalid Bearer token" });
+    });
+
+    it("rejects missing sessionId or chart state", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/update-chart-state");
+      const reply = makeReply();
+
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer token123" },
+          body: { sessionId: "sid-1" }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toEqual({ error: "Missing sessionId or userChartState" });
+    });
+
+    it("rejects invalid or expired session", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/update-chart-state");
+      const reply = makeReply();
+
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer token123" },
+          body: {
+            sessionId: "missing-session",
+            userChartState: { datapackTitles: ["x"], overrides: {}, columnToggles: {} }
+          }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toEqual({ error: "Invalid or expired session" });
+    });
+
+    it("updates chart state for valid existing session", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const { sessions } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const now = Date.now();
+      sessions.set("sid-1", {
+        userInfo: makeSharedUser(),
+        createdAt: now - 1000,
+        lastActivity: now - 1000,
+        userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+      });
+
+      const handler = app.find("POST", "/messages/update-chart-state");
+      const reply = makeReply();
+      const userChartState = {
+        datapackTitles: ["Africa Bight"],
+        overrides: { topAge_Ma: 0, baseAge_Ma: 65 },
+        columnToggles: { Epochs: { on: false } }
+      };
+
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer token123" },
+          body: { sessionId: "sid-1", userChartState }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(200);
+      expect(reply.payload).toEqual({ ok: true, sessionId: "sid-1" });
+
+      const entry = sessions.get("sid-1");
+      expect(entry?.userChartState).toEqual(userChartState);
+      expect(entry?.lastActivity).toBeGreaterThanOrEqual(now);
+    });
+  });
+
   it("cleanup timer reaps expired sessions (streamable + legacy) and onClose cleans everything", async () => {
     vi.useFakeTimers();
 
@@ -727,6 +938,32 @@ describe("registerMCPRoutes", () => {
 
     // close should be safe and idempotent; we mainly assert no throw + cleanup executed
     expect(true).toBe(true);
+  });
+
+  it("cleanup timer logs warning when legacy SSE response destroy fails", async () => {
+    vi.useFakeTimers();
+
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance, {
+      streamableTtlMs: 50_000,
+      legacySseTtlMs: 5,
+      legacyKeepAliveMs: 50_000
+    });
+
+    const sse = app.find("GET", "/sse");
+    const sseReply = makeReply();
+    await sse(makeReq({ raw: new EventEmitter() }), sseReply);
+
+    sseReply.raw.destroy.mockImplementation(() => {
+      throw new Error("ttl destroy failed");
+    });
+
+    vi.advanceTimersByTime(20_000);
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to destroy SSE response for expired session"),
+      expect.any(Error)
+    );
   });
 
   it("onClose: logs warning if destroying SSE response throws", async () => {
