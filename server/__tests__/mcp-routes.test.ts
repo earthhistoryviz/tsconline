@@ -36,12 +36,9 @@ import {
   mcpUserInfoProxy,
   mcpUploadDatapack,
   mcpCreateSession,
-<<<<<<< HEAD
-  mcpDeleteTempSessionDatapacks
-=======
+  mcpDeleteTempSessionDatapacks,
   mcpUpdateSessionChartState,
   mcpRequestSessionChartState
->>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
 } from "../src/routes/mcp-routes.js";
 import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
