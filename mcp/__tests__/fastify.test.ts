@@ -17,6 +17,14 @@ type StreamableTransportLike = {
 
 let lastStreamableTransport: StreamableTransportLike | undefined;
 
+vi.mock("@tsconline/shared", async () => {
+  const actual = await vi.importActual<typeof import("@tsconline/shared")>("@tsconline/shared");
+  return {
+    ...actual,
+    newMCPChartState: vi.fn(() => ({ datapackTitles: [], overrides: {}, columnToggles: {} }))
+  };
+});
+
 // Mock MCP module
 vi.mock("../src/mcp.js", () => {
   const sessions = new Map<string, { userInfo?: unknown; createdAt: number; lastActivity: number }>();
@@ -494,13 +502,8 @@ describe("registerMCPRoutes", () => {
       });
 
       await sse(req, reply);
-<<<<<<< HEAD
-
-      vi.advanceTimersByTime(20);
-=======
       vi.advanceTimersByTime(20);
 
->>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
       expect(reply.raw.write).toHaveBeenCalled();
     });
 
@@ -560,11 +563,7 @@ describe("registerMCPRoutes", () => {
 
   describe("/messages/user-info", () => {
     it("missing bearer token => 401", async () => {
-<<<<<<< HEAD
-      delete process.env.MCP_AUTH_TOKEN;
-=======
       process.env.MCP_AUTH_TOKEN = "token123";
->>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
       const app = new FakeFastify();
       registerMCPRoutes(app as unknown as FastifyInstance);
 
@@ -585,11 +584,7 @@ describe("registerMCPRoutes", () => {
       const reply = makeReply();
       await handler(
         makeReq({
-<<<<<<< HEAD
-          headers: { authorization: "Bearer wrong-token" },
-=======
           headers: { authorization: "Bearer wrong" },
->>>>>>> 80f4d424dfa57c8f043d79b1f58c71a7509bee72
           body: { sessionId: "sid-1", userInfo: makeSharedUser() }
         }),
         reply
