@@ -12,7 +12,8 @@ const ORIGINAL_ENV = { ...process.env };
 vi.mock("../src/public-datapack-handler.js", () => ({ loadPublicUserDatapacks: vi.fn() }));
 vi.mock("../src/user/user-handler.js", () => ({
   fetchAllPrivateOfficialDatapacks: vi.fn(),
-  fetchAllUsersDatapacks: vi.fn()
+  fetchAllUsersDatapacks: vi.fn(),
+  deleteUserDatapack: vi.fn()
 }));
 vi.mock("../src/util.js", () => ({ extractMetadataFromDatapack: vi.fn() }));
 vi.mock("../src/chart-generation/generate-chart.js", () => ({ generateChart: vi.fn() }));
@@ -31,11 +32,16 @@ import {
   mcpRenderChartWithEdits,
   mcpUserInfoProxy,
   mcpUploadDatapack,
-  mcpCreateSession
+  mcpCreateSession,
+  mcpDeleteTempSessionDatapacks
 } from "../src/routes/mcp-routes.js";
 import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
-import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../src/user/user-handler.js";
+import {
+  fetchAllPrivateOfficialDatapacks,
+  fetchAllUsersDatapacks,
+  deleteUserDatapack
+} from "../src/user/user-handler.js";
 import { extractMetadataFromDatapack } from "../src/util.js";
 import { generateChart } from "../src/chart-generation/generate-chart.js";
 import { generateChartWithEdits, listColumns } from "../src/settings-generation/build-settings.js";
@@ -686,5 +692,99 @@ describe("mcpCreateSession", () => {
 
     expect(reply.code).toHaveBeenCalledWith(200);
     expect(reply.send).toHaveBeenCalledWith({ sessionId: "sid123" });
+  });
+});
+
+describe("mcpDeleteTempSessionDatapacks", () => {
+  it("returns 400 when uuid or sessionId is missing", async () => {
+    process.env.TMP_USR_SESSION_ID = "temp-uuid";
+
+    const req = { body: { uuid: "temp-uuid" } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpDeleteTempSessionDatapacks(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing uuid or sessionId" });
+    expect(fetchAllUsersDatapacks).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when uuid does not match configured temp user uuid", async () => {
+    process.env.TMP_USR_SESSION_ID = "temp-uuid";
+
+    const req = {
+      body: { uuid: "some-other-uuid", sessionId: "session-1" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpDeleteTempSessionDatapacks(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Invalid temp user uuid" });
+    expect(fetchAllUsersDatapacks).not.toHaveBeenCalled();
+  });
+
+  it("deletes only datapacks for the requested session and returns deleted count", async () => {
+    process.env.TMP_USR_SESSION_ID = "temp-uuid";
+
+    (fetchAllUsersDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      { title: "dp-a", sessionId: "session-1" },
+      { title: "dp-b", sessionId: "session-2" },
+      { title: "dp-c", sessionId: "session-1" }
+    ]);
+    (deleteUserDatapack as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+
+    const req = {
+      body: { uuid: "temp-uuid", sessionId: "session-1" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpDeleteTempSessionDatapacks(req, reply);
+
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledWith("temp-uuid");
+    expect(deleteUserDatapack).toHaveBeenCalledTimes(2);
+    expect(deleteUserDatapack).toHaveBeenNthCalledWith(1, "temp-uuid", "dp-a");
+    expect(deleteUserDatapack).toHaveBeenNthCalledWith(2, "temp-uuid", "dp-c");
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ deleted: 2 });
+  });
+
+  it("still returns 200 when one delete fails due to Promise.allSettled", async () => {
+    process.env.TMP_USR_SESSION_ID = "temp-uuid";
+
+    (fetchAllUsersDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      { title: "dp-a", sessionId: "session-1" },
+      { title: "dp-b", sessionId: "session-1" }
+    ]);
+    (deleteUserDatapack as unknown as ReturnType<typeof vi.fn>)
+      .mockRejectedValueOnce(new Error("delete failed"))
+      .mockResolvedValueOnce(undefined);
+
+    const req = {
+      body: { uuid: "temp-uuid", sessionId: "session-1" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpDeleteTempSessionDatapacks(req, reply);
+
+    expect(deleteUserDatapack).toHaveBeenCalledTimes(2);
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ deleted: 2 });
+  });
+
+  it("returns 500 when listing user datapacks throws", async () => {
+    process.env.TMP_USR_SESSION_ID = "temp-uuid";
+
+    (fetchAllUsersDatapacks as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("list failed"));
+
+    const req = {
+      body: { uuid: "temp-uuid", sessionId: "session-1" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpDeleteTempSessionDatapacks(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(500);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Error: list failed" });
   });
 });

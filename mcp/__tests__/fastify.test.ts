@@ -198,6 +198,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
+  delete process.env.MCP_AUTH_TOKEN;
+  delete process.env.TMP_USR_SESSION_ID;
 });
 
 describe("registerMCPRoutes", () => {
@@ -477,6 +479,26 @@ describe("registerMCPRoutes", () => {
       expect(reply.raw.write).not.toHaveBeenCalled();
     });
 
+    it("GET /sse: keepAlive clears interval when write throws", async () => {
+      vi.useFakeTimers();
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance, { legacyKeepAliveMs: 10 });
+
+      const sse = app.find("GET", "/sse");
+      const reply = makeReply();
+      const req = makeReq({ raw: new EventEmitter() });
+
+      reply.raw.write.mockImplementation(() => {
+        throw new Error("write failed");
+      });
+
+      await sse(req, reply);
+
+      vi.advanceTimersByTime(20);
+      expect(reply.raw.write).toHaveBeenCalled();
+    });
+
     it("GET /sse: cleanup handles errors from clearInterval and destroy (covers warn branches)", async () => {
       vi.useFakeTimers();
 
@@ -532,6 +554,38 @@ describe("registerMCPRoutes", () => {
   });
 
   describe("/messages/user-info", () => {
+    it("missing bearer token => 401", async () => {
+      delete process.env.MCP_AUTH_TOKEN;
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/user-info");
+      const reply = makeReply();
+      await handler(makeReq({ body: { sessionId: "sid-1", userInfo: makeSharedUser() } }), reply);
+
+      expect(reply.statusCode).toBe(401);
+      expect(reply.payload).toEqual({ error: "Missing or invalid Bearer token" });
+    });
+
+    it("invalid bearer token => 401", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      const handler = app.find("POST", "/messages/user-info");
+      const reply = makeReply();
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer wrong-token" },
+          body: { sessionId: "sid-1", userInfo: makeSharedUser() }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(401);
+      expect(reply.payload).toEqual({ error: "Invalid Bearer token" });
+    });
+
     it("invalid or expired session => 400", async () => {
       process.env.MCP_AUTH_TOKEN = "token123";
       const app = new FakeFastify();
@@ -584,6 +638,49 @@ describe("registerMCPRoutes", () => {
       expect(entry?.userInfo).toEqual(userInfo);
       expect(entry?.lastActivity).toBeGreaterThanOrEqual(now);
     });
+
+    it("already authenticated non-temp session => 400", async () => {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      process.env.TMP_USR_SESSION_ID = "temp-user";
+      const { sessions } = await import("../src/mcp.js");
+
+      const app = new FakeFastify();
+      registerMCPRoutes(app as unknown as FastifyInstance);
+
+      sessions.set("sid-auth", {
+        createdAt: Date.now(),
+        lastActivity: Date.now(),
+        userInfo: makeSharedUser({ uuid: "real-user" as never }),
+        userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+      });
+
+      const handler = app.find("POST", "/messages/user-info");
+      const reply = makeReply();
+      await handler(
+        makeReq({
+          headers: { authorization: "Bearer token123" },
+          body: { sessionId: "sid-auth", userInfo: makeSharedUser({ uuid: "another-user" as never }) }
+        }),
+        reply
+      );
+
+      expect(reply.statusCode).toBe(400);
+      expect(reply.payload).toEqual({ error: "Session already authenticated" });
+    });
+  });
+
+  it("POST /messages/create-session: returns sessionId and stores default session", async () => {
+    const { sessions } = await import("../src/mcp.js");
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance);
+
+    const handler = app.find("POST", "/messages/create-session");
+    const reply = makeReply();
+
+    await handler(makeReq(), reply);
+
+    expect(reply.payload).toEqual({ sessionId: "streamable-uuid-1" });
+    expect(sessions.has("streamable-uuid-1")).toBe(true);
   });
 
   it("cleanup timer reaps expired sessions (streamable + legacy) and onClose cleans everything", async () => {
@@ -647,5 +744,57 @@ describe("registerMCPRoutes", () => {
     await app.runOnClose();
 
     expect(console.warn).toHaveBeenCalledWith("Failed to destroy SSE response during shutdown:", expect.any(Error));
+  });
+
+  it("TTL cleanup logs warning when destroying expired SSE response throws", async () => {
+    vi.useFakeTimers();
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance, { legacySseTtlMs: 5, legacyKeepAliveMs: 50_000 });
+
+    const sse = app.find("GET", "/sse");
+    const reply = makeReply();
+    reply.raw.destroy.mockImplementation(() => {
+      throw new Error("ttl destroy failed");
+    });
+    await sse(makeReq({ raw: new EventEmitter() }), reply);
+
+    vi.advanceTimersByTime(20_000);
+
+    expect(console.warn).toHaveBeenCalledWith(
+      "Failed to destroy SSE response for expired session legacy-test-session:",
+      expect.any(Error)
+    );
+  });
+
+  it("streamable close triggers temp datapack cleanup fetch", async () => {
+    const { sessions } = await import("../src/mcp.js");
+    process.env.TMP_USR_SESSION_ID = "temp-user";
+
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const app = new FakeFastify();
+    registerMCPRoutes(app as unknown as FastifyInstance);
+
+    const post = app.find("POST", "/streamable-http");
+    await post(makeReq({ body: { method: "initialize" } }), makeReply());
+
+    sessions.set("streamable-uuid-1", {
+      createdAt: Date.now(),
+      lastActivity: Date.now(),
+      userInfo: makeSharedUser({ uuid: "temp-user" as never }),
+      userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+    });
+
+    lastStreamableTransport?.onclose?.();
+    await Promise.resolve();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:3000/mcp/delete-temp-session-datapacks",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      })
+    );
   });
 });
