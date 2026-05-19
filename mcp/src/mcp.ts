@@ -426,9 +426,7 @@ export const createMCPServer = () => {
           currentState: st
         };
 
-        const wrapped = wrapResponse(chartResponse, sess.sessionId);
-        console.log("wrapped response:", wrapped);
-        return wrapped;
+        return wrapResponse(chartResponse, sess.sessionId);
       } catch (e) {
         return wrapResponse({ error: `Error generating chart: ${String(e)}` }, sess.sessionId);
       }
@@ -495,7 +493,6 @@ export const createMCPServer = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ datapackTitles, uuid })
         });
-        console.log("getting here 1");
 
         if (!res.ok) {
           const text = await res.text();
@@ -503,11 +500,7 @@ export const createMCPServer = () => {
         }
 
         const json = await res.json();
-        const wrapResponseObj = wrapResponse(json, sess.sessionId);
-        console.log("getting here 2");
-        console.log("wrapped response:", wrapResponseObj);
-
-        return wrapResponseObj;
+        return wrapResponse(json, sess.sessionId);
       } catch (e) {
         return wrapResponse({ error: `Error listing columns: ${String(e)}` }, sess.sessionId);
       }
