@@ -83,10 +83,7 @@ function addNormalizedToggleCandidates(
 
     normalizedToggles.set(trimmed.toLowerCase(), settings);
 
-    if (
-      (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-      (trimmed.startsWith("'") && trimmed.endsWith("'"))
-    ) {
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
       queue.push(trimmed.slice(1, -1));
     }
 
@@ -100,7 +97,10 @@ function addNormalizedToggleCandidates(
     }
 
     if (trimmed.includes(".")) {
-      const dotParts = trimmed.split(".").map((part) => part.trim()).filter(Boolean);
+      const dotParts = trimmed
+        .split(".")
+        .map((part) => part.trim())
+        .filter(Boolean);
       for (let i = 1; i < dotParts.length; i++) {
         queue.push(dotParts.slice(i).join("."));
       }

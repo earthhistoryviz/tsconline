@@ -220,7 +220,7 @@ const updateChartArgsSchema = z.object({
   columnToggles: columnToggleSchema
     .optional()
     .describe(
-      "Flat object keyed by actual column names/identifiers. Do not use nested objects from listColumns and do not join parent/child names with dots. Example: { \"Period (Lunar)\": { \"on\": true }, \"Events (Martian)\": { \"on\": true } }"
+      'Flat object keyed by actual column names/identifiers. Do not use nested objects from listColumns and do not join parent/child names with dots. Example: { "Period (Lunar)": { "on": true }, "Events (Martian)": { "on": true } }'
     ),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),

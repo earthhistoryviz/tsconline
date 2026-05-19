@@ -21,6 +21,19 @@ type PendingChartStateRequest = {
   timeout: NodeJS.Timeout;
 };
 
+type ColumnTreeNode = {
+  __children: ColumnTree;
+};
+
+type ColumnTree = Record<string, ColumnTreeNode>;
+
+interface SimplifiedColumnsMap {
+  [key: string]: SimplifiedColumns | string[] | undefined;
+  _leaves?: string[];
+}
+
+type SimplifiedColumns = string[] | SimplifiedColumnsMap;
+
 const mcpChartStateSockets = new Map<string, WebSocket>();
 const pendingChartStateRequests = new Map<string, PendingChartStateRequest>();
 
@@ -164,7 +177,7 @@ export async function mcpListColumns(_request: FastifyRequest, reply: FastifyRep
     const dropRoot = firstSegments.length === 1 && hasNestedPath;
 
     // Build a nested tree as maps
-    const root: Record<string, any> = {};
+    const root: ColumnTree = {};
 
     for (const segs of paths) {
       const parts = dropRoot ? segs.slice(1) : segs.slice();
@@ -172,26 +185,26 @@ export async function mcpListColumns(_request: FastifyRequest, reply: FastifyRep
       let node = root;
       for (const part of parts) {
         if (!node[part]) node[part] = { __children: {} };
-        node = node[part].__children;
+        node = node[part]!.__children;
       }
     }
 
     // Convert the internal tree into a simplified JSON:
     // - If a node's children are all leaves (no further grandchildren), represent as an array of names
     // - Otherwise represent as an object mapping child name -> nested structure
-    function simplifyNode(node: Record<string, any>): any {
+    const simplifyNode = (node: ColumnTree): SimplifiedColumns | undefined => {
       const keys = Object.keys(node);
       if (keys.length === 0) return undefined;
 
       const leaves: string[] = [];
-      const children: Record<string, any> = {};
+      const children: Record<string, SimplifiedColumns> = {};
 
       for (const k of keys) {
-        const childKeys = Object.keys(node[k].__children || {});
+        const childKeys = Object.keys(node[k]?.__children ?? {});
         if (childKeys.length === 0) {
           leaves.push(k);
         } else {
-          const simplifiedChild = simplifyNode(node[k].__children || {});
+          const simplifiedChild = simplifyNode(node[k]?.__children ?? {});
           if (simplifiedChild !== undefined) children[k] = simplifiedChild;
         }
       }
@@ -202,10 +215,10 @@ export async function mcpListColumns(_request: FastifyRequest, reply: FastifyRep
       }
 
       // Mixed node: include nested children and, if present, a compact _leaves array.
-      const out: Record<string, any> = { ...children };
+      const out: SimplifiedColumnsMap = { ...children };
       if (leaves.length > 0) out._leaves = leaves;
       return out;
-    }
+    };
 
     const simplified = simplifyNode(root);
 

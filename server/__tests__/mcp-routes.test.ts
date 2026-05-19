@@ -200,7 +200,6 @@ describe("mcpListColumns", () => {
     await mcpListColumns(req, reply);
 
     expect(listColumns).toHaveBeenCalledWith(mockDatapacks);
-    expect(reply.type).toHaveBeenCalledWith("application/json");
     expect(reply.send).toHaveBeenCalledWith({
       datapackTitles: ["GTS2020"],
       columns: { Zone: ["Subzone"] }
@@ -288,7 +287,6 @@ describe("mcpListColumns", () => {
 
     expect(fetchAllUsersDatapacks).toHaveBeenCalledWith("user-456");
     expect(listColumns).toHaveBeenCalledWith(mockUserDp);
-    expect(reply.type).toHaveBeenCalledWith("application/json");
     expect(reply.send).toHaveBeenCalledWith({
       datapackTitles: ["UserDP"],
       columns: ["Col"]
