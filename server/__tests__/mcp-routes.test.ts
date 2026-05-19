@@ -167,26 +167,43 @@ describe("mcpListDatapacks", () => {
 describe("mcpListColumns", () => {
   it("returns minimal column tree for valid datapacks", async () => {
     const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip" }];
-    // Simulate a minimal SimpleColumn[]
-    const mockSimpleTree = [
+    const mockFlatColumns = [
       {
+        id: "zone",
         name: "Zone",
-        editName: "Zone",
-        children: [{ name: "Subzone", editName: "Subzone" }]
+        path: "Chart Root > Zone",
+        on: true,
+        enableTitle: true,
+        type: "zone"
+      },
+      {
+        id: "subzone",
+        name: "Subzone",
+        path: "Chart Root > Zone > Subzone",
+        on: true,
+        enableTitle: true,
+        type: "zone"
       }
     ];
 
     (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
     (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
-    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockSimpleTree);
+    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockFlatColumns);
 
     const req = { body: { datapackTitles: ["GTS2020"] } } as unknown as FastifyRequest;
-    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+    const reply = {
+      send: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      type: vi.fn().mockReturnThis()
+    } as unknown as FastifyReply;
 
     await mcpListColumns(req, reply);
 
     expect(listColumns).toHaveBeenCalledWith(mockDatapacks);
-    expect(reply.send).toHaveBeenCalledWith(mockSimpleTree);
+    expect(reply.send).toHaveBeenCalledWith({
+      datapackTitles: ["GTS2020"],
+      columns: { Zone: ["Subzone"] }
+    });
   });
 
   it("returns 400 when datapackTitles is missing", async () => {
@@ -260,13 +277,20 @@ describe("mcpListColumns", () => {
     (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockColumns);
 
     const req = { body: { datapackTitles: ["UserDP"], uuid: "user-456" } } as unknown as FastifyRequest;
-    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+    const reply = {
+      send: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      type: vi.fn().mockReturnThis()
+    } as unknown as FastifyReply;
 
     await mcpListColumns(req, reply);
 
     expect(fetchAllUsersDatapacks).toHaveBeenCalledWith("user-456");
     expect(listColumns).toHaveBeenCalledWith(mockUserDp);
-    expect(reply.send).toHaveBeenCalledWith(mockColumns);
+    expect(reply.send).toHaveBeenCalledWith({
+      datapackTitles: ["UserDP"],
+      columns: ["Col"]
+    });
   });
 });
 

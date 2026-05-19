@@ -14,6 +14,7 @@ import * as util from "../src/util";
 import { ChartRequest } from "@tsconline/shared";
 import { User } from "../src/types";
 import { EventEmitter, Readable } from "stream";
+import path from "path";
 import * as fs from "fs/promises";
 import * as svgson from "svgson";
 
@@ -143,7 +144,7 @@ describe("checkForCacheHit", () => {
     checkFileExistsSpy.mockResolvedValueOnce(true);
     const deleteSpy = vi.spyOn(util, "deleteDirectory").mockResolvedValueOnce("done");
     const result = await checkForCacheHit(chartFilePath, false, chartUrlPath, hash);
-    expect(deleteSpy).toHaveBeenCalledWith(chartFilePath);
+    expect(deleteSpy).toHaveBeenCalledWith(path.dirname(chartFilePath));
     expect(result).toBeNull();
   });
 

@@ -108,8 +108,8 @@ export async function checkForCacheHit(
     return null;
   }
   if (!useCache) {
-    console.log("Deleting chart filepath since it already exists and cache is not being used");
-    deleteDirectory(chartFilePath);
+    console.log("Deleting chart directory since it already exists and cache is not being used");
+    deleteDirectory(path.dirname(chartFilePath));
     return null;
   }
   console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
