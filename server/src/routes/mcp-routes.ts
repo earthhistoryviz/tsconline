@@ -154,7 +154,65 @@ export async function mcpListColumns(_request: FastifyRequest, reply: FastifyRep
     }
 
     const flat = listColumns(requestedDatapacks);
-    reply.send(flat);
+    // Build a simplified nested structure from the flattened columns.
+    // Each flat entry has a `path` like "Chart Title > Group > Subgroup > Column".
+    const paths = flat.map((c) => c.path.split(" > "));
+
+    // If all paths share the same first segment (often a chart root), drop it for clarity.
+    const firstSegments = Array.from(new Set(paths.map((p) => p[0] ?? "")));
+    const hasNestedPath = paths.some((p) => p.length > 1);
+    const dropRoot = firstSegments.length === 1 && hasNestedPath;
+
+    // Build a nested tree as maps
+    const root: Record<string, any> = {};
+
+    for (const segs of paths) {
+      const parts = dropRoot ? segs.slice(1) : segs.slice();
+      if (parts.length === 0) continue;
+      let node = root;
+      for (const part of parts) {
+        if (!node[part]) node[part] = { __children: {} };
+        node = node[part].__children;
+      }
+    }
+
+    // Convert the internal tree into a simplified JSON:
+    // - If a node's children are all leaves (no further grandchildren), represent as an array of names
+    // - Otherwise represent as an object mapping child name -> nested structure
+    function simplifyNode(node: Record<string, any>): any {
+      const keys = Object.keys(node);
+      if (keys.length === 0) return undefined;
+
+      const leaves: string[] = [];
+      const children: Record<string, any> = {};
+
+      for (const k of keys) {
+        const childKeys = Object.keys(node[k].__children || {});
+        if (childKeys.length === 0) {
+          leaves.push(k);
+        } else {
+          const simplifiedChild = simplifyNode(node[k].__children || {});
+          if (simplifiedChild !== undefined) children[k] = simplifiedChild;
+        }
+      }
+
+      // If there are no nested children, return a simple array of leaf names.
+      if (Object.keys(children).length === 0) {
+        return leaves;
+      }
+
+      // Mixed node: include nested children and, if present, a compact _leaves array.
+      const out: Record<string, any> = { ...children };
+      if (leaves.length > 0) out._leaves = leaves;
+      return out;
+    }
+
+    const simplified = simplifyNode(root);
+
+    reply.send({
+      datapackTitles,
+      columns: simplified
+    });
   } catch (err) {
     reply.status(500).send({ error: String(err) });
   }

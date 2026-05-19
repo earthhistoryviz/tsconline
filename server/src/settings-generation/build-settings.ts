@@ -65,6 +65,50 @@ function getPossibleColumnIdentifiers(col: ColumnInfo): string[] {
   return Array.from(new Set([...displayIds, ...explicitIds]));
 }
 
+function addNormalizedToggleCandidates(
+  normalizedToggles: Map<string, Partial<MCPColumnToggleSettings>>,
+  columnId: string,
+  settings: Partial<MCPColumnToggleSettings>
+) {
+  const queue = [columnId];
+  const seen = new Set<string>();
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) continue;
+
+    const trimmed = current.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+
+    normalizedToggles.set(trimmed.toLowerCase(), settings);
+
+    if (
+      (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'"))
+    ) {
+      queue.push(trimmed.slice(1, -1));
+    }
+
+    const dequoted = trimmed.replace(/^"+|"+$/g, "").replace(/^'+|'+$/g, "");
+    if (dequoted !== trimmed) {
+      queue.push(dequoted);
+    }
+
+    if (trimmed.includes(":")) {
+      queue.push(trimmed.split(":").slice(1).join(":"));
+    }
+
+    if (trimmed.includes(".")) {
+      const dotParts = trimmed.split(".").map((part) => part.trim()).filter(Boolean);
+      for (let i = 1; i < dotParts.length; i++) {
+        queue.push(dotParts.slice(i).join("."));
+      }
+      queue.push(dotParts[dotParts.length - 1]!);
+    }
+  }
+}
+
 /**
  * Merge multiple datapack column trees into a single root column.
  * Replicates frontend worker logic to ensure consistency.
@@ -243,28 +287,28 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
   ];
 
   for (const [columnId, settings] of Object.entries(toggles)) {
-    const raw = columnId.toLowerCase();
-    normalizedToggles.set(raw, settings);
-
-    if (columnId.includes(":")) {
-      const suffix = columnId.split(":").slice(1).join(":").toLowerCase();
-      normalizedToggles.set(suffix, settings);
-    }
+    addNormalizedToggleCandidates(normalizedToggles, columnId, settings);
   }
 
-  const visit = (col: ColumnInfo) => {
+  const visit = (col: ColumnInfo, ancestors: ColumnInfo[] = []) => {
     const candidates = getPossibleColumnIdentifiers(col);
     const matchedId = candidates.find((id) => normalizedToggles.has(id));
     const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
 
     if (settings) {
+      if (settings.on === true) {
+        for (const ancestor of ancestors) {
+          ancestor.on = true;
+        }
+      }
+
       for (const applyToggle of columnToggleAppliers) {
         applyToggle(col, settings);
       }
     }
 
     if (col.children) {
-      col.children.forEach(visit);
+      col.children.forEach((child) => visit(child, [...ancestors, col]));
     }
   };
 

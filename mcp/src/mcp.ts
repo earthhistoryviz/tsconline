@@ -215,9 +215,13 @@ const singleColumnToggleSchema = z
 const columnToggleSchema = z.record(z.string(), singleColumnToggleSchema);
 
 const updateChartArgsSchema = z.object({
-  datapackTitles: datapackTitlesSchema,
+  datapackTitles: datapackTitlesSchema.describe("Array of datapack titles to use for the chart."),
   overrides: overridesSchema.optional(),
-  columnToggles: columnToggleSchema.optional(),
+  columnToggles: columnToggleSchema
+    .optional()
+    .describe(
+      "Flat object keyed by actual column names/identifiers. Do not use nested objects from listColumns and do not join parent/child names with dots. Example: { \"Period (Lunar)\": { \"on\": true }, \"Events (Martian)\": { \"on\": true } }"
+    ),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),
   sessionId: z
@@ -278,10 +282,10 @@ export const createMCPServer = () => {
             ? hasChart
               ? `You are logged in as ${sess.entry.userInfo?.username}. You have a chart in progress.`
               : `You are logged in as ${sess.entry.userInfo?.username}. No chart started yet.`
-            : "Session exists but is not authenticated yet.",
+            : "Session is not authenticated. You can still use tools and generate charts from public or otherwise accessible datapacks.",
           sessionStatus: {
             isAuthenticated,
-            loginRequired: !isAuthenticated,
+            loginRequired: false,
             sessionReplaced: es.internalNote !== undefined,
             sessionNote: es.internalNote
           },
@@ -423,7 +427,7 @@ export const createMCPServer = () => {
         };
 
         const wrapped = wrapResponse(chartResponse, sess.sessionId);
-
+        console.log("wrapped response:", wrapped);
         return wrapped;
       } catch (e) {
         return wrapResponse({ error: `Error generating chart: ${String(e)}` }, sess.sessionId);
@@ -491,6 +495,7 @@ export const createMCPServer = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ datapackTitles, uuid })
         });
+        console.log("getting here 1");
 
         if (!res.ok) {
           const text = await res.text();
@@ -498,7 +503,11 @@ export const createMCPServer = () => {
         }
 
         const json = await res.json();
-        return wrapResponse(json, sess.sessionId);
+        const wrapResponseObj = wrapResponse(json, sess.sessionId);
+        console.log("getting here 2");
+        console.log("wrapped response:", wrapResponseObj);
+
+        return wrapResponseObj;
       } catch (e) {
         return wrapResponse({ error: `Error listing columns: ${String(e)}` }, sess.sessionId);
       }
