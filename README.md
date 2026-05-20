@@ -46,6 +46,7 @@ If you see a version number, npm is installed. If not, or if the version is not 
 
   Then run:
   ```bash
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
   nvm install 20
   nvm use 20
   ```
