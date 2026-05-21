@@ -25,6 +25,31 @@ export type SchemaOverrides = Partial<{
   enHideBlockLable: boolean;
 }>;
 
+export function extractUnitScopedTimeOverrides(overrides: SchemaOverrides): {
+  topAgeByUnit: Map<string, number>;
+  baseAgeByUnit: Map<string, number>;
+} {
+  const topAgeByUnit = new Map<string, number>();
+  const baseAgeByUnit = new Map<string, number>();
+
+  for (const [key, value] of Object.entries(overrides)) {
+    if (typeof value !== "number") continue;
+
+    const topAgeMatch = key.match(/^topAge_(.+)$/);
+    if (topAgeMatch?.[1]) {
+      topAgeByUnit.set(topAgeMatch[1].toLowerCase(), value);
+      continue;
+    }
+
+    const baseAgeMatch = key.match(/^baseAge_(.+)$/);
+    if (baseAgeMatch?.[1]) {
+      baseAgeByUnit.set(baseAgeMatch[1].toLowerCase(), value);
+    }
+  }
+
+  return { topAgeByUnit, baseAgeByUnit };
+}
+
 export type ColumnToggles = Record<
   string,
   {
@@ -320,6 +345,8 @@ function applyOverridesToChartSettings(
   overrides: SchemaOverrides,
   primaryUnit: string
 ) {
+  const { topAgeByUnit, baseAgeByUnit } = extractUnitScopedTimeOverrides(overrides);
+
   if (overrides.topAge !== undefined) {
     const existingTopAge = chartSettings.topAge.find((t) => t.unit === primaryUnit);
     if (existingTopAge) {
@@ -335,6 +362,34 @@ function applyOverridesToChartSettings(
       existingBaseAge.text = overrides.baseAge;
     } else {
       chartSettings.baseAge.push({ source: "text", unit: primaryUnit, text: overrides.baseAge });
+    }
+  }
+
+  for (const entry of chartSettings.topAge) {
+    const unitScopedTopAge = topAgeByUnit.get(entry.unit.toLowerCase());
+    if (unitScopedTopAge !== undefined) {
+      entry.text = unitScopedTopAge;
+    }
+  }
+
+  for (const [unit, scopedTopAge] of topAgeByUnit.entries()) {
+    const hasExistingUnit = chartSettings.topAge.some((entry) => entry.unit.toLowerCase() === unit);
+    if (!hasExistingUnit) {
+      chartSettings.topAge.push({ source: "text", unit, text: scopedTopAge });
+    }
+  }
+
+  for (const entry of chartSettings.baseAge) {
+    const unitScopedBaseAge = baseAgeByUnit.get(entry.unit.toLowerCase());
+    if (unitScopedBaseAge !== undefined) {
+      entry.text = unitScopedBaseAge;
+    }
+  }
+
+  for (const [unit, scopedBaseAge] of baseAgeByUnit.entries()) {
+    const hasExistingUnit = chartSettings.baseAge.some((entry) => entry.unit.toLowerCase() === unit);
+    if (!hasExistingUnit) {
+      chartSettings.baseAge.push({ source: "text", unit, text: scopedBaseAge });
     }
   }
 
