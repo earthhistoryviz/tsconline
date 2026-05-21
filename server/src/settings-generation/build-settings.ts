@@ -4,7 +4,8 @@ import {
   defaultChartSettingsInfoTSC,
   ChartSettingsInfoTSC,
   defaultColumnRootConstant,
-  FontsInfo
+  FontsInfo,
+  MCPColumnToggleSettings
 } from "@tsconline/shared";
 import Color from "color";
 import _ from "lodash";
@@ -64,6 +65,50 @@ function getPossibleColumnIdentifiers(col: ColumnInfo): string[] {
     .map((value) => value.toLowerCase());
 
   return Array.from(new Set([...displayIds, ...explicitIds]));
+}
+
+function addNormalizedToggleCandidates(
+  normalizedToggles: Map<string, Partial<MCPColumnToggleSettings>>,
+  columnId: string,
+  settings: Partial<MCPColumnToggleSettings>
+) {
+  const queue = [columnId];
+  const seen = new Set<string>();
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) continue;
+
+    const trimmed = current.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+
+    normalizedToggles.set(trimmed.toLowerCase(), settings);
+
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      queue.push(trimmed.slice(1, -1));
+    }
+
+    const dequoted = trimmed.replace(/^"+|"+$/g, "").replace(/^'+|'+$/g, "");
+    if (dequoted !== trimmed) {
+      queue.push(dequoted);
+    }
+
+    if (trimmed.includes(":")) {
+      queue.push(trimmed.split(":").slice(1).join(":"));
+    }
+
+    if (trimmed.includes(".")) {
+      const dotParts = trimmed
+        .split(".")
+        .map((part) => part.trim())
+        .filter(Boolean);
+      for (let i = 1; i < dotParts.length; i++) {
+        queue.push(dotParts.slice(i).join("."));
+      }
+      queue.push(dotParts[dotParts.length - 1]!);
+    }
+  }
 }
 
 /**
@@ -228,29 +273,40 @@ function extractSettingsComponents(datapacks: Datapack[]): {
 }
 
 export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
-  const normalizedToggles = new Map<string, { on?: boolean; width?: number; backgroundColor?: string }>();
+  const normalizedToggles = new Map<string, { on?: boolean; width?: number }>();
+
+  const columnToggleAppliers: Array<(col: ColumnInfo, settings: Partial<MCPColumnToggleSettings>) => void> = [
+    (col, settings) => {
+      if (settings.on !== undefined) {
+        col.on = settings.on;
+      }
+    },
+    (col, settings) => {
+      if (settings.width !== undefined) {
+        col.width = settings.width;
+      }
+    }
+  ];
 
   for (const [columnId, settings] of Object.entries(toggles)) {
-    const raw = columnId.toLowerCase();
-    normalizedToggles.set(raw, settings);
-
-    if (columnId.includes(":")) {
-      const suffix = columnId.split(":").slice(1).join(":").toLowerCase();
-      normalizedToggles.set(suffix, settings);
-    }
+    addNormalizedToggleCandidates(normalizedToggles, columnId, settings);
   }
 
-  const visit = (col: ColumnInfo) => {
+  const visit = (col: ColumnInfo, ancestors: ColumnInfo[] = []) => {
     const candidates = getPossibleColumnIdentifiers(col);
     const matchedId = candidates.find((id) => normalizedToggles.has(id));
     const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
 
-    if (settings?.on !== undefined) {
-      col.on = settings.on;
-    }
+    if (settings) {
+      if (settings.on === true) {
+        for (const ancestor of ancestors) {
+          ancestor.on = true;
+        }
+      }
 
-    if (settings?.width !== undefined) {
-      col.width = settings.width;
+      for (const applyToggle of columnToggleAppliers) {
+        applyToggle(col, settings);
+      }
     }
 
     if (settings?.backgroundColor !== undefined) {
@@ -261,7 +317,7 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
     }
 
     if (col.children) {
-      col.children.forEach(visit);
+      col.children.forEach((child) => visit(child, [...ancestors, col]));
     }
   };
 

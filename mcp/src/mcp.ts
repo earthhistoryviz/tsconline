@@ -3,8 +3,14 @@ import z from "zod";
 import * as path from "path";
 import dotenv from "dotenv";
 import { randomUUID } from "crypto";
-import type { SharedUser } from "@tsconline/shared";
-import { MCPLinkParams, assertDatapackMetadata, DatapackMetadata, DatapackType } from "@tsconline/shared";
+import type { SharedUser, MCPChartState, MCPColumnToggleSettings } from "@tsconline/shared";
+import {
+  MCPLinkParams,
+  assertDatapackMetadata,
+  DatapackMetadata,
+  DatapackType,
+  newMCPChartState
+} from "@tsconline/shared";
 import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType } from "./mcp-helper.js";
 import { TOOL_DESCRIPTIONS } from "./tool-descriptions.js";
 
@@ -27,7 +33,7 @@ export interface SessionEntry {
   userInfo?: SharedUser; // undefined = pre-login, defined = authenticated
   createdAt: number;
   lastActivity: number;
-  userChartState: ChartState;
+  userChartState: MCPChartState;
 }
 
 export const sessions = new Map<string, SessionEntry>();
@@ -84,7 +90,7 @@ function createSession(): { sessionId: string; entry: SessionEntry } {
     createdAt: Date.now(),
     lastActivity: Date.now(),
     userInfo: undefined,
-    userChartState: newChartState()
+    userChartState: newMCPChartState()
   };
 
   sessions.set(sessionId, entry);
@@ -229,9 +235,13 @@ const singleColumnToggleSchema = z
 const columnToggleSchema = z.record(z.string(), singleColumnToggleSchema);
 
 const updateChartArgsSchema = z.object({
-  datapackTitles: datapackTitlesSchema,
+  datapackTitles: datapackTitlesSchema.describe("Array of datapack titles to use for the chart."),
   overrides: overridesSchema.optional(),
-  columnToggles: columnToggleSchema.optional(),
+  columnToggles: columnToggleSchema
+    .optional()
+    .describe(
+      'Flat object keyed by actual column names/identifiers. Do not use nested objects from listColumns and do not join parent/child names with dots. Example: { "Period (Lunar)": { "on": true }, "Events (Martian)": { "on": true } }'
+    ),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),
   sessionId: z
@@ -252,22 +262,74 @@ export const createMCPServer = () => {
     }
   });
 
-  // Get current chart state
+  // Get user/session status plus current chart state
   server.registerTool(
-    "getCurrentChartState",
+    "getUserStatus",
     {
-      title: TOOL_DESCRIPTIONS.getCurrentChartState.title,
-      description: TOOL_DESCRIPTIONS.getCurrentChartState.description,
+      title: TOOL_DESCRIPTIONS.getUserStatus.title,
+      description: TOOL_DESCRIPTIONS.getUserStatus.description,
       inputSchema: {
         sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
       }
     },
     async ({ sessionId }) => {
       const es = verifyMCPSession(sessionId);
-
       const sess = requireSession(es);
 
-      return wrapResponse(sess.entry.userChartState, sess.sessionId);
+      // Ask TSCOnline to push its latest in-browser chart state for this session.
+      try {
+        const token = process.env.MCP_AUTH_TOKEN;
+        if (token) {
+          await fetch(`${internalServerUrl}/mcp/request-chart-state`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ sessionId: sess.sessionId })
+          });
+        }
+      } catch {
+        // Fall back to last known state if the client is offline/unreachable.
+      }
+
+      const isAuthenticated = sess.entry.userInfo !== undefined;
+      const hasChart = sess.entry.userChartState.datapackTitles.length > 0;
+
+      return wrapResponse(
+        {
+          message: isAuthenticated
+            ? hasChart
+              ? `You are logged in as ${sess.entry.userInfo?.username}. You have a chart in progress.`
+              : `You are logged in as ${sess.entry.userInfo?.username}. No chart started yet.`
+            : "Session is not authenticated. You can still use tools and generate charts from public or otherwise accessible datapacks.",
+          sessionStatus: {
+            isAuthenticated,
+            loginRequired: false,
+            sessionReplaced: es.internalNote !== undefined,
+            sessionNote: es.internalNote
+          },
+          userInfo: isAuthenticated
+            ? {
+                username: sess.entry.userInfo?.username,
+                email: sess.entry.userInfo?.email
+              }
+            : null,
+          chartState: {
+            hasChart,
+            datapackTitles: sess.entry.userChartState.datapackTitles,
+            overrides: sess.entry.userChartState.overrides,
+            columnToggles: sess.entry.userChartState.columnToggles,
+            lastChartPath: sess.entry.userChartState.lastChartPath,
+            lastModified: sess.entry.userChartState.lastModified,
+            message: hasChart
+              ? "You were working with these datapacks and settings. Ready to continue or make changes?"
+              : "No chart is currently in progress for this session."
+          },
+          currentChartState: sess.entry.userChartState
+        },
+        sess.sessionId
+      );
     }
   );
 
@@ -286,7 +348,7 @@ export const createMCPServer = () => {
 
       const sess = requireSession(es);
 
-      sess.entry.userChartState = newChartState();
+      sess.entry.userChartState = newMCPChartState();
 
       return wrapResponse({ message: "Chart state cleared for this session." }, sess.sessionId);
     }
@@ -323,11 +385,13 @@ export const createMCPServer = () => {
 
       const normalizedIncoming = Object.fromEntries(
         Object.entries(args.columnToggles ?? {}).map(([columnId, settings]) => [columnId.toLowerCase(), settings])
-      ) as Record<string, MCPColumnToggleSettings>;
+      ) as Record<string, Partial<MCPColumnToggleSettings>>;
+
+      const columnToggles = st.columnToggles;
 
       for (const [columnId, settings] of Object.entries(normalizedIncoming)) {
-        st.columnToggles[columnId] = {
-          ...(st.columnToggles[columnId] ?? {}),
+        columnToggles[columnId] = {
+          ...(columnToggles[columnId] ?? {}),
           ...settings
         };
       }
@@ -340,7 +404,7 @@ export const createMCPServer = () => {
           body: JSON.stringify({
             datapackTitles: st.datapackTitles,
             overrides: st.overrides,
-            columnToggles: st.columnToggles,
+            columnToggles,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false,
             uuid: entry.userInfo?.uuid
@@ -382,9 +446,7 @@ export const createMCPServer = () => {
           currentState: st
         };
 
-        const wrapped = wrapResponse(chartResponse, sess.sessionId);
-
-        return wrapped;
+        return wrapResponse(chartResponse, sess.sessionId);
       } catch (e) {
         return wrapResponse({ error: `Error generating chart: ${String(e)}` }, sess.sessionId);
       }
@@ -501,61 +563,6 @@ export const createMCPServer = () => {
         );
       } catch (e) {
         return wrapResponse({ error: `Error logging in: ${String(e)}` }, sessionId || "");
-      }
-    }
-  );
-
-  server.registerTool(
-    "whoami",
-    {
-      title: TOOL_DESCRIPTIONS.whoami.title,
-      description: TOOL_DESCRIPTIONS.whoami.description,
-      inputSchema: {
-        sessionId: z.string().optional().describe("Session ID from login tool response")
-      }
-    },
-    async ({ sessionId }) => {
-      try {
-        if (!sessionId) {
-          const es = verifyMCPSession(undefined);
-          return wrapResponse(
-            { error: "You are not logged in. Please use the login tool to authenticate.", loginRequired: true },
-            es.sessionId
-          );
-        }
-
-        const entry = sessions.get(sessionId);
-        if (!entry) {
-          const es = verifyMCPSession(undefined);
-          return wrapResponse(
-            { error: "Session ID not found. Please run login tool again.", loginRequired: true },
-            es.sessionId
-          );
-        }
-
-        requireSession({ sessionId, entry });
-
-        if (entry.userInfo) {
-          return wrapResponse(
-            {
-              message: "You are logged in",
-              userInfo: entry.userInfo.username
-                ? { username: entry.userInfo.username, email: entry.userInfo.email }
-                : null
-            },
-            sessionId
-          );
-        } else {
-          return wrapResponse(
-            {
-              message: "Session exists but not yet authenticated",
-              loginRequired: true
-            },
-            sessionId
-          );
-        }
-      } catch (e) {
-        return wrapResponse({ error: `Error checking user info: ${String(e)}` }, sessionId || "");
       }
     }
   );
