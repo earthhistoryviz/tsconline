@@ -51,6 +51,14 @@ function collectRenderColumnSettings(
   if (defaultColumn === undefined || defaultColumn.width !== renderColumn.width) {
     settings.width = renderColumn.width;
   }
+  if (
+    defaultColumn === undefined ||
+    defaultColumn.rgb.r !== renderColumn.rgb.r ||
+    defaultColumn.rgb.g !== renderColumn.rgb.g ||
+    defaultColumn.rgb.b !== renderColumn.rgb.b
+  ) {
+    settings.backgroundColor = `rgb(${renderColumn.rgb.r}, ${renderColumn.rgb.g}, ${renderColumn.rgb.b})`;
+  }
   if (Object.keys(settings).length > 0 || defaultColumn === undefined) {
     columnToggleSettings[renderColumn.name] = settings;
   }

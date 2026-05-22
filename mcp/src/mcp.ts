@@ -65,25 +65,6 @@ export const cleanupInterval = setInterval(
   1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
-// Chart state management - tracks current chart configuration
-interface ChartState {
-  datapackTitles: string[];
-  overrides: Record<string, unknown>;
-  columnToggles: Record<string, MCPColumnToggleSettings>;
-  lastChartPath?: string;
-  lastModified?: Date;
-}
-
-interface MCPColumnToggleSettings {
-  on?: boolean;
-  width?: number;
-  backgroundColor?: string;
-}
-
-function newChartState(): ChartState {
-  return { datapackTitles: [], overrides: {}, columnToggles: {} };
-}
-
 function createSession(): { sessionId: string; entry: SessionEntry } {
   const sessionId = randomUUID();
   const entry: SessionEntry = {

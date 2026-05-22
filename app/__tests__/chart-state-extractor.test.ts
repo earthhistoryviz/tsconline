@@ -37,6 +37,7 @@ describe("extractCurrentChartState", () => {
               children: [],
               on: false,
               width: 120,
+              rgb: { r: 255, g: 255, b: 255 },
               show: false,
               expanded: false
             }
@@ -53,7 +54,7 @@ describe("extractCurrentChartState", () => {
       unitsPerMY: [{ unit: "Ma", value: 4 }]
     });
     expect(extracted.columnToggles).toMatchObject({
-      [childName]: { on: false, width: 120 }
+      [childName]: { on: false, width: 120, backgroundColor: "rgb(255, 255, 255)" }
     });
   });
 });

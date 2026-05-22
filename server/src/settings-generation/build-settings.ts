@@ -273,7 +273,7 @@ function extractSettingsComponents(datapacks: Datapack[]): {
 }
 
 export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
-  const normalizedToggles = new Map<string, { on?: boolean; width?: number }>();
+  const normalizedToggles = new Map<string, Partial<MCPColumnToggleSettings>>();
 
   const columnToggleAppliers: Array<(col: ColumnInfo, settings: Partial<MCPColumnToggleSettings>) => void> = [
     (col, settings) => {
@@ -284,6 +284,14 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
     (col, settings) => {
       if (settings.width !== undefined) {
         col.width = settings.width;
+      }
+    },
+    (col, settings) => {
+      if (settings.backgroundColor !== undefined) {
+        const [r = NaN, g = NaN, b = NaN] = Color(settings.backgroundColor).rgb().array();
+        col.rgb.r = Math.round(r);
+        col.rgb.g = Math.round(g);
+        col.rgb.b = Math.round(b);
       }
     }
   ];
@@ -307,13 +315,6 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
       for (const applyToggle of columnToggleAppliers) {
         applyToggle(col, settings);
       }
-    }
-
-    if (settings?.backgroundColor !== undefined) {
-      const [r = NaN, g = NaN, b = NaN] = Color(settings.backgroundColor).rgb().array();
-      col.rgb.r = Math.round(r);
-      col.rgb.g = Math.round(g);
-      col.rgb.b = Math.round(b);
     }
 
     if (col.children) {
