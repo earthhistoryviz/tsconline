@@ -89,9 +89,13 @@ export type MCPLinkParams = {
   uuid?: string;
 };
 
+export type MCPFontSettings = Partial<FontLabelOptions>; // Possible font settings to change (like color, size, etc.) - Partial since not ALL fields style fields need to be present
+export type MCPFontSettingsByTarget = Partial<Record<ValidFontOptions, MCPFontSettings>>; // Mapping of font targets (e.g., column header) to their possbile font styles
+
 export interface MCPColumnToggleSettings {
   on?: boolean;
   width?: number;
+  fonts?: MCPFontSettingsByTarget; // .fonts is the hashmap (e.g., The Period Column can have a .fonts = fonts: {"Column Header": {"on": true, fontFace: "Courier"}})
 }
 
 export type MCPColumnToggles = Record<string, Partial<MCPColumnToggleSettings>>;
