@@ -387,7 +387,8 @@ export const createMCPServer = () => {
             columnToggles,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false,
-            uuid: entry.userInfo?.uuid
+            uuid: entry.userInfo?.uuid,
+            sessionId: sess.sessionId
           })
         });
 
