@@ -113,6 +113,42 @@ export type MCPUpdateSessionChartStateRequest = {
   userChartState: MCPChartState;
 };
 
+export type MCPChartSyncClientMessage =
+  | {
+      type: "register";
+      sessionId: string;
+    }
+  | {
+      type: "chart-state-response";
+      requestId: string;
+      ok: boolean;
+      error?: string;
+    };
+
+export type MCPChartSyncServerMessage =
+  | {
+      type: "request-chart-state";
+      requestId: string;
+    }
+  | {
+      type: "geogpt-chart-update-start";
+      requestId: string;
+    }
+  | ({
+      type: "geogpt-chart-update-progress";
+      requestId: string;
+    } & NormalProgress)
+  | {
+      type: "geogpt-chart-update-complete";
+      requestId: string;
+      mcpLinkParams: MCPLinkParams;
+    }
+  | {
+      type: "geogpt-chart-update-error";
+      requestId: string;
+      error: string;
+    };
+
 export function newMCPChartState(): MCPChartState {
   return { datapackTitles: [], overrides: {}, columnToggles: {} };
 }
