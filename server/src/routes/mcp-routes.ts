@@ -1,5 +1,11 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { DatapackMetadata, ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
+import {
+  DatapackMetadata,
+  ChartRequest,
+  ChartProgressUpdate,
+  MCPChartSyncClientMessage,
+  MCPChartSyncServerMessage
+} from "@tsconline/shared";
 import type { MCPCreateSessionRequest, MCPUpdateSessionChartStateRequest } from "@tsconline/shared";
 import { randomUUID } from "node:crypto";
 import type { WebSocket } from "ws";
@@ -36,6 +42,22 @@ type SimplifiedColumns = string[] | SimplifiedColumnsMap;
 
 const mcpChartStateSockets = new Map<string, WebSocket>();
 const pendingChartStateRequests = new Map<string, PendingChartStateRequest>();
+
+function sendMcpSocketMessage(sessionId: string | undefined, message: MCPChartSyncServerMessage): boolean {
+  if (!sessionId) return false;
+
+  const socket = mcpChartStateSockets.get(sessionId);
+  if (!socket || socket.readyState !== 1) {
+    return false;
+  }
+
+  try {
+    socket.send(JSON.stringify(message));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function clearPendingChartStateRequest(requestId: string) {
   const pending = pendingChartStateRequests.get(requestId);
@@ -93,7 +115,7 @@ export async function handleMcpChartStateSync(socket: WebSocket, request: Fastif
 
     if (!message || typeof message !== "object") return;
 
-    const typed = message as { type?: string; sessionId?: string; requestId?: string; ok?: boolean; error?: string };
+    const typed = message as Partial<MCPChartSyncClientMessage>;
 
     if (typed.type === "register" && typeof typed.sessionId === "string" && typed.sessionId.length > 0) {
       const existing = mcpChartStateSockets.get(typed.sessionId);
@@ -235,6 +257,8 @@ export async function mcpListColumns(_request: FastifyRequest, reply: FastifyRep
  * MCP route: Generate chart with small edit payload (overrides + column toggles)
  */
 export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: FastifyReply) {
+  const requestId = randomUUID();
+
   try {
     const {
       datapackTitles,
@@ -242,7 +266,8 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       columnToggles = {},
       useCache,
       isCrossPlot,
-      uuid
+      uuid,
+      sessionId
     } = (_request.body ?? {}) as {
       datapackTitles?: string[];
       overrides?: SchemaOverrides;
@@ -250,6 +275,7 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       useCache?: boolean;
       isCrossPlot?: boolean;
       uuid?: string;
+      sessionId?: string;
     };
 
     if (!datapackTitles || !Array.isArray(datapackTitles) || datapackTitles.length === 0) {
@@ -283,10 +309,38 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       isCrossPlot: isCrossPlot ?? false
     };
 
-    const onProgress = (_p: ChartProgressUpdate) => {};
+    sendMcpSocketMessage(sessionId, { type: "geogpt-chart-update-start", requestId });
+
+    const onProgress = (progress: ChartProgressUpdate) => {
+      if (progress.stage === "Complete" || progress.stage === "Error") {
+        return;
+      }
+
+      sendMcpSocketMessage(sessionId, {
+        type: "geogpt-chart-update-progress",
+        requestId,
+        stage: progress.stage,
+        percent: progress.percent
+      });
+    };
+
     const result = await generateChart(chartRequest, onProgress, uuid);
+    sendMcpSocketMessage(sessionId, {
+      type: "geogpt-chart-update-complete",
+      requestId,
+      mcpLinkParams: {
+        datapacks: datapackTitles,
+        chartHash: result.hash
+      }
+    });
     reply.send(result);
   } catch (err) {
+    const { sessionId } = (_request.body ?? {}) as { sessionId?: string };
+    sendMcpSocketMessage(sessionId, {
+      type: "geogpt-chart-update-error",
+      requestId,
+      error: String(err)
+    });
     reply.status(500).send({ error: String(err) });
   }
 }

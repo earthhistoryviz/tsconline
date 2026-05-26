@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applyTogglesToColumnInfo } from "../src/settings-generation/build-settings";
+import { applyTogglesToColumnInfo, extractUnitScopedTimeOverrides } from "../src/settings-generation/build-settings";
 import { defaultFontsInfo, ColumnInfo } from "@tsconline/shared";
 
 const buildFakeColumn = (): ColumnInfo => ({
@@ -159,5 +159,21 @@ describe("build-settings applyTogglesToColumnInfo", () => {
     applyTogglesToColumnInfo(root, { '"Period (Lunar)"': { on: true } });
     expect(parent.on).toBe(true);
     expect(child.on).toBe(true);
+  });
+});
+
+describe("build-settings extractUnitScopedTimeOverrides", () => {
+  it("extracts unit-scoped top/base ages from MCP/browser-style override keys", () => {
+    const overrides = extractUnitScopedTimeOverrides({
+      topAge_Ma: 0,
+      baseAge_Ma: 20,
+      topAge_ka: 100,
+      unitsPerMY: [{ unit: "Ma", value: 2 }]
+    });
+
+    expect(overrides.topAgeByUnit.get("ma")).toBe(0);
+    expect(overrides.baseAgeByUnit.get("ma")).toBe(20);
+    expect(overrides.topAgeByUnit.get("ka")).toBe(100);
+    expect(overrides.baseAgeByUnit.has("ka")).toBe(false);
   });
 });
