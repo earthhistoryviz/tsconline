@@ -72,6 +72,39 @@ function extractColumnType(text: string): string | undefined {
 /**
  * Attach TSC prefix to column name based on type
  */
+type ColumnInfoWithPossibleIds = ColumnInfo & {
+  _id?: string;
+  id?: string;
+  originalTscId?: string;
+};
+
+function getPreservedColumnId(state: ColumnInfo): string | undefined {
+  const withIds = state as ColumnInfoWithPossibleIds;
+  for (const candidate of [withIds.originalTscId, withIds._id, withIds.id]) {
+    if (candidate && candidate.includes("class datastore.") && candidate.includes(":")) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
+
+function deriveStableColumnName(state: ColumnInfo): string {
+  const preservedId = getPreservedColumnId(state);
+  if (preservedId) {
+    return preservedId.split(":").slice(1).join(":");
+  }
+
+  const rawName = state.name?.trim();
+  if (!rawName) return "";
+
+  const parentName = state.parent?.trim();
+  if (parentName && rawName.startsWith(`${parentName} `)) {
+    return rawName.slice(parentName.length).trim();
+  }
+
+  return rawName;
+}
+
 function attachTscPrefixToName(name: string, columnDisplayType: string): string {
   let prefix = "";
   switch (columnDisplayType) {
@@ -297,7 +330,8 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       break;
   }
 
-  column._id = attachTscPrefixToName(state.name, state.columnDisplayType);
+  const preservedId = getPreservedColumnId(state);
+  column._id = preservedId ?? attachTscPrefixToName(deriveStableColumnName(state), state.columnDisplayType);
   column.title = escapeHtmlChars(state.editName, "text");
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
@@ -380,7 +414,7 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
         xml += `${indent}<setting name="customColor"/>\n`;
       }
     } else if (key === "width") {
-      if (column.width) {
+      if (column.width !== undefined && column.width !== null && typeof column.width === "number") {
         xml += `${indent}<setting name="width">${column.width}</setting>\n`;
       }
     } else if (key === "fonts") {

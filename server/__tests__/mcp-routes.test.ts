@@ -4,6 +4,7 @@ import fastify from "fastify";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import type { FastifyRequest, FastifyReply } from "fastify";
+import { randomUUID } from "node:crypto";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants.js";
 
 const ORIGINAL_ENV = { ...process.env };
@@ -25,15 +26,19 @@ vi.mock("../src/database.js", () => ({ findUser: vi.fn() }));
 vi.mock("../src/upload-datapack.js", () => ({
   processAndUploadDatapack: vi.fn().mockResolvedValue({ code: 200, message: "success" })
 }));
+vi.mock("node:crypto", () => ({ randomUUID: vi.fn(() => "mock-request-id") }));
 
 import {
+  handleMcpChartStateSync,
   mcpListDatapacks,
   mcpListColumns,
   mcpRenderChartWithEdits,
   mcpUserInfoProxy,
   mcpUploadDatapack,
   mcpCreateSession,
-  mcpDeleteTempSessionDatapacks
+  mcpDeleteTempSessionDatapacks,
+  mcpUpdateSessionChartState,
+  mcpRequestSessionChartState
 } from "../src/routes/mcp-routes.js";
 import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
@@ -47,10 +52,30 @@ import { generateChart } from "../src/chart-generation/generate-chart.js";
 import { generateChartWithEdits, listColumns } from "../src/settings-generation/build-settings.js";
 import { findUser } from "../src/database.js";
 
+function makeMockWebSocket() {
+  const handlers = new Map<string, Array<(payload?: unknown) => void>>();
+
+  return {
+    readyState: 1,
+    send: vi.fn(),
+    close: vi.fn(),
+    on: vi.fn((event: string, handler: (payload?: unknown) => void) => {
+      const list = handlers.get(event) ?? [];
+      list.push(handler);
+      handlers.set(event, list);
+    }),
+    emit: (event: string, payload?: unknown) => {
+      const list = handlers.get(event) ?? [];
+      for (const handler of list) handler(payload);
+    }
+  };
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   // Reset .env to original state after every test
   process.env = { ...ORIGINAL_ENV };
+  (randomUUID as unknown as ReturnType<typeof vi.fn>).mockReturnValue("mock-request-id");
 });
 
 describe("mcpListDatapacks", () => {
@@ -148,30 +173,57 @@ describe("mcpListDatapacks", () => {
 describe("mcpListColumns", () => {
   it("returns minimal column tree for valid datapacks", async () => {
     const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip" }];
-    // Simulate a minimal SimpleColumn[]
-    const mockSimpleTree = [
+    const mockFlatColumns = [
       {
+        id: "zone",
         name: "Zone",
-        editName: "Zone",
-        children: [{ name: "Subzone", editName: "Subzone" }]
+        path: "Chart Root > Zone",
+        on: true,
+        enableTitle: true,
+        type: "zone"
+      },
+      {
+        id: "subzone",
+        name: "Subzone",
+        path: "Chart Root > Zone > Subzone",
+        on: true,
+        enableTitle: true,
+        type: "zone"
       }
     ];
 
     (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
     (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
-    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockSimpleTree);
+    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockFlatColumns);
 
     const req = { body: { datapackTitles: ["GTS2020"] } } as unknown as FastifyRequest;
-    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+    const reply = {
+      send: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      type: vi.fn().mockReturnThis()
+    } as unknown as FastifyReply;
 
     await mcpListColumns(req, reply);
 
     expect(listColumns).toHaveBeenCalledWith(mockDatapacks);
-    expect(reply.send).toHaveBeenCalledWith(mockSimpleTree);
+    expect(reply.send).toHaveBeenCalledWith({
+      datapackTitles: ["GTS2020"],
+      columns: { Zone: ["Subzone"] }
+    });
   });
 
   it("returns 400 when datapackTitles is missing", async () => {
     const req = { body: {} } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 400 when request body is missing", async () => {
+    const req = {} as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
 
     await mcpListColumns(req, reply);
@@ -241,37 +293,84 @@ describe("mcpListColumns", () => {
     (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockColumns);
 
     const req = { body: { datapackTitles: ["UserDP"], uuid: "user-456" } } as unknown as FastifyRequest;
-    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+    const reply = {
+      send: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      type: vi.fn().mockReturnThis()
+    } as unknown as FastifyReply;
 
     await mcpListColumns(req, reply);
 
     expect(fetchAllUsersDatapacks).toHaveBeenCalledWith("user-456");
     expect(listColumns).toHaveBeenCalledWith(mockUserDp);
-    expect(reply.send).toHaveBeenCalledWith(mockColumns);
+    expect(reply.send).toHaveBeenCalledWith({
+      datapackTitles: ["UserDP"],
+      columns: ["Col"]
+    });
+  });
+
+  it("drops root-only paths and avoids _leaves when a node has only nested children", async () => {
+    const mockDatapacks = [{ title: "Nested", storedFileName: "nested.zip" }];
+    const mockFlatColumns = [
+      { id: "root", name: "Root", path: "Chart Root", on: true, enableTitle: true, type: "zone" },
+      {
+        id: "nested-column",
+        name: "Column",
+        path: "Chart Root > Group > Subgroup > Column",
+        on: true,
+        enableTitle: true,
+        type: "zone"
+      }
+    ];
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockFlatColumns);
+
+    const req = { body: { datapackTitles: ["Nested"] } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.send).toHaveBeenCalledWith({
+      datapackTitles: ["Nested"],
+      columns: { Group: { Subgroup: ["Column"] } }
+    });
   });
 });
 
 describe("mcpRenderChartWithEdits", () => {
-  it("generates chart with overrides and column toggles", async () => {
+  it("generates chart with overrides and column toggles and pushes websocket updates when sessionId is provided", async () => {
     const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
     const mockSettingsXml = "<settings/>";
-    const mockResult = { chartpath: "public/charts/abc/chart.svg" };
+    const mockResult = { chartpath: "public/charts/abc/chart.svg", hash: "abc123" };
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-render" })));
 
     (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
     (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
     (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockSettingsXml);
     (generateChart as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
       async (_chartRequest: unknown, onProgress?: (p: unknown) => void) => {
-        if (onProgress) onProgress({ percentage: 50 });
+        if (onProgress) onProgress({ stage: "Rendering", percent: 50 });
         return mockResult;
       }
     );
 
     const req = {
       body: {
+        sessionId: "sid-render",
         datapackTitles: ["GTS2020"],
         overrides: { topAge: 0, baseAge: 10 },
-        columnToggles: { off: ["stage-id"] }
+        columnToggles: { "stage-id": { on: false } }
       }
     } as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -281,10 +380,24 @@ describe("mcpRenderChartWithEdits", () => {
     expect(generateChartWithEdits).toHaveBeenCalledWith(
       mockDatapacks,
       { topAge: 0, baseAge: 10 },
-      { off: ["stage-id"] }
+      { "stage-id": { on: false } }
     );
     expect(generateChart).toHaveBeenCalled();
     expect(reply.send).toHaveBeenCalledWith(mockResult);
+
+    const sentMessages = socket.send.mock.calls.map(([raw]) => JSON.parse(raw as string));
+    expect(sentMessages).toEqual([
+      { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
+      { type: "geogpt-chart-update-progress", requestId: "mock-request-id", stage: "Rendering", percent: 50 },
+      {
+        type: "geogpt-chart-update-complete",
+        requestId: "mock-request-id",
+        mcpLinkParams: {
+          datapacks: ["GTS2020"],
+          chartHash: "abc123"
+        }
+      }
+    ]);
   });
 
   it("returns 400 when datapackTitles is missing", async () => {
@@ -295,6 +408,69 @@ describe("mcpRenderChartWithEdits", () => {
 
     expect(reply.status).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 400 when request body is missing", async () => {
+    const req = {} as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("ignores terminal progress events and preserves explicit false flags", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-terminal-progress" })));
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("<settings/>");
+    (generateChart as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      async (chartRequest: unknown, onProgress?: (p: unknown) => void) => {
+        expect(chartRequest).toMatchObject({ useCache: false, isCrossPlot: false });
+        onProgress?.({ stage: "Complete", percent: 100 });
+        onProgress?.({ stage: "Error", percent: 100 });
+        return { chartpath: "public/charts/final/chart.svg", hash: "terminal123" };
+      }
+    );
+
+    const req = {
+      body: {
+        sessionId: "sid-terminal-progress",
+        datapackTitles: ["GTS2020"],
+        overrides: {},
+        columnToggles: {},
+        useCache: false,
+        isCrossPlot: false
+      }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    const sentMessages = socket.send.mock.calls.map(([raw]) => JSON.parse(raw as string));
+    expect(sentMessages).toEqual([
+      { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
+      {
+        type: "geogpt-chart-update-complete",
+        requestId: "mock-request-id",
+        mcpLinkParams: {
+          datapacks: ["GTS2020"],
+          chartHash: "terminal123"
+        }
+      }
+    ]);
   });
 
   it("returns 400 when datapackTitles is not an array", async () => {
@@ -349,13 +525,24 @@ describe("mcpRenderChartWithEdits", () => {
 
   it("returns 500 when generateChart throws", async () => {
     const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-render-error" })));
+
     (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
     (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
     (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("<settings/>");
     (generateChart as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("fail chart"));
 
     const req = {
-      body: { datapackTitles: ["GTS2020"], overrides: {}, columnToggles: {} }
+      body: { sessionId: "sid-render-error", datapackTitles: ["GTS2020"], overrides: {}, columnToggles: {} }
     } as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
 
@@ -363,6 +550,16 @@ describe("mcpRenderChartWithEdits", () => {
 
     expect(reply.status).toHaveBeenCalledWith(500);
     expect(reply.send).toHaveBeenCalledWith({ error: "Error: fail chart" });
+    expect(socket.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: "geogpt-chart-update-start", requestId: "mock-request-id" })
+    );
+    expect(socket.send).toHaveBeenLastCalledWith(
+      JSON.stringify({
+        type: "geogpt-chart-update-error",
+        requestId: "mock-request-id",
+        error: "Error: fail chart"
+      })
+    );
   });
 
   it("includes user datapacks with uuid field when uuid is provided", async () => {
@@ -402,6 +599,44 @@ describe("mcpRenderChartWithEdits", () => {
       uuid: "dp-uuid-123"
     });
     expect(reply.send).toHaveBeenCalledWith(mockResult);
+  });
+
+  it("continues rendering when websocket update sends are not writable", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-closed-socket" })));
+    socket.readyState = 0;
+    socket.send.mockImplementation(() => {
+      throw new Error("socket closed");
+    });
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("<settings/>");
+    (generateChart as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      chartpath: "public/charts/socket/chart.svg",
+      hash: "socket123"
+    });
+
+    const req = {
+      body: { sessionId: "sid-closed-socket", datapackTitles: ["GTS2020"], overrides: {}, columnToggles: {} }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.send).toHaveBeenCalledWith({
+      chartpath: "public/charts/socket/chart.svg",
+      hash: "socket123"
+    });
   });
 });
 
@@ -467,6 +702,24 @@ describe("mcpUserInfoProxy", () => {
     expect(reply.send).toHaveBeenCalledWith({ error: "Not logged in" });
   });
 
+  it("returns 404 when user record is not found", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      body: { sessionId: "sid123" },
+      session: { get: vi.fn().mockReturnValue("u123") }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    (findUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+
+    await mcpUserInfoProxy(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(404);
+    expect(reply.send).toHaveBeenCalledWith({ error: "User not found" });
+  });
+
   // Test for actual call when everything is present
   it("forwards to MCP /messages/user-info with Bearer token", async () => {
     // Use a dummy expected token for test
@@ -522,6 +775,37 @@ describe("mcpUserInfoProxy", () => {
     // Expect code 200 for success
     expect(reply.code).toHaveBeenCalledWith(200);
     expect(reply.send).toHaveBeenCalledWith({ ok: true, sessionId: "sid123" });
+  });
+
+  it("uses DOMAIN env var when forwarding to MCP /messages/user-info", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    process.env.DOMAIN = "example.test";
+
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: vi.fn().mockResolvedValue({ ok: true, sessionId: "sid123" })
+    }) as unknown as typeof fetch;
+
+    (findUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        uuid: "u123",
+        username: "user",
+        email: "user@example.com",
+        pictureUrl: "pic",
+        accountType: "pro",
+        isAdmin: 1
+      }
+    ]);
+
+    const req = {
+      body: { sessionId: "sid123" },
+      session: { get: vi.fn().mockReturnValue("u123") }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+    await mcpUserInfoProxy(req, reply);
+
+    expect(global.fetch).toHaveBeenCalledWith("https://example.test/messages/user-info", expect.any(Object));
   });
 });
 
@@ -678,7 +962,8 @@ describe("mcpCreateSession", () => {
     }) as unknown as typeof fetch;
 
     const req = {
-      session: { get: vi.fn().mockReturnValue("u123") }
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: undefined
     } as unknown as FastifyRequest;
 
     const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -692,6 +977,547 @@ describe("mcpCreateSession", () => {
 
     expect(reply.code).toHaveBeenCalledWith(200);
     expect(reply.send).toHaveBeenCalledWith({ sessionId: "sid123" });
+  });
+
+  it("uses DOMAIN env var for create-session proxy", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    process.env.DOMAIN = "example.test";
+
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: vi.fn().mockResolvedValue({ sessionId: "sid123" })
+    }) as unknown as typeof fetch;
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: undefined
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpCreateSession(req, reply);
+
+    expect(global.fetch).toHaveBeenCalledWith("https://example.test/messages/create-session", {
+      method: "POST",
+      headers: { Authorization: "Bearer token123" }
+    });
+  });
+
+  it("forwards userChartState to MCP /messages/create-session when provided", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    delete process.env.DOMAIN;
+
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: vi.fn().mockResolvedValue({ sessionId: "sid123" })
+    }) as unknown as typeof fetch;
+
+    const userChartState = {
+      datapackTitles: ["GTS2020"],
+      overrides: { topAge_Ma: 0, baseAge_Ma: 541 },
+      columnToggles: {
+        Periods: { on: true },
+        Epochs: { on: false }
+      }
+    };
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: { userChartState }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpCreateSession(req, reply);
+
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/messages/create-session", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer token123",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ userChartState })
+    });
+
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ sessionId: "sid123" });
+  });
+});
+
+describe("mcpUpdateSessionChartState", () => {
+  it("returns 401 when session uuid is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue(undefined) },
+      body: { sessionId: "sid123", userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} } }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Not logged in" });
+  });
+
+  it("returns 400 when body is missing required fields", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing sessionId or userChartState" });
+  });
+
+  it("returns 400 when request body is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing sessionId or userChartState" });
+  });
+
+  it("forwards chart state update to MCP with Bearer token", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    delete process.env.DOMAIN;
+
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: vi.fn().mockResolvedValue({ ok: true, sessionId: "sid123" })
+    }) as unknown as typeof fetch;
+
+    const userChartState = {
+      datapackTitles: ["GTS2020"],
+      overrides: { topAge_Ma: 0 },
+      columnToggles: { Epochs: { on: false } }
+    };
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: { sessionId: "sid123", userChartState }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/messages/update-chart-state", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer token123",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ sessionId: "sid123", userChartState })
+    });
+
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ ok: true, sessionId: "sid123" });
+  });
+
+  it("returns 500 when MCP_AUTH_TOKEN is missing", async () => {
+    delete process.env.MCP_AUTH_TOKEN;
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: { sessionId: "sid123", userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} } }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(500);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing MCP_AUTH_TOKEN" });
+  });
+
+  it("uses DOMAIN env var for update-chart-state proxy", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    process.env.DOMAIN = "example.test";
+
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: vi.fn().mockResolvedValue({ ok: true, sessionId: "sid123" })
+    }) as unknown as typeof fetch;
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") },
+      body: {
+        sessionId: "sid123",
+        userChartState: { datapackTitles: ["d1"], overrides: {}, columnToggles: {} }
+      }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(global.fetch).toHaveBeenCalledWith("https://example.test/messages/update-chart-state", expect.any(Object));
+  });
+});
+
+describe("mcpRequestSessionChartState", () => {
+  it("returns 401 when bearer token is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      headers: {},
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing or invalid Bearer token" });
+  });
+
+  it("returns 401 when MCP_AUTH_TOKEN is missing", async () => {
+    delete process.env.MCP_AUTH_TOKEN;
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing or invalid Bearer token" });
+  });
+
+  it("returns 400 when sessionId is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: {}
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing sessionId" });
+  });
+
+  it("returns 409 when there is no active websocket client", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(409);
+    expect(reply.send).toHaveBeenCalledWith({
+      ok: false,
+      sessionId: "sid123",
+      error: "No active TSCOnline websocket for this session"
+    });
+  });
+
+  it("returns 401 when bearer token is invalid", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      headers: { authorization: "Bearer wrong-token" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Invalid Bearer token" });
+  });
+
+  it("returns 200 when active websocket responds with chart state", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid123" })));
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    const pending = mcpRequestSessionChartState(req, reply);
+    const outboundRaw = socket.send.mock.calls[0]?.[0] as string;
+    const outbound = JSON.parse(outboundRaw) as { type: string; requestId?: string };
+    expect(outbound.type).toBe("request-chart-state");
+    expect(typeof outbound.requestId).toBe("string");
+
+    socket.emit(
+      "message",
+      Buffer.from(JSON.stringify({ type: "chart-state-response", requestId: outbound.requestId, ok: true }))
+    );
+
+    await pending;
+
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({ ok: true, sessionId: "sid123" });
+  });
+
+  it("returns 409 when websocket send throws", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    const socket = makeMockWebSocket();
+    socket.send.mockImplementation(() => {
+      throw new Error("send failed");
+    });
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid123" })));
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(409);
+    expect(reply.send).toHaveBeenCalledWith({
+      ok: false,
+      sessionId: "sid123",
+      error: "Failed to send chart state request over websocket"
+    });
+  });
+
+  it("returns 409 when websocket response times out", async () => {
+    vi.useFakeTimers();
+    try {
+      process.env.MCP_AUTH_TOKEN = "token123";
+      const socket = makeMockWebSocket();
+
+      await handleMcpChartStateSync(
+        socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+        {
+          session: { get: vi.fn().mockReturnValue("u123") }
+        } as unknown as FastifyRequest
+      );
+
+      socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid123" })));
+
+      const req = {
+        headers: { authorization: "Bearer token123" },
+        body: { sessionId: "sid123" }
+      } as unknown as FastifyRequest;
+      const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+      const pending = mcpRequestSessionChartState(req, reply);
+      await vi.advanceTimersByTimeAsync(10_001);
+      await pending;
+
+      expect(reply.code).toHaveBeenCalledWith(409);
+      expect(reply.send).toHaveBeenCalledWith({
+        ok: false,
+        sessionId: "sid123",
+        error: "Timed out waiting for chart state response"
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("uses response error when websocket returns not-ok payload", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid123" })));
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    const pending = mcpRequestSessionChartState(req, reply);
+    const outboundRaw = socket.send.mock.calls[0]?.[0] as string;
+    const outbound = JSON.parse(outboundRaw) as { requestId?: string };
+    socket.emit(
+      "message",
+      Buffer.from(
+        JSON.stringify({
+          type: "chart-state-response",
+          requestId: outbound.requestId,
+          ok: false,
+          error: "Client refused refresh"
+        })
+      )
+    );
+
+    await pending;
+
+    expect(reply.code).toHaveBeenCalledWith(409);
+    expect(reply.send).toHaveBeenCalledWith({
+      ok: false,
+      sessionId: "sid123",
+      error: "Client refused refresh"
+    });
+  });
+
+  it("uses the default error when websocket returns not-ok without an error message", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid123" })));
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    const pending = mcpRequestSessionChartState(req, reply);
+    const outboundRaw = socket.send.mock.calls[0]?.[0] as string;
+    const outbound = JSON.parse(outboundRaw) as { requestId?: string };
+    socket.emit(
+      "message",
+      Buffer.from(
+        JSON.stringify({
+          type: "chart-state-response",
+          requestId: outbound.requestId,
+          ok: false
+        })
+      )
+    );
+
+    await pending;
+
+    expect(reply.code).toHaveBeenCalledWith(409);
+    expect(reply.send).toHaveBeenCalledWith({
+      ok: false,
+      sessionId: "sid123",
+      error: "Unable to refresh chart state"
+    });
+  });
+});
+
+describe("handleMcpChartStateSync", () => {
+  it("closes socket when request session is missing", async () => {
+    const socket = makeMockWebSocket();
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue(undefined) }
+      } as unknown as FastifyRequest
+    );
+
+    expect(socket.close).toHaveBeenCalled();
+  });
+
+  it("ignores malformed messages and replaces existing session socket", async () => {
+    const firstSocket = makeMockWebSocket();
+    const secondSocket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      firstSocket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      { session: { get: vi.fn().mockReturnValue("u123") } } as unknown as FastifyRequest
+    );
+    await handleMcpChartStateSync(
+      secondSocket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      { session: { get: vi.fn().mockReturnValue("u123") } } as unknown as FastifyRequest
+    );
+
+    firstSocket.emit("message", Buffer.from("not-json"));
+    firstSocket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-replace" })));
+    secondSocket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-replace" })));
+
+    expect(firstSocket.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("cleans up registered socket mapping on close and error events", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      { session: { get: vi.fn().mockReturnValue("u123") } } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-clean" })));
+    socket.emit("close");
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid-clean" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(409);
+
+    socket.emit("error");
+  });
+
+  it("ignores primitive payloads and unmatched chart-state responses", async () => {
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      { session: { get: vi.fn().mockReturnValue("u123") } } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify("primitive")));
+    socket.emit(
+      "message",
+      Buffer.from(JSON.stringify({ type: "chart-state-response", requestId: "missing-request", ok: true }))
+    );
+
+    expect(socket.close).not.toHaveBeenCalled();
   });
 });
 
