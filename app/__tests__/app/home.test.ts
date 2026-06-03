@@ -6,34 +6,34 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("navigation routing works across main pages", async ({ page }) => {
-  let tab = page.locator(".qsg-presets");
-  await expect(tab).toBeVisible();
-  await tab.click();
+  const datapacksTab = page.locator(".qsg-presets");
+  await expect(datapacksTab).toBeVisible();
+  await datapacksTab.click();
   await expect(page).toHaveURL(/.*\/presets-view/);
 
-  tab = page.locator(".qsg-chart");
-  await expect(tab).toBeVisible();
-  await tab.click();
+  const chartTab = page.locator(".qsg-chart");
+  await expect(chartTab).toBeVisible();
+  await chartTab.click();
   await expect(page).toHaveURL(/.*\/chart-view/);
 
-  tab = page.locator(".qsg-settings");
-  await expect(tab).toBeVisible();
-  await tab.click();
+  const settingsTab = page.locator(".qsg-settings");
+  await expect(settingsTab).toBeVisible();
+  await settingsTab.click();
   await expect(page).toHaveURL(/.*\/settings/);
 
-  tab = page.locator(".qsg-help");
-  await expect(tab).toBeVisible();
-  await tab.click();
+  const helpTab = page.locator(".qsg-help");
+  await expect(helpTab).toBeVisible();
+  await helpTab.click();
   await expect(page).toHaveURL(/.*\/help/);
 
-  tab = page.locator(".qsg-workshops");
-  await expect(tab).toBeVisible();
-  await tab.click();
+  const workshopsTab = page.locator(".qsg-workshops");
+  await expect(workshopsTab).toBeVisible();
+  await workshopsTab.click();
   await expect(page).toHaveURL(/.*\/workshops/);
 
-  tab = page.locator(".qsg-about");
-  await expect(tab).toBeVisible();
-  await tab.click();
+  const aboutTab = page.locator(".qsg-about");
+  await expect(aboutTab).toBeVisible();
+  await aboutTab.click();
   await expect(page).toHaveURL(/.*\/about/);
 });
 
