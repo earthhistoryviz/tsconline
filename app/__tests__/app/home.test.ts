@@ -5,35 +5,45 @@ test.beforeEach(async ({ page }) => {
   await page.waitForTimeout(4000);
 });
 
-test("navigation routing works across main pages", async ({ page }) => {
+test("navigation to presets page works", async ({ page }) => {
   const datapacksTab = page.locator(".qsg-presets");
   await expect(datapacksTab).toBeVisible();
   await datapacksTab.click();
   await expect(page).toHaveURL(/.*\/presets-view/);
+});
 
-  const chartTab = page.locator(".qsg-chart");
-  await expect(chartTab).toBeVisible();
-  await chartTab.click();
+test("navigation to datapack page works", async ({ page }) => {
+  const datapacksTab = page.locator(".qsg-chart");
+  await expect(datapacksTab).toBeVisible();
+  await datapacksTab.click();
   await expect(page).toHaveURL(/.*\/chart-view/);
+});
 
-  const settingsTab = page.locator(".qsg-settings");
-  await expect(settingsTab).toBeVisible();
-  await settingsTab.click();
+test("navigation to settings page works", async ({ page }) => {
+  const datapacksTab = page.locator(".qsg-settings");
+  await expect(datapacksTab).toBeVisible();
+  await datapacksTab.click();
   await expect(page).toHaveURL(/.*\/settings/);
+});
 
-  const helpTab = page.locator(".qsg-help");
-  await expect(helpTab).toBeVisible();
-  await helpTab.click();
+test("navigation to help page works", async ({ page }) => {
+  const datapacksTab = page.locator(".qsg-help");
+  await expect(datapacksTab).toBeVisible();
+  await datapacksTab.click();
   await expect(page).toHaveURL(/.*\/help/);
+});
 
-  const workshopsTab = page.locator(".qsg-workshops");
-  await expect(workshopsTab).toBeVisible();
-  await workshopsTab.click();
+test("navigation to workshops page works", async ({ page }) => {
+  const datapacksTab = page.locator(".qsg-workshops");
+  await expect(datapacksTab).toBeVisible();
+  await datapacksTab.click();
   await expect(page).toHaveURL(/.*\/workshops/);
+});
 
-  const aboutTab = page.locator(".qsg-about");
-  await expect(aboutTab).toBeVisible();
-  await aboutTab.click();
+test("navigation to about page works", async ({ page }) => {
+  const datapacksTab = page.locator(".qsg-about");
+  await expect(datapacksTab).toBeVisible();
+  await datapacksTab.click();
   await expect(page).toHaveURL(/.*\/about/);
 });
 

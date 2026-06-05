@@ -145,11 +145,6 @@ test("check if generate chart and save chart works", async ({ page }) => {
   const diff = Math.abs(downloadedSize - referenceSize);
   const allowedDiff = referenceSize * 0.1;
   expect(diff).toBeLessThanOrEqual(allowedDiff);
-});
-
-test("check if time scaling and column adjustments work", async ({ page }) => {
-  await generateBasicChart(page);
-
   await page.locator("text=Settings").click();
   await page.locator('input[value="10"]').fill("15");
   await page.locator('input[value="2"]').fill("1");
@@ -163,12 +158,22 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
   await expect(page.locator("text=Loading Chart")).toBeHidden();
   await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
 
-  const chartSvg = page.locator(".react-transform-component svg");
-
   await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
 
   await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
   await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
+
+  await page.locator("text=Settings").click();
+
+  await page.locator("text=Map Points").first().click();
+  await page.locator("text=Africa Bight").click();
+
+  await expect(page.locator("data-testid=LocationOnSharpIcon").nth(0)).toBeVisible();
+  await expect(page.locator("data-testid=LocationOnSharpIcon").nth(1)).toBeVisible();
+
+  await page.locator("data-testid=LocationOnSharpIcon").nth(0).hover();
+
+  await expect(page.locator("text=Nigeria Coast")).toBeVisible();
 });
 
 test("Load Basic Settings", async ({ page }) => {
@@ -238,31 +243,7 @@ test("check if generate crossplot works", async ({ page }) => {
   await expect(chartSvg.locator("text=Ocean Crust").nth(1)).toBeVisible();
 });
 
-test("check if Map Points Functional", async ({ page }) => {
-  await generateBasicChart(page);
-
-  const chartSvg = page.locator(".react-transform-component svg");
-  await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
-
-  await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
-  await expect(chartSvg.locator("text=Deep Marine")).toBeVisible();
-  await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
-  await expect(chartSvg.locator("text=Ocean Crust")).toBeVisible();
-
-  await page.locator("text=Settings").click();
-
-  await page.locator("text=Map Points").first().click();
-  await page.locator("text=Africa Bight").click();
-
-  await expect(page.locator("data-testid=LocationOnSharpIcon").nth(0)).toBeVisible();
-  await expect(page.locator("data-testid=LocationOnSharpIcon").nth(1)).toBeVisible();
-
-  await page.locator("data-testid=LocationOnSharpIcon").nth(0).hover();
-
-  await expect(page.locator("text=Nigeria Coast")).toBeVisible();
-});
-
-test("check if new window button works", async ({ page, context }) => {
+test("check sync of preview with window", async ({ page, context }) => {
   await generateBasicChart(page);
   const newWindowButton = await page.locator(".new-window-button");
   await expect(newWindowButton).toBeVisible();
@@ -274,24 +255,11 @@ test("check if new window button works", async ({ page, context }) => {
 
   const newWindowButtonPrev = await newPage.locator(".new-window-button");
   await expect(newWindowButtonPrev).toBeHidden();
-  await newPage.close();
-});
 
-test("check sync and locking of preview window", async ({ page, context }) => {
-  await generateBasicChart(page);
-  const newWindowButton = await page.locator(".new-window-button");
-  await expect(newWindowButton).toBeVisible();
-  const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
-
-  await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart-view/preview");
-  await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
-
-  // Lock the preview window
   await expect(newPage.locator(".lock-button")).toBeVisible();
   await newPage.locator(".lock-button").click();
 
-  // Update the main window with a new datapack
+  //bring first page to front and make an update
   await page.bringToFront();
   await page.locator("text=Datapacks").click();
 
@@ -304,15 +272,14 @@ test("check sync and locking of preview window", async ({ page, context }) => {
 
   const generateChart = page.locator("text=Generate Chart");
   await generateChart.click();
+  //wait for chart to load
   await expect(page.locator("text=Loading Chart")).toBeHidden();
   await expect(page.locator("text=Successfully generated chart")).toBeVisible();
   await expect(page.locator("text=Greater NW Shelf")).toBeVisible();
 
-  // Locked: preview should still show original chart
+  //bring new page to front and check for update
   await newPage.bringToFront();
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
-
-  // Unlock: preview should now sync
   await newPage.locator(".lock-button").click();
   await expect(newPage.locator("text=Greater NW Shelf")).toBeVisible({ timeout: 10000 });
 });
