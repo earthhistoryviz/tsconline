@@ -1,7 +1,4 @@
-import {
-  generateLondonDatapack,
-  LONDON_DATAPACK_TITLE
-} from "./db/london/json-to-txt.js";
+import { generateLondonDatapack, LONDON_DATAPACK_TITLE } from "./db/london/json-to-txt.js";
 import { addLondonConfigToAdminConfig } from "./add-dev-config.js";
 import { migrateLondonCachedDatapacks } from "./migrate-cached-datapacks.js";
 import { connectToDB } from "./db/london/sql-to-json.js";

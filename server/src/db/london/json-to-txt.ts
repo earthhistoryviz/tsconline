@@ -299,15 +299,6 @@ function getPointPopup(row: LondonJsonRow) {
   return cleanText(popupValue);
 }
 
-function normalizePointColumnColour(colour: string | null | undefined): string {
-  const trimmed = cleanText(colour);
-  if (!trimmed) return "";
-  if (/^\d+,\d+,\d+$/.test(trimmed)) {
-    return sanitizeTscColour(trimmed.replace(/,/g, "/"));
-  }
-  return sanitizeTscColour(trimmed);
-}
-
 function getRowAge(row: LondonJsonRow): number | null {
   return getRowNumber(row.age ?? row.age2020 ?? row.age2020_uncorrected);
 }
@@ -396,9 +387,7 @@ function resolvePointColumnDisplay(column: arkL_columns, values: number[]): Poin
 /** Transect: London has no exported geometry yet (stacked filled curve / bar chart metadata only). */
 async function processTransectColumns(columns: arkL_columns[]): Promise<ProcessColumnOutput[]> {
   const candidates = columns.filter(
-    (column) =>
-      column.column_type === "stacked filled curve" ||
-      column.columnx === "Major Evaporite Seals"
+    (column) => column.column_type === "stacked filled curve" || column.columnx === "Major Evaporite Seals"
   );
   if (candidates.length > 0) {
     console.log(
@@ -412,9 +401,7 @@ async function processTransectColumns(columns: arkL_columns[]): Promise<ProcessC
 
 /** Freehand: London graphic/images columns have no image-placement rows in export yet. */
 async function processFreehandColumns(columns: arkL_columns[]): Promise<ProcessColumnOutput[]> {
-  const candidates = columns.filter(
-    (column) => column.column_type === "graphic" || column.column_type === "images"
-  );
+  const candidates = columns.filter((column) => column.column_type === "graphic" || column.column_type === "images");
   if (candidates.length > 0) {
     console.log(
       chalk.yellow(
@@ -445,10 +432,7 @@ function formatPointAge(age: number, decimalPlaces: number): string {
   return String(Number(age.toFixed(decimalPlaces)));
 }
 
-async function loadPointdataRows(
-  column: arkL_columns,
-  events: arkL_events[]
-): Promise<LondonJsonRow[]> {
+async function loadPointdataRows(column: arkL_columns, _events: arkL_events[]): Promise<LondonJsonRow[]> {
   const tableName = cleanText(column.pointdata_table);
   if (!tableName) return [];
 
@@ -659,11 +643,7 @@ function lerpValue(from: number, to: number, fraction: number): number {
  * 2 crest: 0.5 × (3 → 1) age, 0.75 × (3 → 1) onlap
  * 4 LST: 0.333 × (5 → 3) age, 0.667 × (3 → 5) onlap
  */
-function computeSequenceOnlapPoints(
-  mfs: arkL_events,
-  sb: arkL_events,
-  prevSbAge: number | null
-): OnlapPoint[] {
+function computeSequenceOnlapPoints(mfs: arkL_events, sb: arkL_events, prevSbAge: number | null): OnlapPoint[] {
   const mfsLt = getRowNumber(mfs.longterm_sl);
   const sbLt = getRowNumber(sb.longterm_sl);
   const mfsAge = mfs.age;
@@ -687,10 +667,7 @@ function computeSequenceOnlapPoints(
   return [p1, p5, p3, p2, p4];
 }
 
-function getSequenceIntervalsForDataset(
-  datasetId: number,
-  intervals: arkL_intervals[]
-): arkL_intervals[] {
+function getSequenceIntervalsForDataset(datasetId: number, intervals: arkL_intervals[]): arkL_intervals[] {
   return intervals
     .filter(
       (interval) =>
@@ -766,11 +743,7 @@ function buildShortTermPhanerozoicSeries(
 }
 
 /** Mean sea level at each MFS: 0.5 × (MFS longterm + SB actual), per London notes. */
-function buildMeanSeaLevelSeries(
-  datasetId: number,
-  events: arkL_events[],
-  intervals: arkL_intervals[]
-): OnlapPoint[] {
+function buildMeanSeaLevelSeries(datasetId: number, events: arkL_events[], intervals: arkL_intervals[]): OnlapPoint[] {
   const eventById = new Map<number, arkL_events>();
   for (const event of events) {
     if (event.dataset_id === datasetId) eventById.set(event.id, event);
@@ -827,9 +800,7 @@ function buildLongTermPhanerozoicSeries(datasetId: number, events: arkL_events[]
 
   const presentLt = events.find(
     (event) =>
-      event.dataset_id === datasetId &&
-      /modern/i.test(event.eventx ?? "") &&
-      getRowNumber(event.longterm_sl) !== null
+      event.dataset_id === datasetId && /modern/i.test(event.eventx ?? "") && getRowNumber(event.longterm_sl) !== null
   );
   const presentOnlap = presentLt ? getRowNumber(presentLt.longterm_sl)! : -30;
   if (!series.some((point) => point.age === 0)) {
@@ -923,9 +894,7 @@ async function processSeaLevelCurveColumns(
     const popup = columnHeaderPopup(column.TSC_notes ?? COASTAL_ONLAP_COLUMN_POPUP);
     const { titleFlag, lowerRange, upperRange } = seaLevelCurveSettings(kind);
     const lines: string[] = [];
-    lines.push(
-      `${column.columnx}\tpoint\t${column.width || "200"}\t\t\t${titleFlag}\t${popup}`
-    );
+    lines.push(`${column.columnx}\tpoint\t${column.width || "200"}\t\t\t${titleFlag}\t${popup}`);
     lines.push(`nopoints\tline\t\t${lowerRange}\t${upperRange}\tsmoothed`);
     for (const point of series) {
       lines.push(formatOnlapPointLine(point.age, point.onlap));
@@ -966,7 +935,11 @@ async function processSequenceColumns(
     const mode = getSequenceExportMode(column);
     const sequenceEvents = selectSequenceEventsForColumn(column, events, intervalEventIds, mode);
     if (sequenceEvents.length === 0) {
-      console.log(chalk.yellow(`missing sequence events for ${column.columnx} (mode=${mode}, dataset=${column.dataset_id}, subdataset=${column.subdataset_id ?? "all"})`));
+      console.log(
+        chalk.yellow(
+          `missing sequence events for ${column.columnx} (mode=${mode}, dataset=${column.dataset_id}, subdataset=${column.subdataset_id ?? "all"})`
+        )
+      );
       continue;
     }
 
@@ -1027,7 +1000,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
       const colour = resolveEventColumnColour(column, dataset);
       const popup = eventColumnPopup(dataset);
       const trimPrefix = isDefiningEventsFadColumn(column);
-      let line = `${column.columnx}\tevent\t${eventColumnWidth(column)}\t${colour}\tnotitle\toff\t${popup}`;
+      const line = `${column.columnx}\tevent\t${eventColumnWidth(column)}\t${colour}\tnotitle\toff\t${popup}`;
       columnLines.push(line);
 
       for (const section of sectionOrder) {
@@ -1071,26 +1044,24 @@ async function processBlockColumns(datasets: arkL_datasets[], columns: arkL_colu
       const dbIntervals = intervals
         .filter(
           (interval) =>
-            interval.column_id === intervalColumnId &&
-            interval.base_age !== null &&
-            interval.base_age !== undefined
+            interval.column_id === intervalColumnId && interval.base_age !== null && interval.base_age !== undefined
         )
         .sort((a, b) => blockSortAge(a) - blockSortAge(b));
       if (dbIntervals.length === 0) {
         console.log(chalk.yellow("no blocks found for " + column.columnx));
         continue;
       }
-      const popup = columnHeaderPopup(
-        column.TSC_notes ?? dataset.TSC_source_notes ?? dataset.notes_Jur ?? ""
-      );
+      const popup = columnHeaderPopup(column.TSC_notes ?? dataset.TSC_source_notes ?? dataset.notes_Jur ?? "");
       const defaultWidth =
-        column.columnx === "Chinese Loess divisions" ? "60" : column.columnx === "Ukrainian Loess Plain stages" ? "100" : "";
+        column.columnx === "Chinese Loess divisions"
+          ? "60"
+          : column.columnx === "Ukrainian Loess Plain stages"
+            ? "100"
+            : "";
       const defaultColour =
-        column.columnx === "Chinese Loess divisions" && isVariesOrNonRgbColour(column.colour)
-          ? "225/255/255"
-          : "";
+        column.columnx === "Chinese Loess divisions" && isVariesOrNonRgbColour(column.colour) ? "225/255/255" : "";
       const columnColour = sanitizeTscColour(column.colour || defaultColour || dataset.colour || "");
-      let line = `${column.columnx}\tblock\t${column.width || defaultWidth}\t${columnColour}\tnotitle\toff\t${popup}`;
+      const line = `${column.columnx}\tblock\t${column.width || defaultWidth}\t${columnColour}\tnotitle\toff\t${popup}`;
       columnLines.push(line);
       const topAge = blockTopAge(dbIntervals);
       const topInterval =
@@ -1111,9 +1082,7 @@ async function processBlockColumns(datasets: arkL_datasets[], columns: arkL_colu
         //ex. block_label
         const label = getIntervalLabel(
           inter,
-          column.field_if_not_intvx !== "" && column.field_if_not_intvx !== null
-            ? column.field_if_not_intvx
-            : null
+          column.field_if_not_intvx !== "" && column.field_if_not_intvx !== null ? column.field_if_not_intvx : null
         );
         if (!label) continue;
         const intervalNotes = cleanText(inter.interval_notes);
@@ -1139,21 +1108,6 @@ async function processBlockColumns(datasets: arkL_datasets[], columns: arkL_colu
     }
   }
   return blockColumns;
-}
-
-/** Block columns that sit beside Chinese Loess point curves in TSC2020 (not pointdata). */
-const QUATERNARY_LOESS_BLOCK_COLUMN_NAMES = new Set([
-  "Chinese Loess divisions",
-  "Ukrainian Loess Plain stages"
-]);
-
-async function processQuaternaryLoessBlockColumns(
-  datasets: arkL_datasets[],
-  columns: arkL_columns[],
-  intervals: arkL_intervals[]
-): Promise<ProcessColumnOutput[]> {
-  const loessBlocks = columns.filter((column) => QUATERNARY_LOESS_BLOCK_COLUMN_NAMES.has(column.columnx ?? ""));
-  return processBlockColumns(datasets, loessBlocks, intervals);
 }
 
 async function processChronColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
@@ -1369,7 +1323,10 @@ function faciesRockTypeLabel(bed: arkL_intervals, lithologyById: Map<number, str
 
 function faciesFormationLabel(interval: arkL_intervals): string {
   if (interval.intervalx) {
-    return interval.intervalx.replace(/\s+Fm\.\s*DeL$/i, " Fm.").replace(/\s+DeL$/i, "").trim();
+    return interval.intervalx
+      .replace(/\s+Fm\.\s*DeL$/i, " Fm.")
+      .replace(/\s+DeL$/i, "")
+      .trim();
   }
   return chronIntervalDisplayLabel(interval);
 }
@@ -1416,7 +1373,9 @@ async function processFaciesColumns(
     const labelColumn = findFaciesFormationLabelColumn(columns, column);
 
     const beds = intervals
-      .filter((interval) => interval.column_id === column.id && interval.base_age !== null && interval.base_age !== undefined)
+      .filter(
+        (interval) => interval.column_id === column.id && interval.base_age !== null && interval.base_age !== undefined
+      )
       .sort((a, b) => a.base_age! - b.base_age!);
     if (beds.length === 0) {
       console.log(chalk.yellow("no facies beds found for " + column.columnx));
@@ -1535,11 +1494,7 @@ async function processPointDataColumns(
     const valueRange = points.map((point) => point.xVal);
     const display = resolvePointColumnDisplay(column, valueRange);
     const popup = columnHeaderPopup(
-      column.TSC_notes ??
-        dataset?.TSC_source_notes ??
-        dataset?.notes_Cenoz ??
-        dataset?.notes_Jur ??
-        ""
+      column.TSC_notes ?? dataset?.TSC_source_notes ?? dataset?.notes_Cenoz ?? dataset?.notes_Jur ?? ""
     );
     const ageDecimals = derivePointAgeDecimalPlaces(points.map((point) => point.age));
 

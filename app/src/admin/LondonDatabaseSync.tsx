@@ -20,43 +20,43 @@ export const LondonSyncButton: React.FC<TSCLondonDatabaseSyncButtonProps> = obse
       {datapack &&
         (datapack.title === "UCL TSC Chron" || datapack.title === "UCL TSC Facies") &&
         state.user?.isAdmin && (
-        <Box sx={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
-          <CustomTooltip title="Sync London Datapack: This will fetch the latest London datapack and upload it to the official datapacks. Existing datapacks with the same name will be deleted first. Sync is automatically done every midnight EST.">
-            <span>
-              <ColoredIconButton
-                size="small"
-                disabled={loading}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  setLoading(true);
-                  try {
-                    const result = await actions.fetchLondonDatapack();
-                    if (result) {
-                      const { metadata, file } = result;
-                      const uploadMetadata = { ...metadata, title: "UCL TSC Chron" };
-                      const legacyTitles = ["UCL TSC Chron", "UCL TSC Facies"];
-                      const toDelete = legacyTitles
-                        .filter((title) =>
-                          state.datapackMetadata.some((d) => d.title === title && d.type === "official")
-                        )
-                        .map((title) => ({ ...uploadMetadata, title }));
-                      if (toDelete.length > 0) {
-                        await actions.adminDeleteOfficialDatapacks(toDelete);
+          <Box sx={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
+            <CustomTooltip title="Sync London Datapack: This will fetch the latest London datapack and upload it to the official datapacks. Existing datapacks with the same name will be deleted first. Sync is automatically done every midnight EST.">
+              <span>
+                <ColoredIconButton
+                  size="small"
+                  disabled={loading}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setLoading(true);
+                    try {
+                      const result = await actions.fetchLondonDatapack();
+                      if (result) {
+                        const { metadata, file } = result;
+                        const uploadMetadata = { ...metadata, title: "UCL TSC Chron" };
+                        const legacyTitles = ["UCL TSC Chron", "UCL TSC Facies"];
+                        const toDelete = legacyTitles
+                          .filter((title) =>
+                            state.datapackMetadata.some((d) => d.title === title && d.type === "official")
+                          )
+                          .map((title) => ({ ...uploadMetadata, title }));
+                        if (toDelete.length > 0) {
+                          await actions.adminDeleteOfficialDatapacks(toDelete);
+                        }
+                        await actions.adminUploadOfficialDatapack(file, uploadMetadata);
                       }
-                      await actions.adminUploadOfficialDatapack(file, uploadMetadata);
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setLoading(false);
                     }
-                  } catch (e) {
-                    console.error(e);
-                  } finally {
-                    setLoading(false);
-                  }
-                }}>
-                {loading ? <Loader /> : <SyncIcon className={"sync-icon"} />}
-              </ColoredIconButton>
-            </span>
-          </CustomTooltip>
-        </Box>
-      )}
+                  }}>
+                  {loading ? <Loader /> : <SyncIcon className={"sync-icon"} />}
+                </ColoredIconButton>
+              </span>
+            </CustomTooltip>
+          </Box>
+        )}
     </>
   );
 });
