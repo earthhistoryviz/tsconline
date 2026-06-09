@@ -159,6 +159,12 @@ export default observer(function App() {
         return;
       }
 
+      if (message.type === "apply-chart-state") {
+        activeGeoGPTRequestId = message.requestId;
+        actions.applyMcpChartState(message.chartState);
+        return;
+      }
+
       if (message.type === "geogpt-chart-update-start") {
         activeGeoGPTRequestId = message.requestId;
         actions.resetChartTabStateForGeneration(state.chartTab.state);

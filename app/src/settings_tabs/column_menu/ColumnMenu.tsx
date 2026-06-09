@@ -1,76 +1,56 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { context } from "../../state";
 import { Box, Typography } from "@mui/material";
+import ViewColumnOutlinedIcon from "@mui/icons-material/ViewColumnOutlined";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
 import { RangeSettings, assertRangeSettings } from "@tsconline/shared";
-import {
-  CustomDivider,
-  CustomFormControlLabel,
-  GenericTextField,
-  StyledScrollbar,
-  TSCButton,
-  TSCCheckbox
-} from "../../components";
+import { CustomFormControlLabel, GenericTextField, StyledScrollbar, TSCButton, TSCCheckbox } from "../../components";
 import { InfoBox } from "./InfoBox";
 import { EventSpecificSettings } from "../advanced_settings/EventSpecificSettings";
 import { PointSettingsDisplay } from "../advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
 import AccordionPositionControls from "./AccordionPositionControls";
-import { CustomTabs } from "../../components/TSCCustomTabs";
 import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSettings";
 import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings";
 import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 import { setColumnMenuTabValue } from "../../state/actions";
 import { useTranslation } from "react-i18next";
 import { RenderColumnInfo } from "../../types";
+import Color from "color";
+import { useTheme } from "@mui/material/styles";
 
 export const ColumnMenu = observer(() => {
   const { state, actions } = useContext(context);
   const selectedColumn = state.columnMenu.columnSelected;
-  const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
-
-  // Resize the column menu tabs based on the width of the column menu
-  const columnAccordionWrapper = document.getElementById("ResizableColumnAccordionWrapper");
-  const columnMenuTabs = document.getElementById("ColumnMenuCustomTabs");
-  useEffect(() => {
-    if (!columnAccordionWrapper || !columnMenuTabs) return;
-    function resizeColumnMenuTabs() {
-      const width = columnAccordionWrapper?.clientWidth;
-      const viewPortWidth = window.innerWidth;
-      if (columnAccordionWrapper && width !== undefined && width / viewPortWidth > 0.5) {
-        columnMenuTabs?.classList.add("column-menu-tabs-small");
-      } else {
-        columnMenuTabs?.classList.remove("column-menu-tabs-small");
-      }
-    }
-    const resizeObserver = new ResizeObserver(resizeColumnMenuTabs);
-    resizeObserver.observe(columnAccordionWrapper);
-    return () => {
-      resizeObserver.unobserve(columnAccordionWrapper);
-      resizeObserver.disconnect();
-    };
-  }, []);
+  const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn) : undefined;
   const { t } = useTranslation();
-  return (
-    <div className="column-menu">
-      <div className="column-menu-header">
-        <div className="column-menu-label">
-          <Typography component="h1" variant="h5" whiteSpace={"nowrap"}>
-            {t("settings.column.titles.column-menu-title")}
-          </Typography>
-        </div>
+
+  if (!column) {
+    return (
+      <div className="column-detail column-detail-empty">
+        <ViewColumnOutlinedIcon className="column-detail-empty-icon" />
+        <Typography variant="subtitle1" fontWeight={600}>
+          {t("settings.column.empty-state.title")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" className="column-detail-empty-text">
+          {t("settings.column.empty-state.description")}
+        </Typography>
       </div>
-      <CustomDivider className="settings-header-divider" />
-      <div className="column-menu-content-container">
-        <CustomTabs
-          id="ColumnMenuCustomTabs"
-          className="column-menu-custom-tabs"
-          tabIndicatorLength={25}
+    );
+  }
+
+  return (
+    <div className="column-detail">
+      <div className="column-detail-header">
+        <Typography variant="h6" fontWeight={600} noWrap className="column-detail-name">
+          {column.editName}
+        </Typography>
+        <ColumnDetailTabs
+          tabs={state.columnMenu.tabs}
           value={state.columnMenu.tabValue}
-          verticalCenter
           onChange={(index) => {
             const tab = state.columnMenu.tabs[index];
             if (tab === "Data Mining" || tab === "Overlay") {
@@ -79,14 +59,44 @@ export const ColumnMenu = observer(() => {
             }
             setColumnMenuTabValue(index);
           }}
-          orientation="vertical-right"
-          width={90}
-          tabs={state.columnMenu.tabs.map((val) => ({ id: val, tab: t(`settingsTabs.${val}`) }))}
         />
-        <Box border={1} borderColor="divider" className="column-menu-content" bgcolor="secondaryBackground.main">
-          {column && <ColumnContent tab={state.columnMenu.tabs[state.columnMenu.tabValue]} column={column} />}
-        </Box>
       </div>
+      <Box className="column-detail-body" sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <ColumnContent tab={state.columnMenu.tabs[state.columnMenu.tabValue]} column={column} />
+      </Box>
+    </div>
+  );
+});
+
+type ColumnDetailTabsProps = {
+  tabs: string[];
+  value: number;
+  onChange: (index: number) => void;
+};
+
+const ColumnDetailTabs: React.FC<ColumnDetailTabsProps> = observer(({ tabs, value, onChange }) => {
+  const { t } = useTranslation();
+  const theme = useTheme();
+
+  return (
+    <div
+      className="column-detail-tabs"
+      style={{ backgroundColor: Color(theme.palette.button.main).alpha(0.12).string() }}>
+      {tabs.map((tab, index) => (
+        <button
+          key={tab}
+          type="button"
+          setting-tour={`setting-tour-${tab}-tab`}
+          className={`column-detail-tab ${index === value ? "column-detail-tab-active" : ""}`}
+          style={
+            index === value
+              ? { backgroundColor: theme.palette.button.main, color: theme.palette.button.contrastText }
+              : undefined
+          }
+          onClick={() => onChange(index)}>
+          {t(`settingsTabs.${tab}`)}
+        </button>
+      ))}
     </div>
   );
 });
@@ -97,7 +107,7 @@ type ColumnContentProps = {
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
   const { actions } = useContext(context);
-  const { t } = useTranslation(); //pass translation to components to avoid hook bugs
+  const { t } = useTranslation();
   function addBlankColumn() {
     actions.addBlankColumn(column);
   }
@@ -108,8 +118,8 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
   switch (tab) {
     case "General":
       return (
-        <StyledScrollbar>
-          <Box display="flex" flexDirection="column" gap="10px">
+        <StyledScrollbar style={{ flex: 1, minHeight: 0 }}>
+          <Box display="flex" flexDirection="column" gap="12px">
             <EditNameField column={column} />
             {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
             {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
@@ -160,13 +170,6 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
   }
 });
 
-/**
- * For generic text field, add range fields if the column is a range column
- * This is done so that the range fields can be displayed in the column menu
- * next to the width field and for flex box to work properly
- * @param column
- * @returns
- */
 function addRangeFields(
   column: RenderColumnInfo,
   setRangeColumnSettings: (r: RangeSettings, n: Partial<RangeSettings>) => void

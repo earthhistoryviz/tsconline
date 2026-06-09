@@ -1,61 +1,94 @@
-.column-menu {
+/* ── Detail panel (right side) ── */
+.column-detail {
   display: flex;
-  align-items: center;
   flex-direction: column;
-  flex-grow: 1;
-  min-width: 0;
-}
-
-.settings-header-divider {
-  margin-top: 10px;
-  margin-bottom: 10px;
-  width: 90%;
-}
-
-.column-menu-label {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.column-menu-header {
-  display: flex;
-  flex-direction: row;
-}
-
-.column-menu-content-container {
-  display: flex;
-  flex-direction: row;
-  align-self: flex-start;
-  flex-grow: 1;
+  flex: 1 1 0;
+  min-width: 200px;
+  min-height: 0;
   height: 100%;
-  width: 100%;
+  overflow: hidden;
 }
 
-.column-menu-content {
+.column-detail-header {
   display: flex;
   flex-direction: column;
-  padding: 15px 10px;
   gap: 10px;
-  max-width: calc(100% - 110px);
-  /* 110px is the width of the tabs, needed for proper scrolling */
-  flex-grow: 1;
-  height: calc(100% - 33px);
-  /* 33px is the height of the header, needed for the scrolling */
+  padding: 14px 16px 10px;
+  flex-shrink: 0;
 }
 
+.column-detail-name {
+  font-size: 1.05rem !important;
+  line-height: 1.3;
+}
+
+.column-detail-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.column-detail-tab {
+  position: relative;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s;
+  color: inherit;
+}
+
+.column-detail-tab:hover:not(.column-detail-tab-active) {
+  background-color: rgba(128, 128, 128, 0.12);
+}
+
+.column-detail-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 16px 16px;
+}
+
+/* ── Empty state ── */
+.column-detail-empty {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  gap: 8px;
+}
+
+.column-detail-empty-icon {
+  font-size: 52px !important;
+  opacity: 0.25;
+  margin-bottom: 8px;
+}
+
+.column-detail-empty-text {
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+/* ── Settings content ── */
 .show-titles-container {
+  display: flex;
   flex-direction: row;
-  margin-top: 10px;
-  margin-left: 10px;
+  flex-wrap: wrap;
+  gap: 4px 16px;
 }
 
 .accordion-position-controls {
   display: flex;
   align-items: center;
-  margin-top: 10px;
-  margin-left: 10px;
-  margin-bottom: 10px;
 }
 
 .lightgray-square {
@@ -84,74 +117,38 @@
   gap: 10px;
 }
 
-.column-menu-tabs {
-  padding: 10px;
-  width: 100px;
-}
-
-.column-menu-tab {
-  min-width: 0px;
-  white-space: wrap;
-}
-
-.column-menu-custom-tabs {
-  padding: 10px;
-  flex-shrink: 0;
-}
-
-@media screen and (max-width: 530px) {
-  .column-menu-label > .MuiTypography-root {
-    font-size: 0.9rem;
-    white-space: wrap;
-    text-align: center;
-  }
-
-  .column-menu-content {
-    max-width: calc(100% - 70px);
-  }
-
-  .column-menu-content-container {
-    min-height: 40vh;
-    height: 40vh;
-  }
-
-  .column-menu-custom-tabs > .tsc-tab-buttons {
-    width: 50px;
-  }
-
-  .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-panel {
-    width: 50px !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 10px 0px 10px 0px !important;
-  }
-
-  .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-indicator {
-    left: 55px !important;
-  }
-}
-
-.column-menu-tabs-small > .tsc-tab-buttons {
-  width: 50px;
-}
-
-.column-menu-tabs-small > .tsc-tab-buttons > .tsc-tab-panel {
-  width: 50px !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 10px 0px 10px 0px !important;
-}
-
-.column-menu-tabs-small > .tsc-tab-buttons > .tsc-tab-indicator {
-  left: 55px !important;
-}
-
 .add-blank-or-age-button-container {
   display: flex;
-  margin: 10px 0px 0px 0px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .add-blank-or-age-button {
-  margin: 0px 10px 0px 0px;
   padding: 5px 15px;
+}
+
+@media screen and (max-width: 530px) {
+  .column-detail {
+    min-width: 0;
+    min-height: 40vh;
+  }
+
+  .column-detail-header {
+    padding: 10px 12px 8px;
+  }
+
+  .column-detail-body {
+    padding: 0 12px 12px;
+  }
+
+  .column-detail-tabs {
+    width: 100%;
+  }
+
+  .column-detail-tab {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
 }

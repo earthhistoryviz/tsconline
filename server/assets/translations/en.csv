@@ -228,6 +228,11 @@ translation.settings.column.tooltip.flip,Flip Range
 translation.settings.column.titles.column-menu-title,Column Customization
 translation.settings.column.titles.data-mining-title,Data Mining Settings
 translation.settings.column.titles.font-option-title,Font Options for "{{name}}
+translation.settings.column.titles.sidebar-title,Columns
+translation.settings.column.empty-state.title,No column selected
+translation.settings.column.empty-state.description,Pick a column from the list to edit its title, width, fonts, and other options.
+translation.settings.column.hide-default-columns.label,Blank slate
+translation.settings.column.hide-default-columns.tooltip,Hide datapack default columns so you can pick only what you need. Click again to restore defaults.
 translation.settings.column.menu.shift-row,Shift Row Positions
 translation.settings.column.menu.edit-name,Edit Title
 translation.settings.column.menu.background-color,Background Color

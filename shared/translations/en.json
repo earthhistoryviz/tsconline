@@ -350,7 +350,16 @@
                 "titles": {
                     "column-menu-title": "Column Customization",
                     "data-mining-title": "Data Mining Settings",
-                    "font-option-title": "Font Options for \"{{name}}"
+                    "font-option-title": "Font Options for \"{{name}}",
+                    "sidebar-title": "Columns"
+                },
+                "empty-state": {
+                    "title": "No column selected",
+                    "description": "Pick a column from the list to edit its title, width, fonts, and other options."
+                },
+                "hide-default-columns": {
+                    "label": "Blank slate",
+                    "tooltip": "Hide datapack default columns so you can pick only what you need. Click again to restore defaults."
                 },
                 "menu": {
                     "shift-row": "Shift Row Positions",

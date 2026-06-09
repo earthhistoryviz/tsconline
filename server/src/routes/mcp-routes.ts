@@ -270,7 +270,7 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       sessionId
     } = (_request.body ?? {}) as {
       datapackTitles?: string[];
-      overrides?: SchemaOverrides;
+      overrides?: SchemaOverrides & Record<string, unknown>;
       columnToggles?: ColumnToggles;
       useCache?: boolean;
       isCrossPlot?: boolean;
@@ -295,7 +295,21 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       return;
     }
 
-    const settingsXml = await generateChartWithEdits(requestedDatapacks, overrides, columnToggles);
+    const hideDatapackDefaults = overrides.hideDatapackDefaults === true;
+
+    const settingsXml = await generateChartWithEdits(requestedDatapacks, overrides, columnToggles, {
+      hideDatapackDefaults
+    });
+
+    sendMcpSocketMessage(sessionId, {
+      type: "apply-chart-state",
+      requestId,
+      chartState: {
+        datapackTitles,
+        overrides,
+        columnToggles
+      }
+    });
 
     const chartRequest: ChartRequest = {
       settings: settingsXml,

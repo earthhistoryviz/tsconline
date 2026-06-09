@@ -216,11 +216,19 @@ const columnToggleSchema = z.record(z.string(), singleColumnToggleSchema);
 
 const updateChartArgsSchema = z.object({
   datapackTitles: datapackTitlesSchema.describe("Array of datapack titles to use for the chart."),
-  overrides: overridesSchema.optional(),
+  overrides: overridesSchema
+    .extend({
+      hideDatapackDefaults: z
+        .boolean()
+        .optional()
+        .describe("When true, hides datapack default-on columns (blank slate). Pair with columnToggles listing the columns to keep on.")
+    })
+    .passthrough()
+    .optional(),
   columnToggles: columnToggleSchema
     .optional()
     .describe(
-      'Flat object keyed by actual column names/identifiers. Do not use nested objects from listColumns and do not join parent/child names with dots. Example: { "Period (Lunar)": { "on": true }, "Events (Martian)": { "on": true } }'
+      'Flat object keyed by actual column names/identifiers. Use { "on": true } to enable a column and { "on": false } to disable default-on columns. Width overrides use { "width": number }. Example: { "Period (Lunar)": { "on": true }, "Events": { "on": false } }'
     ),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),

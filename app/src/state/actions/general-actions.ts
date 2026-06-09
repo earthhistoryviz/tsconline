@@ -12,6 +12,7 @@ import {
   ChartInfoTSC,
   ChartSettingsInfoTSC,
   type ColumnInfo,
+  type MCPChartState,
   Datapack,
   DatapackConfigForChartRequest,
   DatapackMetadata,
@@ -32,6 +33,7 @@ import {
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { devSafeUrl, executeRecaptcha, fetcher } from "../../util";
+import { applyMcpChartStateToApp } from "../../util/apply-mcp-chart-state";
 import {
   applyChartColumnSettings,
   applyRowOrder,
@@ -39,6 +41,7 @@ import {
   handleDataMiningColumns,
   handleDualColCompColumns,
   initializeColumnHashMap,
+  resetHideDatapackDefaultsState,
   searchColumns,
   searchEvents
 } from "./column-actions";
@@ -449,6 +452,10 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
+export const applyMcpChartState = action("applyMcpChartState", (chartState: MCPChartState) => {
+  applyMcpChartStateToApp(state, chartState);
+});
+
 export const applySettings = action("applySettings", async (settings: ChartInfoTSC) => {
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
@@ -563,6 +570,7 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   searchColumns(state.settingsTabs.columnSearchTerm);
   searchEvents(state.settingsTabs.eventSearchTerm);
   setUnsavedDatapackConfig([]);
+  resetHideDatapackDefaultsState();
 });
 
 /**
@@ -707,6 +715,7 @@ export const setDatapackConfig = action(
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
       await applySettings(chartSettings);
+      resetHideDatapackDefaultsState();
     } else {
       // set any new units in the time
       for (const chart of columnRoot.children) {
@@ -716,6 +725,7 @@ export const setDatapackConfig = action(
           });
         }
       }
+      resetHideDatapackDefaultsState();
     }
     if (state.settingsTabs.columnSearchTerm) searchColumns(state.settingsTabs.columnSearchTerm);
     if (state.settingsTabs.columnSearchTerm) searchEvents(state.settingsTabs.eventSearchTerm);
