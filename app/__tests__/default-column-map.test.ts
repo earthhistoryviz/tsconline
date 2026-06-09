@@ -60,12 +60,8 @@ describe("default-column-map", () => {
   });
 
   it("restores from snapshot", () => {
-    const hashMap = new Map<string, RenderColumnInfo>([
-      ["Events", makeRenderColumn({ name: "Events", on: false })]
-    ]);
-    const snapshot = snapshotColumnOnStates(
-      new Map([["Events", makeRenderColumn({ name: "Events", on: true })]])
-    );
+    const hashMap = new Map<string, RenderColumnInfo>([["Events", makeRenderColumn({ name: "Events", on: false })]]);
+    const snapshot = snapshotColumnOnStates(new Map([["Events", makeRenderColumn({ name: "Events", on: true })]]));
 
     restoreColumnOnSnapshot(hashMap, snapshot);
     expect(hashMap.get("Events")!.on).toBe(true);

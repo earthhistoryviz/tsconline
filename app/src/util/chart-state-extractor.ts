@@ -100,9 +100,7 @@ function collectLeafColumnToggle(
   }
 
   const widthDiffers =
-    defaultColumn === undefined
-      ? renderColumn.width !== undefined
-      : defaultColumn.width !== renderColumn.width;
+    defaultColumn === undefined ? renderColumn.width !== undefined : defaultColumn.width !== renderColumn.width;
 
   if (widthDiffers && renderColumn.width !== undefined) {
     settings.width = renderColumn.width;
@@ -145,12 +143,7 @@ function collectRenderColumnSettings(
   if (!renderColumn || renderColumn.name === defaultColumnRoot.name) return;
 
   if (hideDatapackDefaults) {
-    collectBlankSlatePositiveEntry(
-      renderColumn,
-      parentMap,
-      state.settingsTabs.columnHashMap,
-      columnToggleSettings
-    );
+    collectBlankSlatePositiveEntry(renderColumn, parentMap, state.settingsTabs.columnHashMap, columnToggleSettings);
   } else if (isReportableLeaf(renderColumn)) {
     collectLeafColumnToggle(
       renderColumn,

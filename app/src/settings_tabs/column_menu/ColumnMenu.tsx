@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
-import { Box, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import ViewColumnOutlinedIcon from "@mui/icons-material/ViewColumnOutlined";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
@@ -83,9 +83,8 @@ const ColumnDetailTabs: React.FC<ColumnDetailTabsProps> = observer(({ tabs, valu
       className="column-detail-tabs"
       style={{ backgroundColor: Color(theme.palette.button.main).alpha(0.12).string() }}>
       {tabs.map((tab, index) => (
-        <button
+        <Button
           key={tab}
-          type="button"
           setting-tour={`setting-tour-${tab}-tab`}
           className={`column-detail-tab ${index === value ? "column-detail-tab-active" : ""}`}
           style={
@@ -95,7 +94,7 @@ const ColumnDetailTabs: React.FC<ColumnDetailTabsProps> = observer(({ tabs, valu
           }
           onClick={() => onChange(index)}>
           {t(`settingsTabs.${tab}`)}
-        </button>
+        </Button>
       ))}
     </div>
   );

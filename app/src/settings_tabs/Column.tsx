@@ -278,7 +278,6 @@ const ColumnDisplaySurface = observer(function ColumnDisplaySurface({
   embedded: boolean;
   scrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const { state } = useContext(ColumnContext);
   const isLoading = useContext(context).state.settingsTabs.showColumnSearchLoader;
   const wrapperClass = [
     "column-accordion-wrapper",
@@ -383,12 +382,7 @@ const ColumnIcon = observer(({ column, isBranch = false }: { column: RenderColum
     if (!unitSettings) return true;
     return checkIfDccColumn(column)
       ? checkIfDccDataIsInRange(column, unitSettings.topStageAge, unitSettings.baseStageAge)
-      : checkIfDataIsInRange(
-          column.minAge,
-          column.maxAge,
-          unitSettings.topStageAge,
-          unitSettings.baseStageAge
-        );
+      : checkIfDataIsInRange(column.minAge, column.maxAge, unitSettings.topStageAge, unitSettings.baseStageAge);
   }, [column, unitSettings?.topStageAge, unitSettings?.baseStageAge]);
   const tooltipOrCheckBox =
     !dataInRange && !(column.name === "Ma" || column.name === "Root") ? (

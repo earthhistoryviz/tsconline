@@ -221,7 +221,9 @@ const updateChartArgsSchema = z.object({
       hideDatapackDefaults: z
         .boolean()
         .optional()
-        .describe("When true, hides datapack default-on columns (blank slate). Pair with columnToggles listing the columns to keep on.")
+        .describe(
+          "When true, hides datapack default-on columns (blank slate). Pair with columnToggles listing the columns to keep on."
+        )
     })
     .passthrough()
     .optional(),

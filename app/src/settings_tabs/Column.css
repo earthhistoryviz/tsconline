@@ -280,7 +280,9 @@
   pointer-events: none;
   width: var(--button-size);
   height: var(--button-size);
-  transition: opacity 0.3s ease, visibility 0s 0.3s;
+  transition:
+    opacity 0.3s ease,
+    visibility 0s 0.3s;
 }
 
 .scroll-to-top-button.show {

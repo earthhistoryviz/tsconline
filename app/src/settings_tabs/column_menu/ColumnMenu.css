@@ -43,8 +43,14 @@
   padding: 5px 14px;
   border-radius: 999px;
   white-space: nowrap;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
   color: inherit;
+  min-width: 0;
+  text-transform: none;
+  box-shadow: none;
+  line-height: inherit;
 }
 
 .column-detail-tab:hover:not(.column-detail-tab-active) {

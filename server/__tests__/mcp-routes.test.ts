@@ -465,6 +465,15 @@ describe("mcpRenderChartWithEdits", () => {
 
     const sentMessages = socket.send.mock.calls.map(([raw]) => JSON.parse(raw as string));
     expect(sentMessages).toEqual([
+      {
+        type: "apply-chart-state",
+        requestId: "mock-request-id",
+        chartState: {
+          datapackTitles: ["GTS2020"],
+          overrides: {},
+          columnToggles: {}
+        }
+      },
       { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
       {
         type: "geogpt-chart-update-complete",
