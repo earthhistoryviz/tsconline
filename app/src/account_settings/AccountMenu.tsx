@@ -22,7 +22,6 @@ import { useTranslation } from "react-i18next";
 import type { MCPCreateSessionRequest } from "@tsconline/shared";
 
 import { fetcher } from "../util";
-import { ErrorCodes } from "../util/error-codes";
 import { extractCurrentChartState } from "../util/chart-state-extractor";
 
 export const AccountMenu = observer(() => {

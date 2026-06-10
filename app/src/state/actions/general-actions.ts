@@ -1185,9 +1185,6 @@ export const setIsInitializing = action("setIsInitializing", (initializing: bool
 export const setUser = action("setUser", (user: SharedUser) => {
   state.user = { ...state.user, ...user };
 });
-export const setGeoGPTSessionId = action("setGeoGPTSessionId", (sessionId: string) => {
-  state.user.geogptSessionId = sessionId;
-});
 export const setPictureUrl = action("setPictureUrl", (url: string) => {
   state.user.pictureUrl = url;
 });

@@ -43,7 +43,6 @@ export type UploadDatapackMethodType = (
 ) => Promise<void>;
 
 export type User = SharedUser & {
-  geogptSessionId: string;
   settings: {
     darkMode: boolean;
     language: string;
