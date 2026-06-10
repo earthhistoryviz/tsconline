@@ -108,6 +108,12 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         }
         assertMCPLinkParams(parsedState);
 
+        //If cowork isn't enabled, chart isnt auto-updated
+        if (!state.user?.settings?.geogptTscOnlineCoWork) {
+          actions.pushSnackbar("Co-work disabled, enable for automatic chart updates", "info");
+          return;
+        }
+
         await actions.loadMcpChartLink(parsedState);
       } catch (e) {
         displayServerError(null, ErrorCodes.NO_CACHED_FILE_FOUND, ErrorMessages[ErrorCodes.NO_CACHED_FILE_FOUND]);
