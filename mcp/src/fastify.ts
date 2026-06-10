@@ -9,7 +9,8 @@ import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
 import { createMCPServer, sessions } from "./mcp.js";
 
-import { SharedUser } from "@tsconline/shared";
+import { newMCPChartState } from "@tsconline/shared";
+import type { SharedUser, MCPCreateSessionRequest, MCPUpdateSessionChartStateRequest } from "@tsconline/shared";
 
 export interface MCPRoutesOptions {
   streamableTtlMs?: number; // default 15m
@@ -286,17 +287,53 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     reply.code(200).send({ ok: true, sessionId });
   });
 
-  app.post("/messages/create-session", async (_req, reply) => {
+  app.post("/messages/create-session", async (req, reply) => {
     const sessionId = randomUUID(); // generate new sessionid for this new entry we are making
 
+    // Extract optional chart state from request body
+    const { userChartState } = (req.body ?? {}) as MCPCreateSessionRequest;
+
     // create that new entry in the mcp sessions mapping (userInfo undefined for now)
+    // If userChartState is provided, use it; otherwise use empty state
     sessions.set(sessionId, {
       createdAt: Date.now(),
       lastActivity: Date.now(),
-      userChartState: { datapackTitles: [], overrides: {}, columnToggles: {} }
+      userChartState: userChartState || newMCPChartState()
     });
 
     return reply.send({ sessionId });
+  });
+
+  app.post("/messages/update-chart-state", async (req, reply) => {
+    const authHeader = req.headers.authorization;
+    const expectedToken = process.env.MCP_AUTH_TOKEN;
+
+    if (!expectedToken || !authHeader?.startsWith("Bearer ")) {
+      reply.code(401).send({ error: "Missing or invalid Bearer token" });
+      return;
+    }
+
+    const token = authHeader.slice(7);
+    if (token !== expectedToken) {
+      reply.code(401).send({ error: "Invalid Bearer token" });
+      return;
+    }
+
+    const { sessionId, userChartState } = (req.body ?? {}) as Partial<MCPUpdateSessionChartStateRequest>;
+    if (!sessionId || !userChartState) {
+      reply.code(400).send({ error: "Missing sessionId or userChartState" });
+      return;
+    }
+
+    const entry = sessions.get(sessionId);
+    if (!entry) {
+      reply.code(400).send({ error: "Invalid or expired session" });
+      return;
+    }
+
+    entry.userChartState = userChartState;
+    entry.lastActivity = Date.now();
+    reply.code(200).send({ ok: true, sessionId });
   });
 
   if (enableHealth) {

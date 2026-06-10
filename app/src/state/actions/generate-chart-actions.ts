@@ -202,6 +202,7 @@ export const compileChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: false
       });
+
       generalActions.removeAllErrors();
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {

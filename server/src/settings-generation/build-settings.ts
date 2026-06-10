@@ -4,7 +4,8 @@ import {
   defaultChartSettingsInfoTSC,
   ChartSettingsInfoTSC,
   defaultColumnRootConstant,
-  FontsInfo
+  FontsInfo,
+  MCPColumnToggleSettings
 } from "@tsconline/shared";
 import _ from "lodash";
 import { jsonToXml } from "./settings-to-xml.js";
@@ -24,10 +25,38 @@ export type SchemaOverrides = Partial<{
   enHideBlockLable: boolean;
 }>;
 
-export type ColumnToggles = {
-  on?: string[];
-  off?: string[];
-};
+export function extractUnitScopedTimeOverrides(overrides: SchemaOverrides): {
+  topAgeByUnit: Map<string, number>;
+  baseAgeByUnit: Map<string, number>;
+} {
+  const topAgeByUnit = new Map<string, number>();
+  const baseAgeByUnit = new Map<string, number>();
+
+  for (const [key, value] of Object.entries(overrides)) {
+    if (typeof value !== "number") continue;
+
+    const topAgeMatch = key.match(/^topAge_(.+)$/);
+    if (topAgeMatch?.[1]) {
+      topAgeByUnit.set(topAgeMatch[1].toLowerCase(), value);
+      continue;
+    }
+
+    const baseAgeMatch = key.match(/^baseAge_(.+)$/);
+    if (baseAgeMatch?.[1]) {
+      baseAgeByUnit.set(baseAgeMatch[1].toLowerCase(), value);
+    }
+  }
+
+  return { topAgeByUnit, baseAgeByUnit };
+}
+
+export type ColumnToggles = Record<
+  string,
+  {
+    on?: boolean;
+    width?: number;
+  }
+>;
 
 export type FlattenedColumn = {
   id: string;
@@ -37,6 +66,73 @@ export type FlattenedColumn = {
   enableTitle: boolean;
   type: string;
 };
+
+type ColumnInfoWithPossibleIds = ColumnInfo & {
+  _id?: string;
+  id?: string;
+  originalTscId?: string;
+};
+
+function getPossibleColumnIdentifiers(col: ColumnInfo): string[] {
+  const withIds = col as ColumnInfoWithPossibleIds;
+  const explicitIds = [withIds.originalTscId, withIds._id, withIds.id]
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) => {
+      const rawValue = value.toLowerCase();
+      const suffix = value.includes(":") ? value.split(":").slice(1).join(":").toLowerCase() : rawValue;
+      return [rawValue, suffix];
+    });
+
+  const displayIds = [col.name, col.editName]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.toLowerCase());
+
+  return Array.from(new Set([...displayIds, ...explicitIds]));
+}
+
+function addNormalizedToggleCandidates(
+  normalizedToggles: Map<string, Partial<MCPColumnToggleSettings>>,
+  columnId: string,
+  settings: Partial<MCPColumnToggleSettings>
+) {
+  const queue = [columnId];
+  const seen = new Set<string>();
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) continue;
+
+    const trimmed = current.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+
+    normalizedToggles.set(trimmed.toLowerCase(), settings);
+
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      queue.push(trimmed.slice(1, -1));
+    }
+
+    const dequoted = trimmed.replace(/^"+|"+$/g, "").replace(/^'+|'+$/g, "");
+    if (dequoted !== trimmed) {
+      queue.push(dequoted);
+    }
+
+    if (trimmed.includes(":")) {
+      queue.push(trimmed.split(":").slice(1).join(":"));
+    }
+
+    if (trimmed.includes(".")) {
+      const dotParts = trimmed
+        .split(".")
+        .map((part) => part.trim())
+        .filter(Boolean);
+      for (let i = 1; i < dotParts.length; i++) {
+        queue.push(dotParts.slice(i).join("."));
+      }
+      queue.push(dotParts[dotParts.length - 1]!);
+    }
+  }
+}
 
 /**
  * Merge multiple datapack column trees into a single root column.
@@ -199,19 +295,45 @@ function extractSettingsComponents(datapacks: Datapack[]): {
   return { columnRoot, chartSettings };
 }
 
-function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
-  const toLowerSet = (arr?: string[]) => new Set((arr ?? []).map((v) => v.toLowerCase()));
-  const idsOn = toLowerSet(toggles.on);
-  const idsOff = toLowerSet(toggles.off);
+export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
+  const normalizedToggles = new Map<string, Partial<MCPColumnToggleSettings>>();
 
-  const visit = (col: ColumnInfo) => {
-    const candidates = [col.name, col.editName].filter((v): v is string => Boolean(v)).map((v) => v.toLowerCase());
+  const columnToggleAppliers: Array<(col: ColumnInfo, settings: Partial<MCPColumnToggleSettings>) => void> = [
+    (col, settings) => {
+      if (settings.on !== undefined) {
+        col.on = settings.on;
+      }
+    },
+    (col, settings) => {
+      if (settings.width !== undefined) {
+        col.width = settings.width;
+      }
+    }
+  ];
 
-    if (candidates.some((id) => idsOn.has(id))) col.on = true;
-    if (candidates.some((id) => idsOff.has(id))) col.on = false;
+  for (const [columnId, settings] of Object.entries(toggles)) {
+    addNormalizedToggleCandidates(normalizedToggles, columnId, settings);
+  }
+
+  const visit = (col: ColumnInfo, ancestors: ColumnInfo[] = []) => {
+    const candidates = getPossibleColumnIdentifiers(col);
+    const matchedId = candidates.find((id) => normalizedToggles.has(id));
+    const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
+
+    if (settings) {
+      if (settings.on === true) {
+        for (const ancestor of ancestors) {
+          ancestor.on = true;
+        }
+      }
+
+      for (const applyToggle of columnToggleAppliers) {
+        applyToggle(col, settings);
+      }
+    }
 
     if (col.children) {
-      col.children.forEach(visit);
+      col.children.forEach((child) => visit(child, [...ancestors, col]));
     }
   };
 
@@ -223,6 +345,8 @@ function applyOverridesToChartSettings(
   overrides: SchemaOverrides,
   primaryUnit: string
 ) {
+  const { topAgeByUnit, baseAgeByUnit } = extractUnitScopedTimeOverrides(overrides);
+
   if (overrides.topAge !== undefined) {
     const existingTopAge = chartSettings.topAge.find((t) => t.unit === primaryUnit);
     if (existingTopAge) {
@@ -238,6 +362,34 @@ function applyOverridesToChartSettings(
       existingBaseAge.text = overrides.baseAge;
     } else {
       chartSettings.baseAge.push({ source: "text", unit: primaryUnit, text: overrides.baseAge });
+    }
+  }
+
+  for (const entry of chartSettings.topAge) {
+    const unitScopedTopAge = topAgeByUnit.get(entry.unit.toLowerCase());
+    if (unitScopedTopAge !== undefined) {
+      entry.text = unitScopedTopAge;
+    }
+  }
+
+  for (const [unit, scopedTopAge] of topAgeByUnit.entries()) {
+    const hasExistingUnit = chartSettings.topAge.some((entry) => entry.unit.toLowerCase() === unit);
+    if (!hasExistingUnit) {
+      chartSettings.topAge.push({ source: "text", unit, text: scopedTopAge });
+    }
+  }
+
+  for (const entry of chartSettings.baseAge) {
+    const unitScopedBaseAge = baseAgeByUnit.get(entry.unit.toLowerCase());
+    if (unitScopedBaseAge !== undefined) {
+      entry.text = unitScopedBaseAge;
+    }
+  }
+
+  for (const [unit, scopedBaseAge] of baseAgeByUnit.entries()) {
+    const hasExistingUnit = chartSettings.baseAge.some((entry) => entry.unit.toLowerCase() === unit);
+    if (!hasExistingUnit) {
+      chartSettings.baseAge.push({ source: "text", unit, text: scopedBaseAge });
     }
   }
 
@@ -325,7 +477,7 @@ export async function generateChartWithEdits(
   const { columnRoot, chartSettings } = extractSettingsComponents(datapacks);
   const primaryUnit = datapacks[0] && datapacks.length > 0 ? datapacks[0].ageUnits : "Ma";
 
-  if (normalizedToggles.on?.length || normalizedToggles.off?.length) {
+  if (Object.keys(normalizedToggles).length > 0) {
     applyTogglesToColumnInfo(columnRoot, normalizedToggles);
   }
 
@@ -335,7 +487,9 @@ export async function generateChartWithEdits(
 
   validateChartSettings(chartSettings, primaryUnit);
 
-  return jsonToXml(columnRoot, chartSettings);
+  const xml = jsonToXml(columnRoot, chartSettings);
+
+  return xml;
 }
 
 function flattenColumnsInternal(columns: ColumnInfo[], parentPath: string): FlattenedColumn[] {

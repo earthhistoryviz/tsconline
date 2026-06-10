@@ -19,8 +19,11 @@ import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import type { MCPCreateSessionRequest } from "@tsconline/shared";
 
 import { fetcher } from "../util";
+import { ErrorCodes } from "../util/error-codes";
+import { extractCurrentChartState } from "../util/chart-state-extractor";
 
 export const AccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -53,9 +56,15 @@ export const AccountMenu = observer(() => {
 
     try {
       setLoading(true);
+
+      const userChartState = extractCurrentChartState(state);
+      const createSessionPayload: MCPCreateSessionRequest = { userChartState };
+
       const res = await fetcher("/mcp/create-session", {
         method: "POST",
-        credentials: "include"
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(createSessionPayload)
       });
 
       const json = await res.json();
