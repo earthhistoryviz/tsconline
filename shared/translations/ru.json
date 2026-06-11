@@ -465,7 +465,12 @@
             },
             "datapacks": {
                 "see-info-guidance": "Нажмите на датапак, чтобы узнать больше!",
-                "add-datapack-guidance": "Добавьте датапак, установив флажок",
+                "add-datapack-guidance": "Добавьте датапак, нажав кнопку «Добавить»",
+                "add-to-chart": "Добавить в диаграмму",
+                "add-short": "Добавить",
+                "in-chart-short": "Добавлен",
+                "remove-from-chart": "Убрать",
+                "selected-count": "Выбрано: {{count}}",
                 "title": {
                     "private-official": "Закрытые официальные датапаки",
                     "public-official": "Официальные датапаки",

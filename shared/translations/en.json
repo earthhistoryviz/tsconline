@@ -465,7 +465,12 @@
             },
             "datapacks": {
                 "see-info-guidance": "Click a datapack to see more information!",
-                "add-datapack-guidance": "Add a datapack by clicking the checkbox",
+                "add-datapack-guidance": "Add a datapack by clicking the Add button",
+                "add-to-chart": "Add to chart",
+                "add-short": "Add",
+                "in-chart-short": "Added",
+                "remove-from-chart": "Remove",
+                "selected-count": "{{count}} selected",
                 "title": {
                     "private-official": "Private Official Datapacks",
                     "public-official": "Official Datapacks",

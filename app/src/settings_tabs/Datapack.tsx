@@ -7,7 +7,9 @@ import Typography from "@mui/material/Typography";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
-import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, SvgIcon } from "@mui/material";
+import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, SvgIcon, useTheme } from "@mui/material";
+import Color from "color";
+import { datapackAddedColors } from "../components/datapack_display/TSCDatapackCard";
 import { People, School, Security, Verified, Terrain } from "@mui/icons-material";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
@@ -43,7 +45,10 @@ export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
   const { t } = useTranslation();
+  const theme = useTheme();
+  const added = datapackAddedColors(theme);
   const navigate = useNavigate();
+  const selectedCount = state.unsavedDatapackConfig.length;
   const shouldLoadRecaptcha =
     state.isLoggedIn &&
     (formOpen ||
@@ -72,6 +77,25 @@ export const Datapacks = observer(function Datapacks() {
         <div>
           <Typography className={styles.h}>{t("settings.datapacks.see-info-guidance")}</Typography>
           <Typography className={styles.dh}>{t("settings.datapacks.add-datapack-guidance")}</Typography>
+          {/* count of datapacks staged before confirm */}
+          {selectedCount > 0 && (
+            <Typography
+              className={styles.dh}
+              sx={{
+                fontWeight: 600,
+                color: added.main,
+                bgcolor: Color(added.main).alpha(0.12).string(),
+                border: `1px solid ${added.main}`,
+                borderRadius: 1,
+                px: 1,
+                py: 0.25,
+                width: "fit-content",
+                mx: "auto",
+                mt: 0.5
+              }}>
+              {t("settings.datapacks.selected-count", { count: selectedCount })}
+            </Typography>
+          )}
         </div>
         <ToggleButtonGroup
           className={styles.display}
