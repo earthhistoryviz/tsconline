@@ -54,7 +54,7 @@ export const DatapackChartAction = ({ selected, loading, compact, fullWidth, onC
   const { t } = useTranslation();
   const added = datapackAddedColors(theme);
 
-  const addLabel = compact ? t("settings.datapacks.add-short") : t("settings.datapacks.add-to-chart");
+  const addLabel = t("settings.datapacks.add-to-chart");
   const inChartLabel = t("settings.datapacks.in-chart-short");
   const removeLabel = t("settings.datapacks.remove-from-chart");
 

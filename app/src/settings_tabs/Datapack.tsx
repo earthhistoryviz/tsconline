@@ -37,6 +37,7 @@ import {
   getPublicDatapacksMetadataWithoutCurrentUser,
   getPublicOfficialDatapacksMetadata,
   getWorkshopDatapacksMetadata,
+  groupOfficialDatapacks,
   isOwnedByUser
 } from "../state/non-action-util";
 import { useNavigate } from "react-router";
@@ -60,6 +61,11 @@ export const Datapacks = observer(function Datapacks() {
       if (shouldLoadRecaptcha) removeRecaptcha();
     };
   }, [shouldLoadRecaptcha]);
+
+  // same code to get passed to datapack group display component but as a var to be reused for subgroups paramater
+  const officialDatapacks = getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter(
+    (item) => !["Treatise", "Lexicon Formations"].some((tag) => item.tags.includes(tag))
+  );
 
   return (
     <StyledScrollbar className={styles.dc + " settings-datapack-container"}>
@@ -123,9 +129,8 @@ export const Datapacks = observer(function Datapacks() {
       <Box
         className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards} datapack-display-container`}>
         <DatapackGroupDisplay
-          datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter(
-            (item) => !["Treatise", "Lexicon Formations"].some((tag) => item.tags.includes(tag))
-          )}
+          datapacks={officialDatapacks}
+          subgroups={groupOfficialDatapacks(officialDatapacks)}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}
           loading={state.skeletonStates.publicOfficialDatapacksLoading}
@@ -269,9 +274,11 @@ type DatapackGroupDisplayProps = {
   header: string;
   HeaderIcon: React.ElementType;
   loading?: boolean;
+  // when set, renders official datapacks in labeled sub-sections instead of one flat list
+  subgroups?: { subgroup: string; datapacks: DatapackMetadata[] }[];
 };
 const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
-  ({ datapacks, header, HeaderIcon, loading = false }) => {
+  ({ datapacks, header, HeaderIcon, loading = false, subgroups }) => {
     const { state, actions } = useContext(context);
     const { t } = useTranslation();
     const [showAll, setShowAll] = useState(false);
@@ -303,10 +310,33 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     };
     const numberOfDatapacks = datapacks.length + extraLoadingSkeletons;
     const shouldWrap = shouldSplitIntoTwoCol && state.settingsTabs.datapackDisplayType !== "cards";
-    const officialRowLimit =
-      shouldSplitIntoTwoCol && (showAll || numberOfDatapacks <= visibleLimit)
-        ? { gridTemplateRows: `repeat(${(numberOfDatapacks / 2).toFixed(0)}, 1fr)` }
+    // row count for the official two-column grid (flat list only)
+    const officialRowLimit = (count: number) =>
+      shouldSplitIntoTwoCol && (showAll || count <= visibleLimit)
+        ? { gridTemplateRows: `repeat(${Math.ceil(count / 2)}, 1fr)` }
         : {};
+
+    // pick row, compact, or card component based on display mode
+    const renderDatapack = (datapack: DatapackMetadata | null, key: string) => {
+      const value = datapack ? state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack)) : false;
+      return state.settingsTabs.datapackDisplayType === "rows" ? (
+        datapack ? (
+          <TSCDatapackRow key={key} datapack={datapack} value={value} onChange={onChange} />
+        ) : (
+          <TSCDatapackRow key={key} />
+        )
+      ) : state.settingsTabs.datapackDisplayType === "compact" ? (
+        datapack ? (
+          <TSCCompactDatapackRow key={key} datapack={datapack} value={value} onChange={onChange} />
+        ) : (
+          <TSCCompactDatapackRow key={key} />
+        )
+      ) : datapack ? (
+        <TSCDatapackCard key={key} datapack={datapack} value={value} onChange={onChange} />
+      ) : (
+        <TSCDatapackCard key={key} />
+      );
+    };
 
     return (
       <Box
@@ -322,33 +352,44 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
             className={styles.idh}>{`${header} (${numberOfDatapacks - extraLoadingSkeletons})`}</Typography>
         </Box>
         <CustomDivider className={styles.divider} />
-        {numberOfDatapacks !== 0 && (
-          <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`} style={officialRowLimit}>
-            {[...visibleDatapacks, ...skeletons].map((datapack, index) => {
-              const value = datapack
-                ? state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack))
-                : false;
-              return state.settingsTabs.datapackDisplayType === "rows" ? (
-                datapack ? (
-                  <TSCDatapackRow key={index} datapack={datapack} value={value} onChange={onChange} />
-                ) : (
-                  <TSCDatapackRow key={index} />
-                )
-              ) : state.settingsTabs.datapackDisplayType === "compact" ? (
-                datapack ? (
-                  <TSCCompactDatapackRow key={index} datapack={datapack} value={value} onChange={onChange} />
-                ) : (
-                  <TSCCompactDatapackRow key={index} />
-                )
-              ) : datapack ? (
-                <TSCDatapackCard key={index} datapack={datapack} value={value} onChange={onChange} />
-              ) : (
-                <TSCDatapackCard key={index} />
-              );
-            })}
-          </Box>
-        )}
-        {numberOfDatapacks > visibleLimit && (
+        {numberOfDatapacks !== 0 &&
+          (subgroups ? (
+            <>
+              {subgroups.map(({ subgroup, datapacks: subgroupDatapacks }) => (
+                <Box key={subgroup} className={styles.subgroup}>
+                  <Typography variant="subtitle1" className={styles.subgroupHeader}>
+                    {t(`settings.datapacks.official-subgroup.${subgroup}`)}
+                  </Typography>
+                  {/* 2-column grid for rows/compact; flex wrap for cards */}
+                  <Box
+                    className={`${styles.item} ${
+                      state.settingsTabs.datapackDisplayType === "cards"
+                        ? styles.subgroupItemCards
+                        : shouldWrap
+                          ? styles.subgroupItem
+                          : ""
+                    }`}>
+                    {subgroupDatapacks.map((datapack) => renderDatapack(datapack, datapack.title))}
+                  </Box>
+                </Box>
+              ))}
+              {skeletons.length > 0 && (
+                <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`}>
+                  {skeletons.map((datapack, index) => renderDatapack(datapack, `skeleton-${index}`))}
+                </Box>
+              )}
+            </>
+          ) : (
+            // render datapacks normally if not in offical datapack section (that one is categorized)
+            <Box
+              className={`${styles.item} ${shouldWrap && styles.wrapItem}`}
+              style={officialRowLimit(datapacks.length)}>
+              {[...visibleDatapacks, ...skeletons].map((datapack, index) =>
+                renderDatapack(datapack, datapack?.title ?? `skeleton-${index}`)
+              )}
+            </Box>
+          ))}
+        {!subgroups && numberOfDatapacks > visibleLimit && (
           <Box className={styles.showBox} onClick={() => setShowAll(!showAll)}>
             <Typography className={styles.show} variant="body2" color="theme.palette.backgroundColor.contrastText">
               {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}

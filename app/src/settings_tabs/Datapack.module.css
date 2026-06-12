@@ -156,6 +156,39 @@
   margin-left: 5px;
 }
 
+.subgroup {
+  width: 100%;
+}
+
+.subgroupHeader {
+  margin: 14px 0 8px 5px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  width: 98%;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.35);
+  box-sizing: border-box;
+}
+
+.subgroupItem {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+
+.subgroupItem > * {
+  min-width: 0;
+}
+
+.container.cards .subgroupItemCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 @media (max-width: 720px) {
   .container.cards {
     overflow-y: hidden;

@@ -480,6 +480,12 @@
                     "treatise": "Treatise Datapacks",
                     "lexicon": "Lexicon Datapacks"
                 },
+                "official-subgroup": {
+                    "global": "Global Timescale",
+                    "regional": "Regional Datapacks",
+                    "evolution-culture": "Evolution & Culture",
+                    "other": "Other"
+                },
                 "no": "No",
                 "avaliable": "Avaliable",
                 "upload": "Upload Datapack",

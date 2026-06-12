@@ -270,9 +270,22 @@
                 "remove-from-chart": "移除",
                 "selected-count": "已选择 {{count}} 个",
                 "title": {
+                    "private-official": "私有官方数据包",
+                    "public-official": "官方数据包",
+                    "contributed": "用户贡献的数据包",
                     "workshop": "工作坊数据包",
-                    "your": "你的数据包"
+                    "your": "你的数据包",
+                    "treatise": "专著数据包",
+                    "lexicon": "词典数据包"
                 },
+                "official-subgroup": {
+                    "global": "全球时间尺度",
+                    "regional": "区域数据包",
+                    "evolution-culture": "进化与文化",
+                    "other": "其他"
+                },
+                "seeMore": "查看更多...",
+                "seeLess": "收起...",
                 "no": "暂无",
                 "avaliable": "可用",
                 "upload": "上传数据包",
