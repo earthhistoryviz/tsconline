@@ -185,9 +185,25 @@ translation.settings.font.notes2,在此处更改字体会影响整个图表
 translation.settings.font.notes3,注意：可以通过每列的“字体”按钮单独更改每列的字体
 translation.settings.map-points.not-avaliable,该数据包暂无地图可用
 translation.settings.datapacks.see-info-guidance,点击数据包以查看更多信息！
-translation.settings.datapacks.add-datapack-guidance,点击加号添加数据包
+translation.settings.datapacks.add-datapack-guidance,点击「添加」按钮以添加数据包
+translation.settings.datapacks.add-to-chart,添加到图表
+translation.settings.datapacks.add-short,添加
+translation.settings.datapacks.in-chart-short,已添加
+translation.settings.datapacks.remove-from-chart,移除
+translation.settings.datapacks.selected-count,已选择 {{count}} 个
+translation.settings.datapacks.title.private-official,私有官方数据包
+translation.settings.datapacks.title.public-official,官方数据包
+translation.settings.datapacks.title.contributed,用户贡献的数据包
 translation.settings.datapacks.title.workshop,工作坊数据包
 translation.settings.datapacks.title.your,你的数据包
+translation.settings.datapacks.title.treatise,专著数据包
+translation.settings.datapacks.title.lexicon,词典数据包
+translation.settings.datapacks.official-subgroup.global,全球时间尺度
+translation.settings.datapacks.official-subgroup.regional,区域数据包
+translation.settings.datapacks.official-subgroup.evolution-culture,进化与文化
+translation.settings.datapacks.official-subgroup.other,其他
+translation.settings.datapacks.seeMore,查看更多...
+translation.settings.datapacks.seeLess,收起...
 translation.settings.datapacks.no,暂无
 translation.settings.datapacks.avaliable,可用
 translation.settings.datapacks.upload,上传数据包

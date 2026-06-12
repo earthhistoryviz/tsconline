@@ -311,7 +311,12 @@ translation.settings.font.notes3,NOTE: These fonts can be changed on a column by
 translation.settings.map-points.included,Included Maps
 translation.settings.map-points.not-avaliable,No Map Points available for this datapack
 translation.settings.datapacks.see-info-guidance,Click a datapack to see more information!
-translation.settings.datapacks.add-datapack-guidance,Add a datapack by clicking the checkbox
+translation.settings.datapacks.add-datapack-guidance,Add a datapack by clicking the Add button
+translation.settings.datapacks.add-to-chart,Add to chart
+translation.settings.datapacks.add-short,Add
+translation.settings.datapacks.in-chart-short,Added
+translation.settings.datapacks.remove-from-chart,Remove
+translation.settings.datapacks.selected-count,{{count}} selected
 translation.settings.datapacks.title.private-official,Private Official Datapacks
 translation.settings.datapacks.title.public-official,Official Datapacks
 translation.settings.datapacks.title.contributed,User Contributed Datapacks
@@ -319,6 +324,10 @@ translation.settings.datapacks.title.workshop,Workshop Datapacks
 translation.settings.datapacks.title.your,Your Datapacks
 translation.settings.datapacks.title.treatise,Treatise Datapacks
 translation.settings.datapacks.title.lexicon,Lexicon Datapacks
+translation.settings.datapacks.official-subgroup.global,Global Timescale
+translation.settings.datapacks.official-subgroup.regional,Regional Datapacks
+translation.settings.datapacks.official-subgroup.evolution-culture,Evolution & Culture
+translation.settings.datapacks.official-subgroup.other,Other
 translation.settings.datapacks.no,No
 translation.settings.datapacks.avaliable,Avaliable
 translation.settings.datapacks.upload,Upload Datapack
