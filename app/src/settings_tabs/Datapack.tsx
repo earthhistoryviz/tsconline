@@ -81,7 +81,7 @@ export const Datapacks = observer(function Datapacks() {
           </IconButton>
         </CustomTooltip>
         <div className={styles.guidance}>
-        <Typography className={styles.h}>{t("settings.datapacks.see-info-guidance")}</Typography>
+          <Typography className={styles.h}>{t("settings.datapacks.see-info-guidance")}</Typography>
           <Typography className={styles.dh}>{t("settings.datapacks.add-datapack-guidance")}</Typography>
           {/* count of datapacks staged before confirm */}
           {selectedCount > 0 && (
