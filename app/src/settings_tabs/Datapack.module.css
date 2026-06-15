@@ -36,6 +36,8 @@
 .dh {
   flex-grow: 1;
   text-align: center;
+  text-wrap: pretty;
+  line-height: 1.5;
 }
 
 .tb {
@@ -187,6 +189,15 @@
   gap: 10px;
   width: 100%;
   box-sizing: border-box;
+}
+
+.guidance {
+  flex: 1;
+  min-width: 0;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0 0.75rem;
+  text-align: center;
 }
 
 @media (max-width: 720px) {

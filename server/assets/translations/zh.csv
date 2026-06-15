@@ -185,7 +185,7 @@ translation.settings.font.notes2,在此处更改字体会影响整个图表
 translation.settings.font.notes3,注意：可以通过每列的“字体”按钮单独更改每列的字体
 translation.settings.map-points.not-avaliable,该数据包暂无地图可用
 translation.settings.datapacks.see-info-guidance,点击数据包以查看更多信息！
-translation.settings.datapacks.add-datapack-guidance,点击「添加」按钮以添加数据包
+translation.settings.datapacks.add-datapack-guidance,选择一个或多个数据包来构建图表。每个数据包都会添加地质事件。确认选择后生成图表。
 translation.settings.datapacks.add-to-chart,添加到图表
 translation.settings.datapacks.add-short,添加
 translation.settings.datapacks.in-chart-short,已添加

@@ -263,7 +263,7 @@
             },
             "datapacks": {
                 "see-info-guidance": "点击数据包以查看更多信息！",
-                "add-datapack-guidance": "点击「添加」按钮以添加数据包",
+                "add-datapack-guidance": "选择一个或多个数据包来构建图表。每个数据包都会添加地质事件。确认选择后生成图表。",
                 "add-to-chart": "添加到图表",
                 "add-short": "添加",
                 "in-chart-short": "已添加",

@@ -465,7 +465,7 @@
             },
             "datapacks": {
                 "see-info-guidance": "Click a datapack to see more information!",
-                "add-datapack-guidance": "Add a datapack by clicking the Add button",
+                "add-datapack-guidance": "Select one or more datapacks to build your chart. Each adds geologic events. Confirm your selection, then generate your chart.",
                 "add-to-chart": "Add to chart",
                 "add-short": "Add",
                 "in-chart-short": "Added",
