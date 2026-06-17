@@ -177,7 +177,6 @@ const members = [
     timeWorked: "2026 - Present",
     proPic: "AdityaPatel.jpg"
   }
-  
 ];
 
 export const About = observer(function About() {
