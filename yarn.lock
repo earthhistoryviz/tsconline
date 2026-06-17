@@ -3424,7 +3424,7 @@ __metadata:
     nearest-color: "npm:^0.4.4"
     node-cron: "npm:^3.0.3"
     node-vibrant: "npm:^3.2.1-alpha.1"
-    nodemailer: "npm:^8.0.5"
+    nodemailer: "npm:^8.0.9"
     nodemon: "npm:^2.0.22"
     p-map: "npm:^6.0.0"
     p-queue: "npm:^8.0.1"
@@ -11333,10 +11333,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:^8.0.5":
-  version: 8.0.7
-  resolution: "nodemailer@npm:8.0.7"
-  checksum: f0afea43af7f7deb55913811362b5d255e9d70c87024eb8b5161acd8a3a3c765454a52eefbfe40a5fe79ff0475b5445acafd20cb187826222b895dee15470c8f
+"nodemailer@npm:^8.0.9":
+  version: 8.0.9
+  resolution: "nodemailer@npm:8.0.9"
+  checksum: 5e05f2ae9637fab18e99813cd2db1e5ab408c34f6164e5d3c9ad0bce9e70dfa6ab689971cd025f30322c91bfc9ab560431f3bb7928e68d962e6edd2256c2366e
   languageName: node
   linkType: hard
 
