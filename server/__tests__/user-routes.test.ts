@@ -365,12 +365,14 @@ const routes: RouteDefinition[] = [
   },
   {
     method: "GET",
-    url: `/user/history/${mockDate.toISOString()}`,
+    // GET : history ids are epoch ms
+    url: `/user/history/${mockDate.getTime()}`,
     hasAuth: true
   },
   {
     method: "DELETE",
-    url: `/user/history/${mockDate.toISOString()}`,
+    // DELETE: history ids are epoch ms (or -1 for delete all)
+    url: `/user/history/${mockDate.getTime()}`,
     hasAuth: true
   },
   {
@@ -1441,7 +1443,8 @@ describe("fetchUserHistory tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const timestamp = new Date().toISOString();
+  // dummy epoc ms for test
+  const timestamp = "1734567890123";
   it("should reply 400 if timestamp is invalid", async () => {
     const response = await app.inject({
       method: "GET",
@@ -1452,7 +1455,8 @@ describe("fetchUserHistory tests", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: 'params/timestamp must match format "date-time"',
+      // fetchUserHistoryParams: 13-digit epoch ms only
+      message: 'params/timestamp must match pattern "^\\d{13}$"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -1467,7 +1471,7 @@ describe("fetchUserHistory tests", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "params/timestamp must NOT have fewer than 1 characters",
+      message: 'params/timestamp must match pattern "^\\d{13}$"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -1542,7 +1546,8 @@ describe("deleteUserHistory tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const timestamp = new Date().toISOString();
+  // dummy epoc ms for test
+  const timestamp = "1734567890123";
   it("should reply 400 if timestamp is invalid", async () => {
     const response = await app.inject({
       method: "DELETE",
@@ -1553,7 +1558,8 @@ describe("deleteUserHistory tests", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: 'params/timestamp must match format "date-time"',
+      // deleteUserHistoryParams: epoch or "-1" for delete all
+      message: 'params/timestamp must match pattern "^(\\d{13}|-1)$"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -1568,7 +1574,7 @@ describe("deleteUserHistory tests", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "params/timestamp must NOT have fewer than 1 characters",
+      message: 'params/timestamp must match pattern "^(\\d{13}|-1)$"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
