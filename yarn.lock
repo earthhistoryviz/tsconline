@@ -3270,7 +3270,7 @@ __metadata:
     framer-motion: "npm:^11.15.0"
     i18next: "npm:^23.14.0"
     i18next-browser-languagedetector: "npm:^8.0.0"
-    i18next-http-backend: "npm:^2.6.1"
+    i18next-http-backend: "npm:^3.0.5"
     js-big-decimal: "npm:^2.0.7"
     jspdf: "npm:^4.2.1"
     lodash: "npm:^4.18.1"
@@ -6277,12 +6277,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-fetch@npm:4.0.0":
-  version: 4.0.0
-  resolution: "cross-fetch@npm:4.0.0"
+"cross-fetch@npm:4.1.0":
+  version: 4.1.0
+  resolution: "cross-fetch@npm:4.1.0"
   dependencies:
-    node-fetch: "npm:^2.6.12"
-  checksum: e231a71926644ef122d334a3a4e73d9ba3ba4b480a8a277fb9badc434c1ba905b3d60c8034e18b348361a09afbec40ba9371036801ba2b675a7b84588f9f55d8
+    node-fetch: "npm:^2.7.0"
+  checksum: 07624940607b64777d27ec9c668ddb6649e8c59ee0a5a10e63a51ce857e2bbb1294a45854a31c10eccb91b65909a5b199fcb0217339b44156f85900a7384f489
   languageName: node
   linkType: hard
 
@@ -6812,27 +6812,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dompurify@npm:^3.3.1":
-  version: 3.3.1
-  resolution: "dompurify@npm:3.3.1"
+"dompurify@npm:^3.3.1, dompurify@npm:^3.4.0":
+  version: 3.4.6
+  resolution: "dompurify@npm:3.4.6"
   dependencies:
     "@types/trusted-types": "npm:^2.0.7"
   dependenciesMeta:
     "@types/trusted-types":
       optional: true
-  checksum: f71cca489e628591165d16e8cf4fa4f0d3e2ee48db4d73e9d2c5bedc6f915c92f9e9f101f8c4ba790bec0cdffe7f4e1747f5e31c69dc53ce7ae20a81ff6b0022
-  languageName: node
-  linkType: hard
-
-"dompurify@npm:^3.4.0":
-  version: 3.4.1
-  resolution: "dompurify@npm:3.4.1"
-  dependencies:
-    "@types/trusted-types": "npm:^2.0.7"
-  dependenciesMeta:
-    "@types/trusted-types":
-      optional: true
-  checksum: dcaf945376eff2a61841b205501b163b2c8ae9afe7251e68276b561d9fcf943cefc67e2631fdeae080b52a8b37c96e6beb7e6ae80ad8a83692ff67965dd6b4db
+  checksum: 950bfadc9ad6ee5706ccdfde09313c9c8f6a299206f77ccb621b1355947443753163031770cbb46236f1b6910e57e6710c34970b13c8a9e0fd7c93fac77c4815
   languageName: node
   linkType: hard
 
@@ -9067,12 +9055,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next-http-backend@npm:^2.6.1":
-  version: 2.6.1
-  resolution: "i18next-http-backend@npm:2.6.1"
+"i18next-http-backend@npm:^3.0.5":
+  version: 3.0.5
+  resolution: "i18next-http-backend@npm:3.0.5"
   dependencies:
-    cross-fetch: "npm:4.0.0"
-  checksum: 17f716934c9d21e307e85b7f8684662cc3942df1e7f0998dc7733599449fd24e2268803d5a14625d86a593011f308e35471d28b4ef48ebb112a3afed31b82f05
+    cross-fetch: "npm:4.1.0"
+  checksum: a0a9b75c05e335e1bb6dcf4ff81723e82700f1d16809b55e121054b1822068c72947d9661e29293c24294af6d1d9532999e7445518606a6964fadc7e779eb777
   languageName: node
   linkType: hard
 
@@ -11180,7 +11168,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.6.12, node-fetch@npm:^2.6.9":
+"node-fetch@npm:^2.6.9, node-fetch@npm:^2.7.0":
   version: 2.7.0
   resolution: "node-fetch@npm:2.7.0"
   dependencies:
