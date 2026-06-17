@@ -1133,7 +1133,10 @@ export const setDefaultUserState = action(() => {
     uuid: "",
     settings: {
       darkMode: false,
-      language: "English"
+      language: "English",
+      geogptAutoOpen: false,
+      geogptTscOnlineCoWork: false,
+      geogptSettingsSeen: false
     },
     historyEntries: []
   };
@@ -1157,6 +1160,11 @@ export const getInitialDarkMode = () => {
   }
   return prefersDarkMode;
 };
+
+export const getInitialGeoGPTAutoOpen = () => localStorage.getItem("geogptAutoOpen") === "true";
+export const getInitialGeoGPTTscOnlineCoWork = () => localStorage.getItem("geogptTscOnlineCoWork") === "true";
+export const getInitialGeoGPTSettingsSeen = () => localStorage.getItem("geogptSettingsSeen") === "true";
+export const getInitialGeoGPTSessionId = () => localStorage.getItem("geogptSessionId") || "";
 
 // This is a helper function to listen for system dark mode changes (if the user has not set a preference)
 export const listenForSystemDarkMode = () => {
@@ -1187,9 +1195,6 @@ export const setIsInitializing = action("setIsInitializing", (initializing: bool
 export const setUser = action("setUser", (user: SharedUser) => {
   state.user = { ...state.user, ...user };
 });
-export const setGeoGPTSessionId = action("setGeoGPTSessionId", (sessionId: string) => {
-  state.user.geogptSessionId = sessionId;
-});
 export const setPictureUrl = action("setPictureUrl", (url: string) => {
   state.user.pictureUrl = url;
 });
@@ -1201,6 +1206,34 @@ export const setDarkMode = action("setDarkMode", (newval: boolean) => {
 });
 export const setLanguage = action("setLanguage", (newval: string) => {
   state.user.settings.language = newval;
+});
+export const setGeoGPTAutoOpen = action("setGeoGPTAutoOpen", (newval: boolean) => {
+  if (state.cookieConsent) {
+    localStorage.setItem("geogptAutoOpen", newval.toString());
+  }
+  state.user.settings.geogptAutoOpen = newval;
+});
+export const setGeoGPTTscOnlineCoWork = action("setGeoGPTTscOnlineCoWork", (newval: boolean) => {
+  if (state.cookieConsent) {
+    localStorage.setItem("geogptTscOnlineCoWork", newval.toString());
+  }
+  state.user.settings.geogptTscOnlineCoWork = newval;
+});
+export const setGeoGPTSettingsSeen = action("setGeoGPTSettingsSeen", (newval: boolean) => {
+  if (state.cookieConsent) {
+    localStorage.setItem("geogptSettingsSeen", newval.toString());
+  }
+  state.user.settings.geogptSettingsSeen = newval;
+});
+export const setGeoGPTSessionId = action("setGeoGPTSessionId", (sessionId: string | null) => {
+  if (state.cookieConsent) {
+    if (sessionId) {
+      localStorage.setItem("geogptSessionId", sessionId);
+    } else {
+      localStorage.removeItem("geogptSessionId");
+    }
+  }
+  state.user.geogptSessionId = sessionId || "";
 });
 export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;

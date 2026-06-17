@@ -101,7 +101,7 @@ Works with or without authentication.
   - Changes sync to the user's open TSCOnline session in real time before the chart finishes rendering
 
   Input:
-  - { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: Record<string, { on?: boolean; width?: number }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
+  - { datapackTitles: string[]; overrides?: { fonts?: Record<FontTarget, FontSettings>; [key: string]: unknown }; columnToggles?: Record<string, { on?: boolean; width?: number; fonts?: Record<FontTarget, FontSettings>; }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
 
   Output data:
   - { directUrl, embeddedChartUrl, currentState }
@@ -115,6 +115,12 @@ Works with or without authentication.
   - Column keys are case-insensitive.
   - If listColumns was used to identify relevant columns, carry those exact leaf names into columnToggles — do not stop at discovery.
   - Do not call updateChartState with topic-specific columnToggles unless listColumns has already been used for that datapack in this conversation.
+  - If the user names a specific column, use columnToggles[columnName].fonts, not overrides.fonts.
+  - Use overrides.fonts only when the user asks for all columns, every column, global/default fonts, or apply all.
+  - FontSettings: { on?: boolean; inheritable?: boolean; fontFace?: "Arial" | "Courier" | "Verdana"; size?: number; bold?: boolean; italic?: boolean; color?: string }. Include on: true when changing fontFace, size, bold, italic, or color. Color must use rgb(r, g, b), for example "rgb(0, 128, 0)", not color names or hex.  - Common FontTargets: "Column Header" = column title/header; "Zone Column Label" = text inside zone columns; "Sequence Column Label" = sequence-column labels; "Event Column Label" = event-column labels; "Popup Body" = popup text.
+  - If the user says "column header" or asks to change the column name/title text, use "Column Header".
+  - If the user says "text inside the chart" or is ambiguous, prefer the column's own likely label target, such as "Zone Column Label" for zone columns, instead of overrides.fonts.
+  - If you used listColumns to identify relevant columns, do not stop there; carry those chosen column names into columnToggles when calling updateChartState.
   - A request like "teach me about planetary systems using this datapack" should usually produce a focused updateChartState call with planet-related columns toggled on, not a bare datapack-only request.
   - columnToggles must be a flat object whose keys are actual column names/identifiers, not the nested object structure returned by listColumns.
   - Do not concatenate parent and child names with dots or arrows. For example, use "Period (Lunar)" or "Events (Lunar)", not "Moon.Period (Lunar)" or "Planetary Time Scale.Events (Lunar)".

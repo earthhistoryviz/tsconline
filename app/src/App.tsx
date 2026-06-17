@@ -110,6 +110,9 @@ export default observer(function App() {
     const sessionId = state.user.geogptSessionId;
     if (!state.isLoggedIn || !sessionId) return;
 
+    // Only sync chart state if co-work is enabled
+    if (!state.user.settings.geogptTscOnlineCoWork) return;
+
     const wsBase = import.meta.env.DEV
       ? "ws://localhost:3000"
       : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
@@ -208,7 +211,7 @@ export default observer(function App() {
     return () => {
       ws.close();
     };
-  }, [state.isLoggedIn, state.user.geogptSessionId]);
+  }, [state.isLoggedIn, state.user.geogptSessionId, state.user.settings.geogptTscOnlineCoWork]);
 
   const getQsg = () => {
     switch (i18n.language) {
