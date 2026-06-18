@@ -858,7 +858,6 @@ describe("mcpUploadDatapack (route)", () => {
       limits: { fieldNameSize: 100, fileSize: 1024 * 1024 * 60 }
     });
     app.post("/mcp/upload-datapack", mcpUploadDatapack);
-    await app.listen({ host: "127.0.0.1", port: 0 });
   });
 
   afterAll(async () => {

@@ -7,7 +7,6 @@ import fastifySecureSession from "@fastify/secure-session";
 import formAutoContent from "form-auto-content";
 import * as util from "../src/util";
 import { ChartProgressUpdate, ChartRequest } from "@tsconline/shared";
-import { WebSocket } from "ws";
 import * as generateChartHelpers from "../src/chart-generation/generate-chart-helpers";
 import * as generateChart from "../src/chart-generation/generate-chart";
 
@@ -70,7 +69,6 @@ beforeAll(async () => {
   app.post("/bug-report", submitBugReport);
   app.get("/chart", { websocket: true }, handleChartGeneration);
   app.get<{ Params: { chartHash: string } }>("/cached-chart/:chartHash", fetchCachedFilePaths);
-  await app.listen({ host: "localhost", port: 4650 });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -321,22 +319,37 @@ describe("handleChartGeneration", () => {
   };
   const generateChartSpy = vi.spyOn(generateChart, "generateChart");
   vi.spyOn(generateChartHelpers, "waitForSVGReady").mockResolvedValue();
+  const createMockSocket = () => {
+    const messages: ChartProgressUpdate[] = [];
+    let messageHandler: ((message: Buffer) => void | Promise<void>) | undefined;
+    const socket = {
+      once: vi.fn((event: string, handler: (message: Buffer) => void | Promise<void>) => {
+        if (event === "message") {
+          messageHandler = handler;
+        }
+      }),
+      send: vi.fn((payload: string) => {
+        messages.push(JSON.parse(payload));
+      }),
+      close: vi.fn()
+    };
+    const emitMessage = async (payload: unknown) => {
+      await messageHandler?.(Buffer.from(JSON.stringify(payload)));
+    };
+    return { socket, messages, emitMessage };
+  };
+  const mockRequest = {
+    session: {
+      get: vi.fn().mockReturnValue("mock-uuid")
+    }
+  } as any;
 
   it("sends progress and completes successfully", async () => {
     generateChartSpy.mockResolvedValueOnce({ chartpath: "/charts/test/chart.svg", hash: "test" });
+    const { socket, messages, emitMessage } = createMockSocket();
 
-    const ws = new WebSocket("ws://localhost:4650/chart");
-    const messages: ChartProgressUpdate[] = [];
-
-    ws.onmessage = (event) => {
-      messages.push(JSON.parse(event.data.toString()));
-    };
-
-    await new Promise((resolve) => (ws.onopen = resolve));
-
-    ws.send(JSON.stringify(validChartRequest));
-
-    await new Promise((resolve) => (ws.onclose = resolve));
+    await handleChartGeneration(socket as any, mockRequest);
+    await emitMessage(validChartRequest);
 
     expect(messages).toContainEqual({ stage: "Initializing", percent: 0 });
     expect(messages).toContainEqual({ stage: "Waiting for file", percent: 90 });
@@ -346,22 +359,15 @@ describe("handleChartGeneration", () => {
       chartpath: "/charts/test/chart.svg",
       hash: "test"
     });
+    expect(socket.close).toHaveBeenCalledOnce();
   });
 
   it("handles ChartGenerationError properly", async () => {
     generateChartSpy.mockRejectedValueOnce(new generateChart.ChartGenerationError("Chart failed", 1234));
-    const ws = new WebSocket("ws://localhost:4650/chart");
-    const messages: ChartProgressUpdate[] = [];
+    const { socket, messages, emitMessage } = createMockSocket();
 
-    ws.onmessage = (event) => {
-      messages.push(JSON.parse(event.data.toString()));
-    };
-
-    await new Promise((resolve) => (ws.onopen = resolve));
-
-    ws.send(JSON.stringify(validChartRequest));
-
-    await new Promise((resolve) => (ws.onclose = resolve));
+    await handleChartGeneration(socket as any, mockRequest);
+    await emitMessage(validChartRequest);
 
     expect(messages).toContainEqual({
       stage: "Error",
@@ -369,25 +375,17 @@ describe("handleChartGeneration", () => {
       error: "Chart failed",
       errorCode: 1234
     });
+    expect(socket.close).toHaveBeenCalledOnce();
   });
 
   it("handles generic error properly", async () => {
-    generateChartSpy.mockImplementation(() => {
+    generateChartSpy.mockImplementationOnce(() => {
       throw new Error("Unexpected failure");
     });
+    const { socket, messages, emitMessage } = createMockSocket();
 
-    const ws = new WebSocket(`ws://localhost:4650/chart`);
-    const messages: ChartProgressUpdate[] = [];
-
-    ws.onmessage = (event) => {
-      messages.push(JSON.parse(event.data.toString()));
-    };
-
-    await new Promise((resolve) => (ws.onopen = resolve));
-
-    ws.send(JSON.stringify(validChartRequest));
-
-    await new Promise((resolve) => (ws.onclose = resolve));
+    await handleChartGeneration(socket as any, mockRequest);
+    await emitMessage(validChartRequest);
 
     expect(messages).toContainEqual({
       stage: "Error",
@@ -395,6 +393,7 @@ describe("handleChartGeneration", () => {
       error: "Unexpected failure",
       errorCode: 5000
     });
+    expect(socket.close).toHaveBeenCalledOnce();
   });
 });
 

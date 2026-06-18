@@ -70,7 +70,7 @@ const mockTimestamp = Date.now().toString();
 const historyEntryPath = join(baseHistoryPath, mockTimestamp);
 
 describe("chartHistory tests", () => {
-  const getUserHistoryRootFilePathSpy = vi.spyOn(chartHistoryHelperFunctions, "getUserHistoryRootFilePath");
+  const getUserHistoryRootFilePathSpy = vi.mocked(chartHistoryHelperFunctions.getUserHistoryRootFilePath);
   beforeEach(() => {
     vi.clearAllMocks();
     vi.setSystemTime(parseInt(mockTimestamp));
@@ -94,7 +94,7 @@ describe("chartHistory tests", () => {
       expect(getUserHistoryRootFilePathSpy).toHaveBeenCalledWith(mockUUID);
     });
     it("removes oldest entry if more than 10 exist", async () => {
-      vi.spyOn(fs, "readdir").mockResolvedValueOnce([
+      vi.mocked(fs.readdir).mockResolvedValueOnce([
         "1",
         "2",
         "3",
@@ -122,7 +122,7 @@ describe("chartHistory tests", () => {
     });
 
     it("cleans up if something fails", async () => {
-      vi.spyOn(fs, "readdir").mockRejectedValueOnce(new Error("fail"));
+      vi.mocked(fs.readdir).mockRejectedValueOnce(new Error("fail"));
       await saveChartHistory(mockUUID, "settings.tsc", [], "chart.svg", "hash");
       expect(fs.rm).toHaveBeenCalledWith(join(baseHistoryPath, Date.now().toString()), {
         recursive: true,
@@ -136,9 +136,9 @@ describe("chartHistory tests", () => {
       getUserHistoryRootFilePathSpy.mockResolvedValueOnce(baseHistoryPath);
       vi.clearAllMocks();
     });
-    const verifySymlinkSpy = vi.spyOn(utilsModule, "verifySymlink");
-    const readdir = vi.spyOn(fs, "readdir");
-    const rm = vi.spyOn(fs, "rm");
+    const verifySymlinkSpy = vi.mocked(utilsModule.verifySymlink);
+    const readdir = vi.mocked(fs.readdir);
+    const rm = vi.mocked(fs.rm);
 
     it("shouldn't return entry if symlink is invalid", async () => {
       readdir.mockResolvedValueOnce([mockTimestamp] as unknown as Dirent[]);
@@ -179,17 +179,15 @@ describe("chartHistory tests", () => {
     beforeEach(() => {
       vi.clearAllMocks();
     });
-    const getCachedDatapackFromDirectory = vi.spyOn(fetchUserFiles, "getCachedDatapackFromDirectory");
-    const getSettingsFromChartHistoryTimeStamp = vi.spyOn(
-      chartHistoryHelperFunctions,
-      "getSettingsFromChartHistoryTimeStamp"
+    const getCachedDatapackFromDirectory = vi.mocked(fetchUserFiles.getCachedDatapackFromDirectory);
+    const getSettingsFromChartHistoryTimeStamp = vi.mocked(
+      chartHistoryHelperFunctions.getSettingsFromChartHistoryTimeStamp
     );
-    const verifySymlink = vi.spyOn(utilsModule, "verifySymlink");
-    const readdir = vi.spyOn(fs, "readdir");
-    const realpath = vi.spyOn(fs, "realpath");
-    const getChartContentFromChartHistoryTimeStamp = vi.spyOn(
-      chartHistoryHelperFunctions,
-      "getChartContentFromChartHistoryTimeStamp"
+    const verifySymlink = vi.mocked(utilsModule.verifySymlink);
+    const readdir = vi.mocked(fs.readdir);
+    const realpath = vi.mocked(fs.realpath);
+    const getChartContentFromChartHistoryTimeStamp = vi.mocked(
+      chartHistoryHelperFunctions.getChartContentFromChartHistoryTimeStamp
     );
     it("throws if timestamp is invalid", async () => {
       await expect(getChartHistory(mockUUID, "abc")).rejects.toThrow("Invalid timestamp");

@@ -37,9 +37,9 @@ describe("getUserHistoryRootFilePath", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const mkdir = vi.spyOn(fs, "mkdir");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const verifyNonExistentFilepath = vi.spyOn(util, "verifyNonExistentFilepath");
+  const mkdir = vi.mocked(fs.mkdir);
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
+  const verifyNonExistentFilepath = vi.mocked(util.verifyNonExistentFilepath);
   it("should make directory if it doesn't exist", async () => {
     const uuid = "test-uuid";
     verifyFilepath.mockResolvedValueOnce(false);
@@ -65,7 +65,7 @@ describe("getHistoryEntryDatapacksPath", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
   it("should return the correct path", async () => {
     const uuid = "test-uuid";
     const timestamp = "1234567890123";
@@ -90,7 +90,7 @@ describe("getSpecificUserHistoryRootFilePath", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
   it("should return the correct path", async () => {
     const uuid = "test-uuid";
     const timestamp = "1234567890123";
@@ -116,8 +116,8 @@ describe("getChartContentFromChartHistoryTimeStamp", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const readdir = vi.spyOn(fs, "readdir");
-  const readFile = vi.spyOn(fs, "readFile");
+  const readdir = vi.mocked(fs.readdir);
+  const readFile = vi.mocked(fs.readFile);
   it("should throw error if chart doesn't exist", async () => {
     readdir.mockResolvedValueOnce(["chart"] as unknown as Dirent[]);
     await expect(getChartContentFromChartHistoryTimeStamp("test-uuid", "1234567890123")).rejects.toThrow(
@@ -141,8 +141,8 @@ describe("getSettingsFromChartHistoryTimeStamp", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const readdir = vi.spyOn(fs, "readdir");
-  const readFile = vi.spyOn(fs, "readFile");
+  const readdir = vi.mocked(fs.readdir);
+  const readFile = vi.mocked(fs.readFile);
   it("should throw error if settings don't exist", async () => {
     readdir.mockResolvedValueOnce(["settings"] as unknown as Dirent[]);
     await expect(getSettingsFromChartHistoryTimeStamp("test-uuid", "1234567890123")).rejects.toThrow(
