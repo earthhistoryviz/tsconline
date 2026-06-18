@@ -98,6 +98,7 @@ vi.mock("../src/verify", async (importOriginal) => {
   const actual = await importOriginal<typeof verifyModule>();
   return {
     ...actual,
+    checkRecaptchaToken: vi.fn().mockResolvedValue(1),
     generateToken: vi.fn().mockReturnValue("test")
   };
 });
@@ -212,7 +213,6 @@ beforeAll(async () => {
   const session = app.createSecureSession({ uuid: testUser.uuid });
   const cookie = encodeURIComponent(app.encodeSecureSession(session));
   cookieHeader = { cookie: `loginSession=${cookie}` };
-  await app.listen({ host: "", port: 8000 });
 });
 
 afterAll(async () => {
@@ -236,15 +236,16 @@ describe("login-routes tests", () => {
   }
 
   beforeEach(() => {
+    vi.clearAllMocks();
     process.env = { ...originalEnv };
-    emailSpy = vi.spyOn(emailModule, "sendEmail");
-    createVerificationSpy = vi.spyOn(databaseModule, "createVerification");
-    deleteVerificationSpy = vi.spyOn(databaseModule, "deleteVerification");
-    createUserSpy = vi.spyOn(databaseModule, "createUser");
-    findUserSpy = vi.spyOn(databaseModule, "findUser");
-    updateUserSpy = vi.spyOn(databaseModule, "updateUser");
-    findVerificationSpy = vi.spyOn(databaseModule, "findVerification");
-    deleteUserSpy = vi.spyOn(databaseModule, "deleteUser");
+    emailSpy = vi.mocked(emailModule.sendEmail);
+    createVerificationSpy = vi.mocked(databaseModule.createVerification);
+    deleteVerificationSpy = vi.mocked(databaseModule.deleteVerification);
+    createUserSpy = vi.mocked(databaseModule.createUser);
+    findUserSpy = vi.mocked(databaseModule.findUser);
+    updateUserSpy = vi.mocked(databaseModule.updateUser);
+    findVerificationSpy = vi.mocked(databaseModule.findVerification);
+    deleteUserSpy = vi.mocked(databaseModule.deleteUser);
   });
 
   describe("/signup", () => {
@@ -288,7 +289,7 @@ describe("login-routes tests", () => {
     });
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -303,7 +304,7 @@ describe("login-routes tests", () => {
     });
 
     it("should return 409 if username is taken", async () => {
-      const spy = vi.spyOn(databaseModule, "checkForUsersWithUsernameOrEmail").mockResolvedValueOnce([testUser]);
+      const spy = vi.mocked(databaseModule.checkForUsersWithUsernameOrEmail).mockResolvedValueOnce([testUser]);
 
       const response = await app.inject({
         method: "POST",
@@ -399,7 +400,7 @@ describe("login-routes tests", () => {
     );
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValue(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValue(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -538,7 +539,7 @@ describe("login-routes tests", () => {
     );
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -583,7 +584,7 @@ describe("login-routes tests", () => {
 
     it("should return 403 if email is not verified", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, emailVerified: 0 }]);
-      const compareSpy = vi.spyOn(bcryptModule, "compare");
+      const compareSpy = vi.mocked(bcryptModule.compare);
 
       const response = await app.inject({
         method: "POST",
@@ -599,7 +600,7 @@ describe("login-routes tests", () => {
 
     it("should return 423 if session is invalidated", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, invalidateSession: 1 }]);
-      const compareSpy = vi.spyOn(bcryptModule, "compare");
+      const compareSpy = vi.mocked(bcryptModule.compare);
 
       const response = await app.inject({
         method: "POST",
@@ -712,7 +713,7 @@ describe("login-routes tests", () => {
         { ...testToken, expiresAt: expiresAt.toISOString() }
       ]);
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, emailVerified: 0 }]);
-      const deleteVerificationSpy = vi.spyOn(databaseModule, "deleteVerification");
+      const deleteVerificationSpy = vi.mocked(databaseModule.deleteVerification);
 
       const response = await app.inject({
         method: "POST",
@@ -794,7 +795,7 @@ describe("login-routes tests", () => {
     it("should return 200 if successful", async () => {
       vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([testToken]);
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, emailVerified: 0 }]);
-      const updateUserSpy = vi.spyOn(databaseModule, "updateUser");
+      const updateUserSpy = vi.mocked(databaseModule.updateUser);
 
       const response = await app.inject({
         method: "POST",
@@ -848,7 +849,7 @@ describe("login-routes tests", () => {
     });
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -1016,7 +1017,7 @@ describe("login-routes tests", () => {
     });
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -1185,7 +1186,7 @@ describe("login-routes tests", () => {
     );
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -1383,7 +1384,7 @@ describe("login-routes tests", () => {
     });
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -1788,8 +1789,12 @@ describe("login-routes tests", () => {
   describe("/session-check", () => {
     beforeEach(() => {
       vi.clearAllMocks();
+      vi.mocked(databaseModule.findUser).mockReset();
+      vi.mocked(databaseModule.findUser).mockResolvedValue([]);
+      vi.mocked(databaseModule.getActiveWorkshopsUserIsIn).mockReset();
+      vi.mocked(databaseModule.getActiveWorkshopsUserIsIn).mockResolvedValue([]);
     });
-    const getActiveWorkshopsUsersIsInSpy = vi.spyOn(databaseModule, "getActiveWorkshopsUserIsIn");
+    const getActiveWorkshopsUsersIsInSpy = vi.mocked(databaseModule.getActiveWorkshopsUserIsIn);
     it("should return 200 and authenticated false if not logged in", async () => {
       const response = await app.inject({
         method: "POST",
@@ -1940,6 +1945,19 @@ describe("login-routes tests", () => {
     };
 
     beforeEach(() => {
+      vi.clearAllMocks();
+      vi.mocked(databaseModule.findUser).mockReset();
+      vi.mocked(databaseModule.findUser).mockResolvedValue([]);
+      vi.mocked(fsPromisesModule.mkdir).mockReset();
+      vi.mocked(fsPromisesModule.mkdir).mockResolvedValue([]);
+      vi.mocked(fsPromisesModule.readdir).mockReset();
+      vi.mocked(fsPromisesModule.readdir).mockResolvedValue([]);
+      vi.mocked(fsPromisesModule.rm).mockReset();
+      vi.mocked(fsPromisesModule.rm).mockResolvedValue([]);
+      vi.mocked(streamPromisesModule.pipeline).mockReset();
+      vi.mocked(streamPromisesModule.pipeline).mockResolvedValue({});
+      vi.mocked(fsModule.createWriteStream).mockReset();
+      vi.mocked(fsModule.createWriteStream).mockReturnValue({});
       createFormWithCookieHeader({
         value: Buffer.from("aditya"),
         options: {
@@ -2049,11 +2067,11 @@ describe("login-routes tests", () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
       // @ts-expect-error ts does not infer that readdir will be called with { withFileTypes: true } so expects Dirent
       vi.mocked(fsPromisesModule.readdir).mockResolvedValueOnce([`profile-${testUser.uuid}.png`]);
-      const mkdirSpy = vi.spyOn(fsPromisesModule, "mkdir");
-      const readdirSpy = vi.spyOn(fsPromisesModule, "readdir");
-      const rmSpy = vi.spyOn(fsPromisesModule, "rm");
-      const createWriteStreamSpy = vi.spyOn(fsModule, "createWriteStream");
-      const pipelineSpy = vi.spyOn(streamPromisesModule, "pipeline");
+      const mkdirSpy = vi.mocked(fsPromisesModule.mkdir);
+      const readdirSpy = vi.mocked(fsPromisesModule.readdir);
+      const rmSpy = vi.mocked(fsPromisesModule.rm);
+      const createWriteStreamSpy = vi.mocked(fsModule.createWriteStream);
+      const pipelineSpy = vi.mocked(streamPromisesModule.pipeline);
       const response = await app.inject({
         method: "POST",
         url: "/upload-profile-picture",
@@ -2080,6 +2098,14 @@ describe("login-routes tests", () => {
       newUsername: "newtest",
       recaptchaToken: "test"
     };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      vi.mocked(databaseModule.findUser).mockReset();
+      vi.mocked(databaseModule.findUser).mockResolvedValue([]);
+      vi.mocked(verifyModule.checkRecaptchaToken).mockReset();
+      vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValue(1);
+    });
 
     it("should return 401 if not logged in", async () => {
       const response = await app.inject({
@@ -2112,7 +2138,7 @@ describe("login-routes tests", () => {
     );
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -2220,7 +2246,7 @@ describe("login-routes tests", () => {
     });
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+      const spy = vi.mocked(verifyModule.checkRecaptchaToken).mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -2354,8 +2380,8 @@ describe("login-routes tests", () => {
     it("should return 200 if rm fails", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
       vi.mocked(fsPromisesModule.rm).mockRejectedValueOnce(new Error("Filesystem Error"));
-      const deleteAllUserMetadata = vi.spyOn(metadataModule, "deleteAllUserMetadata");
-      const loggerSpy = vi.spyOn(logger, "error");
+      const deleteAllUserMetadata = vi.mocked(metadataModule.deleteAllUserMetadata);
+      const loggerSpy = vi.mocked(logger.error);
 
       const response = await app.inject({
         method: "POST",
@@ -2375,10 +2401,8 @@ describe("login-routes tests", () => {
 
     it("should return 200 if deleting metadata fails", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-      const deleteAllUserMetadata = vi
-        .spyOn(metadataModule, "deleteAllUserMetadata")
-        .mockRejectedValueOnce(new Error());
-      const loggerSpy = vi.spyOn(logger, "error");
+      const deleteAllUserMetadata = vi.mocked(metadataModule.deleteAllUserMetadata).mockRejectedValueOnce(new Error());
+      const loggerSpy = vi.mocked(logger.error);
 
       const response = await app.inject({
         method: "POST",
@@ -2398,8 +2422,8 @@ describe("login-routes tests", () => {
 
     it("should return 200 if successful", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-      const rmSpy = vi.spyOn(fsPromisesModule, "rm");
-      const deleteAllUserMetadata = vi.spyOn(metadataModule, "deleteAllUserMetadata");
+      const rmSpy = vi.mocked(fsPromisesModule.rm);
+      const deleteAllUserMetadata = vi.mocked(metadataModule.deleteAllUserMetadata);
       const response = await app.inject({
         method: "POST",
         url: "/delete-profile",

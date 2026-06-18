@@ -68,6 +68,7 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   const original = await importOriginal<typeof shared>();
   return {
     ...original,
+    getWorkshopUUIDFromWorkshopId: vi.fn().mockReturnValue("workshop-uuid"),
     isDateValid: vi.fn().mockReturnValue(true),
     isDatapackTypeString: vi.fn().mockReturnValue(true),
     isUserDatapack: vi.fn().mockReturnValue(true),
@@ -128,8 +129,8 @@ vi.spyOn(console, "error").mockImplementation(() => undefined);
 vi.spyOn(console, "log").mockImplementation(() => undefined);
 
 describe("uploadUserDatapackHandler", () => {
-  const rm = vi.spyOn(fsPromises, "rm");
-  const isDateValid = vi.spyOn(shared, "isDateValid");
+  const rm = vi.mocked(fsPromises.rm);
+  const isDateValid = vi.mocked(shared.isDateValid);
   const fields = {
     title: "title",
     description: "description",
@@ -203,7 +204,7 @@ describe("uploadUserDatapackHandler", () => {
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
   });
   it("should return 400 if incorrect datapack type", async () => {
-    const isDatapackTypeString = vi.spyOn(shared, "isDatapackTypeString");
+    const isDatapackTypeString = vi.mocked(shared.isDatapackTypeString);
     isDatapackTypeString.mockReturnValueOnce(false);
     const val = await uploadUserDatapackHandler(fields, 1);
     expect(isOperationResult(val)).toBe(true);
@@ -250,7 +251,7 @@ describe("uploadUserDatapackHandler", () => {
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
   });
   it("should return a 400 error if assertDatapackMetadata fails", async () => {
-    const assertDatapackMetadata = vi.spyOn(shared, "assertDatapackMetadata");
+    const assertDatapackMetadata = vi.mocked(shared.assertDatapackMetadata);
     assertDatapackMetadata.mockImplementationOnce(() => {
       throw new Error("error");
     });
@@ -430,8 +431,8 @@ describe("uploadUserDatapackHandler", () => {
 });
 
 describe("uploadFileToFileSystem tests", () => {
-  const pipeline = vi.spyOn(streamPromises, "pipeline");
-  const rm = vi.spyOn(fsPromises, "rm");
+  const pipeline = vi.mocked(streamPromises.pipeline);
+  const rm = vi.mocked(fsPromises.rm);
   const multipartFile = {
     name: "file",
     type: "file",
@@ -471,10 +472,10 @@ describe("uploadFileToFileSystem tests", () => {
 });
 
 describe("changeProfilePicture tests", () => {
-  const rename = vi.spyOn(fsPromises, "rename");
-  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
-  const rm = vi.spyOn(fsPromises, "rm");
+  const rename = vi.mocked(fsPromises.rename);
+  const fetchUserDatapackDirectory = vi.mocked(fetchUserFiles.fetchUserDatapackDirectory);
+  const checkFileExists = vi.mocked(util.checkFileExists);
+  const rm = vi.mocked(fsPromises.rm);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -497,12 +498,12 @@ describe("changeProfilePicture tests", () => {
 });
 
 describe("replaceDatapackFile", () => {
-  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
-  const copyFile = vi.spyOn(fsPromises, "copyFile");
-  const decryptDatapack = vi.spyOn(userHandlers, "decryptDatapack");
-  const deleteDatapackFileAndDecryptedCounterpart = vi.spyOn(userHandlers, "deleteDatapackFileAndDecryptedCounterpart");
-  const loadDatapackIntoIndex = vi.spyOn(loadPacks, "loadDatapackIntoIndex");
-  const rm = vi.spyOn(fsPromises, "rm");
+  const fetchUserDatapackDirectory = vi.mocked(fetchUserFiles.fetchUserDatapackDirectory);
+  const copyFile = vi.mocked(fsPromises.copyFile);
+  const decryptDatapack = vi.mocked(userHandlers.decryptDatapack);
+  const deleteDatapackFileAndDecryptedCounterpart = vi.mocked(userHandlers.deleteDatapackFileAndDecryptedCounterpart);
+  const loadDatapackIntoIndex = vi.mocked(loadPacks.loadDatapackIntoIndex);
+  const rm = vi.mocked(fsPromises.rm);
   const metadata = {
     title: "title"
   } as shared.Datapack;
@@ -531,18 +532,17 @@ describe("replaceDatapackFile", () => {
 });
 
 describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
-  const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
-    userHandlers,
-    "doesDatapackFolderExistInAllUUIDDirectories"
+  const doesDatapackFolderExistInAllUUIDDirectories = vi.mocked(
+    userHandlers.doesDatapackFolderExistInAllUUIDDirectories
   );
-  const mkdir = vi.spyOn(fsPromises, "mkdir");
-  const copyFile = vi.spyOn(fsPromises, "copyFile");
-  const decryptDatapack = vi.spyOn(userHandlers, "decryptDatapack");
-  const loadDatapackIntoIndex = vi.spyOn(loadPacks, "loadDatapackIntoIndex");
-  const writeFile = vi.spyOn(fsPromises, "writeFile");
-  const writeFileMetadata = vi.spyOn(fileMetadataHandler, "writeFileMetadata");
-  const rm = vi.spyOn(fsPromises, "rm");
-  const isUserDatapack = vi.spyOn(shared, "isUserDatapack");
+  const mkdir = vi.mocked(fsPromises.mkdir);
+  const copyFile = vi.mocked(fsPromises.copyFile);
+  const decryptDatapack = vi.mocked(userHandlers.decryptDatapack);
+  const loadDatapackIntoIndex = vi.mocked(loadPacks.loadDatapackIntoIndex);
+  const writeFile = vi.mocked(fsPromises.writeFile);
+  const writeFileMetadata = vi.mocked(fileMetadataHandler.writeFileMetadata);
+  const rm = vi.mocked(fsPromises.rm);
+  const isUserDatapack = vi.mocked(shared.isUserDatapack);
   const metadata = {
     title: "title",
     storedFileName: "storedFileName",
@@ -628,7 +628,7 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     });
     const datapackFolder = path.normalize("datapacks-directory/title");
     const expectedPdfFilesDir = path.resolve(datapackFolder, "files");
-    const verifyNonExistentFilepathMock = vi.spyOn(util, "verifyNonExistentFilepath").mockResolvedValue(true);
+    const verifyNonExistentFilepathMock = vi.mocked(util.verifyNonExistentFilepath).mockResolvedValue(true);
     const fetchPDFFileDirectory = vi
       .spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory")
       .mockResolvedValue(expectedPdfFilesDir);
@@ -650,10 +650,10 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
 });
 
 describe("getFileNameFromCachedDatapack tests", () => {
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
-  const readFile = vi.spyOn(fsPromises, "readFile");
-  const assertUserDatapack = vi.spyOn(shared, "assertUserDatapack");
-  const assertDatapack = vi.spyOn(shared, "assertDatapack");
+  const checkFileExists = vi.mocked(util.checkFileExists);
+  const readFile = vi.mocked(fsPromises.readFile);
+  const assertUserDatapack = vi.mocked(shared.assertUserDatapack);
+  const assertDatapack = vi.mocked(shared.assertDatapack);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -678,19 +678,19 @@ describe("getFileNameFromCachedDatapack tests", () => {
   });
 });
 it("should return the directory and filename", async () => {
-  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  const getUserUUIDDirectory = vi.mocked(fetchUserFiles.getUserUUIDDirectory);
   getUserUUIDDirectory.mockResolvedValueOnce("uuid-directory");
   const result = await getTemporaryFilepath("uuid", "filename");
   expect(path.normalize(result)).toEqual(path.normalize("uuid-directory/filename"));
   expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
 });
 describe("processMultipartPartsForDatapackUpload tests", () => {
-  const findUser = vi.spyOn(database, "findUser");
-  const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
-  const checkFileTypeIsPDF = vi.spyOn(userHandlers, "checkFileTypeIsPDF");
-  const checkFileTypeIsDatapackImage = vi.spyOn(userHandlers, "checkFileTypeIsDatapackImage");
-  const pipeline = vi.spyOn(streamPromises, "pipeline");
-  const rm = vi.spyOn(fsPromises, "rm");
+  const findUser = vi.mocked(database.findUser);
+  const checkFileTypeIsDatapack = vi.mocked(userHandlers.checkFileTypeIsDatapack);
+  const checkFileTypeIsPDF = vi.mocked(userHandlers.checkFileTypeIsPDF);
+  const checkFileTypeIsDatapackImage = vi.mocked(userHandlers.checkFileTypeIsDatapackImage);
+  const pipeline = vi.mocked(streamPromises.pipeline);
+  const rm = vi.mocked(fsPromises.rm);
   let formData: AsyncIterableIterator<Multipart>;
   function createFormData(
     json: Record<string, string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }> = {}
@@ -982,10 +982,10 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
   });
 });
 describe("fetchMapPackImageFilepath", () => {
-  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
-  const getDecryptedDirectory = vi.spyOn(fetchUserFiles, "getDecryptedDirectory");
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
-  const getDirectories = vi.spyOn(fetchUserFiles, "getDirectories");
+  const fetchUserDatapackDirectory = vi.mocked(fetchUserFiles.fetchUserDatapackDirectory);
+  const getDecryptedDirectory = vi.mocked(fetchUserFiles.getDecryptedDirectory);
+  const checkFileExists = vi.mocked(util.checkFileExists);
+  const getDirectories = vi.mocked(fetchUserFiles.getDirectories);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1029,9 +1029,9 @@ describe("uploadFileToWorkshop tests", () => {
       bytesRead: 1
     }
   } as unknown as MultipartFile;
-  const getWorkshopFilesPath = vi.spyOn(workshopUtil, "getWorkshopFilesPath");
-  const rm = vi.spyOn(fsPromises, "rm");
-  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  const getWorkshopFilesPath = vi.mocked(workshopUtil.getWorkshopFilesPath);
+  const rm = vi.mocked(fsPromises.rm);
+  const pipeline = vi.mocked(streamPromises.pipeline);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1071,9 +1071,9 @@ describe("uploadCoverToWorkshop tests", () => {
       bytesRead: 1
     }
   } as unknown as MultipartFile;
-  const getWorkshopCoverPath = vi.spyOn(workshopUtil, "getWorkshopCoverPath");
-  const rm = vi.spyOn(fsPromises, "rm");
-  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  const getWorkshopCoverPath = vi.mocked(workshopUtil.getWorkshopCoverPath);
+  const rm = vi.mocked(fsPromises.rm);
+  const pipeline = vi.mocked(streamPromises.pipeline);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1105,8 +1105,8 @@ describe("uploadCoverToWorkshop tests", () => {
 });
 
 describe("fetchWorkshopCoverPictureFilepath tests", () => {
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
-  const getWorkshopCoverPath = vi.spyOn(workshopUtil, "getWorkshopCoverPath");
+  const checkFileExists = vi.mocked(util.checkFileExists);
+  const getWorkshopCoverPath = vi.mocked(workshopUtil.getWorkshopCoverPath);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1134,12 +1134,11 @@ describe("getWorkshopDatapacksNames tests", () => {
     { name: "datapack2", isFile: () => false, isDirectory: () => true } as Dirent,
     { name: "datapack3", isFile: () => false, isDirectory: () => true } as Dirent
   ];
-  const getWorkshopUUIDFromWorkshopId = vi.spyOn(shared, "getWorkshopUUIDFromWorkshopId");
-  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
-  const readdir = vi.spyOn(fsPromises, "readdir");
-  const getUsersDatapacksDirectoryFromUUIDDirectory = vi.spyOn(
-    fetchUserFiles,
-    "getUsersDatapacksDirectoryFromUUIDDirectory"
+  const getWorkshopUUIDFromWorkshopId = vi.mocked(shared.getWorkshopUUIDFromWorkshopId);
+  const getUserUUIDDirectory = vi.mocked(fetchUserFiles.getUserUUIDDirectory);
+  const readdir = vi.mocked(fsPromises.readdir);
+  const getUsersDatapacksDirectoryFromUUIDDirectory = vi.mocked(
+    fetchUserFiles.getUsersDatapacksDirectoryFromUUIDDirectory
   );
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1172,8 +1171,8 @@ describe("getWorkshopFilesNames tests", () => {
     { name: "file2", isFile: () => true, isDirectory: () => false } as Dirent,
     { name: "file3", isFile: () => true, isDirectory: () => false } as Dirent
   ];
-  const readdir = vi.spyOn(fsPromises, "readdir");
-  const getWorkshopFilesPath = vi.spyOn(workshopUtil, "getWorkshopFilesPath");
+  const readdir = vi.mocked(fsPromises.readdir);
+  const getWorkshopFilesPath = vi.mocked(workshopUtil.getWorkshopFilesPath);
   beforeEach(() => {
     vi.clearAllMocks();
   });

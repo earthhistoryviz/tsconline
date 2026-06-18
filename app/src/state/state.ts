@@ -114,6 +114,8 @@ export type State = {
     columnHashMap: Map<string, RenderColumnInfo>;
     columnSearchTerm: string;
     showColumnSearchLoader: boolean;
+    hideDatapackDefaults: boolean;
+    columnOnSnapshot: Map<string, boolean> | null;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
     groupedEvents: GroupedEventSearchInfo[];
@@ -299,6 +301,8 @@ export const state = observable<State>({
       columnHashMap: new Map<string, RenderColumnInfo>(),
       columnSearchTerm: "",
       showColumnSearchLoader: false,
+      hideDatapackDefaults: false,
+      columnOnSnapshot: null,
       datapackDisplayType: "compact" as const,
       eventSearchTerm: "",
       groupedEvents: []
