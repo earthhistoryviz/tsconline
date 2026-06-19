@@ -53,7 +53,7 @@ vi.mock("../src/database", () => {
 vi.mock("../src/types", async (importOriginal) => {
   const actual = await importOriginal<typeof types>();
   return {
-    isOperationResult: actual.isOperationResult
+    isOperationResult: vi.fn(actual.isOperationResult)
   };
 });
 vi.mock("../src/error-logger", async () => {
@@ -67,9 +67,9 @@ const user = {
   isAdmin: 1
 };
 describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => {
-  const uploadUserDatapackHandler = vi.spyOn(uploadHandlers, "uploadUserDatapackHandler");
-  const processMultipartPartsForDatapackUpload = vi.spyOn(uploadHandlers, "processMultipartPartsForDatapackUpload");
-  const isOperationResult = vi.spyOn(types, "isOperationResult");
+  const uploadUserDatapackHandler = vi.mocked(uploadHandlers.uploadUserDatapackHandler);
+  const processMultipartPartsForDatapackUpload = vi.mocked(uploadHandlers.processMultipartPartsForDatapackUpload);
+  const isOperationResult = vi.mocked(types.isOperationResult);
   let formData: AsyncIterableIterator<Multipart>;
   function createFormData(
     json: Record<string, string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }> = {}
@@ -192,19 +192,18 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   });
 });
 describe("processAndUploadDatapack", () => {
-  const isOfficialDatapack = vi.spyOn(shared, "isOfficialDatapack");
-  const findUser = vi.spyOn(database, "findUser");
-  const isWorkshopDatapack = vi.spyOn(shared, "isWorkshopDatapack");
-  const grabAndVerifyWorkshopUUID = vi.spyOn(workshopHandler, "grabAndVerifyWorkshopUUID");
-  const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
-    userHandler,
-    "doesDatapackFolderExistInAllUUIDDirectories"
+  const isOfficialDatapack = vi.mocked(shared.isOfficialDatapack);
+  const findUser = vi.mocked(database.findUser);
+  const isWorkshopDatapack = vi.mocked(shared.isWorkshopDatapack);
+  const grabAndVerifyWorkshopUUID = vi.mocked(workshopHandler.grabAndVerifyWorkshopUUID);
+  const doesDatapackFolderExistInAllUUIDDirectories = vi.mocked(
+    userHandler.doesDatapackFolderExistInAllUUIDDirectories
   );
-  const processMultipartPartsForDatapackUpload = vi.spyOn(uploadHandlers, "processMultipartPartsForDatapackUpload");
-  const uploadUserDatapackHandler = vi.spyOn(uploadHandlers, "uploadUserDatapackHandler");
-  const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
-  const deleteUserDatapack = vi.spyOn(userHandler, "deleteUserDatapack");
-  const rm = vi.spyOn(fsPromises, "rm");
+  const processMultipartPartsForDatapackUpload = vi.mocked(uploadHandlers.processMultipartPartsForDatapackUpload);
+  const uploadUserDatapackHandler = vi.mocked(uploadHandlers.uploadUserDatapackHandler);
+  const setupNewDatapackDirectoryInUUIDDirectory = vi.mocked(uploadHandlers.setupNewDatapackDirectoryInUUIDDirectory);
+  const deleteUserDatapack = vi.mocked(userHandler.deleteUserDatapack);
+  const rm = vi.mocked(fsPromises.rm);
   let formData: AsyncIterableIterator<Multipart>;
   function createFormData(
     json: Record<string, string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }> = {}
@@ -365,10 +364,10 @@ describe("uploadTemporaryDatapack", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const isTempDatapack = vi.spyOn(shared, "isTempDatapack");
-  const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
-  const deleteUserDatapack = vi.spyOn(userHandler, "deleteUserDatapack");
-  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const isTempDatapack = vi.mocked(shared.isTempDatapack);
+  const setupNewDatapackDirectoryInUUIDDirectory = vi.mocked(uploadHandlers.setupNewDatapackDirectoryInUUIDDirectory);
+  const deleteUserDatapack = vi.mocked(userHandler.deleteUserDatapack);
+  const fetchUserDatapack = vi.mocked(userHandler.fetchUserDatapack);
   const metadata: DatapackMetadata = {
     title: "test"
   } as DatapackMetadata;

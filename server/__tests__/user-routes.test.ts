@@ -242,7 +242,6 @@ beforeAll(async () => {
   });
   await app.register(userRoutes, { prefix: "/user" });
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  await app.listen({ host: "", port: 1234 });
 });
 
 afterAll(async () => {
@@ -389,7 +388,7 @@ describe("Route Consistency Tests", () => {
 });
 
 describe("fetchSingleUserDatapack", () => {
-  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const fetchUserDatapack = vi.mocked(userHandler.fetchUserDatapack);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -445,7 +444,7 @@ describe("fetchSingleUserDatapack", () => {
 
 describe("verifySession tests", () => {
   describe.each(routes.filter((r) => r.hasAuth))("when request is %s %s", ({ method, url, body }) => {
-    const findUser = vi.spyOn(database, "findUser");
+    const findUser = vi.mocked(database.findUser);
     beforeEach(() => {
       findUser.mockClear();
     });
@@ -500,7 +499,7 @@ describe("verifyRecaptcha tests", () => {
       expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
     });
     it("should reply 422 when recaptcha failed", async () => {
-      const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
+      const checkRecaptchaToken = vi.mocked(verify.checkRecaptchaToken);
       checkRecaptchaToken.mockResolvedValueOnce(0);
       const response = await app.inject({
         method: method as InjectOptions["method"],
@@ -513,7 +512,7 @@ describe("verifyRecaptcha tests", () => {
       expect(await response.json()).toEqual({ error: "Recaptcha failed" });
     });
     it("should reply 500 when an error occurred in checkRecaptchaToken", async () => {
-      const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
+      const checkRecaptchaToken = vi.mocked(verify.checkRecaptchaToken);
       checkRecaptchaToken.mockRejectedValueOnce(new Error("Recaptcha error"));
       const response = await app.inject({
         method: method as InjectOptions["method"],
@@ -529,7 +528,7 @@ describe("verifyRecaptcha tests", () => {
 });
 
 describe("editDatapackMetadata", () => {
-  const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
+  const editDatapackMetadataRequestHandler = vi.mocked(generalFileHandlerRequests.editDatapackMetadataRequestHandler);
   it("should return 400 if datapack is not provided", async () => {
     const response = await app.inject({
       method: "PATCH",
@@ -570,15 +569,12 @@ describe("editDatapackMetadata", () => {
 });
 
 describe("requestDownload", () => {
-  const readFileSpy = vi.spyOn(fspModule, "readFile");
-  const checkHeaderSpy = vi.spyOn(utilModule, "checkHeader");
-  const runJavaEncryptSpy = vi.spyOn(runJavaEncryptModule, "runJavaEncrypt");
-  const rmSpy = vi.spyOn(fspModule, "rm");
-  const mkdirSpy = vi.spyOn(fspModule, "mkdir");
-  const getEncryptionDatapackFileSystemDetails = vi.spyOn(
-    runJavaEncryptModule,
-    "getEncryptionDatapackFileSystemDetails"
-  );
+  const readFileSpy = vi.mocked(fspModule.readFile);
+  const checkHeaderSpy = vi.mocked(utilModule.checkHeader);
+  const runJavaEncryptSpy = vi.mocked(runJavaEncryptModule.runJavaEncrypt);
+  const rmSpy = vi.mocked(fspModule.rm);
+  const mkdirSpy = vi.mocked(fspModule.mkdir);
+  const getEncryptionDatapackFileSystemDetails = vi.mocked(runJavaEncryptModule.getEncryptionDatapackFileSystemDetails);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -643,7 +639,7 @@ describe("requestDownload", () => {
     expect(response.json().error).toBe("Failed to create encrypted directory with error Error: Unknown Error");
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
     expect(readFileSpy).toHaveBeenCalledTimes(2);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(false);
     expect(response.statusCode).toBe(500);
     expect(rmSpy).not.toHaveBeenCalled();
   });
@@ -691,7 +687,7 @@ describe("requestDownload", () => {
       headers
     });
 
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(false);
     expect(readFileSpy).toHaveBeenCalledTimes(2);
     expect(mkdirSpy).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
@@ -716,9 +712,9 @@ describe("requestDownload", () => {
       headers
     });
 
-    expect(runJavaEncryptSpy).toHaveReturnedWith(undefined);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
+    await expect(runJavaEncryptSpy.mock.results[0]?.value).resolves.toBeUndefined();
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(false);
+    await expect(checkHeaderSpy.mock.results[1]?.value).resolves.toBe(false);
     expect(rmSpy).toHaveBeenCalledWith("encryptedFilepath", { force: true });
     expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(response.statusCode).toBe(422);
@@ -778,7 +774,7 @@ describe("requestDownload", () => {
     });
     expect(readFileSpy).toHaveBeenCalledTimes(1);
     expect(checkHeaderSpy).not.toHaveBeenCalled();
-    expect(readFileSpy).toHaveNthReturnedWith(1, "original file");
+    await expect(readFileSpy.mock.results[0]?.value).resolves.toBe("original file");
     expect(response.statusCode).toBe(200);
     const isBuffer = Buffer.isBuffer(response.rawPayload);
     const fileContent = Buffer.from("original file");
@@ -810,8 +806,8 @@ describe("requestDownload", () => {
 
     expect(runJavaEncryptSpy).toHaveBeenCalledOnce();
     expect(readFileSpy).toHaveBeenCalledTimes(3);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(2, true);
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(false);
+    await expect(checkHeaderSpy.mock.results[1]?.value).resolves.toBe(true);
     expect(response.statusCode).toBe(200);
     const isBuffer = Buffer.isBuffer(response.rawPayload);
     const fileContent = Buffer.from(dataFile);
@@ -828,8 +824,8 @@ describe("requestDownload", () => {
       headers
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(readFileSpy).toHaveNthReturnedWith(1, dataFile);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, true);
+    await expect(readFileSpy.mock.results[0]?.value).resolves.toBe(dataFile);
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(true);
     expect(response.statusCode).toBe(200);
     const isBuffer = Buffer.isBuffer(response.rawPayload);
     const fileContent = Buffer.from("TSCreator Encrypted Datafile");
@@ -853,9 +849,9 @@ describe("requestDownload", () => {
       headers
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(readFileSpy).toHaveNthReturnedWith(2, dataFile);
+    await expect(readFileSpy.mock.results[1]?.value).resolves.toBe(dataFile);
     expect(readFileSpy).toHaveBeenCalledTimes(2);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, true);
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(true);
     expect(response.statusCode).toBe(200);
     const isBuffer = Buffer.isBuffer(response.rawPayload);
     const fileContent = Buffer.from("TSCreator Encrypted Datafile");
@@ -877,13 +873,13 @@ describe("requestDownload", () => {
     });
 
     expect(rmSpy).toHaveBeenCalledTimes(1);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(3, true);
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(false);
+    await expect(checkHeaderSpy.mock.results[1]?.value).resolves.toBe(false);
+    await expect(checkHeaderSpy.mock.results[2]?.value).resolves.toBe(true);
     expect(readFileSpy).toHaveBeenCalledTimes(3);
-    expect(readFileSpy).toHaveNthReturnedWith(1, "not properly encrypted");
-    expect(readFileSpy).toHaveNthReturnedWith(2, "default content");
-    expect(readFileSpy).toHaveNthReturnedWith(3, "TSCreator Encrypted Datafile");
+    await expect(readFileSpy.mock.results[0]?.value).resolves.toBe("not properly encrypted");
+    await expect(readFileSpy.mock.results[1]?.value).resolves.toBe("default content");
+    await expect(readFileSpy.mock.results[2]?.value).resolves.toBe("TSCreator Encrypted Datafile");
     expect(runJavaEncryptSpy).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(200);
     const isBuffer = Buffer.isBuffer(response.rawPayload);
@@ -935,9 +931,9 @@ describe("requestDownload", () => {
       headers
     });
     expect(response.statusCode).toBe(404);
-    expect(runJavaEncryptSpy).toHaveNthReturnedWith(1, undefined);
-    expect(mkdirSpy).toHaveNthReturnedWith(1, undefined);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
+    await expect(runJavaEncryptSpy.mock.results[0]?.value).resolves.toBeUndefined();
+    await expect(mkdirSpy.mock.results[0]?.value).resolves.toBeUndefined();
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(false);
     expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(rmSpy).not.toHaveBeenCalled();
     expect(response.json().error).toBe(`Java file did not successfully process the file ${filename}`);
@@ -963,17 +959,17 @@ describe("requestDownload", () => {
     });
     expect(response.json().error).toBe("An error occurred: Error: Unknown Error");
     expect(response.statusCode).toBe(500);
-    expect(runJavaEncryptSpy).toHaveNthReturnedWith(1, undefined);
-    expect(mkdirSpy).toHaveNthReturnedWith(1, undefined);
-    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
-    expect(readFileSpy).toHaveNthReturnedWith(2, "default content");
+    await expect(runJavaEncryptSpy.mock.results[0]?.value).resolves.toBeUndefined();
+    await expect(mkdirSpy.mock.results[0]?.value).resolves.toBeUndefined();
+    await expect(checkHeaderSpy.mock.results[0]?.value).resolves.toBe(false);
+    await expect(readFileSpy.mock.results[1]?.value).resolves.toBe("default content");
     expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(rmSpy).not.toHaveBeenCalled();
   });
 });
 
 describe("userDeleteDatapack tests", () => {
-  const deleteUserDatapack = vi.spyOn(userHandler, "deleteUserDatapack");
+  const deleteUserDatapack = vi.mocked(userHandler.deleteUserDatapack);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1017,7 +1013,7 @@ describe("userDeleteDatapack tests", () => {
 
 describe("uploadDatapack tests", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+  const processAndUploadDatapack = vi.mocked(uploadDatapack.processAndUploadDatapack);
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("datapack" in json)) {
       json.datapack = {
@@ -1176,7 +1172,7 @@ describe("uploadExternalDatapack", () => {
     expect(response.statusCode).toBe(401);
   });
   it("should return 200 if official datapack already exists and file is the same", async () => {
-    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    const fetchAllUsersDatapacks = vi.mocked(userHandler.fetchAllUsersDatapacks);
     fetchAllUsersDatapacks.mockResolvedValueOnce([
       { title: headers.datapacktitle, originalFileName: headers.datapackhash + ".txt" } as shared.Datapack
     ]);
@@ -1193,8 +1189,8 @@ describe("uploadExternalDatapack", () => {
     expect(fetchAllUsersDatapacks).toHaveBeenCalledOnce();
   });
   it("should return custom operation code if processUploadDatpaack fails", async () => {
-    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
-    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    const processAndUploadDatapack = vi.mocked(uploadDatapack.processAndUploadDatapack);
+    const fetchAllUsersDatapacks = vi.mocked(userHandler.fetchAllUsersDatapacks);
     fetchAllUsersDatapacks.mockResolvedValueOnce([]);
     processAndUploadDatapack.mockResolvedValueOnce({
       code: 500,
@@ -1213,8 +1209,8 @@ describe("uploadExternalDatapack", () => {
     expect(processAndUploadDatapack).toHaveBeenCalled();
   });
   it("should return 500 if processAndUploadDatapack throws an error", async () => {
-    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
-    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    const processAndUploadDatapack = vi.mocked(uploadDatapack.processAndUploadDatapack);
+    const fetchAllUsersDatapacks = vi.mocked(userHandler.fetchAllUsersDatapacks);
     fetchAllUsersDatapacks.mockResolvedValueOnce([]);
     processAndUploadDatapack.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
@@ -1229,8 +1225,8 @@ describe("uploadExternalDatapack", () => {
   });
 
   it("should return 200 if upload is successful", async () => {
-    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
-    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    const processAndUploadDatapack = vi.mocked(uploadDatapack.processAndUploadDatapack);
+    const fetchAllUsersDatapacks = vi.mocked(userHandler.fetchAllUsersDatapacks);
     fetchAllUsersDatapacks.mockResolvedValueOnce([]);
     processAndUploadDatapack.mockResolvedValueOnce({
       code: 200,
@@ -1251,7 +1247,7 @@ describe("uploadExternalDatapack", () => {
 
   it("should return 200 if upload is duplicated", async () => {
     process.env.BEARER_TOKEN = "correct_token";
-    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    const fetchAllUsersDatapacks = vi.mocked(userHandler.fetchAllUsersDatapacks);
     fetchAllUsersDatapacks.mockResolvedValueOnce([{ title: "test" } as shared.Datapack]);
     const response = await app.inject({
       method: "POST",
@@ -1272,9 +1268,9 @@ describe("uploadExternalDatapack", () => {
 });
 
 describe("fetchWorkshopDatapack tests", () => {
-  const findUser = vi.spyOn(database, "findUser");
-  const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
-  const getWorkshopIdFromUUID = vi.spyOn(workshopUtil, "getWorkshopIdFromUUID");
+  const findUser = vi.mocked(database.findUser);
+  const verifyWorkshopValidity = vi.mocked(workshopUtil.verifyWorkshopValidity);
+  const getWorkshopIdFromUUID = vi.mocked(workshopUtil.getWorkshopIdFromUUID);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1332,7 +1328,7 @@ describe("fetchWorkshopDatapack tests", () => {
     expect(response.statusCode).toBe(403);
   });
   it("should reply 404 if the datapack is not found", async () => {
-    const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+    const fetchUserDatapack = vi.mocked(userHandler.fetchUserDatapack);
     fetchUserDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "GET",
@@ -1356,7 +1352,7 @@ describe("fetchWorkshopDatapack tests", () => {
   });
 
   it("should reply 200 when the datapack is successfully fetched", async () => {
-    const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+    const fetchUserDatapack = vi.mocked(userHandler.fetchUserDatapack);
     fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as shared.Datapack);
     const response = await app.inject({
       method: "GET",
@@ -1369,7 +1365,7 @@ describe("fetchWorkshopDatapack tests", () => {
 });
 
 describe("fetchPublicUserDatapack tests", () => {
-  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const fetchUserDatapack = vi.mocked(userHandler.fetchUserDatapack);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1439,7 +1435,7 @@ describe("fetchPublicUserDatapack tests", () => {
 });
 
 describe("fetchUserHistory tests", () => {
-  const getChartHistory = vi.spyOn(chartHistory, "getChartHistory");
+  const getChartHistory = vi.mocked(chartHistory.getChartHistory);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1514,7 +1510,7 @@ describe("fetchUserHistory tests", () => {
 });
 
 describe("fetchUserHistoryMetadata tests", () => {
-  const getChartHistoryMetadata = vi.spyOn(chartHistory, "getChartHistoryMetadata");
+  const getChartHistoryMetadata = vi.mocked(chartHistory.getChartHistoryMetadata);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1542,7 +1538,7 @@ describe("fetchUserHistoryMetadata tests", () => {
 });
 
 describe("deleteUserHistory tests", () => {
-  const deleteChartHistory = vi.spyOn(chartHistory, "deleteChartHistory");
+  const deleteChartHistory = vi.mocked(chartHistory.deleteChartHistory);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1608,9 +1604,9 @@ describe("downloadPrivateDatapackFilesZip tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
-  const checkUserAllowedDownloadDatapack = vi.spyOn(shared, "checkUserAllowedDownloadDatapack");
-  const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+  const fetchUserDatapack = vi.mocked(userHandler.fetchUserDatapack);
+  const checkUserAllowedDownloadDatapack = vi.mocked(shared.checkUserAllowedDownloadDatapack);
+  const downloadDatapackFilesZip = vi.mocked(userHandler.downloadDatapackFilesZip);
   it("should return 400 if title is empty", async () => {
     const response = await app.inject({
       method: "GET",
@@ -1707,7 +1703,7 @@ describe("downloadPublicDatapackFilesZip tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+  const downloadDatapackFilesZip = vi.mocked(userHandler.downloadDatapackFilesZip);
   it("should return 400 if title is empty", async () => {
     const response = await app.inject({
       method: "GET",
@@ -1750,7 +1746,7 @@ describe("downloadPublicDatapackFilesZip tests", () => {
     expect(await response.json()).toEqual({ error: "Error downloading datapack files zip" });
   });
   it("should return 200 and download the datapack files zip", async () => {
-    const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+    const downloadDatapackFilesZip = vi.mocked(userHandler.downloadDatapackFilesZip);
     downloadDatapackFilesZip.mockResolvedValueOnce(Buffer.from("zip content"));
     const response = await app.inject({
       method: "GET",
@@ -1764,7 +1760,7 @@ describe("downloadPublicDatapackFilesZip tests", () => {
 });
 
 describe("fetchDatapackComments tests", () => {
-  const findCurrentDatapackComments = vi.spyOn(database, "findCurrentDatapackComments");
+  const findCurrentDatapackComments = vi.mocked(database.findCurrentDatapackComments);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1808,8 +1804,8 @@ describe("fetchDatapackComments tests", () => {
 });
 
 describe("uploadDatapackComment tests", () => {
-  const createDatapackComment = vi.spyOn(database, "createDatapackComment");
-  const findDatapackComment = vi.spyOn(database, "findDatapackComment");
+  const createDatapackComment = vi.mocked(database.createDatapackComment);
+  const findDatapackComment = vi.mocked(database.findDatapackComment);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1895,7 +1891,7 @@ describe("uploadDatapackComment tests", () => {
 });
 
 describe("updateDatapackComment tests", () => {
-  const updateComment = vi.spyOn(database, "updateComment");
+  const updateComment = vi.mocked(database.updateComment);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -2037,8 +2033,8 @@ describe("updateDatapackComment tests", () => {
 });
 
 describe("deleteDatapackComment tests", () => {
-  const deleteComment = vi.spyOn(database, "deleteComment");
-  const findDatapackComment = vi.spyOn(database, "findDatapackComment");
+  const deleteComment = vi.mocked(database.deleteComment);
+  const findDatapackComment = vi.mocked(database.findDatapackComment);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -2136,8 +2132,8 @@ describe("deleteDatapackComment tests", () => {
 });
 
 describe("fetchUserDatapacksMetadata", async () => {
-  const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
-  const getActiveWorkshopsUserIsIn = vi.spyOn(database, "getActiveWorkshopsUserIsIn");
+  const fetchAllUsersDatapacks = vi.mocked(userHandler.fetchAllUsersDatapacks);
+  const getActiveWorkshopsUserIsIn = vi.mocked(database.getActiveWorkshopsUserIsIn);
   beforeEach(() => {
     vi.clearAllMocks();
   });

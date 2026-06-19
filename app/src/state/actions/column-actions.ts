@@ -53,6 +53,13 @@ import {
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 import { discardTscPrefix, findSerialNum, getChildRenderColumns, prependDualColCompColumnName } from "../../util/util";
+import {
+  applyHideDatapackDefaults,
+  collectDefaultColumnMaps,
+  restoreColumnOnSnapshot,
+  restoreDatapackDefaultOnStates,
+  snapshotColumnOnStates
+} from "../../util/default-column-map";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -662,6 +669,30 @@ export const setRangeColumnSettings = action((rangeSettings: RangeSettings, newS
 });
 export const setColumnOn = action((isOn: boolean, column: RenderColumnInfo) => {
   column.on = isOn;
+});
+
+export const setHideDatapackDefaults = action((enabled: boolean) => {
+  if (enabled === state.settingsTabs.hideDatapackDefaults) return;
+  const { columnHashMap } = state.settingsTabs;
+
+  if (enabled) {
+    state.settingsTabs.columnOnSnapshot = snapshotColumnOnStates(columnHashMap);
+    applyHideDatapackDefaults(columnHashMap, collectDefaultColumnMaps(state));
+    state.settingsTabs.hideDatapackDefaults = true;
+  } else {
+    if (state.settingsTabs.columnOnSnapshot) {
+      restoreColumnOnSnapshot(columnHashMap, state.settingsTabs.columnOnSnapshot);
+    } else {
+      restoreDatapackDefaultOnStates(columnHashMap, collectDefaultColumnMaps(state));
+    }
+    state.settingsTabs.columnOnSnapshot = null;
+    state.settingsTabs.hideDatapackDefaults = false;
+  }
+});
+
+export const resetHideDatapackDefaultsState = action(() => {
+  state.settingsTabs.hideDatapackDefaults = false;
+  state.settingsTabs.columnOnSnapshot = null;
 });
 export const setEditName = action((newName: string, column: RenderColumnInfo) => {
   column.editName = newName;

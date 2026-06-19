@@ -1,5 +1,6 @@
 import path from "path";
 import fsPromises from "fs/promises";
+import { EventEmitter } from "events";
 import { vi, describe, it, expect, beforeEach, beforeAll } from "vitest";
 import * as child_process from "child_process";
 import * as util from "../src/util";
@@ -47,7 +48,7 @@ vi.mock("../src/util", async (importOriginal) => {
     getActiveJar: vi.fn(() => "test.jar")
   };
 });
-const getActiveJar = vi.spyOn(util, "getActiveJar");
+const getActiveJar = vi.mocked(util.getActiveJar);
 beforeAll(async () => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   vi.spyOn(console, "log").mockImplementation(() => undefined);
@@ -65,10 +66,20 @@ const returnModelConversionFilepaths = (testCaseDir: string) => {
   return { modelTextFilepath, settingsTextFilepath, outputTextFilepath, datapackFilepath };
 };
 const conversionTestKeys = path.join("server", "__tests__", "__data__", "conversion-test-keys");
+const createMockChildProcess = (code = 0, onBeforeClose?: () => void | Promise<void>) => {
+  const child = new EventEmitter() as child_process.ChildProcessWithoutNullStreams;
+  child.stdout = new EventEmitter() as unknown as child_process.ChildProcessWithoutNullStreams["stdout"];
+  child.stderr = new EventEmitter() as unknown as child_process.ChildProcessWithoutNullStreams["stderr"];
+  process.nextTick(async () => {
+    await onBeforeClose?.();
+    child.emit("close", code, null);
+  });
+  return child;
+};
 describe("convertCrossPlotWithModelsInJar", async () => {
-  const spawn = vi.spyOn(child_process, "spawn");
-  const getDecryptedDatapackFilePath = vi.spyOn(fetchUserFiles, "getDecryptedDatapackFilePath");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const spawn = vi.mocked(child_process.spawn);
+  const getDecryptedDatapackFilePath = vi.mocked(fetchUserFiles.getDecryptedDatapackFilePath);
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
   const generatedOutputFileDirectory = path.join(conversionTestKeys, "generated-file");
   beforeEach(() => {
     vi.clearAllMocks();
@@ -105,6 +116,8 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     const { modelTextFilepath, settingsTextFilepath, datapackFilepath } =
       returnModelConversionFilepaths(testCaseFilepath);
     getDecryptedDatapackFilePath.mockResolvedValueOnce(datapackFilepath);
+    verifyFilepath.mockResolvedValueOnce(false);
+    spawn.mockImplementationOnce(() => createMockChildProcess());
     const outputFileLocation = path.join(generatedOutputFileDirectory, `${testCase}-output.txt`);
     const response = await convertCrossPlotWithModelsInJar(
       [
@@ -120,7 +133,7 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     expect(response).toEqual(false);
     expect(getDecryptedDatapackFilePath).toHaveBeenCalledOnce();
     expect(verifyFilepath).toHaveBeenCalledOnce();
-    expect(verifyFilepath).toHaveReturnedWith(false);
+    await expect(verifyFilepath.mock.results[0]?.value).resolves.toBe(false);
   });
   it("should return true and export output file if successful", { timeout: 20000 }, async () => {
     const testCase = "test-case-1";
@@ -130,6 +143,12 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     getDecryptedDatapackFilePath.mockResolvedValueOnce(datapackFilepath);
     const correctOutput = await fsPromises.readFile(outputTextFilepath);
     const outputFileLocation = path.join(generatedOutputFileDirectory, `${testCase}-output.txt`);
+    spawn.mockImplementationOnce(() =>
+      createMockChildProcess(0, async () => {
+        await fsPromises.writeFile(outputFileLocation, correctOutput);
+      })
+    );
+    verifyFilepath.mockImplementationOnce(async (filePath) => await checkFileExists(filePath));
     const response = await convertCrossPlotWithModelsInJar(
       [
         {
@@ -176,10 +195,10 @@ describe("autoPlotPointsWithJar", async () => {
     }
     await fsPromises.mkdir(generatedOutputFileDirectory, { recursive: true });
   });
-  const getDecryptedDatapackFilePath = vi.spyOn(fetchUserFiles, "getDecryptedDatapackFilePath");
-  const getUUIDOfDatapackType = vi.spyOn(shared, "getUUIDOfDatapackType");
-  const spawn = vi.spyOn(child_process, "spawn");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const getDecryptedDatapackFilePath = vi.mocked(fetchUserFiles.getDecryptedDatapackFilePath);
+  const getUUIDOfDatapackType = vi.mocked(shared.getUUIDOfDatapackType);
+  const spawn = vi.mocked(child_process.spawn);
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
   it("should return false if less than 2 datapacks", async () => {
     const response = await autoPlotPointsWithJar(
       [
@@ -226,6 +245,8 @@ describe("autoPlotPointsWithJar", async () => {
     const { datapackOneFilepath, datapackTwoFilepath, settingsTextFilepath } =
       returnAutoPlotFilepaths(testCaseFilepath);
     getDecryptedDatapackFilePath.mockResolvedValueOnce(datapackOneFilepath).mockResolvedValueOnce(datapackTwoFilepath);
+    verifyFilepath.mockResolvedValueOnce(false);
+    spawn.mockImplementationOnce(() => createMockChildProcess());
     const outputFileLocation = path.join(generatedOutputFileDirectory, `${testCase}-output.txt`);
     const response = await autoPlotPointsWithJar(
       [
@@ -243,7 +264,7 @@ describe("autoPlotPointsWithJar", async () => {
     );
     expect(response).toEqual(false);
     expect(verifyFilepath).toHaveBeenCalledOnce();
-    expect(verifyFilepath).toHaveReturnedWith(false);
+    await expect(verifyFilepath.mock.results[0]?.value).resolves.toBe(false);
     expect(getDecryptedDatapackFilePath).toHaveBeenCalledTimes(2);
     expect(getUUIDOfDatapackType).toHaveBeenCalledTimes(2);
   });
@@ -254,6 +275,13 @@ describe("autoPlotPointsWithJar", async () => {
       returnAutoPlotFilepaths(testCaseFilepath);
     getDecryptedDatapackFilePath.mockResolvedValueOnce(datapackOneFilepath).mockResolvedValueOnce(datapackTwoFilepath);
     const outputFileLocation = path.join(generatedOutputFileDirectory, `${testCase}-output.txt`);
+    const correctOutput = await fsPromises.readFile(outputTextFilepath, "utf-8");
+    spawn.mockImplementationOnce(() =>
+      createMockChildProcess(0, async () => {
+        await fsPromises.writeFile(outputFileLocation, correctOutput);
+      })
+    );
+    verifyFilepath.mockImplementationOnce(async (filePath) => await checkFileExists(filePath));
     const response = await autoPlotPointsWithJar(
       [
         {
@@ -269,7 +297,6 @@ describe("autoPlotPointsWithJar", async () => {
       settingsTextFilepath
     );
     expect(response).toEqual(true);
-    const correctOutput = await fsPromises.readFile(outputTextFilepath, "utf-8");
     const generatedOutput = await fsPromises.readFile(outputFileLocation, "utf-8");
     expect(generatedOutput).toEqual(correctOutput);
     expect(verifyFilepath).toHaveBeenCalledOnce();

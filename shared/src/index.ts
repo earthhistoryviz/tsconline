@@ -135,6 +135,11 @@ export type MCPChartSyncServerMessage =
       requestId: string;
     }
   | {
+      type: "apply-chart-state";
+      requestId: string;
+      chartState: Pick<MCPChartState, "datapackTitles" | "overrides" | "columnToggles">;
+    }
+  | {
       type: "geogpt-chart-update-start";
       requestId: string;
     }
