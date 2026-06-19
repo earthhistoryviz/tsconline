@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { applyTogglesToColumnInfo, extractUnitScopedTimeOverrides } from "../src/settings-generation/build-settings";
+import { translateColumnInfoToColumnInfoTSC } from "../src/settings-generation/settings-to-xml";
 import { defaultFontsInfo, ColumnInfo } from "@tsconline/shared";
 
 const buildFakeColumn = (): ColumnInfo => ({
@@ -120,6 +121,15 @@ describe("build-settings applyTogglesToColumnInfo", () => {
 
     applyTogglesToColumnInfo(root, { '"Planetary Time Scale.Moon.Nigeria Coast"': { width: 150 } });
     expect(root.children[0].width).toBe(150);
+  });
+
+  it("preserves explicit false showAgeLabels when translating to TSC settings", () => {
+    const column: ColumnInfo = {
+      ...buildFakeColumn(),
+      showAgeLabels: false
+    };
+
+    expect(translateColumnInfoToColumnInfoTSC(column).drawAgeLabel).toBe(false);
   });
 
   it("turns ancestor groups on when a child column is toggled on", () => {

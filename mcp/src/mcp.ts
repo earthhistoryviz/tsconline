@@ -208,7 +208,8 @@ const overridesSchema = z
 const singleColumnToggleSchema = z
   .object({
     on: z.boolean().optional(),
-    width: z.number().optional()
+    width: z.number().optional(),
+    showAgeLabels: z.boolean().optional()
   })
   .passthrough();
 

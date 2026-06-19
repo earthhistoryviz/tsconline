@@ -55,6 +55,7 @@ export type ColumnToggles = Record<
   {
     on?: boolean;
     width?: number;
+    showAgeLabels?: boolean;
   }
 >;
 
@@ -307,6 +308,11 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
     (col, settings) => {
       if (settings.width !== undefined) {
         col.width = settings.width;
+      }
+    },
+    (col, settings) => {
+      if (settings.showAgeLabels !== undefined) {
+        col.showAgeLabels = settings.showAgeLabels;
       }
     }
   ];

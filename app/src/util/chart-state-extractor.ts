@@ -51,6 +51,9 @@ function collectRenderColumnSettings(
   if (defaultColumn === undefined || defaultColumn.width !== renderColumn.width) {
     settings.width = renderColumn.width;
   }
+  if (defaultColumn === undefined || defaultColumn.showAgeLabels !== renderColumn.showAgeLabels) {
+    settings.showAgeLabels = renderColumn.showAgeLabels;
+  }
   if (Object.keys(settings).length > 0 || defaultColumn === undefined) {
     columnToggleSettings[renderColumn.name] = settings;
   }

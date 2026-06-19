@@ -92,6 +92,7 @@ export type MCPLinkParams = {
 export interface MCPColumnToggleSettings {
   on?: boolean;
   width?: number;
+  showAgeLabels?: boolean;
 }
 
 export type MCPColumnToggles = Record<string, Partial<MCPColumnToggleSettings>>;
