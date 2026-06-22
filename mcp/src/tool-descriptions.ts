@@ -77,7 +77,7 @@ Works with or without authentication.
   5. Do not invent time-range or scale overrides just to make the chart "fit" unless the user explicitly asks for them.
 
   Input:
-  - { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: Record<string, { on?: boolean; width?: number }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
+  - { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: Record<string, { on?: boolean; width?: number; enableTitle?: boolean; showAgeLabels?: boolean }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
 
   Output data:
   - { directUrl, embeddedChartUrl, currentState }
@@ -92,6 +92,7 @@ Works with or without authentication.
   - If you used listColumns to identify relevant columns, do not stop there; carry those chosen column names into columnToggles when calling updateChartState.
   - A request like "teach me about planetary systems using this datapack" should usually produce a focused updateChartState call with planet-related columns toggled on, not a bare datapack-only request.
   - columnToggles must be a flat object whose keys are actual column names/identifiers, not the nested object structure returned by listColumns.
+  - columnToggles entries may include enableTitle to control whether a column's title is shown.
   - columnToggles entries may include showAgeLabels to control whether a column's age label is shown.
   - Do not concatenate parent and child names with dots or arrows. For example, use "Period (Lunar)" or "Events (Lunar)", not "Moon.Period (Lunar)" or "Planetary Time Scale.Events (Lunar)".
   - The nested structure from listColumns is only for discovery. Convert the selected leaf column names into flat columnToggles keys for updateChartState.

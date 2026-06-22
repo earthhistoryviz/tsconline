@@ -209,6 +209,7 @@ const singleColumnToggleSchema = z
   .object({
     on: z.boolean().optional(),
     width: z.number().optional(),
+    enableTitle: z.boolean().optional(),
     showAgeLabels: z.boolean().optional()
   })
   .passthrough();

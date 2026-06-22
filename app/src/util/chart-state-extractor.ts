@@ -48,6 +48,9 @@ function collectRenderColumnSettings(
   if (defaultColumn === undefined || defaultColumn.on !== renderColumn.on) {
     settings.on = renderColumn.on;
   }
+  if (defaultColumn === undefined || defaultColumn.enableTitle !== renderColumn.enableTitle) {
+    settings.enableTitle = renderColumn.enableTitle;
+  }
   if (defaultColumn === undefined || defaultColumn.width !== renderColumn.width) {
     settings.width = renderColumn.width;
   }
