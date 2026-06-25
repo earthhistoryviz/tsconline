@@ -130,6 +130,7 @@ const officialSubgroupOrder: OfficialDatapackSubgroup[] = ["global", "regional",
 // which official datapack goes in which sub-section (add new official packs here)
 const officialDatapackSubgroupByTitle: Record<string, OfficialDatapackSubgroup> = {
   "TimeScale Creator Internal Datapack": "global",
+  "UCL TSC Chron": "global",
   "Africa Bight": "regional",
   Australia: "regional",
   Belgium: "regional",
