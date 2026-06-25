@@ -165,15 +165,16 @@ export const Datapacks = observer(function Datapacks() {
           HeaderIcon={People}
           loading={state.skeletonStates.publicUserDatapacksLoading}
         />
-        {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) => item.tags.includes("Treatise")) && (
-          <DatapackGroupDisplay
-            datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
-              item.tags.includes("Treatise")
-            )}
-            header={t("settings.datapacks.title.treatise")}
-            HeaderIcon={Terrain}
-            loading={state.skeletonStates.publicOfficialDatapacksLoading}
-          />
+        {state.isLoggedIn &&
+          getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) => item.tags.includes("Treatise")) && (
+            <DatapackGroupDisplay
+              datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
+                item.tags.includes("Treatise")
+              )}
+              header={t("settings.datapacks.title.treatise")}
+              HeaderIcon={Terrain}
+              loading={state.skeletonStates.publicOfficialDatapacksLoading}
+            />
         )}
         {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) =>
           item.tags.includes("Lexicon Formations")
