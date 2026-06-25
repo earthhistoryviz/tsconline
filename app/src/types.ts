@@ -43,11 +43,14 @@ export type UploadDatapackMethodType = (
 ) => Promise<void>;
 
 export type User = SharedUser & {
-  geogptSessionId: string;
   settings: {
     darkMode: boolean;
     language: string;
+    geogptAutoOpen: boolean;
+    geogptTscOnlineCoWork: boolean;
+    geogptSettingsSeen: boolean;
   };
+  geogptSessionId?: string;
 };
 
 export type Reference = {

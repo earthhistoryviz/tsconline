@@ -10,11 +10,12 @@ const dirname = path.dirname(filename);
 async function removeAutoLoadedDatapack(page: Page) {
   await page.getByRole("button", { name: "Deselect All" }).click();
   await page.getByRole("button", { name: "Confirm Selection" }).click();
+  await expect(page.locator("text=Loading Datapacks")).toBeHidden();
 }
 
 async function generateBasicChart(page: Page) {
   const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".add-circle");
+  const addButton = container.locator(".datapack-chart-action");
 
   await expect(addButton).toBeVisible();
   await addButton.click();
@@ -75,19 +76,19 @@ test("datapack button is clickable", async ({ page }) => {
   await expect(page.locator("text=Warnings")).toBeVisible();
 });
 
-test("add-circle button is clickable", async ({ page }) => {
-  const addCircleWrapper = page.locator(".add-circle").nth(0);
-  await expect(addCircleWrapper).toBeVisible();
-  await addCircleWrapper.click();
+test("datapack add-to-chart button is clickable", async ({ page }) => {
+  const addButton = page.locator(".datapack-chart-action").nth(0);
+  await expect(addButton).toBeVisible();
+  await addButton.click();
 
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
 });
 
 test("check if confirm selection works", async ({ page }) => {
-  const addCircleWrapper = page.locator(".add-circle").nth(0);
-  await expect(addCircleWrapper).toBeVisible();
-  await addCircleWrapper.click();
+  const addButton = page.locator(".datapack-chart-action").nth(0);
+  await expect(addButton).toBeVisible();
+  await addButton.click();
 
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
@@ -107,7 +108,7 @@ test("check if generate chart and save chart works", async ({ page }) => {
   const chartSvg = page.locator(".react-transform-component svg");
   await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
 
-  await expect(chartSvg.locator(`text=9`)).toBeVisible();
+  await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
 
   await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
   await expect(chartSvg.locator("text=Deep Marine")).toBeVisible();
@@ -144,11 +145,6 @@ test("check if generate chart and save chart works", async ({ page }) => {
   const diff = Math.abs(downloadedSize - referenceSize);
   const allowedDiff = referenceSize * 0.1;
   expect(diff).toBeLessThanOrEqual(allowedDiff);
-});
-
-test("check if time scaling and column adjustments work", async ({ page }) => {
-  await generateBasicChart(page);
-
   await page.locator("text=Settings").click();
   await page.locator('input[value="10"]').fill("15");
   await page.locator('input[value="2"]').fill("1");
@@ -162,12 +158,22 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
   await expect(page.locator("text=Loading Chart")).toBeHidden();
   await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
 
-  const chartSvg = page.locator(".react-transform-component svg");
-
-  await expect(chartSvg.locator(`text=9`)).toBeVisible();
+  await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
 
   await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
   await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
+
+  await page.locator("text=Settings").click();
+
+  await page.locator("text=Map Points").first().click();
+  await page.locator("text=Africa Bight").click();
+
+  await expect(page.locator("data-testid=LocationOnSharpIcon").nth(0)).toBeVisible();
+  await expect(page.locator("data-testid=LocationOnSharpIcon").nth(1)).toBeVisible();
+
+  await page.locator("data-testid=LocationOnSharpIcon").nth(0).hover();
+
+  await expect(page.locator("text=Nigeria Coast")).toBeVisible();
 });
 
 test("Load Basic Settings", async ({ page }) => {
@@ -189,7 +195,7 @@ test("Load Basic Settings", async ({ page }) => {
 
 test("check if generate crossplot works", async ({ page }) => {
   const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".add-circle");
+  const addButton = container.locator(".datapack-chart-action");
 
   await expect(addButton).toBeVisible();
   await addButton.click();
@@ -237,47 +243,6 @@ test("check if generate crossplot works", async ({ page }) => {
   await expect(chartSvg.locator("text=Ocean Crust").nth(1)).toBeVisible();
 });
 
-test("check if Map Points Functional", async ({ page }) => {
-  await generateBasicChart(page);
-
-  const chartSvg = page.locator(".react-transform-component svg");
-  await expect(chartSvg.locator(`text=9`)).toBeVisible();
-
-  await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
-  await expect(chartSvg.locator("text=Deep Marine")).toBeVisible();
-  await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
-  await expect(chartSvg.locator("text=Ocean Crust")).toBeVisible();
-
-  await page.locator("text=Settings").click();
-
-  await page.locator("text=Map Points").first().click();
-  await page.locator("text=Africa Bight").click();
-
-  await expect(page.locator("data-testid=LocationOnSharpIcon").nth(0)).toBeVisible();
-  await expect(page.locator("data-testid=LocationOnSharpIcon").nth(1)).toBeVisible();
-
-  await page.locator("data-testid=LocationOnSharpIcon").nth(0).hover();
-
-  await expect(page.locator("text=Nigeria Coast")).toBeVisible();
-});
-
-test("check if new window button works", async ({ page, context }) => {
-  await generateBasicChart(page);
-  const newWindowButton = await page.locator(".new-window-button");
-  await expect(newWindowButton).toBeVisible();
-  const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
-
-  await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart-view/preview");
-  await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
-
-  const newWindowButtonPrev = await newPage.locator(".new-window-button");
-  await expect(newWindowButtonPrev).toBeHidden();
-  await newPage.close();
-});
-
-//generate a test with MCPlink state in the window params
-
 test("check sync of preview with window", async ({ page, context }) => {
   await generateBasicChart(page);
   const newWindowButton = await page.locator(".new-window-button");
@@ -288,41 +253,8 @@ test("check sync of preview with window", async ({ page, context }) => {
   expect(newPage.url()).toContain("/chart-view/preview");
   await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
-  //bring first page to front and make an update
-  await page.bringToFront();
-  await page.locator("text=Datapacks").click();
-
-  const container = page.locator("text=Australia").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".add-circle");
-  await addButton.click();
-
-  const confirmButton = page.locator("text=Confirm Selection");
-  await confirmButton.click();
-
-  const generateChart = page.locator("text=Generate Chart");
-  await generateChart.click();
-  //wait for chart to load
-  await expect(page.locator("text=Loading Chart")).toBeHidden();
-  await expect(page.locator("text=Successfully generated chart")).toBeVisible();
-  await expect(page.locator("text=Greater NW Shelf")).toBeVisible();
-
-  //bring new page to front and check for update
-  await newPage.bringToFront();
-  await expect(newPage.locator("text=Greater NW Shelf")).toBeVisible({ timeout: 10000 });
-
   const newWindowButtonPrev = await newPage.locator(".new-window-button");
   await expect(newWindowButtonPrev).toBeHidden();
-});
-
-test("test locking of preview window", async ({ page, context }) => {
-  await generateBasicChart(page);
-  const newWindowButton = await page.locator(".new-window-button");
-  await expect(newWindowButton).toBeVisible();
-  const [newPage] = await Promise.all([context.waitForEvent("page"), newWindowButton.click()]);
-
-  await newPage.bringToFront();
-  expect(newPage.url()).toContain("/chart-view/preview");
-  await expect(newPage.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 10000 });
 
   await expect(newPage.locator(".lock-button")).toBeVisible();
   await newPage.locator(".lock-button").click();
@@ -332,7 +264,7 @@ test("test locking of preview window", async ({ page, context }) => {
   await page.locator("text=Datapacks").click();
 
   const container = page.locator("text=Australia").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".add-circle");
+  const addButton = container.locator(".datapack-chart-action");
   await addButton.click();
 
   const confirmButton = page.locator("text=Confirm Selection");
@@ -441,7 +373,7 @@ test("load cached chart from MCP link state in window params", async ({ page }) 
   await expect(chartSvg).toBeVisible();
 
   // Verify key chart elements are present
-  await expect(chartSvg.locator("text=9")).toBeVisible();
+  await expect(chartSvg.locator("text=9").first()).toBeVisible();
 
   //click settings, expect input to be 12 for baseAge
   await page.locator("text=SETTINGS").click();

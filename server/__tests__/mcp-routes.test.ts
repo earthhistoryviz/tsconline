@@ -216,6 +216,16 @@ describe("mcpListColumns", () => {
     expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
   });
 
+  it("returns 400 when request body is missing", async () => {
+    const req = {} as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
   it("returns 400 when datapackTitles is not an array", async () => {
     const req = { body: { datapackTitles: "GTS2020" } } as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
@@ -292,26 +302,66 @@ describe("mcpListColumns", () => {
       columns: ["Col"]
     });
   });
+
+  it("drops root-only paths and avoids _leaves when a node has only nested children", async () => {
+    const mockDatapacks = [{ title: "Nested", storedFileName: "nested.zip" }];
+    const mockFlatColumns = [
+      { id: "root", name: "Root", path: "Chart Root", on: true, enableTitle: true, type: "zone" },
+      {
+        id: "nested-column",
+        name: "Column",
+        path: "Chart Root > Group > Subgroup > Column",
+        on: true,
+        enableTitle: true,
+        type: "zone"
+      }
+    ];
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (listColumns as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mockFlatColumns);
+
+    const req = { body: { datapackTitles: ["Nested"] } } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpListColumns(req, reply);
+
+    expect(reply.send).toHaveBeenCalledWith({
+      datapackTitles: ["Nested"],
+      columns: { Group: { Subgroup: ["Column"] } }
+    });
+  });
 });
 
 describe("mcpRenderChartWithEdits", () => {
-  it("generates chart with overrides and column toggles", async () => {
+  it("generates chart with overrides and column toggles and pushes websocket updates when sessionId is provided", async () => {
     const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
     const mockSettingsXml = "<settings/>";
-    const mockResult = { chartpath: "public/charts/abc/chart.svg" };
+    const mockResult = { chartpath: "public/charts/abc/chart.svg", hash: "abc123" };
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-render" })));
 
     (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
     (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
     (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockSettingsXml);
     (generateChart as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
       async (_chartRequest: unknown, onProgress?: (p: unknown) => void) => {
-        if (onProgress) onProgress({ percentage: 50 });
+        if (onProgress) onProgress({ stage: "Rendering", percent: 50 });
         return mockResult;
       }
     );
 
     const req = {
       body: {
+        sessionId: "sid-render",
         datapackTitles: ["GTS2020"],
         overrides: { topAge: 0, baseAge: 10 },
         columnToggles: { "stage-id": { on: false } }
@@ -324,10 +374,34 @@ describe("mcpRenderChartWithEdits", () => {
     expect(generateChartWithEdits).toHaveBeenCalledWith(
       mockDatapacks,
       { topAge: 0, baseAge: 10 },
-      { "stage-id": { on: false } }
+      { "stage-id": { on: false } },
+      { hideDatapackDefaults: false }
     );
     expect(generateChart).toHaveBeenCalled();
     expect(reply.send).toHaveBeenCalledWith(mockResult);
+
+    const sentMessages = socket.send.mock.calls.map(([raw]) => JSON.parse(raw as string));
+    expect(sentMessages).toEqual([
+      {
+        type: "apply-chart-state",
+        requestId: "mock-request-id",
+        chartState: {
+          datapackTitles: ["GTS2020"],
+          overrides: { topAge: 0, baseAge: 10 },
+          columnToggles: { "stage-id": { on: false } }
+        }
+      },
+      { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
+      { type: "geogpt-chart-update-progress", requestId: "mock-request-id", stage: "Rendering", percent: 50 },
+      {
+        type: "geogpt-chart-update-complete",
+        requestId: "mock-request-id",
+        mcpLinkParams: {
+          datapacks: ["GTS2020"],
+          chartHash: "abc123"
+        }
+      }
+    ]);
   });
 
   it("returns 400 when datapackTitles is missing", async () => {
@@ -338,6 +412,78 @@ describe("mcpRenderChartWithEdits", () => {
 
     expect(reply.status).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("returns 400 when request body is missing", async () => {
+    const req = {} as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "datapackTitles array is required" });
+  });
+
+  it("ignores terminal progress events and preserves explicit false flags", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-terminal-progress" })));
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("<settings/>");
+    (generateChart as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      async (chartRequest: unknown, onProgress?: (p: unknown) => void) => {
+        expect(chartRequest).toMatchObject({ useCache: false, isCrossPlot: false });
+        onProgress?.({ stage: "Complete", percent: 100 });
+        onProgress?.({ stage: "Error", percent: 100 });
+        return { chartpath: "public/charts/final/chart.svg", hash: "terminal123" };
+      }
+    );
+
+    const req = {
+      body: {
+        sessionId: "sid-terminal-progress",
+        datapackTitles: ["GTS2020"],
+        overrides: {},
+        columnToggles: {},
+        useCache: false,
+        isCrossPlot: false
+      }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    const sentMessages = socket.send.mock.calls.map(([raw]) => JSON.parse(raw as string));
+    expect(sentMessages).toEqual([
+      {
+        type: "apply-chart-state",
+        requestId: "mock-request-id",
+        chartState: {
+          datapackTitles: ["GTS2020"],
+          overrides: {},
+          columnToggles: {}
+        }
+      },
+      { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
+      {
+        type: "geogpt-chart-update-complete",
+        requestId: "mock-request-id",
+        mcpLinkParams: {
+          datapacks: ["GTS2020"],
+          chartHash: "terminal123"
+        }
+      }
+    ]);
   });
 
   it("returns 400 when datapackTitles is not an array", async () => {
@@ -392,13 +538,24 @@ describe("mcpRenderChartWithEdits", () => {
 
   it("returns 500 when generateChart throws", async () => {
     const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-render-error" })));
+
     (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
     (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
     (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("<settings/>");
     (generateChart as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("fail chart"));
 
     const req = {
-      body: { datapackTitles: ["GTS2020"], overrides: {}, columnToggles: {} }
+      body: { sessionId: "sid-render-error", datapackTitles: ["GTS2020"], overrides: {}, columnToggles: {} }
     } as unknown as FastifyRequest;
     const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
 
@@ -406,6 +563,16 @@ describe("mcpRenderChartWithEdits", () => {
 
     expect(reply.status).toHaveBeenCalledWith(500);
     expect(reply.send).toHaveBeenCalledWith({ error: "Error: fail chart" });
+    expect(socket.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: "geogpt-chart-update-start", requestId: "mock-request-id" })
+    );
+    expect(socket.send).toHaveBeenLastCalledWith(
+      JSON.stringify({
+        type: "geogpt-chart-update-error",
+        requestId: "mock-request-id",
+        error: "Error: fail chart"
+      })
+    );
   });
 
   it("includes user datapacks with uuid field when uuid is provided", async () => {
@@ -445,6 +612,44 @@ describe("mcpRenderChartWithEdits", () => {
       uuid: "dp-uuid-123"
     });
     expect(reply.send).toHaveBeenCalledWith(mockResult);
+  });
+
+  it("continues rendering when websocket update sends are not writable", async () => {
+    const mockDatapacks = [{ title: "GTS2020", storedFileName: "gts2020.zip", isPublic: true, type: "datapack" }];
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid-closed-socket" })));
+    socket.readyState = 0;
+    socket.send.mockImplementation(() => {
+      throw new Error("socket closed");
+    });
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockDatapacks);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (generateChartWithEdits as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("<settings/>");
+    (generateChart as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      chartpath: "public/charts/socket/chart.svg",
+      hash: "socket123"
+    });
+
+    const req = {
+      body: { sessionId: "sid-closed-socket", datapackTitles: ["GTS2020"], overrides: {}, columnToggles: {} }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRenderChartWithEdits(req, reply);
+
+    expect(reply.send).toHaveBeenCalledWith({
+      chartpath: "public/charts/socket/chart.svg",
+      hash: "socket123"
+    });
   });
 });
 
@@ -653,7 +858,6 @@ describe("mcpUploadDatapack (route)", () => {
       limits: { fieldNameSize: 100, fileSize: 1024 * 1024 * 60 }
     });
     app.post("/mcp/upload-datapack", mcpUploadDatapack);
-    await app.listen({ host: "127.0.0.1", port: 0 });
   });
 
   afterAll(async () => {
@@ -885,6 +1089,21 @@ describe("mcpUpdateSessionChartState", () => {
     expect(reply.send).toHaveBeenCalledWith({ error: "Missing sessionId or userChartState" });
   });
 
+  it("returns 400 when request body is missing", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+
+    const req = {
+      session: { get: vi.fn().mockReturnValue("u123") }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpUpdateSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing sessionId or userChartState" });
+  });
+
   it("forwards chart state update to MCP with Bearer token", async () => {
     process.env.MCP_AUTH_TOKEN = "token123";
     delete process.env.DOMAIN;
@@ -969,6 +1188,22 @@ describe("mcpRequestSessionChartState", () => {
 
     const req = {
       headers: {},
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpRequestSessionChartState(req, reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Missing or invalid Bearer token" });
+  });
+
+  it("returns 401 when MCP_AUTH_TOKEN is missing", async () => {
+    delete process.env.MCP_AUTH_TOKEN;
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
       body: { sessionId: "sid123" }
     } as unknown as FastifyRequest;
 
@@ -1178,6 +1413,49 @@ describe("mcpRequestSessionChartState", () => {
       error: "Client refused refresh"
     });
   });
+
+  it("uses the default error when websocket returns not-ok without an error message", async () => {
+    process.env.MCP_AUTH_TOKEN = "token123";
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      {
+        session: { get: vi.fn().mockReturnValue("u123") }
+      } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify({ type: "register", sessionId: "sid123" })));
+
+    const req = {
+      headers: { authorization: "Bearer token123" },
+      body: { sessionId: "sid123" }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), code: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    const pending = mcpRequestSessionChartState(req, reply);
+    const outboundRaw = socket.send.mock.calls[0]?.[0] as string;
+    const outbound = JSON.parse(outboundRaw) as { requestId?: string };
+    socket.emit(
+      "message",
+      Buffer.from(
+        JSON.stringify({
+          type: "chart-state-response",
+          requestId: outbound.requestId,
+          ok: false
+        })
+      )
+    );
+
+    await pending;
+
+    expect(reply.code).toHaveBeenCalledWith(409);
+    expect(reply.send).toHaveBeenCalledWith({
+      ok: false,
+      sessionId: "sid123",
+      error: "Unable to refresh chart state"
+    });
+  });
 });
 
 describe("handleMcpChartStateSync", () => {
@@ -1235,5 +1513,22 @@ describe("handleMcpChartStateSync", () => {
     expect(reply.code).toHaveBeenCalledWith(409);
 
     socket.emit("error");
+  });
+
+  it("ignores primitive payloads and unmatched chart-state responses", async () => {
+    const socket = makeMockWebSocket();
+
+    await handleMcpChartStateSync(
+      socket as unknown as Parameters<typeof handleMcpChartStateSync>[0],
+      { session: { get: vi.fn().mockReturnValue("u123") } } as unknown as FastifyRequest
+    );
+
+    socket.emit("message", Buffer.from(JSON.stringify("primitive")));
+    socket.emit(
+      "message",
+      Buffer.from(JSON.stringify({ type: "chart-state-response", requestId: "missing-request", ok: true }))
+    );
+
+    expect(socket.close).not.toHaveBeenCalled();
   });
 });

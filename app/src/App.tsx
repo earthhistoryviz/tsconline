@@ -42,6 +42,7 @@ import { ReportBug } from "./ReportBug";
 import { McpHome } from "./McpHome";
 import { fetcher } from "./util";
 import { extractCurrentChartState } from "./util/chart-state-extractor";
+import { MCPChartSyncServerMessage, MCPChartSyncClientMessage } from "@tsconline/shared";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -109,13 +110,18 @@ export default observer(function App() {
     const sessionId = state.user.geogptSessionId;
     if (!state.isLoggedIn || !sessionId) return;
 
+    // Only sync chart state if co-work is enabled
+    if (!state.user.settings.geogptTscOnlineCoWork) return;
+
     const wsBase = import.meta.env.DEV
       ? "ws://localhost:3000"
       : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
     const ws = new WebSocket(`${wsBase}/mcp/chart-state-sync`);
+    let activeGeoGPTRequestId: string | undefined;
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "register", sessionId }));
+      const registerMessage: MCPChartSyncClientMessage = { type: "register", sessionId };
+      ws.send(JSON.stringify(registerMessage));
     };
 
     ws.onmessage = async (event) => {
@@ -126,44 +132,86 @@ export default observer(function App() {
         return;
       }
 
-      const message = payload as { type?: string; requestId?: string };
-      if (message.type !== "request-chart-state" || typeof message.requestId !== "string") {
-        return;
-      }
+      const message = payload as MCPChartSyncServerMessage;
+      if (message.type === "request-chart-state" && typeof message.requestId === "string") {
+        try {
+          const userChartState = extractCurrentChartState(state);
+          const res = await fetcher("/mcp/update-chart-state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ sessionId, userChartState })
+          });
 
-      try {
-        const userChartState = extractCurrentChartState(state);
-        const res = await fetcher("/mcp/update-chart-state", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ sessionId, userChartState })
-        });
-
-        ws.send(
-          JSON.stringify({
+          const responseMessage: MCPChartSyncClientMessage = {
             type: "chart-state-response",
             requestId: message.requestId,
             ok: res.ok,
             ...(res.ok ? {} : { error: `Failed to update chart state (${res.status})` })
-          })
-        );
-      } catch (error) {
-        ws.send(
-          JSON.stringify({
+          };
+          ws.send(JSON.stringify(responseMessage));
+        } catch (error) {
+          const responseMessage: MCPChartSyncClientMessage = {
             type: "chart-state-response",
             requestId: message.requestId,
             ok: false,
             error: error instanceof Error ? error.message : "Unknown error"
-          })
-        );
+          };
+          ws.send(JSON.stringify(responseMessage));
+        }
+        return;
+      }
+
+      if (message.type === "apply-chart-state") {
+        activeGeoGPTRequestId = message.requestId;
+        actions.applyMcpChartState(message.chartState);
+        return;
+      }
+
+      if (message.type === "geogpt-chart-update-start") {
+        activeGeoGPTRequestId = message.requestId;
+        actions.resetChartTabStateForGeneration(state.chartTab.state);
+        actions.updateChartLoadingProgress(0, "GeoGPT is generating chart");
+        actions.pushSnackbar("GeoGPT is updating your chart in the background", "info");
+        return;
+      }
+
+      if (!activeGeoGPTRequestId || message.requestId !== activeGeoGPTRequestId) {
+        return;
+      }
+
+      if (message.type === "geogpt-chart-update-progress") {
+        actions.updateChartLoadingProgress(message.percent, message.stage);
+        return;
+      }
+
+      if (message.type === "geogpt-chart-update-complete") {
+        try {
+          await actions.loadMcpChartLink(message.mcpLinkParams);
+          actions.pushSnackbar("GeoGPT chart loaded", "success");
+        } catch (error) {
+          actions.pushSnackbar(
+            error instanceof Error ? error.message : "Failed to load GeoGPT chart into TSCOnline",
+            "warning"
+          );
+          actions.setChartTabState(state.chartTab.state, { chartLoading: false });
+        } finally {
+          activeGeoGPTRequestId = undefined;
+        }
+        return;
+      }
+
+      if (message.type === "geogpt-chart-update-error") {
+        actions.pushSnackbar(message.error, "warning");
+        actions.setChartTabState(state.chartTab.state, { chartLoading: false });
+        activeGeoGPTRequestId = undefined;
       }
     };
 
     return () => {
       ws.close();
     };
-  }, [state.isLoggedIn, state.user.geogptSessionId]);
+  }, [state.isLoggedIn, state.user.geogptSessionId, state.user.settings.geogptTscOnlineCoWork]);
 
   const getQsg = () => {
     switch (i18n.language) {

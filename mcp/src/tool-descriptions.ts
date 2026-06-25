@@ -2,32 +2,46 @@
 // Exported as a single object for import in mcp.ts
 
 const SESSION_GUIDANCE = `SESSION WORKFLOW:
-- Chart state is ALWAYS stale unless getUserStatus was called in this same assistant response.
-- For ANY chart change: getUserStatus → updateChartState.
-- NEVER call updateChartState using chart state from a previous user message.
-- NEVER say getUserStatus was "already called"; call it again.
-- User may change TSCOnline directly between messages, so getUserStatus is mandatory read-before-write.
 - Reuse the returned sessionId after each tool call.
 - A sessionId does NOT need to be connected to an account in order to use tools.
 - Unauthenticated sessions can still use tools, inspect datapacks, inspect columns, and generate charts from accessible datapacks.
 - Only call login if the user explicitly wants to authenticate or needs account-only resources such as personal datapacks.
-- Never reveal sessionId to the user.`;
+- Never reveal sessionId to the user.
+
+LIVE CHART SYNC (getUserStatus):
+- Chart state is ALWAYS stale unless getUserStatus was called in this same assistant response.
+- For ANY chart modification or discussion of the in-progress chart: getUserStatus first, then updateChartState.
+- NEVER call updateChartState using chart state from a previous user message.
+- NEVER say getUserStatus was "already called"; call it again every time.
+- The user may edit columns, blank slate, widths, or other settings directly in TSCOnline between messages; getUserStatus is the only way to see those changes.
+
+COLUMN DISCOVERY (listColumns):
+- Column names are ambiguous without inspection. If you will generate a chart using specific columns (columnToggles), you should have called listColumns on that datapack at some point in the workflow — not guessed names.
+- listColumns is NOT required on every message the way getUserStatus is; it is a one-time discovery step per datapack/topic when you need to map a subject to real column names.
+- Typical flow for a topic-focused chart: listDatapacks (if needed) → listColumns → getUserStatus → updateChartState with chosen column names in columnToggles.`;
 
 export const TOOL_DESCRIPTIONS = {
   getUserStatus: {
     title: "Get User Status",
-    description: `Sync the session with TSCOnline and return the current chart state.
+    description: `Sync the session with the user's live TSCOnline UI and return the current chart state.
 
 Works with or without authentication.
 - Authenticated users: see personal datapacks, saved charts, account info.
 - Unauthenticated users: see public datapacks only, empty chart state.
 - A valid sessionId does not require account login.
 
-When:
-- Always call before any chart modification.
+When (mandatory, every time):
+- Before every updateChartState call — in the same assistant response, never from a prior message.
+- Before discussing or continuing work on a chart that is in progress, because the user may have changed column toggles, blank slate, widths, or other settings in TSCOnline since your last tool call.
+- This is live read-before-write sync, not column discovery. Use listColumns separately when you need to know which columns exist in a datapack.
 
 Returns:
-- authentication status, user identity (if any), and currentChartState
+- authentication status, user identity (if any), chartState, and currentChartState
+- chartState.overrides.hideDatapackDefaults controls the column baseline: false = datapack defaults apply, true = blank slate
+- When hideDatapackDefaults is false, chartState.columnToggles contains ONLY explicit leaf-column deltas vs datapack defaults (empty {} means the chart matches defaults)
+- Leaves hidden because a parent folder is off are omitted entirely; the off parent folder itself may appear once as { on: false }
+- When hideDatapackDefaults is true, chartState.columnToggles lists every effectively-on column (folders and leaves) as positive { on: true } entries
+- When hideDatapackDefaults is false, only leaf-column deltas appear; off parent folders may appear once as { on: false }
 - loginRequired should not be treated as "you must log in to continue using tools"
 
 Input:
@@ -71,13 +85,23 @@ Works with or without authentication.
 
   Topic-focused chart workflow:
   1. If the user is still choosing a datapack, call listDatapacks first.
-  2. If the user has chosen a datapack but wants a chart about a specific topic within it, call listColumns next.
-  3. Then call updateChartState and pass the relevant columns in columnToggles instead of sending only datapackTitles.
+  2. Once a datapack is chosen and the chart will use specific columns, call listColumns to discover real column names for that topic — do not guess. If you are about to set columnToggles, you should already have called listColumns on that datapack in this conversation.
+  3. Call getUserStatus (same response) to pick up any live UI edits, then updateChartState with the relevant columns in columnToggles — not datapackTitles alone.
   4. For topic-focused charts, turn the relevant columns on and unrelated columns off whenever practical.
   5. Do not invent time-range or scale overrides just to make the chart "fit" unless the user explicitly asks for them.
 
+  Column visibility (same behavior as the TSCOnline column settings UI):
+  - Baseline with hideDatapackDefaults false: datapack defaults are assumed; only send leaf-column deltas in columnToggles
+  - Turn OFF a default-on leaf: { "Events": { "on": false } }
+  - Turn ON a default-off leaf: { "Ranges": { "on": true } }
+  - Width only: { "Age/Stage": { "width": 110 } }
+  - Blank slate: overrides.hideDatapackDefaults true, then list every kept column (folder or leaf) with { "on": true }
+  - Restore datapack defaults: overrides.hideDatapackDefaults false
+  - In normal mode, only toggle leaf column names; ancestors are turned on automatically
+  - Changes sync to the user's open TSCOnline session in real time before the chart finishes rendering
+
   Input:
-  - { datapackTitles: string[]; overrides?: Record<string, unknown>; columnToggles?: Record<string, { on?: boolean; width?: number }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
+  - { datapackTitles: string[]; overrides?: { fonts?: Record<FontTarget, FontSettings>; [key: string]: unknown }; columnToggles?: Record<string, { on?: boolean; width?: number; fonts?: Record<FontTarget, FontSettings>; }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
 
   Output data:
   - { directUrl, embeddedChartUrl, currentState }
@@ -89,6 +113,13 @@ Works with or without authentication.
   Notes:
   - datapackTitles replaces previous list; toggles/overrides merge into state.
   - Column keys are case-insensitive.
+  - If listColumns was used to identify relevant columns, carry those exact leaf names into columnToggles — do not stop at discovery.
+  - Do not call updateChartState with topic-specific columnToggles unless listColumns has already been used for that datapack in this conversation.
+  - If the user names a specific column, use columnToggles[columnName].fonts, not overrides.fonts.
+  - Use overrides.fonts only when the user asks for all columns, every column, global/default fonts, or apply all.
+  - FontSettings: { on?: boolean; inheritable?: boolean; fontFace?: "Arial" | "Courier" | "Verdana"; size?: number; bold?: boolean; italic?: boolean; color?: string }. Include on: true when changing fontFace, size, bold, italic, or color. Color must use rgb(r, g, b), for example "rgb(0, 128, 0)", not color names or hex.  - Common FontTargets: "Column Header" = column title/header; "Zone Column Label" = text inside zone columns; "Sequence Column Label" = sequence-column labels; "Event Column Label" = event-column labels; "Popup Body" = popup text.
+  - If the user says "column header" or asks to change the column name/title text, use "Column Header".
+  - If the user says "text inside the chart" or is ambiguous, prefer the column's own likely label target, such as "Zone Column Label" for zone columns, instead of overrides.fonts.
   - If you used listColumns to identify relevant columns, do not stop there; carry those chosen column names into columnToggles when calling updateChartState.
   - A request like "teach me about planetary systems using this datapack" should usually produce a focused updateChartState call with planet-related columns toggled on, not a bare datapack-only request.
   - columnToggles must be a flat object whose keys are actual column names/identifiers, not the nested object structure returned by listColumns.
@@ -127,19 +158,19 @@ ${SESSION_GUIDANCE}`
 
   listColumns: {
     title: "List Columns",
-    description: `Return columns for given datapacks (fallback only).
+    description: `Return the column hierarchy for given datapacks so you can map a topic to real column names.
 
 Works with or without authentication.
 - Works for any datapack the session can access (public or personal).
 - No account login is required to inspect columns for accessible public datapacks.
 
 When:
-- Only after updateChartState fails due to unknown column names, or when user asks.
-- Use when the user wants to understand what a specific datapack covers.
-- Use when the user asks about a specific subject inside a chosen datapack (for example, planets, climate, or stratigraphy within that datapack).
-- Use to inspect the available columns so you can judge which columns would help answer the user's topic-specific question or build the most relevant chart.
-- After identifying the relevant columns, use those exact column names to drive the next updateChartState call.
-- Do not treat listColumns as the final step for a chart request; it is a discovery step that should inform columnToggles.
+- Before generating any chart that will use columnToggles for a specific topic or subset of data — you should have called listColumns on that datapack at some point; do not invent or guess column names.
+- When the user wants a chart about something within a datapack but the exact columns are unknown (e.g. a region, taxon group, or stratigraphic theme — use listColumns to see what exists, then pick matching leaves).
+- When the user wants to understand what a datapack covers, even if no chart is generated yet.
+- Not required on every message (unlike getUserStatus). Call once per datapack when column names are needed; reuse discovered names in later updateChartState calls, but still call getUserStatus before each update to sync live UI edits.
+
+After identifying relevant columns, pass those exact leaf names into columnToggles on the next updateChartState call. listColumns is discovery only — not the final step.
 
 Response format:
 - { datapackTitles: string[], columns: { nested structure of column names } }

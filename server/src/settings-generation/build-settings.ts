@@ -5,7 +5,10 @@ import {
   ChartSettingsInfoTSC,
   defaultColumnRootConstant,
   FontsInfo,
-  MCPColumnToggleSettings
+  MCPColumnToggleSettings,
+  MCPFontSettings,
+  MCPFontSettingsByTarget,
+  ValidFontOptions
 } from "@tsconline/shared";
 import Color from "color";
 import _ from "lodash";
@@ -24,7 +27,33 @@ export type SchemaOverrides = Partial<{
   enChartLegend: boolean;
   enPriority: boolean;
   enHideBlockLable: boolean;
+  fonts: MCPFontSettingsByTarget; // Take in global font overrides as part of the main overrides object for simplicity
 }>;
+
+export function extractUnitScopedTimeOverrides(overrides: SchemaOverrides): {
+  topAgeByUnit: Map<string, number>;
+  baseAgeByUnit: Map<string, number>;
+} {
+  const topAgeByUnit = new Map<string, number>();
+  const baseAgeByUnit = new Map<string, number>();
+
+  for (const [key, value] of Object.entries(overrides)) {
+    if (typeof value !== "number") continue;
+
+    const topAgeMatch = key.match(/^topAge_(.+)$/);
+    if (topAgeMatch?.[1]) {
+      topAgeByUnit.set(topAgeMatch[1].toLowerCase(), value);
+      continue;
+    }
+
+    const baseAgeMatch = key.match(/^baseAge_(.+)$/);
+    if (baseAgeMatch?.[1]) {
+      baseAgeByUnit.set(baseAgeMatch[1].toLowerCase(), value);
+    }
+  }
+
+  return { topAgeByUnit, baseAgeByUnit };
+}
 
 export type ColumnToggles = Record<
   string,
@@ -32,6 +61,7 @@ export type ColumnToggles = Record<
     on?: boolean;
     width?: number;
     backgroundColor?: string;
+    fonts?: MCPFontSettingsByTarget; // Allow font overrides at the individual column level as well
   }
 >;
 
@@ -108,6 +138,50 @@ function addNormalizedToggleCandidates(
       }
       queue.push(dotParts[dotParts.length - 1]!);
     }
+  }
+}
+
+function applyFontSettings(font: FontsInfo[ValidFontOptions], settings: MCPFontSettings) {
+  // Check if the request is changing an actual visual font property.
+  const hasFontChange =
+    settings.fontFace !== undefined ||
+    settings.size !== undefined ||
+    settings.bold !== undefined ||
+    settings.italic !== undefined ||
+    settings.color !== undefined;
+
+  if (settings.on !== undefined) {
+    font.on = settings.on; // Switch showing font style visibility (on or off)
+  } else if (hasFontChange) {
+    font.on = true; // Always turn on font visibility if the request includes any actual font style changes, even if "on" is not explicitly included in request.
+  }
+
+  // Only update fields that were actually sent. This keeps existing font settings unchanged unless the request overrides them.
+  if (settings.inheritable !== undefined) font.inheritable = settings.inheritable;
+  if (settings.fontFace !== undefined) font.fontFace = settings.fontFace;
+  if (settings.size !== undefined) font.size = settings.size;
+  if (settings.bold !== undefined) font.bold = settings.bold;
+  if (settings.italic !== undefined) font.italic = settings.italic;
+  if (settings.color !== undefined) font.color = settings.color;
+}
+
+function applyFontsToColumnInfo(col: ColumnInfo, fonts?: MCPFontSettingsByTarget) {
+  if (!fonts) return;
+
+  // fonts is a map like:
+  // {
+  //   "Column Header": { fontFace: "Courier" },
+  //   "Zone Column Label": { italic: true },
+  //   ... etc
+  // }
+  for (const [target, settings] of Object.entries(fonts)) {
+    if (!settings) continue;
+
+    // Find the actual font object on this column for the requested target.
+    const font = col.fontsInfo[target as ValidFontOptions];
+
+    if (!font) continue;
+    applyFontSettings(font, settings); // Apply the requested settings to this column's font object.
   }
 }
 
@@ -293,6 +367,11 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
         col.rgb.g = Math.round(g);
         col.rgb.b = Math.round(b);
       }
+    },
+    (col, settings) => {
+      if (settings.fonts !== undefined) {
+        applyFontsToColumnInfo(col, settings.fonts);
+      }
     }
   ];
 
@@ -325,11 +404,30 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
   visit(columnRoot);
 }
 
+function applyGlobalFontsToColumnInfo(columnRoot: ColumnInfo, fonts?: MCPFontSettingsByTarget) {
+  if (!fonts) return;
+
+  // Walk through the column tree starting at the root.
+  const visit = (col: ColumnInfo) => {
+    applyFontsToColumnInfo(col, fonts); // Apply the same font updates to this column.
+
+    if (col.children) {
+      // Then apply the same font updates to this column's children.
+      col.children.forEach(visit);
+    }
+  };
+
+  // Start applying the global font updates from the root column.
+  visit(columnRoot);
+}
+
 function applyOverridesToChartSettings(
   chartSettings: ChartSettingsInfoTSC,
   overrides: SchemaOverrides,
   primaryUnit: string
 ) {
+  const { topAgeByUnit, baseAgeByUnit } = extractUnitScopedTimeOverrides(overrides);
+
   if (overrides.topAge !== undefined) {
     const existingTopAge = chartSettings.topAge.find((t) => t.unit === primaryUnit);
     if (existingTopAge) {
@@ -345,6 +443,34 @@ function applyOverridesToChartSettings(
       existingBaseAge.text = overrides.baseAge;
     } else {
       chartSettings.baseAge.push({ source: "text", unit: primaryUnit, text: overrides.baseAge });
+    }
+  }
+
+  for (const entry of chartSettings.topAge) {
+    const unitScopedTopAge = topAgeByUnit.get(entry.unit.toLowerCase());
+    if (unitScopedTopAge !== undefined) {
+      entry.text = unitScopedTopAge;
+    }
+  }
+
+  for (const [unit, scopedTopAge] of topAgeByUnit.entries()) {
+    const hasExistingUnit = chartSettings.topAge.some((entry) => entry.unit.toLowerCase() === unit);
+    if (!hasExistingUnit) {
+      chartSettings.topAge.push({ source: "text", unit, text: scopedTopAge });
+    }
+  }
+
+  for (const entry of chartSettings.baseAge) {
+    const unitScopedBaseAge = baseAgeByUnit.get(entry.unit.toLowerCase());
+    if (unitScopedBaseAge !== undefined) {
+      entry.text = unitScopedBaseAge;
+    }
+  }
+
+  for (const [unit, scopedBaseAge] of baseAgeByUnit.entries()) {
+    const hasExistingUnit = chartSettings.baseAge.some((entry) => entry.unit.toLowerCase() === unit);
+    if (!hasExistingUnit) {
+      chartSettings.baseAge.push({ source: "text", unit, text: scopedBaseAge });
     }
   }
 
@@ -374,7 +500,8 @@ function applyOverridesToChartSettings(
     chartSettings.variableColors = overrides.variableColors;
   }
 
-  const booleanFields: (keyof SchemaOverrides)[] = [
+  // Narrowed as const so adding fonts to SchemaOverrides does not make TypeScript treat "fonts" as a possible chart setting key.
+  const booleanFields = [
     "noIndentPattern",
     "negativeChk",
     "doPopups",
@@ -382,7 +509,7 @@ function applyOverridesToChartSettings(
     "enChartLegend",
     "enPriority",
     "enHideBlockLable"
-  ];
+  ] as const;
 
   for (const key of booleanFields) {
     const val = overrides[key];
@@ -416,10 +543,45 @@ function validateChartSettings(chartSettings: ChartSettingsInfoTSC, primaryUnit:
   }
 }
 
+export type ChartEditOptions = {
+  hideDatapackDefaults?: boolean;
+};
+
+function shouldPreserveColumnOn(col: ColumnInfo): boolean {
+  if (col.name === "Chart Root" || col.name === "Chart Title" || col.name === "Ma") {
+    return true;
+  }
+  if (col.columnDisplayType === "Ruler") {
+    return true;
+  }
+  return false;
+}
+
+function setAllColumnsOff(columnRoot: ColumnInfo): void {
+  const visit = (col: ColumnInfo) => {
+    if (!shouldPreserveColumnOn(col)) {
+      col.on = false;
+    }
+    if (col.children) {
+      col.children.forEach(visit);
+    }
+  };
+  visit(columnRoot);
+}
+
+export function applyBlankSlateColumns(columnRoot: ColumnInfo, hideDatapackDefaults: boolean | undefined): void {
+  if (!hideDatapackDefaults) {
+    return;
+  }
+
+  setAllColumnsOff(columnRoot);
+}
+
 export async function generateChartWithEdits(
   datapacks: Datapack[],
   overrides: SchemaOverrides,
-  columnToggles: ColumnToggles
+  columnToggles: ColumnToggles,
+  options?: ChartEditOptions
 ): Promise<string> {
   const normalizedOverrides: SchemaOverrides = (overrides as unknown as { overrides?: SchemaOverrides })?.overrides
     ? (overrides as unknown as { overrides?: SchemaOverrides }).overrides ?? {}
@@ -428,9 +590,15 @@ export async function generateChartWithEdits(
     ?.columnToggles
     ? (columnToggles as unknown as { columnToggles?: ColumnToggles }).columnToggles ?? {}
     : columnToggles ?? {};
-
   const { columnRoot, chartSettings } = extractSettingsComponents(datapacks);
   const primaryUnit = datapacks[0] && datapacks.length > 0 ? datapacks[0].ageUnits : "Ma";
+
+  applyBlankSlateColumns(columnRoot, options?.hideDatapackDefaults);
+
+  if (normalizedOverrides.fonts) {
+    // Apply global font overrides to all columns before applying column-specific toggles, so that column-specific font settings can override global ones when both are present.
+    applyGlobalFontsToColumnInfo(columnRoot, normalizedOverrides.fonts);
+  }
 
   if (Object.keys(normalizedToggles).length > 0) {
     applyTogglesToColumnInfo(columnRoot, normalizedToggles);
@@ -443,7 +611,6 @@ export async function generateChartWithEdits(
   validateChartSettings(chartSettings, primaryUnit);
 
   const xml = jsonToXml(columnRoot, chartSettings);
-
   return xml;
 }
 

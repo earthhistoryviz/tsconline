@@ -14,7 +14,6 @@ let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
   app.get("/fetch-markdown-files", fetchMarkdownFiles);
-  await app.listen({ host: "", port: 1839 });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -23,7 +22,7 @@ afterAll(async () => {
 });
 
 describe("fetch markdown files", () => {
-  const processMarkdownTreeSpy = vi.spyOn(processMarkdownTree, "processMarkdownTree");
+  const processMarkdownTreeSpy = vi.mocked(processMarkdownTree.processMarkdownTree);
   it("should return 500 if error occurs", async () => {
     processMarkdownTreeSpy.mockRejectedValue(new Error("Test error"));
     const response = await app.inject({
