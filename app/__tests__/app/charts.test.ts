@@ -15,7 +15,7 @@ async function removeAutoLoadedDatapack(page: Page) {
 
 async function generateBasicChart(page: Page) {
   const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".add-circle");
+  const addButton = container.locator(".datapack-chart-action");
 
   await expect(addButton).toBeVisible();
   await addButton.click();
@@ -76,19 +76,19 @@ test("datapack button is clickable", async ({ page }) => {
   await expect(page.locator("text=Warnings")).toBeVisible();
 });
 
-test("add-circle button is clickable", async ({ page }) => {
-  const addCircleWrapper = page.locator(".add-circle").nth(0);
-  await expect(addCircleWrapper).toBeVisible();
-  await addCircleWrapper.click();
+test("datapack add-to-chart button is clickable", async ({ page }) => {
+  const addButton = page.locator(".datapack-chart-action").nth(0);
+  await expect(addButton).toBeVisible();
+  await addButton.click();
 
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
 });
 
 test("check if confirm selection works", async ({ page }) => {
-  const addCircleWrapper = page.locator(".add-circle").nth(0);
-  await expect(addCircleWrapper).toBeVisible();
-  await addCircleWrapper.click();
+  const addButton = page.locator(".datapack-chart-action").nth(0);
+  await expect(addButton).toBeVisible();
+  await addButton.click();
 
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
@@ -195,7 +195,7 @@ test("Load Basic Settings", async ({ page }) => {
 
 test("check if generate crossplot works", async ({ page }) => {
   const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".add-circle");
+  const addButton = container.locator(".datapack-chart-action");
 
   await expect(addButton).toBeVisible();
   await addButton.click();
@@ -264,7 +264,7 @@ test("check sync of preview with window", async ({ page, context }) => {
   await page.locator("text=Datapacks").click();
 
   const container = page.locator("text=Australia").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".add-circle");
+  const addButton = container.locator(".datapack-chart-action");
   await addButton.click();
 
   const confirmButton = page.locator("text=Confirm Selection");

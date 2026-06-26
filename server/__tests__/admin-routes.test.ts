@@ -303,7 +303,6 @@ beforeAll(async () => {
     );
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
-  await app.listen({ host: "localhost", port: 1239 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
@@ -585,7 +584,7 @@ describe("Route Consistency Tests", () => {
 
 describe("verifyAdmin tests", () => {
   describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
-    const findUser = vi.spyOn(database, "findUser");
+    const findUser = vi.mocked(database.findUser);
     beforeEach(() => {
       findUser.mockClear();
     });
@@ -644,7 +643,7 @@ describe("verifyRecaptcha tests", () => {
   describe.each(routes)(
     "should return 400 or 422 for route $url with method $method",
     ({ method, url, body, recaptchaAction }) => {
-      const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
+      const checkRecaptchaTokenMock = vi.mocked(verify.checkRecaptchaToken);
       beforeEach(() => {
         checkRecaptchaTokenMock.mockClear();
       });
@@ -711,10 +710,10 @@ describe("adminCreateUser tests", () => {
     invalidateSession: 0,
     accountType: "default"
   };
-  const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
-  const createUser = vi.spyOn(database, "createUser");
-  const findUser = vi.spyOn(database, "findUser");
-  const deleteUser = vi.spyOn(database, "deleteUser");
+  const checkForUsersWithUsernameOrEmail = vi.mocked(database.checkForUsersWithUsernameOrEmail);
+  const createUser = vi.mocked(database.createUser);
+  const findUser = vi.mocked(database.findUser);
+  const deleteUser = vi.mocked(database.deleteUser);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -945,10 +944,10 @@ describe("adminCreateUser tests", () => {
 });
 
 describe("adminDeleteUser tests", () => {
-  const findUser = vi.spyOn(database, "findUser");
-  const deleteUser = vi.spyOn(database, "deleteUser");
-  const deleteAllUserMetadata = vi.spyOn(fileMetadataHandler, "deleteAllUserMetadata");
-  const deleteAllUserDatapacks = vi.spyOn(userHandlers, "deleteAllUserDatapacks");
+  const findUser = vi.mocked(database.findUser);
+  const deleteUser = vi.mocked(database.deleteUser);
+  const deleteAllUserMetadata = vi.mocked(fileMetadataHandler.deleteAllUserMetadata);
+  const deleteAllUserDatapacks = vi.mocked(userHandlers.deleteAllUserDatapacks);
   const body = { uuid: testUUID };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1112,10 +1111,10 @@ describe("adminDeleteUserDatapack", () => {
     uuid: "test-uuid",
     datapack: "test-datapack"
   };
-  const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
-  const deleteUserDatapack = vi.spyOn(userHandlers, "deleteUserDatapack");
-  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
-  const relative = vi.spyOn(path, "relative");
+  const deleteDatapackFoundInMetadata = vi.mocked(fileMetadataHandler.deleteDatapackFoundInMetadata);
+  const deleteUserDatapack = vi.mocked(userHandlers.deleteUserDatapack);
+  const fetchUserDatapackDirectory = vi.mocked(fetchUserFiles.fetchUserDatapackDirectory);
+  const relative = vi.mocked(path.relative);
   const originalEnv = { ...process.env };
   process.cwd = () => "testdir";
   beforeEach(() => {
@@ -1221,7 +1220,7 @@ describe("adminDeleteUserDatapack", () => {
 
 describe("adminUploadDatapack", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+  const processAndUploadDatapack = vi.mocked(uploadDatapack.processAndUploadDatapack);
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("datapack" in json)) {
       json.datapack = {
@@ -1289,9 +1288,9 @@ describe("adminUploadDatapack", () => {
   );
 });
 describe("getUsers", () => {
-  const findUser = vi.spyOn(database, "findUser");
-  const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const findUsersWorkshops = vi.spyOn(database, "findUsersWorkshops");
+  const findUser = vi.mocked(database.findUser);
+  const findWorkshop = vi.mocked(database.findWorkshop);
+  const findUsersWorkshops = vi.mocked(database.findUsersWorkshops);
   it("should return any users without passwords", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     const response = await app.inject({
@@ -1362,7 +1361,7 @@ describe("getUsers", () => {
 });
 
 describe("adminDeleteOfficialDatapack", () => {
-  const deleteOfficialDatapack = vi.spyOn(userHandlers, "deleteOfficialDatapack");
+  const deleteOfficialDatapack = vi.mocked(userHandlers.deleteOfficialDatapack);
   const datapackTitle = "test-datapack";
   const body = { datapack: datapackTitle };
   beforeEach(() => {
@@ -1419,7 +1418,7 @@ describe("adminDeleteOfficialDatapack", () => {
 });
 
 describe("getAllUserDatapacks", () => {
-  const fetchAllUsersDatapacks = vi.spyOn(userHandlers, "fetchAllUsersDatapacks");
+  const fetchAllUsersDatapacks = vi.mocked(userHandlers.fetchAllUsersDatapacks);
   const payload = {
     uuid: testUUID
   };
@@ -1507,16 +1506,16 @@ describe("getAllUserDatapacks", () => {
 
 describe("adminAddUsersToWorkshop", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  const rm = vi.spyOn(fsPromises, "rm");
-  const pipeline = vi.spyOn(streamPromises, "pipeline");
-  const parseExcelFile = vi.spyOn(excel, "parseExcelFile");
-  const findUser = vi.spyOn(database, "findUser");
-  const createUser = vi.spyOn(database, "createUser");
-  const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
-  const updateUser = vi.spyOn(database, "updateUser");
-  const getWorkshopIfNotEnded = vi.spyOn(database, "getWorkshopIfNotEnded");
-  const checkWorkshopHasUser = vi.spyOn(database, "checkWorkshopHasUser");
-  const createUsersWorkshops = vi.spyOn(database, "createUsersWorkshops");
+  const rm = vi.mocked(fsPromises.rm);
+  const pipeline = vi.mocked(streamPromises.pipeline);
+  const parseExcelFile = vi.mocked(excel.parseExcelFile);
+  const findUser = vi.mocked(database.findUser);
+  const createUser = vi.mocked(database.createUser);
+  const checkForUsersWithUsernameOrEmail = vi.mocked(database.checkForUsersWithUsernameOrEmail);
+  const updateUser = vi.mocked(database.updateUser);
+  const getWorkshopIfNotEnded = vi.mocked(database.getWorkshopIfNotEnded);
+  const checkWorkshopHasUser = vi.mocked(database.checkWorkshopHasUser);
+  const createUsersWorkshops = vi.mocked(database.createUsersWorkshops);
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("file" in json)) {
       json.file = {
@@ -1970,7 +1969,7 @@ describe("adminAddUsersToWorkshop", () => {
 
 describe("adminCreateWorkshop", () => {
   const createWorkshop = vi.spyOn(database, "createWorkshop");
-  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const findWorkshop = vi.mocked(database.findWorkshop);
   const body = {
     title: testWorkshop.title,
     start: testWorkshop.start,
@@ -1982,6 +1981,9 @@ describe("adminCreateWorkshop", () => {
   };
   beforeEach(() => {
     vi.clearAllMocks();
+    createWorkshop.mockReset();
+    findWorkshop.mockReset();
+    findWorkshop.mockResolvedValue([]);
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -2236,11 +2238,11 @@ describe("adminCreateWorkshop", () => {
 });
 
 describe("adminEditWorkshop", () => {
-  const updateWorkshop = vi.spyOn(database, "updateWorkshop");
-  const getWorkshopDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
-  const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const getWorkshopFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
-  const getWorkshopIfNotEnded = vi.spyOn(database, "getWorkshopIfNotEnded");
+  const updateWorkshop = vi.mocked(database.updateWorkshop);
+  const getWorkshopDatapacksNames = vi.mocked(uploadHandlers.getWorkshopDatapacksNames);
+  const findWorkshop = vi.mocked(database.findWorkshop);
+  const getWorkshopFilesNames = vi.mocked(uploadHandlers.getWorkshopFilesNames);
+  const getWorkshopIfNotEnded = vi.mocked(database.getWorkshopIfNotEnded);
   const body = {
     workshopId: testWorkshop.workshopId,
     title: "new-title",
@@ -2256,6 +2258,16 @@ describe("adminEditWorkshop", () => {
   };
   beforeEach(() => {
     vi.clearAllMocks();
+    updateWorkshop.mockReset();
+    updateWorkshop.mockResolvedValue({});
+    getWorkshopDatapacksNames.mockReset();
+    getWorkshopDatapacksNames.mockResolvedValue([]);
+    getWorkshopFilesNames.mockReset();
+    getWorkshopFilesNames.mockResolvedValue([]);
+    findWorkshop.mockReset();
+    findWorkshop.mockResolvedValue([]);
+    getWorkshopIfNotEnded.mockReset();
+    getWorkshopIfNotEnded.mockResolvedValue(testWorkshopDatabase);
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -2522,8 +2534,8 @@ describe("adminEditWorkshop", () => {
 });
 
 describe("adminDeleteWorkshop", () => {
-  const deleteWorkshop = vi.spyOn(database, "deleteWorkshop");
-  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const deleteWorkshop = vi.mocked(database.deleteWorkshop);
+  const findWorkshop = vi.mocked(database.findWorkshop);
   const body = {
     workshopId: testWorkshop.workshopId
   };
@@ -2605,8 +2617,8 @@ describe("adminModifyUser tests", () => {
     isAdmin: 1
   };
 
-  const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
-  const updateUser = vi.spyOn(database, "updateUser");
+  const checkForUsersWithUsernameOrEmail = vi.mocked(database.checkForUsersWithUsernameOrEmail);
+  const updateUser = vi.mocked(database.updateUser);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -2797,9 +2809,9 @@ describe("adminEditDatapackPriorities", () => {
   const payload = {
     tasks: [datapackPriorityTaskOne]
   };
-  const assertDatapackPriorityChangeRequestArray = vi.spyOn(shared, "assertDatapackPriorityChangeRequestArray");
-  const editAdminDatapackPriorities = vi.spyOn(adminHandler, "editAdminDatapackPriorities");
-  const loggerError = vi.spyOn(logger.default, "error");
+  const assertDatapackPriorityChangeRequestArray = vi.mocked(shared.assertDatapackPriorityChangeRequestArray);
+  const editAdminDatapackPriorities = vi.mocked(adminHandler.editAdminDatapackPriorities);
+  const loggerError = vi.mocked(logger.default.error);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -2896,15 +2908,24 @@ describe("adminAddOfficialDatapackToWorkshop", () => {
     workshopId: testWorkshop.workshopId,
     datapackTitle: "datapack-title"
   };
-  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
-  const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
-    userHandlers,
-    "doesDatapackFolderExistInAllUUIDDirectories"
+  const fetchUserDatapackDirectory = vi.mocked(fetchUserFiles.fetchUserDatapackDirectory);
+  const doesDatapackFolderExistInAllUUIDDirectories = vi.mocked(
+    userHandlers.doesDatapackFolderExistInAllUUIDDirectories
   );
-  const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
-  const fetchUserDatapack = vi.spyOn(userHandlers, "fetchUserDatapack");
+  const setupNewDatapackDirectoryInUUIDDirectory = vi.mocked(uploadHandlers.setupNewDatapackDirectoryInUUIDDirectory);
+  const fetchUserDatapack = vi.mocked(userHandlers.fetchUserDatapack);
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(database.getWorkshopIfNotEnded).mockReset();
+    vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValue(testWorkshopDatabase);
+    fetchUserDatapackDirectory.mockReset();
+    fetchUserDatapackDirectory.mockResolvedValue("test-user");
+    doesDatapackFolderExistInAllUUIDDirectories.mockReset();
+    doesDatapackFolderExistInAllUUIDDirectories.mockResolvedValue(false);
+    setupNewDatapackDirectoryInUUIDDirectory.mockReset();
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValue({});
+    fetchUserDatapack.mockReset();
+    fetchUserDatapack.mockResolvedValue(testDatapackDescription as shared.Datapack);
   });
   it("should return 400 if workshopId is not a number", async () => {
     const response = await app.inject({
@@ -3015,6 +3036,8 @@ describe("adminEditDatapackMetadata", () => {
   const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
   beforeEach(() => {
     vi.clearAllMocks();
+    editDatapackMetadataRequestHandler.mockReset();
+    editDatapackMetadataRequestHandler.mockResolvedValue({ code: 200, message: "Success" });
   });
   it("should return 400 if datapack is not provided", async () => {
     const response = await app.inject({
@@ -3049,7 +3072,7 @@ describe("adminEditDatapackMetadata", () => {
   });
 });
 describe("adminFetchSingleOfficialDatapack", () => {
-  const fetchUserDatapack = vi.spyOn(userHandlers, "fetchUserDatapack");
+  const fetchUserDatapack = vi.mocked(userHandlers.fetchUserDatapack);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -3077,7 +3100,7 @@ describe("adminFetchSingleOfficialDatapack", () => {
   });
 });
 describe("adminFetchPrivateOfficialDatapacksMetadata", () => {
-  const fetchAllPrivateOfficialDatapacks = vi.spyOn(userHandlers, "fetchAllPrivateOfficialDatapacks");
+  const fetchAllPrivateOfficialDatapacks = vi.mocked(userHandlers.fetchAllPrivateOfficialDatapacks);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -3415,8 +3438,8 @@ describe("adminUploadCoverPicToWorkshop", () => {
 });
 
 describe("adminDeleteDatapackComment tests", () => {
-  const deleteComment = vi.spyOn(database, "deleteComment");
-  const findDatapackComment = vi.spyOn(database, "findDatapackComment");
+  const deleteComment = vi.mocked(database.deleteComment);
+  const findDatapackComment = vi.mocked(database.findDatapackComment);
   beforeEach(() => {
     vi.clearAllMocks();
   });

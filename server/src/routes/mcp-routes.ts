@@ -270,7 +270,7 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       sessionId
     } = (_request.body ?? {}) as {
       datapackTitles?: string[];
-      overrides?: SchemaOverrides;
+      overrides?: SchemaOverrides & Record<string, unknown>;
       columnToggles?: ColumnToggles;
       useCache?: boolean;
       isCrossPlot?: boolean;
@@ -294,8 +294,21 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       reply.status(404).send({ error: `No matching datapacks found for titles: ${missingDatapacks.join(", ")}` });
       return;
     }
+    const hideDatapackDefaults = overrides.hideDatapackDefaults === true;
 
-    const settingsXml = await generateChartWithEdits(requestedDatapacks, overrides, columnToggles);
+    const settingsXml = await generateChartWithEdits(requestedDatapacks, overrides, columnToggles, {
+      hideDatapackDefaults
+    });
+
+    sendMcpSocketMessage(sessionId, {
+      type: "apply-chart-state",
+      requestId,
+      chartState: {
+        datapackTitles,
+        overrides,
+        columnToggles
+      }
+    });
 
     const chartRequest: ChartRequest = {
       settings: settingsXml,

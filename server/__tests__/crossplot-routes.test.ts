@@ -94,7 +94,6 @@ let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
   await app.register(crossPlotRoutes, { prefix: "/crossplot" });
-  await app.listen({ host: "localhost", port: 1210 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   // vi.spyOn(console, "log").mockImplementation(() => {});
 });
@@ -118,12 +117,12 @@ describe("convertCrossplot", async () => {
     action: "file"
   };
   const url = "/crossplot/convert";
-  const convertCrossPlotRequest = vi.spyOn(shared, "assertConvertCrossPlotRequest");
-  const setupConversionDirectory = vi.spyOn(crossplotHandler, "setupConversionDirectory");
-  const isOperationResult = vi.spyOn(types, "isOperationResult");
-  const convertCrossplotWithModelsInJar = vi.spyOn(crossplotHandler, "convertCrossPlotWithModelsInJar");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const readFile = vi.spyOn(fsPromises, "readFile");
+  const convertCrossPlotRequest = vi.mocked(shared.assertConvertCrossPlotRequest);
+  const setupConversionDirectory = vi.mocked(crossplotHandler.setupConversionDirectory);
+  const isOperationResult = vi.mocked(types.isOperationResult);
+  const convertCrossplotWithModelsInJar = vi.mocked(crossplotHandler.convertCrossPlotWithModelsInJar);
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
+  const readFile = vi.mocked(fsPromises.readFile);
   it("should return 400 if the request body is incorrect", async () => {
     convertCrossPlotRequest.mockImplementationOnce(() => {
       throw new Error("Invalid request body");
@@ -186,7 +185,7 @@ describe("convertCrossplot", async () => {
     beforeEach(() => {
       vi.clearAllMocks();
     });
-    const uploadTemporaryDatapack = vi.spyOn(uploadDatapack, "uploadTemporaryDatapack");
+    const uploadTemporaryDatapack = vi.mocked(uploadDatapack.uploadTemporaryDatapack);
     it("should return upload fail code if operation result from upload", async () => {
       isOperationResult.mockReturnValueOnce(false).mockReturnValueOnce(true);
       uploadTemporaryDatapack.mockResolvedValueOnce({
@@ -243,14 +242,14 @@ describe("autoPlotPoints", async () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const assertAutoPlotRequest = vi.spyOn(shared, "assertAutoPlotRequest");
-  const autoPlotPointsWithJar = vi.spyOn(crossplotHandler, "autoPlotPointsWithJar");
-  const setupAutoPlotDirectory = vi.spyOn(crossplotHandler, "setupAutoPlotDirectory");
-  const isAutoPlotMarkerArray = vi.spyOn(shared, "isAutoPlotMarkerArray");
-  const isOperationResult = vi.spyOn(types, "isOperationResult");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const getMarkersFromTextFile = vi.spyOn(extractMarkers, "getMarkersFromTextFile");
-  const loggerError = vi.spyOn(errorLogger.default, "error");
+  const assertAutoPlotRequest = vi.mocked(shared.assertAutoPlotRequest);
+  const autoPlotPointsWithJar = vi.mocked(crossplotHandler.autoPlotPointsWithJar);
+  const setupAutoPlotDirectory = vi.mocked(crossplotHandler.setupAutoPlotDirectory);
+  const isAutoPlotMarkerArray = vi.mocked(shared.isAutoPlotMarkerArray);
+  const isOperationResult = vi.mocked(types.isOperationResult);
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
+  const getMarkersFromTextFile = vi.mocked(extractMarkers.getMarkersFromTextFile);
+  const loggerError = vi.mocked(errorLogger.default.error);
   const url = "/crossplot/autoplot";
   it("should return 400 if the request body is incorrect", async () => {
     assertAutoPlotRequest.mockImplementationOnce(() => {

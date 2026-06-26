@@ -1,9 +1,10 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState, useEffect, useRef, createContext } from "react";
+import React, { useContext, useEffect, useRef, createContext, useMemo, useCallback } from "react";
 import Typography from "@mui/material/Typography";
-import { Box, Button, IconButton, TextField } from "@mui/material";
+import { Box, IconButton, InputAdornment, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie, StyledScrollbar } from "../components";
+import LayersClearOutlinedIcon from "@mui/icons-material/LayersClearOutlined";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { ColumnMenu } from "./column_menu/ColumnMenu";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
@@ -12,15 +13,17 @@ import { Tooltip } from "@mui/material";
 import "./Column.css";
 import { checkIfDataIsInRange, checkIfDccColumn, getChildRenderColumns } from "../util/util";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
-import ExpandIcon from "@mui/icons-material/Expand";
-import CompressIcon from "@mui/icons-material/Compress";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
+import AddIcon from "@mui/icons-material/Add";
 import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, RenderColumnInfo, TimeSettings } from "../types";
 import { context } from "../state";
-import AddIcon from "@mui/icons-material/Add";
 import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";
 import loader from "../assets/icons/loading.json";
 
@@ -53,34 +56,43 @@ export const ColumnContext = createContext<ColumnContextType>({
   }
 });
 
-// column with generate button, and accordion columns
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
   const { state: columnState } = useContext(ColumnContext);
-  const { t } = useTranslation();
+  const theme = useTheme();
 
   return (
     <>
-      <div className="column-top-level-container">
-        <ColumnSearchBar />
-        <div className="column-accordion-and-menu-container">
-          <div className="add-icon-and-menu-container">
-            <div>
-              <Button
-                startIcon={<AddIcon />}
-                className="add-icon"
-                variant="text"
-                onClick={() => actions.setCustomColumnMenuOpen(true)}>
-                {t("settings.column.create-custom-column-button")}
-              </Button>
-            </div>
-            <div className="column-display-container">
-              <ColumnDisplay />
-            </div>
+      <Box
+        className="column-workspace"
+        border={1}
+        borderColor="divider"
+        bgcolor="secondaryBackground.main"
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden"
+        }}
+        style={
+          {
+            "--column-selection-accent": theme.palette.selection.main,
+            "--column-selection-bg": `${theme.palette.selection.main}18`,
+            "--column-hover-bg": theme.palette.action.hover,
+            "--column-filter-accent": theme.palette.error.main
+          } as React.CSSProperties
+        }>
+        <aside className="column-sidebar">
+          <ColumnSidebarHeader />
+          <ColumnSidebarSearch />
+          <div className="column-tree-scroll">
+            <ColumnDisplay embedded />
           </div>
-          <ColumnMenu />
-        </div>
-      </div>
+        </aside>
+        <ColumnMenu />
+      </Box>
       {state.addCustomColumnMenu.open && (
         <StyledScrollbar>
           <AddCustomColumnMenu onClose={() => actions.setCustomColumnMenuOpen(false)} column={columnState.columns} />
@@ -90,93 +102,210 @@ export const Column = observer(function Column() {
   );
 });
 
-export const ColumnDisplay = observer(() => {
+const ColumnSidebarHeader = observer(() => {
   const { state } = useContext(ColumnContext);
   const { state: globalState, actions: globalActions } = useContext(context);
-  const [showScroll, setShowScroll] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const theme = useTheme();
-  // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
-  const handleScroll = () => {
-    if (scrollRef.current && scrollRef.current.scrollTop > 200) {
-      setShowScroll(true);
-    } else {
-      setShowScroll(false);
-    }
-  };
+  const { t } = useTranslation();
+  const hideDefaults = globalState.settingsTabs.hideDatapackDefaults;
 
-  const scrollToTop = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
+  return (
+    <div className="column-sidebar-header">
+      <Typography variant="subtitle2" fontWeight={600} className="column-sidebar-title">
+        {t("settings.column.titles.sidebar-title")}
+      </Typography>
+      <div className="column-sidebar-actions">
+        <CustomTooltip title={t("settings.column.hide-default-columns.tooltip")} placement="top">
+          <IconButton
+            size="small"
+            className={`column-sidebar-action ${hideDefaults ? "column-sidebar-action-active" : ""}`}
+            onClick={() => globalActions.setHideDatapackDefaults(!hideDefaults)}
+            aria-pressed={hideDefaults}
+            aria-label={t("settings.column.hide-default-columns.label")}>
+            <LayersClearOutlinedIcon fontSize="small" />
+          </IconButton>
+        </CustomTooltip>
+        <CustomTooltip title="Expand All" placement="top">
+          <IconButton
+            size="small"
+            className="column-sidebar-action"
+            onClick={() => {
+              if (!state.columns) return;
+              globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, true);
+            }}>
+            <UnfoldMoreIcon fontSize="small" />
+          </IconButton>
+        </CustomTooltip>
+        <CustomTooltip title="Collapse All" placement="top">
+          <IconButton
+            size="small"
+            className="column-sidebar-action"
+            onClick={() => {
+              if (!state.columns) return;
+              globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, false);
+            }}>
+            <UnfoldLessIcon fontSize="small" />
+          </IconButton>
+        </CustomTooltip>
+        <CustomTooltip title={t("settings.column.create-custom-column-button")} placement="top">
+          <IconButton
+            size="small"
+            className="column-sidebar-action column-sidebar-action-primary"
+            onClick={() => globalActions.setCustomColumnMenuOpen(true)}>
+            <AddIcon fontSize="small" />
+          </IconButton>
+        </CustomTooltip>
+      </div>
+    </div>
+  );
+});
+
+const ColumnSidebarSearch = observer(() => {
+  const { state } = useContext(ColumnContext);
+  const { actions: globalActions } = useContext(context);
+  const { t } = useTranslation();
+
+  return (
+    <div className={`column-sidebar-search ${state.columnSearchTerm ? "column-sidebar-search-filtered" : ""}`}>
+      <TextField
+        className="column-search-bar"
+        placeholder={t("settings.search.search-bar")}
+        variant="outlined"
+        size="small"
+        fullWidth
+        onChange={(e) => globalActions.searchColumns(e.target.value)}
+        value={state.columnSearchTerm}
+        autoComplete="off"
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" sx={{ color: "icon.main", opacity: 0.7 }} />
+            </InputAdornment>
+          ),
+          endAdornment: state.columnSearchTerm ? (
+            <InputAdornment position="end">
+              <IconButton size="small" onClick={() => globalActions.searchColumns("")} edge="end" aria-label="clear">
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : undefined
+        }}
+      />
+    </div>
+  );
+});
+
+type ColumnDisplayProps = {
+  embedded?: boolean;
+};
+
+const ColumnTree = observer(function ColumnTree() {
+  const { state } = useContext(ColumnContext);
+  if (!state.columns) return null;
+  return (
+    <div className="column-tree-content">
+      {getChildRenderColumns(state.columns, state.columnHashMap).map((column) => (
+        <ColumnAccordion key={column.name} details={column} />
+      ))}
+    </div>
+  );
+});
+
+export function ColumnDisplay({ embedded = false }: ColumnDisplayProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollButtonRef = useRef<HTMLButtonElement>(null);
+  const showScrollRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
+
+  const scrollToTop = useCallback(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   useEffect(() => {
-    const ref = scrollRef.current;
-    if (ref) {
-      ref.addEventListener("scroll", handleScroll);
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const updateScrollButton = () => {
+      rafRef.current = null;
+      const shouldShow = el.scrollTop > 200;
+      if (shouldShow === showScrollRef.current) return;
+      showScrollRef.current = shouldShow;
+      scrollButtonRef.current?.classList.toggle("show", shouldShow);
+    };
+
+    const onScroll = () => {
+      if (rafRef.current !== null) return;
+      rafRef.current = requestAnimationFrame(updateScrollButton);
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
     return () => {
-      if (ref) {
-        ref.removeEventListener("scroll", handleScroll);
-      }
+      el.removeEventListener("scroll", onScroll);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
   }, []);
-  const isLoading = globalState.settingsTabs.showColumnSearchLoader;
+
+  return (
+    <>
+      <ColumnDisplaySurface embedded={embedded} scrollRef={scrollRef} />
+      <IconButton
+        ref={scrollButtonRef}
+        onClick={scrollToTop}
+        className="scroll-to-top-button"
+        size="small"
+        aria-label="Scroll to top">
+        <ScrollToTopIcon />
+      </IconButton>
+    </>
+  );
+}
+
+const ScrollToTopIcon = observer(function ScrollToTopIcon() {
+  const theme = useTheme();
+  return (
+    <Lottie
+      key="settings-arrow-up"
+      style={{ width: "24px", height: "24px" }}
+      animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+      playOnClick
+    />
+  );
+});
+
+const ColumnDisplaySurface = observer(function ColumnDisplaySurface({
+  embedded,
+  scrollRef
+}: {
+  embedded: boolean;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const isLoading = useContext(context).state.settingsTabs.showColumnSearchLoader;
+  const wrapperClass = [
+    "column-accordion-wrapper",
+    embedded ? "column-accordion-embedded" : "",
+    isLoading ? "column-accordion-loading" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <Box
-      id="ResizableColumnAccordionWrapper"
       ref={scrollRef}
-      border={1}
+      border={embedded ? 0 : 1}
       borderColor="divider"
-      bgcolor="secondaryBackground.main"
-      className={`hide-scrollbar column-accordion-wrapper ${state.columnSearchTerm ? "filtered-border" : ""}`}
-      position="relative"
-      display={isLoading ? "flex" : undefined}
-      justifyContent={isLoading ? "center" : undefined}
-      alignItems={isLoading ? "center" : undefined}>
-      {isLoading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
-      {/* keep accordion in DOM to avoid lag when remounting after loading */}
-      <div style={{ display: isLoading ? "none" : "block" }}>
-        <div className="column-filter-buttons">
-          <CustomTooltip title="Expand All" placement="top">
-            <IconButton
-              disableRipple
-              className="expand-collapse-column-buttons"
-              onClick={() => {
-                if (!state.columns) return;
-                globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, true);
-              }}>
-              <ExpandIcon />
-            </IconButton>
-          </CustomTooltip>
-          <CustomTooltip title="Collapse All" placement="top">
-            <IconButton
-              disableRipple
-              className="expand-collapse-column-buttons"
-              onClick={() => {
-                if (!state.columns) return;
-                globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, false);
-              }}>
-              <CompressIcon />
-            </IconButton>
-          </CustomTooltip>
-        </div>
-        {state.columns &&
-          getChildRenderColumns(state.columns, state.columnHashMap).map((column) => (
-            <ColumnAccordion key={column.name} details={column} />
-          ))}
-        {/* Button to take users to top of column menu when scrolling */}
-
-        <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
-          <Lottie
-            key="settings-arrow-up"
-            style={{ width: "28px", height: "28px" }}
-            animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
-            playOnClick
-          />
-        </IconButton>
-      </div>
+      bgcolor={embedded ? "transparent" : "secondaryBackground.main"}
+      className={`hide-scrollbar ${wrapperClass}`}
+      sx={{
+        display: isLoading ? "flex" : "block",
+        justifyContent: isLoading ? "center" : undefined,
+        alignItems: isLoading ? "center" : undefined,
+        height: embedded ? "100%" : undefined,
+        minHeight: embedded ? 0 : undefined
+      }}>
+      {isLoading ? (
+        <Lottie animationData={loader} autoplay loop width={160} height={160} speed={0.7} />
+      ) : (
+        <ColumnTree />
+      )}
     </Box>
   );
 });
@@ -192,7 +321,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     return null;
   }
   const selectedClass = details.isSelected ? "selected-column" : "";
-  // if there are no children, don't make an accordion
+
   if (details.children.length == 0) {
     return (
       <div
@@ -204,26 +333,25 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     );
   }
 
-  // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.hasSelectedChildren ? { opacity: 1 } : {};
+  const containsSelectedChild = details.hasSelectedChildren ? { opacity: 0.55 } : undefined;
   return (
     <div className="column-accordion-container">
       {details.expanded && (
         <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />
       )}
       <Accordion
-        //checks if column name is in expand list
         expanded={details.expanded}
+        onChange={() => {
+          /* expansion is handled by the expand icon only */
+        }}
         className="column-accordion">
         <MuiAccordionSummary
-          onClick={() => {
-            actions.setColumnSelected(details.name);
-          }}
+          onClick={() => actions.setColumnSelected(details.name)}
           tabIndex={0}
           expandIcon={
             <ArrowForwardIosSharpIcon
               color="icon"
-              sx={{ fontSize: "0.9rem" }}
+              sx={{ fontSize: "0.75rem", opacity: 0.7 }}
               onClick={(e) => {
                 e.stopPropagation();
                 globalActions.setExpanded(!details.expanded, details);
@@ -232,67 +360,40 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           }
           aria-controls="panel-content"
           className={`column-accordion-summary ${selectedClass}`}>
-          <ColumnIcon column={details} />
+          <ColumnIcon column={details} isBranch />
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
           {details.expanded &&
-            getChildRenderColumns(details, state.columnHashMap).map((column) => {
-              return <ColumnAccordion key={column.name} details={column} />;
-            })}
+            getChildRenderColumns(details, state.columnHashMap).map((column) => (
+              <ColumnAccordion key={column.name} details={column} />
+            ))}
         </MuiAccordionDetails>
       </Accordion>
     </div>
   );
 });
 
-const ColumnIcon = observer(({ column }: { column: RenderColumnInfo }) => {
+const ColumnIcon = observer(({ column, isBranch = false }: { column: RenderColumnInfo; isBranch?: boolean }) => {
   const { state, actions } = useContext(ColumnContext);
   const { t } = useTranslation();
   const theme = useTheme();
-  // todo fix this for crossplot
-  const dataInRange = checkIfDccColumn(column)
-    ? checkIfDccDataIsInRange(
-        column,
-        state.timeSettings[column.units].topStageAge,
-        state.timeSettings[column.units].baseStageAge
-      )
-    : checkIfDataIsInRange(
-        column.minAge,
-        column.maxAge,
-        state.timeSettings[column.units].topStageAge,
-        state.timeSettings[column.units].baseStageAge
-      );
+  const unitSettings = state.timeSettings[column.units];
+  const dataInRange = useMemo(() => {
+    if (!unitSettings) return true;
+    return checkIfDccColumn(column)
+      ? checkIfDccDataIsInRange(column, unitSettings.topStageAge, unitSettings.baseStageAge)
+      : checkIfDataIsInRange(column.minAge, column.maxAge, unitSettings.topStageAge, unitSettings.baseStageAge);
+  }, [column, unitSettings?.topStageAge, unitSettings?.baseStageAge]);
   const tooltipOrCheckBox =
     !dataInRange && !(column.name === "Ma" || column.name === "Root") ? (
-      <Tooltip
-        title={t("settings.column.tooltip.not-in-range")}
-        placement="top"
-        arrow
-        slotProps={{
-          popper: {
-            modifiers: [
-              {
-                name: "offset",
-                options: {
-                  offset: [0, -10]
-                }
-              }
-            ]
-          }
-        }}>
-        <ErrorOutlineIcon
-          className="column-error-icon"
-          style={{
-            color: theme.palette.error.main
-          }}
-        />
+      <Tooltip title={t("settings.column.tooltip.not-in-range")} placement="top" arrow>
+        <ErrorOutlineIcon className="column-error-icon" sx={{ color: theme.palette.error.main }} />
       </Tooltip>
     ) : (
       <TSCCheckbox
         checked={column.on}
         className="column-checkbox"
         onClick={(event) => {
-          // to stop selection of column when clicking on checkbox
           event.stopPropagation();
           actions.toggleSettingsTabColumn(column);
         }}
@@ -301,45 +402,9 @@ const ColumnIcon = observer(({ column }: { column: RenderColumnInfo }) => {
   return (
     <ColumnContainer className={`column-row-container ${column.children.length > 0 ? "" : "column-leaf"}`}>
       {tooltipOrCheckBox}
-      <Typography className="column-display-name">{column.editName}</Typography>
+      <Typography className={`column-display-name ${isBranch ? "column-display-name-branch" : ""}`}>
+        {column.editName}
+      </Typography>
     </ColumnContainer>
-  );
-});
-
-const ColumnSearchBar = observer(() => {
-  const { state } = useContext(ColumnContext);
-  const { actions: globalActions } = useContext(context);
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const term = event.target.value;
-    globalActions.searchColumns(term);
-  };
-  const { t } = useTranslation();
-  return (
-    <div className="column-search-bar-container">
-      <TextField
-        className="column-search-bar"
-        label={t("settings.search.search-bar")}
-        variant="outlined"
-        size="small"
-        fullWidth
-        onChange={handleSearch}
-        value={state.columnSearchTerm}
-        autoComplete="off"
-      />
-      <FilterHelperText helperText={state.columnSearchTerm} />
-    </div>
-  );
-});
-
-const FilterHelperText = observer(({ helperText }: { helperText: string }) => {
-  if (helperText.length > 50) helperText = helperText.substring(0, 50) + "...";
-  return (
-    <div className="search-filter-helper-text">
-      {helperText && (
-        <Typography variant="body2" color="textSecondary" id="column-search-term">
-          <span style={{ color: "red" }}>Filtered For: &quot;{helperText}&quot;</span>
-        </Typography>
-      )}
-    </div>
   );
 });

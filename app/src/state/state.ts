@@ -38,7 +38,15 @@ import type {
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
-import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
+import {
+  adjustScaleOfMarkers,
+  adjustScaleOfModels,
+  getInitialDarkMode,
+  getInitialGeoGPTAutoOpen,
+  getInitialGeoGPTSessionId,
+  getInitialGeoGPTSettingsSeen,
+  getInitialGeoGPTTscOnlineCoWork
+} from "./actions";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
@@ -106,6 +114,8 @@ export type State = {
     columnHashMap: Map<string, RenderColumnInfo>;
     columnSearchTerm: string;
     showColumnSearchLoader: boolean;
+    hideDatapackDefaults: boolean;
+    columnOnSnapshot: Map<string, boolean> | null;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
     groupedEvents: GroupedEventSearchInfo[];
@@ -235,7 +245,6 @@ export const state = observable<State>({
     email: "",
     pictureUrl: "",
     geogptChatUrl: "",
-    geogptSessionId: "",
     isGoogleUser: false,
     isAdmin: false,
     accountType: "",
@@ -243,8 +252,12 @@ export const state = observable<State>({
     workshopIds: [],
     settings: {
       darkMode: getInitialDarkMode(),
-      language: "English"
+      language: "English",
+      geogptAutoOpen: getInitialGeoGPTAutoOpen(),
+      geogptTscOnlineCoWork: getInitialGeoGPTTscOnlineCoWork(),
+      geogptSettingsSeen: getInitialGeoGPTSettingsSeen()
     },
+    geogptSessionId: getInitialGeoGPTSessionId(),
     historyEntries: []
   },
   admin: {
@@ -288,6 +301,8 @@ export const state = observable<State>({
       columnHashMap: new Map<string, RenderColumnInfo>(),
       columnSearchTerm: "",
       showColumnSearchLoader: false,
+      hideDatapackDefaults: false,
+      columnOnSnapshot: null,
       datapackDisplayType: "compact" as const,
       eventSearchTerm: "",
       groupedEvents: []

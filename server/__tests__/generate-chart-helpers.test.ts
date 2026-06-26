@@ -359,7 +359,7 @@ describe("waitForSVGReady", () => {
     );
 
     await vi.advanceTimersByTimeAsync(1500);
-    await promise.catch((e) => e.message);
+    await promise;
   });
 
   it("keeps polling if SVG content is invalid", async () => {
@@ -372,6 +372,6 @@ describe("waitForSVGReady", () => {
     );
     await vi.advanceTimersByTimeAsync(900);
 
-    await promise.catch((e) => e.message);
+    await promise;
   });
 });

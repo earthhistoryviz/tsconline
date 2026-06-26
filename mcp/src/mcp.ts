@@ -9,7 +9,8 @@ import {
   assertDatapackMetadata,
   DatapackMetadata,
   DatapackType,
-  newMCPChartState
+  newMCPChartState,
+  allFontOptions
 } from "@tsconline/shared";
 import { fetchFileFromUrl, getImageFileExtension, assertValidImageMimeType, assertPdfMimeType } from "./mcp-helper.js";
 import { TOOL_DESCRIPTIONS } from "./tool-descriptions.js";
@@ -188,6 +189,29 @@ const datapackTitlesSchema = z.preprocess((val: unknown) => {
   return val;
 }, z.array(z.string()));
 
+// These are valid font properties the agent is allowed to send.
+const fontSettingsSchema = z
+  .object({
+    on: z.boolean().optional(), // Whether to apply these font settings or ignore them
+    inheritable: z.boolean().optional(), // Whether child elements should inherit these font settings if they don't have their own specified
+    fontFace: z.enum(["Arial", "Courier", "Verdana"]).optional(), // The possbile options when selecting a font face
+    size: z.number().optional(), // Size of text
+    bold: z.boolean().optional(), // Whether text is bold
+    italic: z.boolean().optional(), // Whether text is italicized
+    color: z
+      .string()
+      .regex(
+        /^rgb\(\s*(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\s*,\s*(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\s*,\s*(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\s*\)$/
+      )
+      .optional() // RGB works best with the agent to apply the color
+  })
+  .passthrough();
+
+// Validation check
+// For .fonts, the first argument checks the key name,
+// and the second argument checks the object stored at that key.
+const fontsByTargetSchema = z.record(z.enum(allFontOptions as [string, ...string[]]), fontSettingsSchema);
+
 const overridesSchema = z
   .object({
     topAge: z.number().optional(),
@@ -201,7 +225,8 @@ const overridesSchema = z
     enEventColBG: z.boolean().optional(),
     enChartLegend: z.boolean().optional(),
     enPriority: z.boolean().optional(),
-    enHideBlockLable: z.boolean().optional()
+    enHideBlockLable: z.boolean().optional(),
+    fonts: fontsByTargetSchema.optional() // Include apply all for fonts as well when sending this 1 compact object
   })
   .passthrough();
 
@@ -210,7 +235,8 @@ const singleColumnToggleSchema = z
     on: z.boolean().optional(),
     width: z.number().optional(),
     enableTitle: z.boolean().optional(),
-    showAgeLabels: z.boolean().optional()
+    showAgeLabels: z.boolean().optional(),
+    fonts: fontsByTargetSchema.optional() // Include font overrides at the individual column level as well - same structure as the global font overrides in the overrides object
   })
   .passthrough();
 
@@ -218,11 +244,21 @@ const columnToggleSchema = z.record(z.string(), singleColumnToggleSchema);
 
 const updateChartArgsSchema = z.object({
   datapackTitles: datapackTitlesSchema.describe("Array of datapack titles to use for the chart."),
-  overrides: overridesSchema.optional(),
+  overrides: overridesSchema
+    .extend({
+      hideDatapackDefaults: z
+        .boolean()
+        .optional()
+        .describe(
+          "When true, hides datapack default-on columns (blank slate). Pair with columnToggles listing the columns to keep on."
+        )
+    })
+    .passthrough()
+    .optional(),
   columnToggles: columnToggleSchema
     .optional()
     .describe(
-      'Flat object keyed by actual column names/identifiers. Do not use nested objects from listColumns and do not join parent/child names with dots. Example: { "Period (Lunar)": { "on": true }, "Events (Martian)": { "on": true } }'
+      'Flat object keyed by actual column names/identifiers. Use { "on": true } to enable a column and { "on": false } to disable default-on columns. Width overrides use { "width": number }. Example: { "Period (Lunar)": { "on": true }, "Events": { "on": false } }'
     ),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),
@@ -231,6 +267,35 @@ const updateChartArgsSchema = z.object({
     .optional()
     .describe("INTERNAL ONLY: Session ID from login() - tracks user activity, extends session timeout")
 });
+
+function mergeColumnToggleSettings(
+  existing: { on?: boolean; width?: number; fonts?: Record<string, Record<string, unknown>> } | undefined, // existing = the old saved settings for this column
+  incoming: { on?: boolean; width?: number; fonts?: Record<string, Record<string, unknown>> } // incoming = the new settings the agent just sent for this column
+) {
+  return {
+    ...(existing ?? {}), // Keep any old top-level settings, like on or width.
+    ...incoming, // If incoming has on or width, those overwrite the old values.
+    fonts: incoming.fonts // If there are incoming font changes
+      ? {
+          ...((existing ?? {}).fonts ?? {}), // Keep old font targets, like "Column Header" for example.
+
+          // For each incoming font target, merge its settings with the old settings.
+          ...Object.fromEntries(
+            Object.entries(incoming.fonts).map(([target, incomingFontSettings]) => [
+              target,
+              {
+                // Keep old properties for this target.
+                ...((existing ?? {}).fonts?.[target] ?? {}),
+                // Apply new properties for this target.
+                // Like add "inheritable: true" without deleting old size property.
+                ...incomingFontSettings
+              }
+            ])
+          )
+        }
+      : (existing ?? {}).fonts // If this update did not include fonts, keep the old fonts.
+  };
+}
 
 export const createMCPServer = () => {
   const server = new McpServer({
@@ -372,10 +437,7 @@ export const createMCPServer = () => {
       const columnToggles = st.columnToggles;
 
       for (const [columnId, settings] of Object.entries(normalizedIncoming)) {
-        columnToggles[columnId] = {
-          ...(columnToggles[columnId] ?? {}),
-          ...settings
-        };
+        columnToggles[columnId] = mergeColumnToggleSettings(columnToggles[columnId], settings); // Merge old settings with new incomming settings. Same as old logic BUT with additional logic when dealing with fonts.
       }
 
       // Generate chart with THIS SESSION'S state

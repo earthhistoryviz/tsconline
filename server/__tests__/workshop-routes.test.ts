@@ -179,7 +179,6 @@ beforeAll(async () => {
     );
   });
   await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
-  await app.listen({ host: "localhost", port: 1250 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
@@ -234,7 +233,7 @@ describe("verifyAuthority", () => {
   describe.each(routes.filter((r) => r.hasAuth))(
     "should return 401 for route $url with method $method",
     ({ method, url, body }) => {
-      const findUser = vi.spyOn(database, "findUser");
+      const findUser = vi.mocked(database.findUser);
       beforeEach(() => {
         findUser.mockClear();
       });
@@ -280,7 +279,7 @@ describe("verifyAuthority", () => {
 describe.each(routes.filter(({ recaptchaAction }) => !!recaptchaAction))(
   "should return 400 or 422 for route $url with method $method",
   ({ method, url, body, recaptchaAction }) => {
-    const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
+    const checkRecaptchaTokenMock = vi.mocked(verify.checkRecaptchaToken);
     beforeEach(() => {
       checkRecaptchaTokenMock.mockClear();
     });
@@ -329,8 +328,8 @@ describe.each(routes.filter(({ recaptchaAction }) => !!recaptchaAction))(
 
 describe("editWorkshopDatapackMetadata", async () => {
   const route = "/workshop/workshop-1/datapack/datpack";
-  const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
-  const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
+  const verifyWorkshopValidity = vi.mocked(workshopUtil.verifyWorkshopValidity);
+  const editDatapackMetadataRequestHandler = vi.mocked(generalFileHandlerRequests.editDatapackMetadataRequestHandler);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -384,9 +383,9 @@ describe("getWorkshops", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const getDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
-  const getFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
+  const findWorkshop = vi.mocked(database.findWorkshop);
+  const getDatapacksNames = vi.mocked(uploadHandlers.getWorkshopDatapacksNames);
+  const getFilesNames = vi.mocked(uploadHandlers.getWorkshopFilesNames);
   it("should return 500 if findWorkshop throws an error", async () => {
     findWorkshop.mockRejectedValueOnce(new Error());
     const response = await app.inject({
@@ -444,10 +443,10 @@ describe("getWorkshops", () => {
 describe("downloadWorkshopFilesZip tests", () => {
   const workshopId = 42;
   const route = `/workshop/download/${workshopId}`;
-  const findUser = vi.spyOn(database, "findUser");
-  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
-  const readFile = vi.spyOn(fsp, "readFile");
-  const createZipFile = vi.spyOn(generalFileHandlerRequests, "createZipFile");
+  const findUser = vi.mocked(database.findUser);
+  const isUserInWorkshop = vi.mocked(database.isUserInWorkshop);
+  const readFile = vi.mocked(fsp.readFile);
+  const createZipFile = vi.mocked(generalFileHandlerRequests.createZipFile);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -466,7 +465,7 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
   });
   it("should return 500 if getWorkshopFilesPath fails", async () => {
-    vi.spyOn(workshopUtil, "getWorkshopFilesPath").mockRejectedValueOnce(new Error("getWorkshopFilesPath error"));
+    vi.mocked(workshopUtil.getWorkshopFilesPath).mockRejectedValueOnce(new Error("getWorkshopFilesPath error"));
 
     const response = await app.inject({
       method: "GET",
@@ -477,7 +476,7 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(await response.json()).toEqual({ error: "An error occurred" });
   });
   it("should return 500 if verifyNonExistentFilepath returns false", async () => {
-    vi.spyOn(util, "verifyNonExistentFilepath").mockResolvedValueOnce(false);
+    vi.mocked(util.verifyNonExistentFilepath).mockResolvedValueOnce(false);
 
     const response = await app.inject({
       method: "GET",
@@ -502,7 +501,7 @@ describe("downloadWorkshopFilesZip tests", () => {
     const error = new Error("ENOENT") as NodeJS.ErrnoException;
     error.code = "ENOENT";
     readFile.mockRejectedValueOnce(error);
-    vi.spyOn(fsp, "readdir").mockResolvedValueOnce([]);
+    vi.mocked(fsp.readdir).mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "GET",
       url: route,
@@ -574,11 +573,11 @@ describe("downloadWorkshopFile tests", () => {
   const workshopId = 42;
   const fileName = "test_file.txt";
   const route = `/workshop/workshop-files/${workshopId}/${fileName}`;
-  const findUser = vi.spyOn(database, "findUser");
-  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+  const findUser = vi.mocked(database.findUser);
+  const isUserInWorkshop = vi.mocked(database.isUserInWorkshop);
 
   beforeEach(() => {
-    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    findUser.mockResolvedValueOnce([testNonAdminUser]);
     vi.clearAllMocks();
   });
   it("should return 400 if workshopId is not a int", async () => {
@@ -640,7 +639,7 @@ describe("downloadWorkshopFile tests", () => {
     expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
   });
   it("should return 500 if getFileFromWorkshop returns false", async () => {
-    vi.spyOn(fetchUserFiles, "getFileFromWorkshop").mockImplementationOnce(() => {
+    vi.mocked(fetchUserFiles.getFileFromWorkshop).mockImplementationOnce(() => {
       throw new Error("Simulated error");
     });
 
@@ -653,7 +652,7 @@ describe("downloadWorkshopFile tests", () => {
     expect(await response.json()).toEqual({ error: "Invalid file path" });
   });
   it("should return 500 if createReadStream throws an error", async () => {
-    vi.spyOn(fs, "createReadStream").mockImplementationOnce(() => {
+    vi.mocked(fs.createReadStream).mockImplementationOnce(() => {
       throw new Error("Simulated stream error");
     });
 
@@ -668,7 +667,7 @@ describe("downloadWorkshopFile tests", () => {
     });
   });
   it("should return 500 if getWorkshopID throws an error", async () => {
-    vi.spyOn(fs, "createReadStream").mockImplementationOnce(() => {
+    vi.mocked(fs.createReadStream).mockImplementationOnce(() => {
       throw new Error("Simulated stream error");
     });
 
@@ -707,14 +706,14 @@ describe("downloadWorkshopDataPack tests", () => {
   const workshopId = 42;
   const datapackName = "datapackName";
   const route = `/workshop/workshop-datapack/${workshopId}/${datapackName}`;
-  const findUser = vi.spyOn(database, "findUser");
-  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
-  const readFileSpy = vi.spyOn(fsp, "readFile");
+  const findUser = vi.mocked(database.findUser);
+  const isUserInWorkshop = vi.mocked(database.isUserInWorkshop);
+  const readFileSpy = vi.mocked(fsp.readFile);
 
-  const getUploadedDatapackFilepathSpy = vi.spyOn(userHandlers, "getUploadedDatapackFilepath");
+  const getUploadedDatapackFilepathSpy = vi.mocked(userHandlers.getUploadedDatapackFilepath);
 
   beforeEach(() => {
-    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    findUser.mockResolvedValueOnce([testNonAdminUser]);
     vi.clearAllMocks();
   });
   it("should return 400 if workshopId is not a int", async () => {
@@ -826,9 +825,9 @@ describe("downloadWorkshopDataPack tests", () => {
 describe("fetchWorkshopCoverImage tests", () => {
   const workshopId = 1;
   const route = `/workshop-images/${workshopId}`;
-  const fetchWorkshopCoverPictureFilepathSpy = vi.spyOn(uploadHandlers, "fetchWorkshopCoverPictureFilepath");
-  const checkFileExistsSpy = vi.spyOn(util, "checkFileExists");
-  const readFileSpy = vi.spyOn(fsp, "readFile");
+  const fetchWorkshopCoverPictureFilepathSpy = vi.mocked(uploadHandlers.fetchWorkshopCoverPictureFilepath);
+  const checkFileExistsSpy = vi.mocked(util.checkFileExists);
+  const readFileSpy = vi.mocked(fsp.readFile);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -876,10 +875,11 @@ describe("fetchWorkshopCoverImage tests", () => {
 
 describe("serveWorkshopHyperlinks tests", () => {
   const route = "/workshop/1/files/presentation";
-  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const findUser = vi.mocked(database.findUser);
+  const isUserInWorkshop = vi.mocked(database.isUserInWorkshop);
+  const checkFileExists = vi.mocked(util.checkFileExists);
   beforeEach(() => {
-    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    findUser.mockResolvedValueOnce([testNonAdminUser]);
     vi.clearAllMocks();
   });
   it("should return 400 if workshopId is not valid", async () => {
@@ -962,10 +962,11 @@ describe("serveWorkshopHyperlinks tests", () => {
 });
 
 describe("registerUserForWorkshop tests", () => {
-  const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
-  const createUsersWorkshops = vi.spyOn(database, "createUsersWorkshops");
-  const checkWorkshopHasUser = vi.spyOn(database, "checkWorkshopHasUser");
+  const findUser = vi.mocked(database.findUser);
+  const findWorkshop = vi.mocked(database.findWorkshop);
+  const isUserInWorkshop = vi.mocked(database.isUserInWorkshop);
+  const createUsersWorkshops = vi.mocked(database.createUsersWorkshops);
+  const checkWorkshopHasUser = vi.mocked(database.checkWorkshopHasUser);
   it("should return 401 if user is not logged in", async () => {
     const response = await app.inject({
       method: "POST",
@@ -976,7 +977,7 @@ describe("registerUserForWorkshop tests", () => {
     expect(response.statusCode).toBe(401);
   });
   it("should return 404 if workshop not found", async () => {
-    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findUser.mockResolvedValueOnce([testAdminUser]);
     findWorkshop.mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "POST",
@@ -988,7 +989,7 @@ describe("registerUserForWorkshop tests", () => {
     expect(response.statusCode).toBe(404);
   });
   it("should return 403 if registration is restricted to admins only", async () => {
-    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    findUser.mockResolvedValueOnce([testNonAdminUser]);
     findWorkshop.mockResolvedValueOnce([{ ...testWorkshopDatabase, regRestrict: 1 }]);
     const response = await app.inject({
       method: "POST",
@@ -1000,7 +1001,7 @@ describe("registerUserForWorkshop tests", () => {
     expect(response.statusCode).toBe(403);
   });
   it("should return 400 if user is already registered for workshop", async () => {
-    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findUser.mockResolvedValueOnce([testAdminUser]);
     findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
     isUserInWorkshop.mockResolvedValueOnce(true);
     const response = await app.inject({
@@ -1014,7 +1015,7 @@ describe("registerUserForWorkshop tests", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should return 500 if createUsersWorkshops fails", async () => {
-    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findUser.mockResolvedValueOnce([testAdminUser]);
     findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
     isUserInWorkshop.mockResolvedValueOnce(false);
     createUsersWorkshops.mockRejectedValueOnce(new Error("Database error"));
@@ -1032,7 +1033,7 @@ describe("registerUserForWorkshop tests", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 500 if checkWorkshopHasUser returns empty array", async () => {
-    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findUser.mockResolvedValueOnce([testAdminUser]);
     findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
     isUserInWorkshop.mockResolvedValueOnce(false);
     checkWorkshopHasUser.mockResolvedValueOnce([]);
