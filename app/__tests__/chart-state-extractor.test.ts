@@ -56,7 +56,7 @@ describe("extractCurrentChartState", () => {
       unitsPerMY: [{ unit: "Ma", value: 4 }]
     });
     expect(extracted.columnToggles).toMatchObject({
-      [childName]: {enableTitle: false, width: 120 }
+      [childName]: { enableTitle: false, width: 120 }
     });
     expect(extracted.columnToggles[childName]?.on).toBeUndefined();
   });

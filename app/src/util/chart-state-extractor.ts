@@ -103,9 +103,7 @@ function collectLeafColumnToggle(
   }
 
   const widthDiffers =
-    defaultColumn === undefined
-      ? renderColumn.width !== undefined
-      : defaultColumn.width !== renderColumn.width;
+    defaultColumn === undefined ? renderColumn.width !== undefined : defaultColumn.width !== renderColumn.width;
 
   if (widthDiffers && renderColumn.width !== undefined) {
     settings.width = renderColumn.width;
