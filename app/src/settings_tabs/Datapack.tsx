@@ -286,7 +286,8 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     const extraLoadingSkeletons = loading ? 2 : 0;
     const isOfficial = header === t("settings.datapacks.title.public-official");
     const isPublicContributed = header === t("settings.datapacks.title.contributed");
-    const shouldSplitIntoTwoCol = isOfficial || isPublicContributed;
+    const isTreatise = header === t("settings.datapacks.title.treatise");
+    const shouldSplitIntoTwoCol = isOfficial || isPublicContributed || isTreatise;
     const visibleLimit = shouldSplitIntoTwoCol ? 12 : 6;
     const visibleDatapacks: (DatapackMetadata | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
     const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);
