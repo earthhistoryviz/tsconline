@@ -123,9 +123,15 @@ export function getPublicOfficialDatapacksMetadata(datapacks: DatapackMetadata[]
   return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic).sort((a, b) => a.priority - b.priority);
 }
 
-export type OfficialDatapackSubgroup = "global" | "regional" | "evolution-culture" | "other";
+export type OfficialDatapackSubgroup = "global" | "regional" | "evolution-culture" | "workshop" | "other";
 
-const officialSubgroupOrder: OfficialDatapackSubgroup[] = ["global", "regional", "evolution-culture", "other"];
+const officialSubgroupOrder: OfficialDatapackSubgroup[] = [
+  "global",
+  "regional",
+  "evolution-culture",
+  "workshop",
+  "other"
+];
 
 // which official datapack goes in which sub-section (add new official packs here)
 const officialDatapackSubgroupByTitle: Record<string, OfficialDatapackSubgroup> = {
@@ -139,7 +145,12 @@ const officialDatapackSubgroupByTitle: Record<string, OfficialDatapackSubgroup> 
   "Evolution of Modern Life": "evolution-culture",
   "Human Evolution": "evolution-culture",
   "Vertebrate Evolution": "evolution-culture",
-  "Human Culture": "evolution-culture"
+  "Human Culture": "evolution-culture",
+  "Gulf of Mexico Swift Well": "workshop",
+  "Slope Garden Banks GB840": "workshop",
+  "Gulf of Mexico Reference TimeScale Paleo Data": "workshop",
+  "Shelf Highland Island HI 119-depth": "workshop",
+  "Deepwater Keathley Canyon KC596-depth": "workshop"
 };
 
 export function getOfficialDatapackSubgroup(datapack: DatapackMetadata): OfficialDatapackSubgroup {
@@ -152,6 +163,7 @@ export function groupOfficialDatapacks(datapacks: DatapackMetadata[]) {
     global: [],
     regional: [],
     "evolution-culture": [],
+    workshop: [],
     other: []
   };
   for (const datapack of datapacks) {

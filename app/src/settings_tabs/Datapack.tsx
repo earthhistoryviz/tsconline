@@ -175,7 +175,7 @@ export const Datapacks = observer(function Datapacks() {
               HeaderIcon={Terrain}
               loading={state.skeletonStates.publicOfficialDatapacksLoading}
             />
-        )}
+          )}
         {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) =>
           item.tags.includes("Lexicon Formations")
         ) && (
