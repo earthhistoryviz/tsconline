@@ -118,7 +118,7 @@
             "password": "Password",
             "tooltip": "Account Settings",
             "profile": "Profile",
-            "create-geogpt-session": "Create New GeoGPT Session",
+            "create-geogpt-session": "Start GeoGPT",
             "open-geogpt-chat": "Open GeoGPT Chat",
             "add": "Add another account",
             "logout": "Logout",
@@ -350,7 +350,16 @@
                 "titles": {
                     "column-menu-title": "Column Customization",
                     "data-mining-title": "Data Mining Settings",
-                    "font-option-title": "Font Options for \"{{name}}"
+                    "font-option-title": "Font Options for \"{{name}}",
+                    "sidebar-title": "Columns"
+                },
+                "empty-state": {
+                    "title": "No column selected",
+                    "description": "Pick a column from the list to edit its title, width, fonts, and other options."
+                },
+                "hide-default-columns": {
+                    "label": "Blank slate",
+                    "tooltip": "Hide datapack default columns so you can pick only what you need. Click again to restore defaults."
                 },
                 "menu": {
                     "shift-row": "Shift Row Positions",
@@ -465,7 +474,12 @@
             },
             "datapacks": {
                 "see-info-guidance": "Click a datapack to see more information!",
-                "add-datapack-guidance": "Add a datapack by clicking the checkbox",
+                "add-datapack-guidance": "Select one or more datapacks to build your chart. Each adds geologic events. Confirm your selection, then generate your chart.",
+                "add-to-chart": "Add to chart",
+                "add-short": "Add",
+                "in-chart-short": "Added",
+                "remove-from-chart": "Remove",
+                "selected-count": "{{count}} selected",
                 "title": {
                     "private-official": "Private Official Datapacks",
                     "public-official": "Official Datapacks",
@@ -474,6 +488,12 @@
                     "your": "Your Datapacks",
                     "treatise": "Treatise Datapacks",
                     "lexicon": "Lexicon Datapacks"
+                },
+                "official-subgroup": {
+                    "global": "Global Timescale",
+                    "regional": "Regional Datapacks",
+                    "evolution-culture": "Evolution & Culture",
+                    "other": "Other"
                 },
                 "no": "No",
                 "avaliable": "Avaliable",
