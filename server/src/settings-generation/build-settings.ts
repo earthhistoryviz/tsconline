@@ -379,10 +379,11 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
     addNormalizedToggleCandidates(normalizedToggles, columnId, settings);
   }
 
-  const visit = (col: ColumnInfo, ancestors: ColumnInfo[] = []) => {
+  const visit = (col: ColumnInfo, ancestors: ColumnInfo[] = [], parentBackgroundColor?: string) => {
     const candidates = getPossibleColumnIdentifiers(col);
     const matchedId = candidates.find((id) => normalizedToggles.has(id));
     const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
+    const realBackgroundColor = settings?.backgroundColor ?? parentBackgroundColor;
 
     if (settings) {
       if (settings.on === true) {
@@ -396,8 +397,15 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
       }
     }
 
+    if (realBackgroundColor && (!settings || settings.backgroundColor === undefined)) {
+      const [r = NaN, g = NaN, b = NaN] = Color(realBackgroundColor).rgb().array();
+      col.rgb.r = Math.round(r);
+      col.rgb.g = Math.round(g);
+      col.rgb.b = Math.round(b);
+    }
+
     if (col.children) {
-      col.children.forEach((child) => visit(child, [...ancestors, col]));
+      col.children.forEach((child) => visit(child, [...ancestors, col], realBackgroundColor));
     }
   };
 
