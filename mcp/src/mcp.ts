@@ -234,6 +234,7 @@ const singleColumnToggleSchema = z
   .object({
     on: z.boolean().optional(),
     width: z.number().optional(),
+    backgroundColor: z.string().optional(),
     fonts: fontsByTargetSchema.optional() // Include font overrides at the individual column level as well - same structure as the global font overrides in the overrides object
   })
   .passthrough();
