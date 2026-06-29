@@ -196,11 +196,12 @@ translation.settings.datapacks.title.public-official,官方数据包
 translation.settings.datapacks.title.contributed,用户贡献的数据包
 translation.settings.datapacks.title.workshop,工作坊数据包
 translation.settings.datapacks.title.your,你的数据包
-translation.settings.datapacks.title.treatise,专著数据包
+translation.settings.datapacks.title.treatise,《无脊椎动物古生物学论文集》（treatise.geolex.org）中的化石类群多样性
 translation.settings.datapacks.title.lexicon,词典数据包
 translation.settings.datapacks.official-subgroup.global,全球时间尺度
 translation.settings.datapacks.official-subgroup.regional,区域数据包
 translation.settings.datapacks.official-subgroup.evolution-culture,进化与文化
+translation.settings.datapacks.official-subgroup.workshop,工作坊
 translation.settings.datapacks.official-subgroup.other,其他
 translation.settings.datapacks.seeMore,查看更多...
 translation.settings.datapacks.seeLess,收起...
