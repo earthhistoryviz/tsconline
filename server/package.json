@@ -76,7 +76,7 @@
   "license": "ISC",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b --force",
     "dev": "tsc -b -w",
     "pull-help": "./pull-markdown.sh",
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch ./public/presets dist/index.js",
