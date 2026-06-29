@@ -533,10 +533,45 @@ function validateChartSettings(chartSettings: ChartSettingsInfoTSC, primaryUnit:
   }
 }
 
+export type ChartEditOptions = {
+  hideDatapackDefaults?: boolean;
+};
+
+function shouldPreserveColumnOn(col: ColumnInfo): boolean {
+  if (col.name === "Chart Root" || col.name === "Chart Title" || col.name === "Ma") {
+    return true;
+  }
+  if (col.columnDisplayType === "Ruler") {
+    return true;
+  }
+  return false;
+}
+
+function setAllColumnsOff(columnRoot: ColumnInfo): void {
+  const visit = (col: ColumnInfo) => {
+    if (!shouldPreserveColumnOn(col)) {
+      col.on = false;
+    }
+    if (col.children) {
+      col.children.forEach(visit);
+    }
+  };
+  visit(columnRoot);
+}
+
+export function applyBlankSlateColumns(columnRoot: ColumnInfo, hideDatapackDefaults: boolean | undefined): void {
+  if (!hideDatapackDefaults) {
+    return;
+  }
+
+  setAllColumnsOff(columnRoot);
+}
+
 export async function generateChartWithEdits(
   datapacks: Datapack[],
   overrides: SchemaOverrides,
-  columnToggles: ColumnToggles
+  columnToggles: ColumnToggles,
+  options?: ChartEditOptions
 ): Promise<string> {
   const normalizedOverrides: SchemaOverrides = (overrides as unknown as { overrides?: SchemaOverrides })?.overrides
     ? (overrides as unknown as { overrides?: SchemaOverrides }).overrides ?? {}
@@ -547,6 +582,8 @@ export async function generateChartWithEdits(
     : columnToggles ?? {};
   const { columnRoot, chartSettings } = extractSettingsComponents(datapacks);
   const primaryUnit = datapacks[0] && datapacks.length > 0 ? datapacks[0].ageUnits : "Ma";
+
+  applyBlankSlateColumns(columnRoot, options?.hideDatapackDefaults);
 
   if (normalizedOverrides.fonts) {
     // Apply global font overrides to all columns before applying column-specific toggles, so that column-specific font settings can override global ones when both are present.

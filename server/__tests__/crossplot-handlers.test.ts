@@ -14,7 +14,7 @@ vi.mock("@tsconline/shared", async () => {
 });
 vi.mock("../src/crossplot/extract-markers", async () => {
   return {
-    getMarkersFromTextFile: vi.fn().mockResolvedValueOnce([
+    getMarkersFromTextFile: vi.fn().mockResolvedValue([
       {
         x: 1,
         y: 2,
@@ -62,10 +62,10 @@ describe("setupConversionDirectory", async () => {
     settings: "settings",
     action: "file"
   };
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const readFile = vi.spyOn(fsPromises, "readFile");
-  const mkdir = vi.spyOn(fsPromises, "mkdir");
-  const writeFile = vi.spyOn(fsPromises, "writeFile");
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
+  const readFile = vi.mocked(fsPromises.readFile);
+  const mkdir = vi.mocked(fsPromises.mkdir);
+  const writeFile = vi.mocked(fsPromises.writeFile);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -117,11 +117,11 @@ describe("setupConversionDirectory", async () => {
 });
 
 describe("setupAutoPlotDirectory", async () => {
-  const mkdir = vi.spyOn(fsPromises, "mkdir");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const writeFile = vi.spyOn(fsPromises, "writeFile");
-  const getMarkersFromTextFile = vi.spyOn(extractMarkers, "getMarkersFromTextFile");
-  const rm = vi.spyOn(fsPromises, "rm");
+  const mkdir = vi.mocked(fsPromises.mkdir);
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
+  const writeFile = vi.mocked(fsPromises.writeFile);
+  const getMarkersFromTextFile = vi.mocked(extractMarkers.getMarkersFromTextFile);
+  const rm = vi.mocked(fsPromises.rm);
   beforeEach(() => {
     vi.clearAllMocks();
   });

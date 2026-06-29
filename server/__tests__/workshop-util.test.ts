@@ -45,7 +45,7 @@ vi.mock("@tsconline/shared", async () => {
 });
 
 describe("getWorkshopIdFromUUID", () => {
-  const isWorkshopUUID = vi.spyOn(shared, "isWorkshopUUID");
+  const isWorkshopUUID = vi.mocked(shared.isWorkshopUUID);
   it("should return the workshop ID from a valid workshop UUID", () => {
     const uuid = "workshop-12345";
     const result = getWorkshopIdFromUUID(uuid);
@@ -73,7 +73,7 @@ describe("getWorkshopIdFromUUID", () => {
 });
 
 describe("isUUIDFolderAWorkshopFolder", () => {
-  const isWorkshopUUID = vi.spyOn(shared, "isWorkshopUUID");
+  const isWorkshopUUID = vi.mocked(shared.isWorkshopUUID);
   it("should return true for a valid workshop UUID folder name", () => {
     const folderName = "workshop-12345";
     const result = isUUIDFolderAWorkshopFolder(folderName);
@@ -90,7 +90,7 @@ describe("isUUIDFolderAWorkshopFolder", () => {
 
 describe("verifyWorkshopValidity", async () => {
   const workshopId = 12345;
-  const isUserInWorkshopAndWorkshopIsActive = vi.spyOn(database, "isUserInWorkshopAndWorkshopIsActive");
+  const isUserInWorkshopAndWorkshopIsActive = vi.mocked(database.isUserInWorkshopAndWorkshopIsActive);
   it("should return 403 if the user does not have access to the workshop", async () => {
     isUserInWorkshopAndWorkshopIsActive.mockResolvedValueOnce(false);
     const result = await verifyWorkshopValidity(workshopId, 1);
@@ -104,7 +104,7 @@ describe("verifyWorkshopValidity", async () => {
 });
 
 describe("extractWorkshopIdFromFolderName", () => {
-  const isWorkshopUUID = vi.spyOn(shared, "isWorkshopUUID");
+  const isWorkshopUUID = vi.mocked(shared.isWorkshopUUID);
   it("should return the workshop ID from a valid workshop folder name", () => {
     isWorkshopUUID.mockReturnValueOnce(true);
     const folderName = "workshop-12345";
@@ -114,9 +114,9 @@ describe("extractWorkshopIdFromFolderName", () => {
 });
 
 describe("getWorkshopFilesPath", async () => {
-  const mkdir = vi.spyOn(fsPromises, "mkdir");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const verifyNonExistentFilepath = vi.spyOn(util, "verifyNonExistentFilepath");
+  const mkdir = vi.mocked(fsPromises.mkdir);
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
+  const verifyNonExistentFilepath = vi.mocked(util.verifyNonExistentFilepath);
   const id = 12345;
   beforeEach(() => {
     vi.clearAllMocks();
@@ -146,9 +146,9 @@ describe("getWorkshopCoverPath", async () => {
     vi.clearAllMocks();
   });
   const id = 12345;
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const verifyNonExistentFilepath = vi.spyOn(util, "verifyNonExistentFilepath");
-  const mkdir = vi.spyOn(fsPromises, "mkdir");
+  const verifyFilepath = vi.mocked(util.verifyFilepath);
+  const verifyNonExistentFilepath = vi.mocked(util.verifyNonExistentFilepath);
+  const mkdir = vi.mocked(fsPromises.mkdir);
   it("should return the cover directory path for a valid workshop directory", async () => {
     verifyFilepath.mockResolvedValueOnce(true);
     const result = await getWorkshopCoverPath(id);

@@ -374,13 +374,23 @@ describe("mcpRenderChartWithEdits", () => {
     expect(generateChartWithEdits).toHaveBeenCalledWith(
       mockDatapacks,
       { topAge: 0, baseAge: 10 },
-      { "stage-id": { on: false } }
+      { "stage-id": { on: false } },
+      { hideDatapackDefaults: false }
     );
     expect(generateChart).toHaveBeenCalled();
     expect(reply.send).toHaveBeenCalledWith(mockResult);
 
     const sentMessages = socket.send.mock.calls.map(([raw]) => JSON.parse(raw as string));
     expect(sentMessages).toEqual([
+      {
+        type: "apply-chart-state",
+        requestId: "mock-request-id",
+        chartState: {
+          datapackTitles: ["GTS2020"],
+          overrides: { topAge: 0, baseAge: 10 },
+          columnToggles: { "stage-id": { on: false } }
+        }
+      },
       { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
       { type: "geogpt-chart-update-progress", requestId: "mock-request-id", stage: "Rendering", percent: 50 },
       {
@@ -455,6 +465,15 @@ describe("mcpRenderChartWithEdits", () => {
 
     const sentMessages = socket.send.mock.calls.map(([raw]) => JSON.parse(raw as string));
     expect(sentMessages).toEqual([
+      {
+        type: "apply-chart-state",
+        requestId: "mock-request-id",
+        chartState: {
+          datapackTitles: ["GTS2020"],
+          overrides: {},
+          columnToggles: {}
+        }
+      },
       { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
       {
         type: "geogpt-chart-update-complete",
@@ -839,7 +858,6 @@ describe("mcpUploadDatapack (route)", () => {
       limits: { fieldNameSize: 100, fileSize: 1024 * 1024 * 60 }
     });
     app.post("/mcp/upload-datapack", mcpUploadDatapack);
-    await app.listen({ host: "127.0.0.1", port: 0 });
   });
 
   afterAll(async () => {

@@ -127,7 +127,8 @@ export const enDpTour = [
     disableBeacon: true
   },
   {
-    target: ".add-circle",
+    // Points at the Add / Added control on each datapack row.
+    target: ".datapack-chart-action",
     content: enTranslation.translation.tours.datapack.step2,
     showSkipButton: true,
     hideCloseButton: true,
@@ -157,7 +158,8 @@ export const zhDpTour = [
     disableBeacon: true
   },
   {
-    target: ".add-circle",
+    // Points at the Add / Added control on each datapack row.
+    target: ".datapack-chart-action",
     content: zhTranslation.translation.tours.datapack.step2,
     showSkipButton: true,
     hideCloseButton: true,

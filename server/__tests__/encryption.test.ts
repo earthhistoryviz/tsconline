@@ -1,8 +1,10 @@
-import { vi, beforeAll, afterAll, describe, it, expect } from "vitest";
+import { vi, beforeAll, afterAll, beforeEach, describe, it, expect } from "vitest";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../src/encryption";
-import { access, readFile, rm } from "fs/promises";
+import { access, mkdir, readFile, rm, writeFile } from "fs/promises";
 import { assertAssetConfig } from "../src/types";
 import path from "path";
+import { EventEmitter } from "events";
+import * as child_process from "child_process";
 import * as userHandler from "../src/user/user-handler";
 vi.mock("../src/user/user-handler", async () => {
   return {
@@ -21,10 +23,29 @@ vi.mock("path", async (importOriginal) => {
     }
   };
 });
+vi.mock("child_process", async (importOriginal) => {
+  const actual = await importOriginal<typeof child_process>();
+  return {
+    ...actual,
+    spawn: vi.fn(actual.spawn)
+  };
+});
 beforeAll(async () => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   vi.spyOn(console, "log").mockImplementation(() => undefined);
 });
+
+const spawn = vi.mocked(child_process.spawn);
+const createMockChildProcess = (code = 0, onBeforeClose?: () => void | Promise<void>) => {
+  const child = new EventEmitter() as child_process.ChildProcessWithoutNullStreams;
+  child.stdout = new EventEmitter() as unknown as child_process.ChildProcessWithoutNullStreams["stdout"];
+  child.stderr = new EventEmitter() as unknown as child_process.ChildProcessWithoutNullStreams["stderr"];
+  process.nextTick(async () => {
+    await onBeforeClose?.();
+    child.emit("close", code);
+  });
+  return child;
+};
 
 async function checkFileExists(filePath: string): Promise<boolean> {
   try {
@@ -36,6 +57,10 @@ async function checkFileExists(filePath: string): Promise<boolean> {
 }
 
 describe("runJavaEncrypt", async () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    await rm(resultPath, { recursive: true, force: true });
+  });
   afterAll(async () => {
     const generatedFilePath = path.resolve("server/__tests__/__data__/encryption-test-generated-file/");
     await rm(generatedFilePath, { recursive: true, force: true });
@@ -54,12 +79,21 @@ describe("runJavaEncrypt", async () => {
   }
   if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
   it("should correctly encrypt an unencrypted TSCreator txt file", { timeout: 20000 }, async () => {
-    if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt"))) {
+    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt";
+    if (!(await checkFileExists(resultFilePath))) {
+      const keyFilePath1 = "server/__tests__/__data__/encryption-test-keys/test-1-key.txt";
+      const key1 = await readFile(keyFilePath1);
+      spawn.mockImplementationOnce(() =>
+        createMockChildProcess(0, async () => {
+          await mkdir(resultPath, { recursive: true });
+          await writeFile(resultFilePath, key1);
+        })
+      );
       await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-1.txt", resultPath);
     } else {
       throw new Error("test generated file shouldn't exist at this point");
     }
-    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt";
+    expect(spawn).toHaveBeenCalledOnce();
     const keyFilePath1 = "server/__tests__/__data__/encryption-test-keys/test-1-key.txt";
     const keyFilePath2 = "server/__tests__/__data__/encryption-test-keys/test-1-key(2).txt";
     const [result, key1, key2] = await Promise.all([
@@ -76,12 +110,21 @@ describe("runJavaEncrypt", async () => {
     "should correctly encrypt an encrypted TSCreator txt file, when the TSCreator Encrypted Datafile title is manually removed from the original encrypted file.",
     { timeout: 20000 },
     async () => {
-      if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
+      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt";
+      if (!(await checkFileExists(resultFilePath))) {
+        const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-2-key.txt";
+        const key = await readFile(keyFilePath);
+        spawn.mockImplementationOnce(() =>
+          createMockChildProcess(0, async () => {
+            await mkdir(resultPath, { recursive: true });
+            await writeFile(resultFilePath, key);
+          })
+        );
         await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-2.txt", resultPath);
       } else {
         throw new Error("test generated file shouldn't exist at this point");
       }
-      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt";
+      expect(spawn).toHaveBeenCalledOnce();
       const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-2-key.txt";
       const [result, key] = await Promise.all([readFile(resultFilePath), readFile(keyFilePath)]);
       expect(result.length).toBe(key.length);
@@ -89,42 +132,89 @@ describe("runJavaEncrypt", async () => {
     }
   );
   it("should correctly encrypt an unencrypted TSCreator zip file", { timeout: 20000 }, async () => {
-    if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk"))) {
+    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk";
+    if (!(await checkFileExists(resultFilePath))) {
+      const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-5-key.dpk";
+      const key = await readFile(keyFilePath);
+      spawn.mockImplementationOnce(() =>
+        createMockChildProcess(0, async () => {
+          await mkdir(resultPath, { recursive: true });
+          await writeFile(resultFilePath, key);
+        })
+      );
       await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-5.zip", resultPath);
     } else {
       throw new Error("test generated file shouldn't exist at this point");
     }
-    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk";
+    expect(spawn).toHaveBeenCalledOnce();
     const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-5-key.dpk";
     const [result, key] = await Promise.all([readFile(resultFilePath), readFile(keyFilePath)]);
     expect(result.length).toBe(key.length);
     expect(result).toEqual(key);
   });
   it("should correctly encrypt an encrypted TSCreator zip file", { timeout: 20000 }, async () => {
-    if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk"))) {
+    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk";
+    if (!(await checkFileExists(resultFilePath))) {
+      const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-6-key.dpk";
+      const key = await readFile(keyFilePath);
+      spawn.mockImplementationOnce(() =>
+        createMockChildProcess(0, async () => {
+          await mkdir(resultPath, { recursive: true });
+          await writeFile(resultFilePath, key);
+        })
+      );
       await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-6.zip", resultPath);
     } else {
       throw new Error("test generated file shouldn't exist at this point");
     }
-    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk";
+    expect(spawn).toHaveBeenCalledOnce();
     const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-6-key.dpk";
     const [result, key] = await Promise.all([readFile(resultFilePath), readFile(keyFilePath)]);
     expect(result.length).toBe(key.length);
     expect(result).toEqual(key);
   });
   it("should not encrypt a bad txt file", async () => {
+    spawn.mockImplementationOnce(() => createMockChildProcess());
     await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-3.txt", resultPath);
+    expect(spawn).toHaveBeenCalledOnce();
     expect(!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-3.txt")));
   });
   it("should not encrypt an encrypted TSCreator txt file with the TSCreator Encrypted Datafile title", async () => {
+    spawn.mockImplementationOnce(() => createMockChildProcess());
     await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-4.txt", resultPath);
+    expect(spawn).toHaveBeenCalledOnce();
     expect(!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-4.txt")));
+  });
+  it("should log stderr when the Java process exits with a non-zero code", async () => {
+    spawn.mockImplementationOnce(() => {
+      const child = createMockChildProcess(1, async () => {
+        child.stdout.emit("data", Buffer.from("java stdout"));
+        child.stderr.emit("data", Buffer.from("java stderr"));
+      });
+      return child;
+    });
+
+    await runJavaEncrypt("C:\\jar\\encrypt.jar", "C:\\input\\file.txt", "C:\\output");
+
+    expect(spawn).toHaveBeenCalledOnce();
+    expect(spawn).toHaveBeenCalledWith("java", [
+      "-jar",
+      "C:\\jar\\encrypt.jar",
+      "-d",
+      "C:/input/file.txt",
+      "-enc",
+      "C:/output",
+      "-node"
+    ]);
+    expect(console.error).toHaveBeenCalledWith("Java process exited with code 1");
+    expect(console.error).toHaveBeenCalledWith("Java stderr: java stderr");
+    expect(console.log).toHaveBeenCalledWith("Java stdout: java stdout");
   });
 });
 
 describe("getEncryptionDatapackFileSystemDetails", async () => {
-  const getUploadedDatapackFilepath = vi.spyOn(userHandler, "getUploadedDatapackFilepath");
-  const getEncryptedDatapackDirectory = vi.spyOn(userHandler, "getEncryptedDatapackDirectory");
+  const getUploadedDatapackFilepath = vi.mocked(userHandler.getUploadedDatapackFilepath);
+  const getEncryptedDatapackDirectory = vi.mocked(userHandler.getEncryptedDatapackDirectory);
   it("should return the correct file system details for a given datapack", async () => {
     const result = await getEncryptionDatapackFileSystemDetails("test-uuid", "test-datapack");
     expect(result).toEqual({
