@@ -169,6 +169,13 @@ const members = [
     homeTown: "Seoul, South Korea",
     timeWorked: "2025 - Present",
     proPic: "HosungRyu.png"
+  },
+  {
+    name: "Aditya Patel",
+    role: "Member",
+    homeTown: "Hillsborough, NJ",
+    timeWorked: "2026 - Present",
+    proPic: "AdityaPatel.jpg"
   }
 ];
 
