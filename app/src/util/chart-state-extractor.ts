@@ -98,12 +98,19 @@ function collectLeafColumnToggle(
   if (effectivelyOn !== defaultOn) {
     settings.on = effectivelyOn;
   }
+  if (defaultColumn === undefined || defaultColumn.enableTitle !== renderColumn.enableTitle) {
+    settings.enableTitle = renderColumn.enableTitle;
+  }
 
   const widthDiffers =
     defaultColumn === undefined ? renderColumn.width !== undefined : defaultColumn.width !== renderColumn.width;
 
   if (widthDiffers && renderColumn.width !== undefined) {
     settings.width = renderColumn.width;
+  }
+
+  if (defaultColumn === undefined || defaultColumn.showAgeLabels !== renderColumn.showAgeLabels) {
+    settings.showAgeLabels = renderColumn.showAgeLabels;
   }
 
   if (Object.keys(settings).length > 0) {

@@ -348,8 +348,8 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
     b: state.rgb.b
   };
   column.children = [];
-  if (state.showAgeLabels) column.drawAgeLabel = state.showAgeLabels;
-  if (state.showUncertaintyLabels) column.drawUncertaintyLabel = state.showUncertaintyLabels;
+  if (state.showAgeLabels !== undefined) column.drawAgeLabel = state.showAgeLabels;
+  if (state.showUncertaintyLabels !== undefined) column.drawUncertaintyLabel = state.showUncertaintyLabels;
 
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]!));
