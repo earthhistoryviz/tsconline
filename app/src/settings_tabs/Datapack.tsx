@@ -165,16 +165,17 @@ export const Datapacks = observer(function Datapacks() {
           HeaderIcon={People}
           loading={state.skeletonStates.publicUserDatapacksLoading}
         />
-        {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) => item.tags.includes("Treatise")) && (
-          <DatapackGroupDisplay
-            datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
-              item.tags.includes("Treatise")
-            )}
-            header={t("settings.datapacks.title.treatise")}
-            HeaderIcon={Terrain}
-            loading={state.skeletonStates.publicOfficialDatapacksLoading}
-          />
-        )}
+        {state.isLoggedIn &&
+          getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) => item.tags.includes("Treatise")) && (
+            <DatapackGroupDisplay
+              datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
+                item.tags.includes("Treatise")
+              )}
+              header={t("settings.datapacks.title.treatise")}
+              HeaderIcon={Terrain}
+              loading={state.skeletonStates.publicOfficialDatapacksLoading}
+            />
+          )}
         {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) =>
           item.tags.includes("Lexicon Formations")
         ) && (
@@ -285,7 +286,8 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     const extraLoadingSkeletons = loading ? 2 : 0;
     const isOfficial = header === t("settings.datapacks.title.public-official");
     const isPublicContributed = header === t("settings.datapacks.title.contributed");
-    const shouldSplitIntoTwoCol = isOfficial || isPublicContributed;
+    const isTreatise = header === t("settings.datapacks.title.treatise");
+    const shouldSplitIntoTwoCol = isOfficial || isPublicContributed || isTreatise;
     const visibleLimit = shouldSplitIntoTwoCol ? 12 : 6;
     const visibleDatapacks: (DatapackMetadata | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
     const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);

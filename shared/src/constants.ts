@@ -463,7 +463,7 @@ export const defaultPoint: Partial<Point> = {
   subPointInfo: [],
   lowerRange: 0,
   upperRange: 0,
-  smoothed: true,
+  smoothed: false,
   drawLine: false,
   lineColor: {
     r: 0,

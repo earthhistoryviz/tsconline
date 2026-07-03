@@ -2416,7 +2416,7 @@
         "maxX": 9.5,
         "minX": 9,
         "pointShape": "cross",
-        "smoothed": true,
+        "smoothed": false,
         "upperRange": 9.5,
         "scaleStart": 0,
         "scaleStep": 0.18,
