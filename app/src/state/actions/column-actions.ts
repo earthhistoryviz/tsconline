@@ -68,6 +68,24 @@ function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
 
+function setColumnAndDescendantsOn(
+  column: RenderColumnInfo,
+  isOn: boolean,
+  columnHashMap: Map<string, RenderColumnInfo>
+): void {
+  column.on = isOn;
+  if (isOn) return;
+
+  const stack = [...column.children];
+  while (stack.length > 0) {
+    const childName = stack.pop()!;
+    const child = columnHashMap.get(childName);
+    if (!child) continue;
+    child.on = false;
+    stack.push(...child.children);
+  }
+}
+
 function setColumnProperties(column: RenderColumnInfo, settings: ColumnInfoTSC) {
   setEditName(settings.title, column);
   setEnableTitle(settings.drawTitle, column);
@@ -624,7 +642,8 @@ export const toggleSettingsTabColumn = action(
       column = columnOrName;
     }
 
-    column.on = !column.on;
+    const nextOn = !column.on;
+    setColumnAndDescendantsOn(column, nextOn, columnHashMap);
     if (expand) column.expanded = true;
     if (!column.on || !column.parent) return;
     if (columnHashMap.get(column.parent) === undefined) {
