@@ -122,6 +122,57 @@ export function getPublicDatapacksMetadataWithoutCurrentUser(datapacks: Datapack
 export function getPublicOfficialDatapacksMetadata(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic).sort((a, b) => a.priority - b.priority);
 }
+
+export type OfficialDatapackSubgroup = "global" | "regional" | "evolution-culture" | "workshop" | "other";
+
+const officialSubgroupOrder: OfficialDatapackSubgroup[] = [
+  "global",
+  "regional",
+  "evolution-culture",
+  "workshop",
+  "other"
+];
+
+// which official datapack goes in which sub-section (add new official packs here)
+const officialDatapackSubgroupByTitle: Record<string, OfficialDatapackSubgroup> = {
+  "TimeScale Creator Internal Datapack": "global",
+  "UCL TSC Chron": "global",
+  "Africa Bight": "regional",
+  Australia: "regional",
+  Belgium: "regional",
+  "British Isles": "regional",
+  "South American Basins": "regional",
+  "Evolution of Modern Life": "evolution-culture",
+  "Human Evolution": "evolution-culture",
+  "Vertebrate Evolution": "evolution-culture",
+  "Human Culture": "evolution-culture",
+  "Gulf of Mexico Swift Well": "workshop",
+  "Slope Garden Banks GB840": "workshop",
+  "Gulf of Mexico Reference TimeScale Paleo Data": "workshop",
+  "Shelf Highland Island HI 119-depth": "workshop",
+  "Deepwater Keathley Canyon KC596-depth": "workshop"
+};
+
+export function getOfficialDatapackSubgroup(datapack: DatapackMetadata): OfficialDatapackSubgroup {
+  return officialDatapackSubgroupByTitle[datapack.title] ?? "other";
+}
+
+// sort official datapacks into ordered sub-sections for the datapacks page
+export function groupOfficialDatapacks(datapacks: DatapackMetadata[]) {
+  const groups: Record<OfficialDatapackSubgroup, DatapackMetadata[]> = {
+    global: [],
+    regional: [],
+    "evolution-culture": [],
+    workshop: [],
+    other: []
+  };
+  for (const datapack of datapacks) {
+    groups[getOfficialDatapackSubgroup(datapack)].push(datapack);
+  }
+  return officialSubgroupOrder
+    .filter((subgroup) => groups[subgroup].length > 0)
+    .map((subgroup) => ({ subgroup, datapacks: groups[subgroup] }));
+}
 export function getPrivateOfficialDatapackMetadatas(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
 }

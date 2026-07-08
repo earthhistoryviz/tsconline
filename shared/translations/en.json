@@ -474,15 +474,27 @@
             },
             "datapacks": {
                 "see-info-guidance": "Click a datapack to see more information!",
-                "add-datapack-guidance": "Add a datapack by clicking the checkbox",
+                "add-datapack-guidance": "Select one or more datapacks to build your chart. Each adds geologic events. Confirm your selection, then generate your chart.",
+                "add-to-chart": "Add to chart",
+                "add-short": "Add",
+                "in-chart-short": "Added",
+                "remove-from-chart": "Remove",
+                "selected-count": "{{count}} selected",
                 "title": {
                     "private-official": "Private Official Datapacks",
                     "public-official": "Official Datapacks",
                     "contributed": "User Contributed Datapacks",
                     "workshop": "Workshop Datapacks",
                     "your": "Your Datapacks",
-                    "treatise": "Treatise Datapacks",
+                    "treatise": "Diversity of Fossil Groups from Treatise of Invertebrate Paleontology (treatise.geolex.org)",
                     "lexicon": "Lexicon Datapacks"
+                },
+                "official-subgroup": {
+                    "global": "Global Timescale",
+                    "regional": "Regional Datapacks",
+                    "evolution-culture": "Evolution & Culture",
+                    "workshop": "Workshop",
+                    "other": "Other"
                 },
                 "no": "No",
                 "avaliable": "Avaliable",
