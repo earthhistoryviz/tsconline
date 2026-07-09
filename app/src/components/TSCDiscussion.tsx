@@ -74,7 +74,7 @@ export const Discussion = observer(() => {
     }
 
     try {
-      const recaptchaToken = await getRecaptchaToken("addComment");
+      const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_UPLOAD_DATAPACK_COMMENT);
       if (!recaptchaToken) return;
       const response = await fetcher(`/user/datapack/addComment/${encodeURIComponent(id)}`, {
         method: "POST",
