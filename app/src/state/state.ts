@@ -112,6 +112,7 @@ export type State = {
     columns: ColumnInfo | undefined;
     renderColumns: RenderColumnInfo | undefined;
     columnHashMap: Map<string, RenderColumnInfo>;
+    defaultColumnMap: Map<string, Pick<ColumnInfo, "on" | "width">> | null;
     columnSearchTerm: string;
     showColumnSearchLoader: boolean;
     hideDatapackDefaults: boolean;
@@ -299,6 +300,7 @@ export const state = observable<State>({
       columns: undefined,
       renderColumns: undefined,
       columnHashMap: new Map<string, RenderColumnInfo>(),
+      defaultColumnMap: null,
       columnSearchTerm: "",
       showColumnSearchLoader: false,
       hideDatapackDefaults: false,

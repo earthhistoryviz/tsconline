@@ -45,6 +45,65 @@ import * as parseSettings from "./parse-settings";
 import { changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
 import { attachTscPrefixToName } from "./non-action-util";
 import { toJS } from "mobx";
+
+type ColumnInfoWithPossibleIds = ColumnInfo & {
+  _id?: string;
+  id?: string;
+  originalTscId?: string;
+};
+
+function getPreservedColumnId(state: ColumnInfo): string | undefined {
+  const withIds = state as ColumnInfoWithPossibleIds;
+  for (const candidate of [withIds.originalTscId, withIds._id, withIds.id]) {
+    if (candidate && candidate.includes("class datastore.") && candidate.includes(":")) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
+
+function deriveStableColumnName(state: ColumnInfo): string {
+  const preservedId = getPreservedColumnId(state);
+  if (preservedId) {
+    return preservedId.split(":").slice(1).join(":");
+  }
+
+  const rawName = state.name?.trim();
+  if (!rawName) return "";
+
+  const parentName = state.parent?.trim();
+  if (parentName && rawName.startsWith(`${parentName} `)) {
+    return rawName.slice(parentName.length).trim();
+  }
+
+  if (parentName && rawName.endsWith(` for ${parentName}`)) {
+    return rawName.slice(0, rawName.length - ` for ${parentName}`.length).trim();
+  }
+
+  return rawName;
+}
+
+function disambiguateSettingsTitles(root: ColumnInfo): void {
+  const visit = (column: ColumnInfo) => {
+    const siblingTitleCounts = new Map<string, number>();
+
+    for (const child of column.children ?? []) {
+      const displayTitle = child.editName || child.name;
+      const count = (siblingTitleCounts.get(displayTitle) ?? 0) + 1;
+      siblingTitleCounts.set(displayTitle, count);
+
+      if (count > 1) {
+        child.editName = child.name;
+      }
+    }
+
+    for (const child of column.children ?? []) {
+      visit(child);
+    }
+  };
+
+  visit(root);
+}
 /**
  * casts a string to a specified type
  * @param value a string that we want to cast to a type
@@ -499,7 +558,8 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
   }
-  column._id = attachTscPrefixToName(state.name, state.columnDisplayType);
+  column._id =
+    getPreservedColumnId(state) ?? attachTscPrefixToName(deriveStableColumnName(state), state.columnDisplayType);
   column.title = escapeHtmlChars(state.editName, "text");
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
@@ -692,6 +752,7 @@ export function jsonToXml(
   settings: ChartSettings,
   version: string = "PRO8.1"
 ): string {
+  disambiguateSettingsTitles(state);
   normalizeColumnProperties(state);
   changeManuallyAddedColumns(state, hash);
   let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state)));

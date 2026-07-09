@@ -7,6 +7,7 @@ import {
   FontsInfo,
   defaultChronSettings,
   defaultEventSettings,
+  defaultFontsInfo,
   defaultPointSettings,
   defaultRangeSettings,
   defaultSequenceSettings,
@@ -34,6 +35,32 @@ vi.mock("../src/state/non-action-util", async (importOriginal) => {
 });
 const tests = JSON.parse(readFileSync(join(testDataDir, "parse-settings-tests.json")).toString());
 const keys = JSON.parse(readFileSync(join(testDataDir, "parse-settings-keys.json")).toString());
+
+function makeColumn(overrides: Partial<ColumnInfo> = {}): ColumnInfo {
+  return {
+    name: overrides.name ?? "Column",
+    editName: overrides.editName ?? overrides.name ?? "Column",
+    children: overrides.children ?? [],
+    on: overrides.on ?? false,
+    popup: overrides.popup ?? "",
+    parent: overrides.parent ?? "",
+    minAge: overrides.minAge ?? 0,
+    maxAge: overrides.maxAge ?? 1,
+    show: overrides.show ?? true,
+    expanded: overrides.expanded ?? false,
+    enableTitle: overrides.enableTitle ?? true,
+    columnDisplayType: overrides.columnDisplayType ?? "Range",
+    columnSpecificSettings: overrides.columnSpecificSettings ?? { ...defaultRangeSettings },
+    rgb: overrides.rgb ?? { r: 255, g: 255, b: 255 },
+    width: overrides.width ?? 20,
+    units: overrides.units ?? "Ma",
+    showAgeLabels: overrides.showAgeLabels ?? false,
+    showUncertaintyLabels: overrides.showUncertaintyLabels ?? false,
+    fontsInfo: overrides.fontsInfo ?? JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontOptions: overrides.fontOptions ?? ["Column Header"],
+    ...overrides
+  } as ColumnInfo;
+}
 describe("escape html chars", () => {
   test.each([
     ["", ""],
@@ -209,6 +236,16 @@ describe("translate columnInfo to columnInfoTSC", () => {
       expect(parseSettings.translateColumnInfoToColumnInfoTSC(input as ColumnInfo)._id).toEqual(expected);
     }
   );
+  it("should derive a stable fallback id from the parent-prefixed internal name", () => {
+    const input = makeColumn({
+      name: "Fish for Categorized Vertebrate ranges",
+      editName: "Fish",
+      parent: "Categorized Vertebrate ranges",
+      columnDisplayType: "MetaColumn",
+      columnSpecificSettings: {}
+    });
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(input)._id).toEqual("class datastore.MetaColumn:Fish");
+  });
 });
 
 describe("generate settings xml", () => {
@@ -631,5 +668,125 @@ describe("json to xml", () => {
       `    </column>\n` +
       `</TSCreator>`;
     expect(parseSettings.jsonToXml({} as ColumnInfo, new Map<string, ColumnInfo>(), {} as ChartSettings)).toEqual(key);
+  });
+  it("should keep duplicate display titles when they live under different parents", () => {
+    mock1.mockRestore();
+    mock2.mockRestore();
+    mock3.mockRestore();
+
+    const root = makeColumn({
+      name: "Chart Root",
+      editName: "Chart Root",
+      columnDisplayType: "RootColumn",
+      columnSpecificSettings: {},
+      children: [
+        makeColumn({
+          name: "Parent A",
+          columnDisplayType: "MetaColumn",
+          columnSpecificSettings: {},
+          parent: "Chart Root",
+          children: [
+            makeColumn({
+              name: "Marsupials",
+              editName: "Marsupials",
+              parent: "Parent A"
+            })
+          ]
+        }),
+        makeColumn({
+          name: "Parent B",
+          columnDisplayType: "MetaColumn",
+          columnSpecificSettings: {},
+          parent: "Chart Root",
+          children: [
+            makeColumn({
+              name: "Marsupials for Parent B",
+              editName: "Marsupials",
+              parent: "Parent B",
+              originalTscId: "class datastore.RangeColumn:Marsupials"
+            } as ColumnInfo)
+          ]
+        })
+      ]
+    });
+
+    const xml = parseSettings.jsonToXml(root, new Map(), {
+      timeSettings: {
+        Ma: {
+          selectedStage: "",
+          topStageAge: 0,
+          topStageKey: "",
+          baseStageAge: 1,
+          baseStageKey: "",
+          unitsPerMY: 2,
+          skipEmptyColumns: true
+        }
+      },
+      noIndentPattern: false,
+      enableColumnBackground: false,
+      enableChartLegend: false,
+      enablePriority: false,
+      enableHideBlockLabel: false,
+      mouseOverPopupsEnabled: false,
+      datapackContainsSuggAge: false,
+      useDatapackSuggestedAge: true
+    });
+
+    expect(xml.match(/<setting name="title">Marsupials<\/setting>/g)?.length).toBe(2);
+    expect(xml).not.toContain('<setting name="title">Marsupials for Parent B</setting>');
+  });
+  it("should disambiguate duplicate display titles when they are siblings", () => {
+    const root = makeColumn({
+      name: "Chart Root",
+      editName: "Chart Root",
+      columnDisplayType: "RootColumn",
+      columnSpecificSettings: {},
+      children: [
+        makeColumn({
+          name: "Parent",
+          columnDisplayType: "MetaColumn",
+          columnSpecificSettings: {},
+          parent: "Chart Root",
+          children: [
+            makeColumn({
+              name: "Marsupials",
+              editName: "Marsupials",
+              parent: "Parent"
+            }),
+            makeColumn({
+              name: "Marsupials for Parent",
+              editName: "Marsupials",
+              parent: "Parent",
+              originalTscId: "class datastore.RangeColumn:Marsupials-alt"
+            } as ColumnInfo)
+          ]
+        })
+      ]
+    });
+
+    const xml = parseSettings.jsonToXml(root, new Map(), {
+      timeSettings: {
+        Ma: {
+          selectedStage: "",
+          topStageAge: 0,
+          topStageKey: "",
+          baseStageAge: 1,
+          baseStageKey: "",
+          unitsPerMY: 2,
+          skipEmptyColumns: true
+        }
+      },
+      noIndentPattern: false,
+      enableColumnBackground: false,
+      enableChartLegend: false,
+      enablePriority: false,
+      enableHideBlockLabel: false,
+      mouseOverPopupsEnabled: false,
+      datapackContainsSuggAge: false,
+      useDatapackSuggestedAge: true
+    });
+
+    expect(xml).toContain('<setting name="title">Marsupials</setting>');
+    expect(xml).toContain('<setting name="title">Marsupials for Parent</setting>');
   });
 });
