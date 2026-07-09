@@ -112,7 +112,7 @@ export type State = {
     columns: ColumnInfo | undefined;
     renderColumns: RenderColumnInfo | undefined;
     columnHashMap: Map<string, RenderColumnInfo>;
-    defaultColumnMap: Map<string, Pick<ColumnInfo, "on" | "width">> | null;
+    defaultColumnMap: Map<string, Pick<ColumnInfo, "on" | "width" | "enableTitle" | "showAgeLabels">> | null;
     columnSearchTerm: string;
     showColumnSearchLoader: boolean;
     hideDatapackDefaults: boolean;
