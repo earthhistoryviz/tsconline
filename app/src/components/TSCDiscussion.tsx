@@ -64,7 +64,8 @@ export const Discussion = observer(() => {
   }, []);
 
   const addComment = async () => {
-    if (!id || state.commentInput === "") {
+    const commentText = state.commentInput.trim();
+    if (!id || commentText === "") {
       return;
     }
 
@@ -84,7 +85,7 @@ export const Discussion = observer(() => {
         },
         credentials: "include",
         body: JSON.stringify({
-          commentText: state.commentInput,
+          commentText: commentText,
           datapackTitle: id
         })
       });
@@ -95,7 +96,7 @@ export const Discussion = observer(() => {
         const newComment: CommentType = {
           username: username,
           dateCreated: date,
-          commentText: state.commentInput,
+          commentText: commentText,
           id: newCommentId,
           uuid: uuid,
           flagged: false,
@@ -109,6 +110,8 @@ export const Discussion = observer(() => {
       } else {
         if (response.status === 401) {
           actions.pushError(ErrorCodes.NOT_LOGGED_IN);
+        } else if (response.status === 422) {
+          actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         } else if (response.status === 500) {
           actions.pushError(ErrorCodes.DATAPACK_COMMENT_CREATION_FAILED);
         }
