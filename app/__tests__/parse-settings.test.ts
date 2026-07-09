@@ -1,4 +1,6 @@
 import { vi, describe, expect, test, it } from "vitest";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   ChartInfoTSC,
   ColumnInfo,
@@ -16,6 +18,8 @@ import { ChartSettings } from "../src/types";
 import { readFileSync } from "fs";
 import * as util from "../src/state/non-action-util";
 
+const testDataDir = join(dirname(fileURLToPath(import.meta.url)), "__data__");
+
 vi.mock("../src/state/actions/util-actions", () => {
   return {
     changeManuallyAddedColumns: vi.fn(),
@@ -29,8 +33,8 @@ vi.mock("../src/state/non-action-util", async (importOriginal) => {
     attachTscPrefixToName: vi.fn(actual.attachTscPrefixToName)
   };
 });
-const tests = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-tests.json").toString());
-const keys = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-keys.json").toString());
+const tests = JSON.parse(readFileSync(join(testDataDir, "parse-settings-tests.json")).toString());
+const keys = JSON.parse(readFileSync(join(testDataDir, "parse-settings-keys.json")).toString());
 
 function makeColumn(overrides: Partial<ColumnInfo> = {}): ColumnInfo {
   return {
@@ -57,7 +61,6 @@ function makeColumn(overrides: Partial<ColumnInfo> = {}): ColumnInfo {
     ...overrides
   } as ColumnInfo;
 }
-
 describe("escape html chars", () => {
   test.each([
     ["", ""],
@@ -125,6 +128,14 @@ describe("translate columnInfo to columnInfoTSC", () => {
     expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-sequence-column-test"])).toEqual(
       keys["translate-sequence-column-key"]
     );
+  });
+  it("should preserve explicit false showAgeLabels", async () => {
+    expect(
+      parseSettings.translateColumnInfoToColumnInfoTSC({
+        ...tests["translate-basic-column-test"],
+        showAgeLabels: false
+      }).drawAgeLabel
+    ).toBe(false);
   });
   const basicColumn = tests["translate-basic-column-test"];
   test.each([
@@ -633,7 +644,7 @@ describe("columnInfoTSC to xml", () => {
         .columnInfoTSCToXml(tests["generate-basic-column-with-point-child-xml-test"], "    ")
         .replace(/\r\n/g, "\n")
     ).toEqual(
-      readFileSync("./app/__tests__/__data__/generate-basic-column-with-point-child-xml-key.tsc")
+      readFileSync(join(testDataDir, "generate-basic-column-with-point-child-xml-key.tsc"))
         .toString()
         .replace(/\r\n/g, "\n")
     );

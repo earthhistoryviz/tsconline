@@ -3,12 +3,14 @@ import type { State } from "../state/state";
 import type { RenderColumnInfo } from "../types";
 import { getDatapackFromArray } from "../state/non-action-util";
 
-export type DefaultColumnState = Pick<ColumnInfo, "on" | "width">;
+export type DefaultColumnState = Pick<ColumnInfo, "on" | "width" | "enableTitle" | "showAgeLabels">;
 
 export function collectDefaultColumnMap(column: ColumnInfo, defaultMap: Map<string, DefaultColumnState>): void {
   defaultMap.set(column.name, {
     on: column.on,
-    width: column.width
+    width: column.width,
+    enableTitle: column.enableTitle,
+    showAgeLabels: column.showAgeLabels
   });
   for (const childColumn of column.children) {
     collectDefaultColumnMap(childColumn, defaultMap);
