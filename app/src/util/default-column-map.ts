@@ -3,16 +3,32 @@ import type { State } from "../state/state";
 import type { RenderColumnInfo } from "../types";
 import { getDatapackFromArray } from "../state/non-action-util";
 
-export function collectDefaultColumnMap(column: ColumnInfo, defaultMap: Map<string, ColumnInfo>): void {
-  defaultMap.set(column.name, column);
+export type DefaultColumnState = Pick<ColumnInfo, "on" | "width" | "enableTitle" | "showAgeLabels">;
+
+export function collectDefaultColumnMap(column: ColumnInfo, defaultMap: Map<string, DefaultColumnState>): void {
+  defaultMap.set(column.name, {
+    on: column.on,
+    width: column.width,
+    enableTitle: column.enableTitle,
+    showAgeLabels: column.showAgeLabels
+  });
   for (const childColumn of column.children) {
     collectDefaultColumnMap(childColumn, defaultMap);
   }
 }
 
-export function collectDefaultColumnMaps(state: State): Map<string, ColumnInfo> {
-  const defaultColumnMap = new Map<string, ColumnInfo>();
-  collectDefaultColumnMap(defaultColumnRoot, defaultColumnMap);
+export function buildDefaultColumnMap(root: ColumnInfo): Map<string, DefaultColumnState> {
+  const defaultColumnMap = new Map<string, DefaultColumnState>();
+  collectDefaultColumnMap(root, defaultColumnMap);
+  return defaultColumnMap;
+}
+
+export function collectDefaultColumnMaps(state: State): Map<string, DefaultColumnState> {
+  if (state.settingsTabs.defaultColumnMap) {
+    return state.settingsTabs.defaultColumnMap;
+  }
+
+  const defaultColumnMap = buildDefaultColumnMap(defaultColumnRoot);
   for (const datapackRef of state.config.datapacks) {
     const datapack = getDatapackFromArray(datapackRef, state.datapacks);
     if (!datapack?.columnInfo) continue;
@@ -53,7 +69,7 @@ export function restoreColumnOnSnapshot(
 /** UI blank slate: turn off datapack-default-on columns only; user-enabled default-off columns stay on. */
 export function applyHideDatapackDefaults(
   columnHashMap: Map<string, RenderColumnInfo>,
-  defaultMap: Map<string, ColumnInfo>
+  defaultMap: Map<string, DefaultColumnState>
 ): void {
   for (const [name, column] of columnHashMap) {
     if (shouldPreserveColumnOn(column)) continue;
@@ -75,7 +91,7 @@ export function setAllRenderColumnsOff(columnHashMap: Map<string, RenderColumnIn
 
 export function restoreDatapackDefaultOnStates(
   columnHashMap: Map<string, RenderColumnInfo>,
-  defaultMap: Map<string, ColumnInfo>
+  defaultMap: Map<string, DefaultColumnState>
 ): void {
   for (const [name, column] of columnHashMap) {
     const defaultCol = defaultMap.get(name);

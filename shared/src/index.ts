@@ -96,6 +96,8 @@ export interface MCPColumnToggleSettings {
   on?: boolean;
   width?: number;
   backgroundColor?: string;
+  enableTitle?: boolean;
+  showAgeLabels?: boolean;
   fonts?: MCPFontSettingsByTarget; // .fonts is the hashmap (e.g., The Period Column can have a .fonts = fonts: {"Column Header": {"on": true, fontFace: "Courier"}})
 }
 

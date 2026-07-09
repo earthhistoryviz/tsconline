@@ -1,8 +1,8 @@
-import type { ColumnInfo, MCPChartState, MCPColumnToggleSettings } from "@tsconline/shared";
+import type { MCPChartState, MCPColumnToggleSettings } from "@tsconline/shared";
 import { defaultColumnRoot } from "@tsconline/shared";
 import type { State } from "../state/state";
 import type { ChartSettings, RenderColumnInfo } from "../types";
-import { collectDefaultColumnMaps, shouldPreserveColumnOn } from "./default-column-map";
+import { collectDefaultColumnMaps, type DefaultColumnState, shouldPreserveColumnOn } from "./default-column-map";
 
 /**
  * Extracts the current chart state from the app's state object
@@ -80,7 +80,7 @@ function collectLeafColumnToggle(
   renderColumn: RenderColumnInfo,
   parentMap: Map<string, string>,
   columnHashMap: Map<string, RenderColumnInfo>,
-  defaultColumnMap: Map<string, ColumnInfo>,
+  defaultColumnMap: Map<string, DefaultColumnState>,
   columnToggleSettings: Record<string, Partial<MCPColumnToggleSettings>>
 ): void {
   const defaultColumn = defaultColumnMap.get(renderColumn.name);
@@ -97,6 +97,9 @@ function collectLeafColumnToggle(
 
   if (effectivelyOn !== defaultOn) {
     settings.on = effectivelyOn;
+  }
+  if (defaultColumn === undefined || defaultColumn.enableTitle !== renderColumn.enableTitle) {
+    settings.enableTitle = renderColumn.enableTitle;
   }
 
   const widthDiffers =
@@ -117,6 +120,10 @@ function collectLeafColumnToggle(
     }
   }
 
+  if (defaultColumn === undefined || defaultColumn.showAgeLabels !== renderColumn.showAgeLabels) {
+    settings.showAgeLabels = renderColumn.showAgeLabels;
+  }
+
   if (Object.keys(settings).length > 0) {
     columnToggleSettings[renderColumn.name] = settings;
   }
@@ -126,7 +133,7 @@ function collectFolderColumnToggle(
   renderColumn: RenderColumnInfo,
   parentMap: Map<string, string>,
   columnHashMap: Map<string, RenderColumnInfo>,
-  defaultColumnMap: Map<string, ColumnInfo>,
+  defaultColumnMap: Map<string, DefaultColumnState>,
   columnToggleSettings: Record<string, Partial<MCPColumnToggleSettings>>
 ): void {
   if (shouldPreserveColumnOn(renderColumn)) return;
@@ -146,7 +153,7 @@ function collectRenderColumnSettings(
   columnName: string,
   state: State,
   parentMap: Map<string, string>,
-  defaultColumnMap: Map<string, ColumnInfo>,
+  defaultColumnMap: Map<string, DefaultColumnState>,
   hideDatapackDefaults: boolean,
   columnToggleSettings: Record<string, Partial<MCPColumnToggleSettings>>
 ): void {

@@ -101,8 +101,7 @@ Works with or without authentication.
   - Changes sync to the user's open TSCOnline session in real time before the chart finishes rendering
 
   Input:
-  - { datapackTitles: string[]; overrides?: { fonts?: Record<FontTarget, FontSettings>; [key: string]: unknown }; columnToggles?: Record<string, { on?: boolean; width?: number; fonts?: Record<FontTarget, FontSettings>; }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
-
+  - { datapackTitles: string[]; overrides?: { fonts?: Record<FontTarget, FontSettings>; [key: string]: unknown }; columnToggles?: Record<string, { on?: boolean; width?: number; enableTitle?: boolean; showAgeLabels?: boolean; fonts?: Record<FontTarget, FontSettings>; }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
   Output data:
   - { directUrl, embeddedChartUrl, currentState }
 
@@ -123,6 +122,8 @@ Works with or without authentication.
   - If you used listColumns to identify relevant columns, do not stop there; carry those chosen column names into columnToggles when calling updateChartState.
   - A request like "teach me about planetary systems using this datapack" should usually produce a focused updateChartState call with planet-related columns toggled on, not a bare datapack-only request.
   - columnToggles must be a flat object whose keys are actual column names/identifiers, not the nested object structure returned by listColumns.
+  - columnToggles entries may include enableTitle to control whether a column's title is shown.
+  - columnToggles entries may include showAgeLabels to control whether a column's age label is shown.
   - Do not concatenate parent and child names with dots or arrows. For example, use "Period (Lunar)" or "Events (Lunar)", not "Moon.Period (Lunar)" or "Planetary Time Scale.Events (Lunar)".
   - The nested structure from listColumns is only for discovery. Convert the selected leaf column names into flat columnToggles keys for updateChartState.
   - Example: if listColumns shows Planetary Time Scale > Moon > Period (Lunar), then updateChartState should use { "Period (Lunar)": { "on": true } }.

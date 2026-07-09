@@ -61,6 +61,8 @@ export type ColumnToggles = Record<
     on?: boolean;
     width?: number;
     backgroundColor?: string;
+    enableTitle?: boolean;
+    showAgeLabels?: boolean;
     fonts?: MCPFontSettingsByTarget; // Allow font overrides at the individual column level as well
   }
 >;
@@ -366,6 +368,16 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
         col.rgb.r = Math.round(r);
         col.rgb.g = Math.round(g);
         col.rgb.b = Math.round(b);
+      }
+    },
+    (col, settings) => {
+      if (settings.enableTitle !== undefined) {
+        col.enableTitle = settings.enableTitle;
+      }
+    },
+    (col, settings) => {
+      if (settings.showAgeLabels !== undefined) {
+        col.showAgeLabels = settings.showAgeLabels;
       }
     },
     (col, settings) => {
