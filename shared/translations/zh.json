@@ -275,13 +275,14 @@
                     "contributed": "用户贡献的数据包",
                     "workshop": "工作坊数据包",
                     "your": "你的数据包",
-                    "treatise": "专著数据包",
+                    "treatise": "《无脊椎动物古生物学论文集》（treatise.geolex.org）中的化石类群多样性",
                     "lexicon": "词典数据包"
                 },
                 "official-subgroup": {
                     "global": "全球时间尺度",
                     "regional": "区域数据包",
                     "evolution-culture": "进化与文化",
+                    "workshop": "工作坊",
                     "other": "其他"
                 },
                 "seeMore": "查看更多...",

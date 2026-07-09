@@ -18,6 +18,95 @@ import {
 } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../../state/non-action-util";
+import { attachTscPrefixToName } from "../../state/non-action-util";
+
+type MergeResult = "added" | "replaced" | "did_nothing";
+
+type ColumnInfoWithPossibleIds = ColumnInfo & {
+  originalTscId?: string;
+};
+
+function isMetaLikeColumn(column: ColumnInfo): boolean {
+  return (
+    column.columnDisplayType === "MetaColumn" ||
+    column.columnDisplayType === "BlockSeriesMetaColumn" ||
+    column.columnDisplayType === "RootColumn"
+  );
+}
+
+function addColumnLikeJava(parent: ColumnInfo, incoming: ColumnInfo, addNotClaimed: boolean): MergeResult {
+  for (let index = 0; index < parent.children.length; index += 1) {
+    const child = parent.children[index]!;
+
+    if (child.name.localeCompare(incoming.name, undefined, { sensitivity: "accent" }) === 0) {
+      incoming.parent = parent.name;
+      parent.children[index] = incoming;
+      return "replaced";
+    }
+
+    if (isMetaLikeColumn(child)) {
+      const result = addColumnLikeJava(child, incoming, false);
+      if (result !== "did_nothing") {
+        return result;
+      }
+    }
+  }
+
+  if (addNotClaimed) {
+    incoming.parent = parent.name;
+    parent.children.push(incoming);
+    return "added";
+  }
+
+  return "did_nothing";
+}
+
+function mergeColumnsLikeJava(parent: ColumnInfo, incomingChildren: ColumnInfo[]): void {
+  for (const incoming of incomingChildren) {
+    addColumnLikeJava(parent, incoming, true);
+  }
+}
+
+function preserveOriginalTscIds(column: ColumnInfo): void {
+  const columnWithOriginalId = column as ColumnInfoWithPossibleIds;
+  if (!columnWithOriginalId.originalTscId) {
+    columnWithOriginalId.originalTscId = attachTscPrefixToName(column.name, column.columnDisplayType);
+  }
+  for (const child of column.children) {
+    preserveOriginalTscIds(child);
+  }
+}
+
+function uniquifyColumnNames(root: ColumnInfo): void {
+  const usedNames = new Set<string>();
+
+  const visit = (column: ColumnInfo, parentDisplayName?: string, preserveRootName: boolean = false) => {
+    const originalName = column.name;
+    if (!preserveRootName && usedNames.has(originalName)) {
+      if (!column.editName) {
+        column.editName = originalName;
+      }
+      const contextualBase = parentDisplayName ? `${originalName} for ${parentDisplayName}` : originalName;
+      let candidate = contextualBase;
+      let serial = 2;
+      while (usedNames.has(candidate)) {
+        candidate = `${contextualBase} (${serial})`;
+        serial += 1;
+      }
+      column.name = candidate;
+    }
+
+    usedNames.add(column.name);
+
+    const currentDisplayName = column.editName || column.name;
+    for (const child of column.children) {
+      child.parent = column.name;
+      visit(child, currentDisplayName);
+    }
+  };
+
+  visit(root, undefined, true);
+}
 
 /**
  * sets chart to newval and requests info on the datapacks from the server
@@ -73,12 +162,11 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
       const existingUnitColumnInfo = unitMap.get(datapack.ageUnits);
       if (!existingUnitColumnInfo) throw new Error("existingUnitColumnInfo is undefined");
       const newUnitChart = datapack.columnInfo;
-      // slice off the existing unit column
       const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
-      for (const child of columnsToAdd) {
-        child.parent = existingUnitColumnInfo.name;
-      }
-      existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
+      // Java recursively merges duplicate-named columns while loading datapacks.
+      // Mirror that behavior here so the app tree matches the live TSC tree
+      // before we serialize settings.tsc.
+      mergeColumnsLikeJava(existingUnitColumnInfo, columnsToAdd);
       existingUnitColumnInfo.datapackUniqueIdentifiers.push(
         convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest)
       );
@@ -115,6 +203,13 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
     columnRoot.fontOptions = Array.from(new Set([...columnRoot.fontOptions, ...column.fontOptions]));
     columnRoot.children.push(column);
   }
+
+  // Different datapacks can reuse the same visible column labels. Give them unique
+  // internal names before the UI builds a name-keyed hash map, while keeping editName
+  // intact so the chart labels shown to the user do not change.
+  preserveOriginalTscIds(columnRoot);
+  uniquifyColumnNames(columnRoot);
+
   const returnValue: SetDatapackConfigReturnValue = {
     columnRoot: columnRoot,
     foundDefaultAge: foundDefaultAge,

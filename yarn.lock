@@ -2944,7 +2944,7 @@ __metadata:
     clsx: "npm:^2.1.0"
     color: "npm:^4.2.3"
     dayjs: "npm:^1.11.12"
-    dompurify: "npm:^3.4.10"
+    dompurify: "npm:^3.4.11"
     file-saver: "npm:^2.0.5"
     framer-motion: "npm:^11.15.0"
     i18next: "npm:^23.14.0"
@@ -3043,7 +3043,7 @@ __metadata:
     better-sqlite3: "npm:^9.4.4"
     chalk: "npm:^5.3.0"
     cors: "npm:^2.8.5"
-    dompurify: "npm:^3.4.10"
+    dompurify: "npm:^3.4.11"
     dotenv: "npm:^16.4.5"
     fastify: "npm:^4.27.0"
     form-auto-content: "npm:^3.2.1"
@@ -6428,15 +6428,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dompurify@npm:^3.4.10":
-  version: 3.4.10
-  resolution: "dompurify@npm:3.4.10"
+"dompurify@npm:^3.4.11":
+  version: 3.4.11
+  resolution: "dompurify@npm:3.4.11"
   dependencies:
     "@types/trusted-types": "npm:^2.0.7"
   dependenciesMeta:
     "@types/trusted-types":
       optional: true
-  checksum: e051c70e7a0729d8cc04d40d7863dc8977495140857e81dc668fb548b7a43c7f80cfc973e3c9c0a6cd18b8eaa94ea7de9603daa02d38c8b15a9b32cc25a6f440
+  checksum: d0473e1a22ed9cc23d86ef426717bce866913d1a725512a9478985bd917b272e0faba5f1d6ad8b2e37f3f4219206c4385162d7c984cfedcd23396e1e6ae0bc5e
   languageName: node
   linkType: hard
 
@@ -9268,14 +9268,14 @@ __metadata:
   linkType: hard
 
 "js-yaml@npm:^3.10.0":
-  version: 3.14.2
-  resolution: "js-yaml@npm:3.14.2"
+  version: 3.15.0
+  resolution: "js-yaml@npm:3.15.0"
   dependencies:
     argparse: "npm:^1.0.7"
     esprima: "npm:^4.0.0"
   bin:
     js-yaml: bin/js-yaml.js
-  checksum: 172e0b6007b0bf0fc8d2469c94424f7dd765c64a047d2b790831fecef2204a4054eabf4d911eb73ab8c9a3256ab8ba1ee8d655b789bf24bf059c772acc2075a1
+  checksum: 2fdf3a1453ed93a8e06d6ca8054c0bec145cf40ab51f305d1071736a03668b95e40f47cfd0239d7d50019b4780a18cdaca3c935def935594c9876964c49f1185
   languageName: node
   linkType: hard
 
