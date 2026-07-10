@@ -1031,6 +1031,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
 async function processBlockColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
   const blockColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
+    if (isStandaloneFaciesSupportColumn(columns, column)) continue;
     if (
       column.column_type?.includes("interval") &&
       !column.interval_type?.includes("sequence") &&
@@ -1294,6 +1295,20 @@ function findFaciesFormationLabelColumn(columns: arkL_columns[], faciesColumn: a
       (col.columnx?.includes("Facies Label") ||
         col.columnx?.includes("Formations") ||
         col.columnx?.includes("Lithostrat - units"))
+  );
+}
+
+function isStandaloneFaciesSupportColumn(columns: arkL_columns[], column: arkL_columns): boolean {
+  if (column.column_type !== "intervals") return false;
+  const name = column.columnx ?? "";
+  const isSupportColumn =
+    /\bSeries\b/i.test(name) || name.includes("Facies Label") || name.includes("Formations");
+  if (!isSupportColumn) return false;
+  return columns.some(
+    (candidate) =>
+      isFaciesGraphicColumn(candidate) &&
+      candidate.dataset_id === column.dataset_id &&
+      candidate.path === column.path
   );
 }
 
