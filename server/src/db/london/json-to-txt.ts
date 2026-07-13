@@ -1301,14 +1301,11 @@ function findFaciesFormationLabelColumn(columns: arkL_columns[], faciesColumn: a
 function isStandaloneFaciesSupportColumn(columns: arkL_columns[], column: arkL_columns): boolean {
   if (column.column_type !== "intervals") return false;
   const name = column.columnx ?? "";
-  const isSupportColumn =
-    /\bSeries\b/i.test(name) || name.includes("Facies Label") || name.includes("Formations");
+  const isSupportColumn = /\bSeries\b/i.test(name) || name.includes("Facies Label") || name.includes("Formations");
   if (!isSupportColumn) return false;
   return columns.some(
     (candidate) =>
-      isFaciesGraphicColumn(candidate) &&
-      candidate.dataset_id === column.dataset_id &&
-      candidate.path === column.path
+      isFaciesGraphicColumn(candidate) && candidate.dataset_id === column.dataset_id && candidate.path === column.path
   );
 }
 
