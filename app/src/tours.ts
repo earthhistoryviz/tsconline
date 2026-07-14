@@ -118,6 +118,45 @@ export const zhQsg = [
   }
 ];
 
+export const enWorkshopTour = [
+  {
+    target: '[data-tour="workshop-tour-header"]',
+    content: enTranslation.translation.tours.workshop.step1,
+    showSkipButton: true,
+    hideCloseButton: true,
+    disableBeacon: true
+  },
+  {
+    target: '[data-tour="workshop-tour-card"]',
+    content: enTranslation.translation.tours.workshop.step2,
+    showSkipButton: true,
+    hideCloseButton: true,
+    disableBeacon: true,
+    spotlightClicks: true
+  },
+  {
+    target: '[data-tour="workshop-register-button"]',
+    content: enTranslation.translation.tours.workshop.step3,
+    showSkipButton: true,
+    hideCloseButton: true,
+    disableBeacon: true
+  },
+  {
+    target: '[data-tour="workshop-download-all-files"]',
+    content: enTranslation.translation.tours.workshop.step4,
+    showSkipButton: true,
+    hideCloseButton: true,
+    disableBeacon: true
+  },
+  {
+    target: '[data-tour="workshop-description"]',
+    content: enTranslation.translation.tours.workshop.step5,
+    showSkipButton: true,
+    hideCloseButton: true,
+    disableBeacon: true
+  }
+];
+
 export const enDpTour = [
   {
     target: '[data-tour="datapack-display-button"]',
@@ -277,6 +316,15 @@ export const zhSetTour = [
   {
     target: '[setting-tour="setting-tour-Datapacks-tab"]',
     content: zhTranslation.translation.tours.settings.step7,
+    showSkipButton: true,
+    hideCloseButton: true,
+    disableBeacon: true
+  }
+];
+export const zhWorkshopTour = [
+  {
+    target: '[data-tour="workshop-display-button"]',
+    content: zhTranslation.translation.tours.workshop.step1,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
