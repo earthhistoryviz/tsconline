@@ -13,7 +13,7 @@
     "@fastify/websocket": "10.0.1",
     "@tsconline/shared": "1.0.0",
     "@xmldom/xmldom": "^0.9.10",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.6.0",
     "archiver": "^7.0.1",
     "async-mutex": "^0.5.0",
     "bcrypt-ts": "^5.0.2",
