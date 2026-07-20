@@ -124,7 +124,8 @@ export const enWorkshopTour = [
     content: enTranslation.translation.tours.workshop.step1,
     showSkipButton: true,
     hideCloseButton: true,
-    disableBeacon: true
+    disableBeacon: true,
+    placement: "auto"
   },
   {
     target: '[data-tour="workshop-tour-card"]',
@@ -132,28 +133,32 @@ export const enWorkshopTour = [
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true,
-    spotlightClicks: true
+    spotlightClicks: true,
+    placement: "auto"
   },
   {
     target: '[data-tour="workshop-register-button"]',
     content: enTranslation.translation.tours.workshop.step3,
     showSkipButton: true,
     hideCloseButton: true,
-    disableBeacon: true
+    disableBeacon: true,
+    placement: "auto"
   },
   {
     target: '[data-tour="workshop-download-all-files"]',
     content: enTranslation.translation.tours.workshop.step4,
     showSkipButton: true,
     hideCloseButton: true,
-    disableBeacon: true
+    disableBeacon: true,
+    placement: "auto"
   },
   {
     target: '[data-tour="workshop-description"]',
     content: enTranslation.translation.tours.workshop.step5,
     showSkipButton: true,
     hideCloseButton: true,
-    disableBeacon: true
+    disableBeacon: true,
+    placement: "left"
   }
 ];
 
