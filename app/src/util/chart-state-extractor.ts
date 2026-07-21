@@ -109,6 +109,17 @@ function collectLeafColumnToggle(
     settings.width = renderColumn.width;
   }
 
+  if (
+    defaultColumn === undefined ||
+    defaultColumn.rgb?.r !== renderColumn.rgb?.r ||
+    defaultColumn.rgb?.g !== renderColumn.rgb?.g ||
+    defaultColumn.rgb?.b !== renderColumn.rgb?.b
+  ) {
+    if (renderColumn.rgb) {
+      settings.backgroundColor = `rgb(${renderColumn.rgb.r}, ${renderColumn.rgb.g}, ${renderColumn.rgb.b})`;
+    }
+  }
+
   if (defaultColumn === undefined || defaultColumn.showAgeLabels !== renderColumn.showAgeLabels) {
     settings.showAgeLabels = renderColumn.showAgeLabels;
   }
