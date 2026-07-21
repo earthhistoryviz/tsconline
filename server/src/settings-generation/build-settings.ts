@@ -63,6 +63,7 @@ export type ColumnToggles = Record<
     backgroundColor?: string;
     enableTitle?: boolean;
     showAgeLabels?: boolean;
+    orientation?: "normal" | "vertical"; // Zone label orientation. Parent folders will go down to their Zone children
     fonts?: MCPFontSettingsByTarget; // Allow font overrides at the individual column level as well
   }
 >;
@@ -348,6 +349,18 @@ function extractSettingsComponents(datapacks: Datapack[]): {
   return { columnRoot, chartSettings };
 }
 
+// Apply label orientation to a Zone column, or to Zone descendants if this is a parent folder
+function applyOrientationToZoneColumns(col: ColumnInfo, orientation: "normal" | "vertical"): void {
+  if (col.columnDisplayType === "Zone") {
+    const zoneSettings = col.columnSpecificSettings as { orientation: "normal" | "vertical" } | undefined;
+    if (zoneSettings) zoneSettings.orientation = orientation;
+    return;
+  }
+  for (const child of col.children ?? []) {
+    applyOrientationToZoneColumns(child, orientation);
+  }
+}
+
 export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: ColumnToggles) {
   const normalizedToggles = new Map<string, Partial<MCPColumnToggleSettings>>();
 
@@ -378,6 +391,12 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
     (col, settings) => {
       if (settings.showAgeLabels !== undefined) {
         col.showAgeLabels = settings.showAgeLabels;
+      }
+    },
+    (col, settings) => {
+      // Label orientation: Zone columns, or Zone descendants when a parent folder is targeted
+      if (settings.orientation !== undefined) {
+        applyOrientationToZoneColumns(col, settings.orientation);
       }
     },
     (col, settings) => {
