@@ -33,8 +33,9 @@ import { Presets } from "./Presets";
 import { Workshops } from "./Workshops";
 import WorkshopDetails from "./WorkshopDetails";
 import Joyride, { CallBackProps, ACTIONS, ORIGIN, EVENTS } from "react-joyride";
-import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours";
+import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour, enWorkshopTour, zhWorkshopTour } from "./tours";
 import i18n from "../i18n";
+import { WORKSHOP_TOUR_DEMO_ID } from "./workshop-tour-demo";
 import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 import { isDDEServer } from "./constants";
 import { PreviousLocationProvider } from "./providers/PreviousLocationProvider";
@@ -52,6 +53,7 @@ export default observer(function App() {
   const [qsgStepIndex, setQsgStepIndex] = useState(0);
   const [datapackStepIndex, setDatapackStepIndex] = useState(0);
   const [settingsStepIndex, setSettingsStepIndex] = useState(0);
+  const [workshopStepIndex, setWorkshopStepIndex] = useState(0);
   const darkTheme = isDDEServer ? ddeDarkTheme : originalDarkTheme;
   const lightTheme = isDDEServer ? ddeLightTheme : originalLightTheme;
   const theme = state.user.settings.darkMode ? darkTheme : lightTheme;
@@ -243,6 +245,16 @@ export default observer(function App() {
         return enSetTour;
     }
   };
+  const getWorkshopTour = () => {
+    switch (i18n.language) {
+      case "en":
+        return enWorkshopTour;
+      case "zh":
+        return zhWorkshopTour;
+      default:
+        return enWorkshopTour;
+    }
+  };
   const handleTourCallback = (
     data: CallBackProps,
     tourName: string,
@@ -251,8 +263,17 @@ export default observer(function App() {
     const { status, action, origin, index, type } = data;
     const finishedStatuses: string[] = ["finished", "skipped"];
     if (finishedStatuses.includes(status) || (action === ACTIONS.CLOSE && origin === ORIGIN.OVERLAY)) {
+      if (tourName === "workshops") {
+        navigate("/workshops");
+      }
       actions.setTourOpen(false, tourName);
       setIndexFunction(0);
+    } else if (tourName === "workshops" && type === EVENTS.STEP_AFTER && index === 1 && action === ACTIONS.NEXT) {
+      navigate(`/workshops/${WORKSHOP_TOUR_DEMO_ID}`);
+      setIndexFunction(index + 1);
+    } else if (tourName === "workshops" && type === EVENTS.STEP_AFTER && index === 2 && action === ACTIONS.PREV) {
+      navigate("/workshops");
+      setIndexFunction(index - 1);
     } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
       setIndexFunction(index + (action === ACTIONS.PREV ? -1 : 1));
     }
@@ -426,6 +447,30 @@ export default observer(function App() {
                 next: t("tours.next"),
                 back: t("tours.back"),
                 nextLabelWithProgress: `${i18n.t("tours.next")} (${settingsStepIndex + 1} / ${getSettingsTour().length})`
+              }}
+              showProgress
+              styles={{
+                options: {
+                  zIndex: 200,
+                  primaryColor: theme.palette.button.main,
+                  backgroundColor: theme.palette.secondaryBackground.main,
+                  arrowColor: theme.palette.secondaryBackground.main,
+                  textColor: theme.palette.text.primary
+                }
+              }}
+            />
+            <Joyride
+              continuous
+              run={state.guides.isWorkshopsTourOpen}
+              steps={getWorkshopTour()}
+              stepIndex={workshopStepIndex}
+              callback={(data) => handleTourCallback(data, "workshops", setWorkshopStepIndex)}
+              locale={{
+                skip: t("tours.quit"),
+                last: t("tours.finish"),
+                next: t("tours.next"),
+                back: t("tours.back"),
+                nextLabelWithProgress: `${i18n.t("tours.next")} (${workshopStepIndex + 1} / ${getWorkshopTour().length})`
               }}
               showProgress
               styles={{

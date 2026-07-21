@@ -49,12 +49,14 @@ import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { SharedWorkshop } from "@tsconline/shared";
 import { ErrorCodes } from "./util/error-codes";
+import { WORKSHOP_TOUR_DEMO_COVER_IMAGE, workshopTourDemoWorkshop } from "./workshop-tour-demo";
 
 type WorkshopsCategoryProps = {
   workshops: SharedWorkshop[];
   noDataMessage: string;
   imageSize: number;
   includeTime: boolean;
+  useTourImage: boolean;
   onClickHandler: (workshop: SharedWorkshop) => void;
 };
 
@@ -70,6 +72,7 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
   noDataMessage,
   imageSize,
   includeTime,
+  useTourImage,
   onClickHandler
 }) => {
   const { t } = useTranslation();
@@ -80,6 +83,7 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
           workshops.map((workshop) => (
             <Grid item key={workshop.workshopId} sx={{ padding: "0px 10px" }}>
               <Card
+                data-tour={useTourImage ? "workshop-tour-card" : undefined}
                 sx={{
                   outline: "1px solid",
                   outlineColor: "divider",
@@ -92,7 +96,7 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
                   <CardMedia
                     component="img"
                     height={imageSize}
-                    image={getWorkshopCoverImage(workshop.workshopId)}
+                    image={useTourImage ? WORKSHOP_TOUR_DEMO_COVER_IMAGE : getWorkshopCoverImage(workshop.workshopId)}
                     alt={workshop.title}
                     sx={{ objectFit: "cover" }}
                     onError={() => actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE)}
@@ -127,10 +131,12 @@ export const Workshops: React.FC = observer(() => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const isWorkshopTourOpen = state.guides.isWorkshopsTourOpen;
+  const workshopsForDisplay = isWorkshopTourOpen ? [workshopTourDemoWorkshop] : state.workshops;
 
-  const activeWorkshops = getActiveWorkshops(state.workshops);
-  const upcomingWorkshops = getUpcomingWorkshops(state.workshops);
-  const pastWorkshops = getPastWorkshops(state.workshops);
+  const activeWorkshops = getActiveWorkshops(workshopsForDisplay);
+  const upcomingWorkshops = getUpcomingWorkshops(workshopsForDisplay);
+  const pastWorkshops = getPastWorkshops(workshopsForDisplay);
 
   const [calendarWorkshopFilter, setCalendarWorkshopFilter] = useState("All");
   const [calendarView, setCalendarView] = useState(() => (window.innerWidth < 500 ? "day" : "month"));
@@ -138,7 +144,7 @@ export const Workshops: React.FC = observer(() => {
   const [calendarState, setCalendarState] = useState(() => {
     const oneWeekFromNow = dayjs().add(1, "week");
     const now = dayjs();
-    return state.workshops.some((workshop) => {
+    return workshopsForDisplay.some((workshop) => {
       const startDate = dayjs(workshop.start);
       const endDate = dayjs(workshop.end);
       return (
@@ -157,6 +163,21 @@ export const Workshops: React.FC = observer(() => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    const oneWeekFromNow = dayjs().add(1, "week");
+    const now = dayjs();
+    setCalendarState(
+      workshopsForDisplay.some((workshop) => {
+        const startDate = dayjs(workshop.start);
+        const endDate = dayjs(workshop.end);
+        return (
+          (startDate.isAfter(now) && startDate.isBefore(oneWeekFromNow)) ||
+          (endDate.isAfter(now) && endDate.isBefore(oneWeekFromNow))
+        );
+      })
+    );
+  }, [workshopsForDisplay]);
 
   function setWorkshopAndNavigateForCalendar(event: { workshopId: number }) {
     navigate(getNavigationRouteForWorkshopDetails(event.workshopId));
@@ -309,7 +330,9 @@ export const Workshops: React.FC = observer(() => {
       });
 
       if (matchedEvent) {
-        newStyle.backgroundImage = getWorkshopCoverImage(matchedEvent.workshopId);
+        newStyle.backgroundImage = isWorkshopTourOpen
+          ? `url(${WORKSHOP_TOUR_DEMO_COVER_IMAGE})`
+          : getWorkshopCoverImage(matchedEvent.workshopId);
         newStyle.backgroundSize = "cover";
         newStyle.backgroundPosition = "center";
         newStyle.opacity = 0.3;
@@ -340,7 +363,7 @@ export const Workshops: React.FC = observer(() => {
 
   const events: Event[] = [
     ...(calendarWorkshopFilter === "All"
-      ? state.workshops
+      ? workshopsForDisplay
       : calendarWorkshopFilter === "Active"
         ? activeWorkshops
         : calendarWorkshopFilter === "Upcoming"
@@ -358,10 +381,11 @@ export const Workshops: React.FC = observer(() => {
       <Box padding={4}>
         <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
           <Box sx={{ width: "200px" }}></Box>
-          <Typography className="header" sx={{ textAlign: "center" }}>
+          <Typography className="header" data-tour="workshop-tour-header" sx={{ textAlign: "center" }}>
             {t("workshops.header")}
           </Typography>
           <FormControlLabel
+            data-tour="workshop-display-button"
             control={
               <Switch
                 color="default"
@@ -394,6 +418,7 @@ export const Workshops: React.FC = observer(() => {
               noDataMessage="active"
               imageSize={140}
               includeTime={true}
+              useTourImage={isWorkshopTourOpen}
               onClickHandler={setWorkshopAndNavigate}
             />
           </AccordionDetails>
@@ -415,6 +440,7 @@ export const Workshops: React.FC = observer(() => {
               noDataMessage="upcoming"
               imageSize={140}
               includeTime={true}
+              useTourImage={isWorkshopTourOpen}
               onClickHandler={setWorkshopAndNavigate}
             />
           </AccordionDetails>
@@ -436,6 +462,7 @@ export const Workshops: React.FC = observer(() => {
               noDataMessage="past"
               imageSize={80}
               includeTime={false}
+              useTourImage={isWorkshopTourOpen}
               onClickHandler={setWorkshopAndNavigate}
             />
           </AccordionDetails>

@@ -557,6 +557,11 @@ translation.tours.qsg.step5,In the Help Page, you can find detailed assistance a
 translation.tours.qsg.step6,In the Workshops Page, you can access a range of educational and experimental tutorials that offer in-depth guidance. Here, you can explore the workshops you have registered for, allowing you to engage with the content and enhance your skills in a hands-on learning environment.
 translation.tours.qsg.step7,The About Page provides information about our development team.
 translation.tours.qsg.step8,Click here to sign in and unlock the features mentioned earlier, such as accessing registered workshops. Once logged in, you will also have the ability to upload datapacks and take full advantage of all functionalities.
+translation.tours.workshop.step1,This is the Workshops page. Dr. Ogg uses it to show the upcoming sessions, the archived sessions, and a live example workshop. The tour swaps in a demo workshop on purpose so you can study the layout without touching real workshop data.
+translation.tours.workshop.step2,This example workshop card is the one you should open. Click 'Next' to jump into the workshop details page and see how a workshop is presented from the inside.
+translation.tours.workshop.step3,Inside a workshop, the first thing to understand is registration. This action simply registers you for the workshop and allows you to access the materials.
+translation.tours.workshop.step4,After registration, the Download All Files button becomes the main action. It represents the bundle of workshop materials that participants can collect in one place.
+translation.tours.workshop.step5,This final section shows the description, instructions, presentation, and other files. It is a quick overview of the workshop flow and the materials available inside the page.
 translation.tours.datapack.step1,Switch between different display types for datapacks: rows, cards, or compact view.
 translation.tours.datapack.step2,Add a datapack by clicking the checkbox
 translation.tours.datapack.step3,Click the deselect icon to deselect all datapacks
