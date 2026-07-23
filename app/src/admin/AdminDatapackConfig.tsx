@@ -61,6 +61,10 @@ function isDatapackRowOrUndefined(row: AdminGridRow | undefined): row is AdminDa
   return !!row && row.kind === "datapack";
 }
 
+function isHeaderRowOrUndefined(row: AdminGridRow | undefined): row is AdminHeaderRow {
+  return !!row && row.kind === "header";
+}
+
 function getHeaderTitles(rows: AdminGridRow[]): string[] {
   return rows.filter(isHeaderRow).map((row) => row.title);
 }
@@ -122,16 +126,6 @@ function buildGridRows(datapacks: DatapackMetadata[], t: (key: string) => string
   return rows;
 }
 
-function reorderSelectedRows(originalRows: AdminGridRow[], selectedIds: Set<string>, displayedRows: AdminGridRow[], draggedId: string) {
-  const selectedRows = originalRows.filter((row) => selectedIds.has(isHeaderRow(row) ? row.id : row.title));
-  const unselectedRows = originalRows.filter((row) => !selectedIds.has(isHeaderRow(row) ? row.id : row.title));
-  const draggedDisplayedIndex = displayedRows.findIndex((row) => (isHeaderRow(row) ? row.id : row.title) === draggedId);
-  const insertIndex = displayedRows
-    .slice(0, Math.max(draggedDisplayedIndex, 0))
-    .filter((row) => !selectedIds.has(isHeaderRow(row) ? row.id : row.title)).length;
-  return [...unselectedRows.slice(0, insertIndex), ...selectedRows, ...unselectedRows.slice(insertIndex)];
-}
-
 function rowsToDatapacks(rows: AdminGridRow[]): DatapackMetadata[] {
   const nextDatapacks: DatapackMetadata[] = [];
   let currentHeader: AdminHeaderRow | null = null;
@@ -159,6 +153,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const [formOpen, setFormOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedCount, setSelectedCount] = useState(0);
+  const [selectedHeaderCount, setSelectedHeaderCount] = useState(0);
   const [editableDatapack, setEditableDatapack] = useState<EditableAdminDatapack | null>(null);
   const [newHeaderTitle, setNewHeaderTitle] = useState("");
   const [tempRows, setTempRows] = useState<AdminGridRow[] | null>(null);
@@ -284,6 +279,62 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
     actions.setAdminTempHeaderTitles(getHeaderTitles(nextRows));
   };
 
+  const deleteSelectedHeaders = () => {
+    const selectedNodes = gridRef.current?.api.getSelectedNodes() || [];
+    const selectedHeaders = selectedNodes.map((node) => node.data).filter(isHeaderRowOrUndefined);
+    if (selectedHeaders.length === 0) return;
+
+    const selectedHeaderIds = new Set(selectedHeaders.map((header) => header.id));
+    const fallbackHeaderTitle = "Other";
+    const baseRows = tempRows || rowData;
+    let fallbackHeaderFound = false;
+    const nextRows: AdminGridRow[] = [];
+    let currentHeaderDeleted = false;
+
+    for (const row of baseRows) {
+      if (isHeaderRow(row)) {
+        currentHeaderDeleted = selectedHeaderIds.has(row.id);
+        if (!currentHeaderDeleted) {
+          if (row.title === fallbackHeaderTitle) fallbackHeaderFound = true;
+          nextRows.push(row);
+        }
+        continue;
+      }
+
+      if (currentHeaderDeleted) {
+        if (!fallbackHeaderFound) {
+          nextRows.push({
+            kind: "header",
+            id: `header-fallback-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            title: fallbackHeaderTitle,
+            officialHeaderOrder: 0
+          });
+          fallbackHeaderFound = true;
+        }
+        const fallbackIndex = nextRows.findIndex((candidate) => isHeaderRow(candidate) && candidate.title === fallbackHeaderTitle);
+        nextRows.splice(fallbackIndex + 1, 0, row);
+      } else {
+        nextRows.push(row);
+      }
+    }
+
+    const dedupedRows: AdminGridRow[] = [];
+    const seenHeaderTitles = new Set<string>();
+    for (const row of nextRows) {
+      if (isHeaderRow(row)) {
+        if (seenHeaderTitles.has(row.title)) continue;
+        seenHeaderTitles.add(row.title);
+      }
+      dedupedRows.push(row);
+    }
+
+    const nextDatapacks = rowsToDatapacks(dedupedRows);
+    setTempRows(dedupedRows);
+    actions.setAdminDatapackConfigTempRowData(nextDatapacks);
+    actions.setAdminRowPriorityUpdates(buildPriorityUpdates(nextDatapacks));
+    actions.setAdminTempHeaderTitles(getHeaderTitles(dedupedRows));
+  };
+
   async function onRowDragEnd(event: RowDragEndEvent<AdminGridRow>) {
     const api = event.api;
     const displayedRows: AdminGridRow[] = [];
@@ -291,21 +342,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       const rowNode = api.getDisplayedRowAtIndex(index);
       if (rowNode?.data) displayedRows.push(rowNode.data);
     }
-    const selectedIds = new Set<string>(
-      (api.getSelectedNodes() || [])
-        .map((node) => (node.data ? (isHeaderRow(node.data) ? node.data.id : node.data.title) : null))
-        .filter((id): id is string => typeof id === "string")
-    );
-    const draggedId = event.node?.data ? (isHeaderRow(event.node.data) ? event.node.data.id : event.node.data.title) : null;
-    const nextRows =
-      draggedId && selectedIds.size > 1 && selectedIds.has(draggedId)
-        ? reorderSelectedRows(currentRows, selectedIds, displayedRows, draggedId)
-        : displayedRows;
-    const nextDatapacks = rowsToDatapacks(nextRows);
-    setTempRows(nextRows);
+    const nextDatapacks = rowsToDatapacks(displayedRows);
+    setTempRows(displayedRows);
     actions.setAdminDatapackConfigTempRowData(nextDatapacks);
     actions.setAdminRowPriorityUpdates(buildPriorityUpdates(nextDatapacks));
-    actions.setAdminTempHeaderTitles(getHeaderTitles(nextRows));
+    actions.setAdminTempHeaderTitles(getHeaderTitles(displayedRows));
   }
 
   async function submitPriorityChanges() {
@@ -369,6 +410,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         </Box>
         <TSCButton disabled={selectedCount !== 1} onClick={openEditDialog}>
           Edit Selected Datapack
+        </TSCButton>
+        <TSCButton disabled={selectedHeaderCount === 0} onClick={deleteSelectedHeaders}>
+          Delete Selected Headers
         </TSCButton>
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
         <TSCButton disabled={!tempRows} onClick={async () => await submitPriorityChanges()}>
@@ -514,9 +558,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
           getRowId: (params) => (isHeaderRow(params.data) ? params.data.id : params.data.title)
         }}
         onSelectionChanged={() =>
-          setSelectedCount(
-            (gridRef.current?.api.getSelectedNodes() || []).map((node) => node.data).filter(isDatapackRowOrUndefined).length
-          )
+          {
+            const selectedRows = (gridRef.current?.api.getSelectedNodes() || []).map((node) => node.data);
+            setSelectedCount(selectedRows.filter(isDatapackRowOrUndefined).length);
+            setSelectedHeaderCount(selectedRows.filter(isHeaderRowOrUndefined).length);
+          }
         }
         rowMultiSelectWithClick
         rowData={currentRows}
