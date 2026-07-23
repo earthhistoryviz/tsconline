@@ -8,9 +8,8 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
 import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, SvgIcon, useTheme } from "@mui/material";
-import Color from "color";
 import { datapackAddedColors } from "../components/datapack_display/TSCDatapackCard";
-import { People, School, Security, Verified, Terrain } from "@mui/icons-material";
+import { People, School, Security, Verified, Terrain, Upload, CheckCircle } from "@mui/icons-material";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -20,13 +19,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import {
-  DatapackConfigForChartRequest,
-  DatapackMetadata,
-  isTempDatapack,
-  isUserDatapack,
-  isWorkshopDatapack
-} from "@tsconline/shared";
+import { DatapackConfigForChartRequest, DatapackMetadata, isUserDatapack, isWorkshopDatapack } from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
@@ -41,7 +34,6 @@ import {
   groupOfficialDatapacks,
   isOwnedByUser
 } from "../state/non-action-util";
-import { useNavigate } from "react-router";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -49,7 +41,6 @@ export const Datapacks = observer(function Datapacks() {
   const { t } = useTranslation();
   const theme = useTheme();
   const added = datapackAddedColors(theme);
-  const navigate = useNavigate();
   const selectedCount = state.unsavedDatapackConfig.length;
   const shouldLoadRecaptcha =
     state.isLoggedIn &&
@@ -67,66 +58,37 @@ export const Datapacks = observer(function Datapacks() {
   const officialDatapacks = getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter(
     (item) => !["Treatise", "Lexicon Formations"].some((tag) => item.tags.includes(tag))
   );
+  const actionBorder = selectedCount > 0 ? added.main : undefined;
 
   return (
     <StyledScrollbar className={styles.dc + " settings-datapack-container"}>
-      <div className={styles.hdc}>
-        <CustomTooltip title="Deselect All" placement="top">
-          <IconButton
-            className={styles.ib}
-            data-tour="datapack-deselect-button"
-            onClick={async () => {
-              actions.setUnsavedDatapackConfig([]);
-            }}>
-            <DeselectIcon />
-          </IconButton>
-        </CustomTooltip>
-        <div className={styles.guidance}>
-          <Typography className={styles.h}>{t("settings.datapacks.see-info-guidance")}</Typography>
-          <Typography className={styles.dh}>{t("settings.datapacks.add-datapack-guidance")}</Typography>
-          {/* count of datapacks staged before confirm */}
-          {selectedCount > 0 && (
-            <Typography
-              className={styles.dh}
-              sx={{
-                fontWeight: 600,
-                color: added.main,
-                bgcolor: Color(added.main).alpha(0.12).string(),
-                border: `1px solid ${added.main}`,
-                borderRadius: 1,
-                px: 1,
-                py: 0.25,
-                width: "fit-content",
-                mx: "auto",
-                mt: 0.5
-              }}>
-              {t("settings.datapacks.selected-count", { count: selectedCount })}
-            </Typography>
-          )}
-        </div>
-        <ToggleButtonGroup
-          className={styles.display}
-          data-tour="datapack-display-button"
-          value={state.settingsTabs.datapackDisplayType}
-          onChange={(_event, val) => {
-            if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards|compact)$/.test(val)) return;
-            actions.setDatapackDisplayType(val);
-          }}
-          exclusive>
-          <ToggleButton className={styles.tb} disableRipple value="compact">
-            {" "}
-            <ViewCompactIcon className={styles.icon} />{" "}
-          </ToggleButton>
-          <ToggleButton className={styles.tb} disableRipple value="rows">
-            {" "}
-            <TableRowsIcon className={styles.icon} />{" "}
-          </ToggleButton>
-          <ToggleButton className={styles.tb} disableRipple value="cards">
-            {" "}
-            <DashboardIcon className={styles.icon} />{" "}
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </div>
+      <Box className={styles.topbar}>
+        <Box>
+          <Typography className={styles.pageTitle}>Add Datapacks</Typography>
+          <Typography className={styles.pageSubtitle}>Pick the packs you want, then generate the chart.</Typography>
+        </Box>
+        <Box className={styles.topbarActions}>
+          <ToggleButtonGroup
+            className={styles.display}
+            data-tour="datapack-display-button"
+            value={state.settingsTabs.datapackDisplayType}
+            onChange={(_event, val) => {
+              if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards|compact)$/.test(val)) return;
+              actions.setDatapackDisplayType(val);
+            }}
+            exclusive>
+            <ToggleButton className={styles.tb} disableRipple value="compact">
+              <ViewCompactIcon className={styles.icon} />
+            </ToggleButton>
+            <ToggleButton className={styles.tb} disableRipple value="rows">
+              <TableRowsIcon className={styles.icon} />
+            </ToggleButton>
+            <ToggleButton className={styles.tb} disableRipple value="cards">
+              <DashboardIcon className={styles.icon} />
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+      </Box>
       <Box
         className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards} datapack-display-container`}>
         <DatapackGroupDisplay
@@ -190,44 +152,46 @@ export const Datapacks = observer(function Datapacks() {
           />
         )}
       </Box>
-      <Box className={`${styles.container} ${styles.buttonContainer}`}>
-        {state.isLoggedIn && (
+      <Box className={styles.actionDock}>
+        <Box className={styles.selectionBadge} sx={{ borderColor: actionBorder }}>
+          <Typography className={styles.selectionCount} sx={{ color: actionBorder }}>
+            {selectedCount}
+          </Typography>
+          <Typography className={styles.selectionLabel} color="text.primary">
+            {selectedCount === 1 ? "datapack staged" : "datapacks staged"}
+          </Typography>
+        </Box>
+        <Box className={styles.dockButtons}>
+          {state.isLoggedIn && (
+            <TSCButton className={styles.dockButton} onClick={() => setFormOpen(!formOpen)}>
+              <Upload fontSize="small" />
+              {t("settings.datapacks.upload")}
+            </TSCButton>
+          )}
           <TSCButton
-            className={styles.buttons}
-            onClick={() => {
-              setFormOpen(!formOpen);
+            className={styles.dockButton}
+            data-tour="datapack-confirm-button"
+            disabled={state.loadingDatapacks || selectedCount === 0}
+            onClick={async () => {
+              await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
             }}>
-            {t("settings.datapacks.upload")}
+            <CheckCircle fontSize="small" />
+            {t("button.confirm-selection")}
           </TSCButton>
-        )}
-        <TSCButton
-          className={styles.buttons}
-          data-tour="datapack-confirm-button"
-          disabled={state.loadingDatapacks}
-          onClick={async () => {
-            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
-          }}>
-          {t("button.confirm-selection")}
-        </TSCButton>
-      </Box>
-      <Box display="flex" justifyContent="center" alignItems="center" width="100%">
-        <TSCButton
-          onClick={() => {
-            navigate("/crossplot");
-            actions.setTab(0);
-            for (const datapack of state.unsavedDatapackConfig) {
-              if (isTempDatapack(datapack)) {
-                // continue to crossplot, this assumes the user just made a converted datapack and is returning the crossplot page
-                return;
-              }
-            }
-            actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), {
-              setter: actions.setCrossPlotDatapackConfig,
-              currentConfig: state.crossPlot.datapacks
-            });
-          }}>
-          {t("crossPlot.create-datapack")}
-        </TSCButton>
+          <CustomTooltip title="Deselect All" placement="top">
+            <span>
+              <IconButton
+                className={styles.clearButton}
+                data-tour="datapack-deselect-button"
+                disabled={selectedCount === 0}
+                onClick={async () => {
+                  actions.setUnsavedDatapackConfig([]);
+                }}>
+                <DeselectIcon />
+              </IconButton>
+            </span>
+          </CustomTooltip>
+        </Box>
       </Box>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <DatapackUploadForm
