@@ -21,7 +21,7 @@ import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
 import { assetconfigs, extractMetadataFromDatapack, isFileTypeAllowed } from "../util.js";
 import { createWriteStream } from "fs";
-import { rm } from "fs/promises";
+import { rm, readFile, writeFile } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import validator from "validator";
@@ -61,7 +61,7 @@ import {
   fetchUserDatapack
 } from "../user/user-handler.js";
 import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
-import { editAdminDatapackPriorities } from "./admin-handler.js";
+import { editAdminDatapackHeaders, editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
@@ -80,6 +80,59 @@ export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPr
     console.error(e);
     reply.status(500).send({ error: "Unknown error fetching private official datapacks" });
     return;
+  }
+};
+
+const OFFICIAL_HEADER_CONFIG_PATH = resolve("assets/official-header-config.json");
+
+async function readOfficialHeaderConfig(): Promise<string[]> {
+  try {
+    const raw = await readFile(OFFICIAL_HEADER_CONFIG_PATH, "utf-8");
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((header): header is string => typeof header === "string");
+  } catch {
+    return [];
+  }
+}
+
+async function writeOfficialHeaderConfig(headers: string[]) {
+  await writeFile(OFFICIAL_HEADER_CONFIG_PATH, JSON.stringify(headers, null, 2));
+}
+
+export const adminFetchOfficialHeaderConfig = async function adminFetchOfficialHeaderConfig(
+  _request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    const headers = await readOfficialHeaderConfig();
+    reply.send({ headers });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Failed to fetch official header configuration" });
+  }
+};
+
+interface AdminSaveOfficialHeaderConfigRequest extends RouteGenericInterface {
+  Body: {
+    headers: string[];
+  };
+}
+export const adminSaveOfficialHeaderConfig = async function adminSaveOfficialHeaderConfig(
+  request: FastifyRequest<AdminSaveOfficialHeaderConfigRequest>,
+  reply: FastifyReply
+) {
+  const { headers } = request.body;
+  if (!Array.isArray(headers) || !headers.every((header) => typeof header === "string")) {
+    reply.status(400).send({ error: "Invalid official header configuration" });
+    return;
+  }
+  try {
+    await writeOfficialHeaderConfig(headers.map((header) => header.trim()).filter(Boolean));
+    reply.send({ message: "Official header configuration updated" });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Failed to save official header configuration" });
   }
 };
 
@@ -757,6 +810,46 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
     completedRequests
   };
   reply.send(success);
+};
+
+interface AdminEditDatapackHeadersRequest extends RouteGenericInterface {
+  Body: {
+    tasks: (DatapackPriorityChangeRequest & { officialHeader?: string; officialHeaderOrder?: number })[];
+  };
+}
+export const adminEditDatapackHeaders = async function adminEditDatapackHeaders(
+  request: FastifyRequest<AdminEditDatapackHeadersRequest>,
+  reply: FastifyReply
+) {
+  const { tasks } = request.body;
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    reply.status(400).send({ error: "No header update tasks provided" });
+    return;
+  }
+  const failedRequests = [...tasks];
+  const completedRequests: typeof tasks = [];
+  for (const task of tasks) {
+    try {
+      await editAdminDatapackHeaders(task);
+    } catch (e) {
+      logger.error(e);
+      continue;
+    }
+    failedRequests.shift();
+    completedRequests.push(task);
+  }
+  if (failedRequests.length > 0) {
+    reply.status(500).send({
+      error: completedRequests.length > 0 ? "Some headers updated" : "Unknown error, no headers updated",
+      failedRequests,
+      completedRequests
+    });
+    return;
+  }
+  reply.send({
+    message: "Headers updated",
+    completedRequests
+  });
 };
 
 export const adminUploadDatapack = async function adminUploadDatapack(request: FastifyRequest, reply: FastifyReply) {
