@@ -206,9 +206,12 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({
           border: `1px solid ${theme.palette.divider}`
         }}
         onClose={() => toggleMenu(false)}>
-        {options.map(({ label, onClick }) => (
+        {options.map(({ label, onClick, icon }) => (
           <TSCMenuItem key={label} className="" onClick={onClick}>
-            <Typography>{label}</Typography>
+            <Typography sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 180 }}>
+              {icon}
+              {label}
+            </Typography>
           </TSCMenuItem>
         ))}
       </ControlledMenu>

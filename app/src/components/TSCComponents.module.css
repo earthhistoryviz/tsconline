@@ -72,6 +72,9 @@
   border-radius: 10%;
   color: white;
   background: transparent;
+  min-height: 32px;
+  padding: 4px 12px;
+  white-space: nowrap;
 }
 .splitButtonMain:hover {
   background-color: #9c9c9c30;
