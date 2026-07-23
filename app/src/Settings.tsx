@@ -5,7 +5,6 @@ import { Column, ColumnContext } from "./settings_tabs/Column";
 import { Time } from "./settings_tabs/Time";
 import { Font } from "./settings_tabs/Font";
 import { MapPoints } from "./settings_tabs/map_points/MapPoints";
-import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
 import { Box, Typography } from "@mui/material";
 import "./Settings.css";
@@ -99,7 +98,5 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
       return <Font />;
     case "mappoints":
       return <MapPoints />;
-    case "datapacks":
-      return <Datapacks />;
   }
 });

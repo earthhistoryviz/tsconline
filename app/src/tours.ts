@@ -222,13 +222,6 @@ export const enSetTour = [
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
-  },
-  {
-    target: '[setting-tour="setting-tour-Datapacks-tab"]',
-    content: enTranslation.translation.tours.settings.step7,
-    showSkipButton: true,
-    hideCloseButton: true,
-    disableBeacon: true
   }
 ];
 export const zhSetTour = [
@@ -270,13 +263,6 @@ export const zhSetTour = [
   {
     target: '[setting-tour="setting-tour-Map Points-tab"]',
     content: zhTranslation.translation.tours.settings.step6,
-    showSkipButton: true,
-    hideCloseButton: true,
-    disableBeacon: true
-  },
-  {
-    target: '[setting-tour="setting-tour-Datapacks-tab"]',
-    content: zhTranslation.translation.tours.settings.step7,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
