@@ -7,13 +7,16 @@ import {
   adminDeleteUser,
   getUsers,
   adminDeleteOfficialDatapack,
+  adminFetchOfficialHeaderConfig,
   getAllUserDatapacks,
   adminAddUsersToWorkshop,
   adminCreateWorkshop,
   adminEditWorkshop,
   adminDeleteWorkshop,
   adminModifyUser,
+  adminEditDatapackHeaders,
   adminEditDatapackPriorities,
+  adminSaveOfficialHeaderConfig,
   adminAddOfficialDatapackToWorkshop,
   adminEditDatapackMetadata,
   adminUploadDatapack,
@@ -334,6 +337,29 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY)]
     },
     adminEditDatapackPriorities
+  );
+  fastify.patch(
+    "/official/datapack/headers",
+    {
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK)]
+    },
+    adminEditDatapackHeaders
+  );
+  fastify.get(
+    "/official/datapack/header-config",
+    {
+      config: { rateLimit: moderateRateLimit }
+    },
+    adminFetchOfficialHeaderConfig
+  );
+  fastify.patch(
+    "/official/datapack/header-config",
+    {
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK)]
+    },
+    adminSaveOfficialHeaderConfig
   );
   fastify.post(
     "/workshop/datapack",

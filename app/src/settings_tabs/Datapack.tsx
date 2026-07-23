@@ -33,6 +33,7 @@ import {
   compareExistingDatapacks,
   doesDatapackAlreadyExist,
   getCurrentUserDatapacksMetadata,
+  OfficialDatapackGroup,
   getPrivateOfficialDatapackMetadatas,
   getPublicDatapacksMetadataWithoutCurrentUser,
   getPublicOfficialDatapacksMetadata,
@@ -276,7 +277,7 @@ type DatapackGroupDisplayProps = {
   HeaderIcon: React.ElementType;
   loading?: boolean;
   // when set, renders official datapacks in labeled sub-sections instead of one flat list
-  subgroups?: { subgroup: string; datapacks: DatapackMetadata[] }[];
+  subgroups?: OfficialDatapackGroup[];
 };
 const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
   ({ datapacks, header, HeaderIcon, loading = false, subgroups }) => {
@@ -357,10 +358,10 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
         {numberOfDatapacks !== 0 &&
           (subgroups ? (
             <>
-              {subgroups.map(({ subgroup, datapacks: subgroupDatapacks }) => (
-                <Box key={subgroup} className={styles.subgroup}>
+              {subgroups.map(({ subgroup, label, datapacks: subgroupDatapacks }) => (
+                <Box key={`${subgroup ?? "custom"}-${label}`} className={styles.subgroup}>
                   <Typography variant="subtitle1" className={styles.subgroupHeader}>
-                    {t(`settings.datapacks.official-subgroup.${subgroup}`)}
+                    {subgroup ? t(`settings.datapacks.official-subgroup.${subgroup}`) : label}
                   </Typography>
                   {/* 2-column grid for rows/compact; flex wrap for cards */}
                   <Box

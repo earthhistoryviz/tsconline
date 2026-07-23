@@ -30,6 +30,7 @@ import {
   pushSnackbar,
   removeAllErrors,
   removeDatapack,
+  refreshPublicDatapacks,
   setPrivateOfficialDatapacksLoading
 } from "./general-actions";
 import { State } from "../state";
@@ -492,6 +493,73 @@ export const adminFetchOfficialDatapack = action(async (datapack: string, option
   }
 });
 
+export const adminEditOfficialDatapack = action(
+  async (
+    originalDatapack: DatapackMetadata,
+    updates: Partial<EditableDatapackMetadata>,
+    replacementFile?: File
+  ): Promise<Datapack | null> => {
+    try {
+      const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK);
+      if (!recaptchaToken) return null;
+      const formData = new FormData();
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === undefined || value === null) continue;
+        if (JSON.stringify(value) === JSON.stringify(originalDatapack[key as keyof DatapackMetadata])) continue;
+        if (key === "tags" || key === "references") {
+          formData.append(key, JSON.stringify(value));
+          continue;
+        }
+        formData.append(key, String(value));
+      }
+      if (replacementFile) {
+        formData.append("datapack", replacementFile);
+      }
+      if (Array.from(formData.keys()).length === 0) {
+        pushSnackbar("No datapack changes to save", "info");
+        return null;
+      }
+      const response = await fetcher(`/admin/official/datapack/${encodeURIComponent(originalDatapack.title)}`, {
+        method: "PATCH",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+      if (!response.ok) {
+        displayServerError(
+          await response.json(),
+          ErrorCodes.USER_EDIT_DATAPACK_FAILED,
+          ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
+        );
+        return null;
+      }
+      const updatedTitle = updates.title ?? originalDatapack.title;
+      const updatedDatapack = await adminFetchOfficialDatapack(updatedTitle);
+      if (!updatedDatapack) return null;
+      runInAction(() => {
+        const metadataIndex = state.datapackMetadata.findIndex((datapack) => datapack.title === originalDatapack.title);
+        if (metadataIndex !== -1) {
+          state.datapackMetadata.splice(metadataIndex, 1, updatedDatapack);
+        } else {
+          state.datapackMetadata.push(updatedDatapack);
+        }
+        const datapackIndex = state.datapacks.findIndex((datapack) => datapack.title === originalDatapack.title);
+        if (datapackIndex !== -1) {
+          state.datapacks.splice(datapackIndex, 1, updatedDatapack);
+        }
+      });
+      pushSnackbar("Official datapack updated", "success");
+      return updatedDatapack;
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+      return null;
+    }
+  }
+);
+
 /**
  * Adds users to a workshop
  * @param formData The form data containing the users to add
@@ -817,7 +885,7 @@ export const setLoadingDatapackPriority = action((loading: boolean) => {
   state.admin.datapackPriorityLoading = loading;
 });
 
-export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[]) => {
+export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[], options?: { silent?: boolean }) => {
   try {
     setLoadingDatapackPriority(true);
     const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY);
@@ -843,10 +911,14 @@ export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriority
             });
           }
         });
-        pushSnackbar("Datapack priorities updated successfully", "success");
+        if (!options?.silent) {
+          pushSnackbar("Datapack priorities updated successfully", "success");
+        }
       } else {
         assertDatapackPriorityPartialUpdateSuccess(json);
-        pushSnackbar("Some datapack priorities were not updated", "warning");
+        if (!options?.silent) {
+          pushSnackbar("Some datapack priorities were not updated", "warning");
+        }
       }
     } catch (e) {
       console.error(e);
@@ -864,17 +936,195 @@ export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriority
   }
 });
 
+export const adminUpdateOfficialDatapackHeaders = action(
+  async (
+    tasks: (DatapackPriorityChangeRequest & { officialHeader?: string; officialHeaderOrder?: number })[],
+    options?: { silent?: boolean }
+  ) => {
+    try {
+      setLoadingDatapackPriority(true);
+      const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK);
+      if (!recaptchaToken) return false;
+      const response = await fetcher("/admin/official/datapack/headers", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body: JSON.stringify({ tasks }),
+        credentials: "include"
+      });
+      if (!response.ok) {
+        displayServerError(
+          await response.json(),
+          ErrorCodes.USER_EDIT_DATAPACK_FAILED,
+          ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
+        );
+        return false;
+      }
+      runInAction(() => {
+        for (const task of tasks) {
+          const index = state.datapackMetadata.findIndex((datapack) => datapack.title === task.id && datapack.type === "official");
+          if (index !== -1) {
+            state.datapackMetadata[index].officialHeader = task.officialHeader;
+            state.datapackMetadata[index].officialHeaderOrder = task.officialHeaderOrder;
+          }
+        }
+      });
+      if (!options?.silent) {
+        pushSnackbar("Official datapack groups updated successfully", "success");
+      }
+      return true;
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+      return false;
+    } finally {
+      setLoadingDatapackPriority(false);
+    }
+  }
+);
+
+export const adminFetchOfficialHeaderConfig = action(async () => {
+  try {
+    const response = await fetcher("/admin/official/datapack/header-config", {
+      method: "GET",
+      credentials: "include"
+    });
+    if (!response.ok) {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.SERVER_RESPONSE_ERROR,
+        ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]
+      );
+      return;
+    }
+    const json = await response.json();
+    if (
+      !json ||
+      !Array.isArray(json.headers) ||
+      !json.headers.every((header: unknown) => typeof header === "string")
+    ) {
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+      return;
+    }
+    setAdminHeaderTitles(json.headers);
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const adminSaveOfficialHeaderConfig = action(async (headers: string[], options?: { silent?: boolean }) => {
+  try {
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK);
+    if (!recaptchaToken) return false;
+    const response = await fetcher("/admin/official/datapack/header-config", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ headers }),
+      credentials: "include"
+    });
+    if (!response.ok) {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.SERVER_RESPONSE_ERROR,
+        ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]
+      );
+      return false;
+    }
+    setAdminHeaderTitles(headers);
+    if (!options?.silent) {
+      pushSnackbar("Official header configuration updated successfully", "success");
+    }
+    return true;
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return false;
+  }
+});
+
+export const adminSaveOfficialDatapackConfig = action(async () => {
+  const nextDatapacks = state.admin.datapackConfig.tempRowData;
+  if (!nextDatapacks) return true;
+  let encounteredError = false;
+  try {
+    await adminUpdateDatapackPriority(buildPriorityTasks(nextDatapacks), { silent: true });
+    const originalMap = new Map(
+      state.datapackMetadata
+        .filter((datapack) => datapack.type === "official" && datapack.isPublic)
+        .map((datapack) => [datapack.title, datapack])
+    );
+    const headerTasks: (DatapackPriorityChangeRequest & { officialHeader?: string; officialHeaderOrder?: number })[] = [];
+    for (const datapack of nextDatapacks) {
+      const original = originalMap.get(datapack.title);
+      if (!original) continue;
+      if (
+        original.officialHeader !== datapack.officialHeader ||
+        original.officialHeaderOrder !== datapack.officialHeaderOrder
+      ) {
+        headerTasks.push({
+          id: datapack.title,
+          uuid: "official",
+          priority: datapack.priority,
+          officialHeader: datapack.officialHeader,
+          officialHeaderOrder: datapack.officialHeaderOrder
+        });
+      }
+    }
+    if (headerTasks.length > 0) {
+      const updated = await adminUpdateOfficialDatapackHeaders(headerTasks, { silent: true });
+      if (!updated) encounteredError = true;
+    }
+    const headerConfigSaved = await adminSaveOfficialHeaderConfig(
+      state.admin.datapackConfig.tempHeaderTitles ?? state.admin.datapackConfig.headerTitles,
+      { silent: true }
+    );
+    if (!headerConfigSaved) encounteredError = true;
+    if (!encounteredError) {
+      await refreshPublicDatapacks();
+      resetAdminConfigTempState();
+      pushSnackbar("Official datapack order and groups updated successfully", "success");
+      return true;
+    }
+  } catch (error) {
+    encounteredError = true;
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+  return !encounteredError;
+});
+
+function buildPriorityTasks(datapacks: DatapackMetadata[]): DatapackPriorityChangeRequest[] {
+  return datapacks.map((datapack) => ({
+    id: datapack.title,
+    uuid: "official",
+    priority: datapack.priority
+  }));
+}
+
 export const setAdminDatapackConfigTempRowData = action(
   (tempRowData: State["admin"]["datapackConfig"]["tempRowData"]) => {
     state.admin.datapackConfig.tempRowData = tempRowData;
   }
 );
+export const setAdminHeaderTitles = action((headerTitles: string[]) => {
+  state.admin.datapackConfig.headerTitles = headerTitles;
+});
+export const setAdminTempHeaderTitles = action((headerTitles: string[] | null) => {
+  state.admin.datapackConfig.tempHeaderTitles = headerTitles;
+});
 export const setAdminRowPriorityUpdates = action((newVal: DatapackPriorityChangeRequest[]) => {
   state.admin.datapackConfig.rowPriorityUpdates = newVal;
 });
 export const resetAdminConfigTempState = action(() => {
   state.admin.datapackConfig.rowPriorityUpdates = [];
   state.admin.datapackConfig.tempRowData = null;
+  state.admin.datapackConfig.tempHeaderTitles = null;
 });
 
 /**
