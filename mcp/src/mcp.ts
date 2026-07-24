@@ -260,6 +260,12 @@ const updateChartArgsSchema = z.object({
     .describe(
       'Flat object keyed by actual column names/identifiers. Use { "on": true } to enable a column and { "on": false } to disable default-on columns. Width overrides use { "width": number }. Example: { "Period (Lunar)": { "on": true }, "Events": { "on": false } }'
     ),
+  columnOrder: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'Flat list of column names in the exact sibling order to apply within each parent group. Use this to reorder columns such as Eon, Era, Period. Any column not listed keeps its relative position after the listed columns.'
+    ),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),
   sessionId: z
@@ -367,6 +373,7 @@ export const createMCPServer = () => {
             datapackTitles: sess.entry.userChartState.datapackTitles,
             overrides: sess.entry.userChartState.overrides,
             columnToggles: sess.entry.userChartState.columnToggles,
+            columnOrder: sess.entry.userChartState.columnOrder,
             lastChartPath: sess.entry.userChartState.lastChartPath,
             lastModified: sess.entry.userChartState.lastModified,
             message: hasChart
@@ -440,6 +447,10 @@ export const createMCPServer = () => {
         columnToggles[columnId] = mergeColumnToggleSettings(columnToggles[columnId], settings); // Merge old settings with new incomming settings. Same as old logic BUT with additional logic when dealing with fonts.
       }
 
+      if (args.columnOrder !== undefined) {
+        st.columnOrder = args.columnOrder;
+      }
+
       // Generate chart with THIS SESSION'S state
       try {
         const res = await fetch(`${internalServerUrl}/mcp/render-chart-with-edits`, {
@@ -449,6 +460,7 @@ export const createMCPServer = () => {
             datapackTitles: st.datapackTitles,
             overrides: st.overrides,
             columnToggles,
+            columnOrder: st.columnOrder,
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false,
             uuid: entry.userInfo?.uuid,

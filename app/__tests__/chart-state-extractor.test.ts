@@ -61,6 +61,55 @@ describe("extractCurrentChartState", () => {
     expect(extracted.columnToggles[childName]?.on).toBeUndefined();
   });
 
+  it("captures the current column order as a preorder list", () => {
+    const firstColumn = "Era";
+    const secondColumn = "Period";
+    const nestedColumn = "Stage";
+
+    const state = {
+      config: { datapacks: [] },
+      datapacks: [],
+      settings: { timeSettings: {} },
+      settingsTabs: {
+        hideDatapackDefaults: false,
+        renderColumns: {
+          name: defaultColumnRoot.name,
+          children: [secondColumn, firstColumn]
+        },
+        columnHashMap: new Map([
+          [
+            firstColumn,
+            {
+              name: firstColumn,
+              children: [nestedColumn],
+              on: true
+            }
+          ],
+          [
+            secondColumn,
+            {
+              name: secondColumn,
+              children: [],
+              on: true
+            }
+          ],
+          [
+            nestedColumn,
+            {
+              name: nestedColumn,
+              children: [],
+              on: true
+            }
+          ]
+        ])
+      }
+    };
+
+    const extracted = extractCurrentChartState(state as never);
+
+    expect(extracted.columnOrder).toEqual([secondColumn, firstColumn, nestedColumn]);
+  });
+
   it("omits default-on leaves that match datapack defaults", () => {
     const defaultOnColumn = "Events";
     const defaultOffColumn = "Ranges";

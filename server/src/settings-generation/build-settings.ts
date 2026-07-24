@@ -65,6 +65,36 @@ export type ColumnToggles = Record<
   }
 >;
 
+function buildColumnOrderIndex(columnOrder: string[]): Map<string, number> {
+  const orderIndex = new Map<string, number>();
+  columnOrder.forEach((columnName, index) => {
+    if (!orderIndex.has(columnName)) {
+      orderIndex.set(columnName, index);
+    }
+  });
+  return orderIndex;
+}
+
+function sortColumnChildrenByOrder(column: ColumnInfo, orderIndex: Map<string, number>): void {
+  if (!column.children || column.children.length === 0) return;
+
+  column.children.sort((left, right) => {
+    const leftIndex = orderIndex.get(left.name) ?? Number.MAX_SAFE_INTEGER;
+    const rightIndex = orderIndex.get(right.name) ?? Number.MAX_SAFE_INTEGER;
+    return leftIndex - rightIndex;
+  });
+
+  for (const child of column.children) {
+    sortColumnChildrenByOrder(child, orderIndex);
+  }
+}
+
+export function applyColumnOrderToColumnInfo(columnRoot: ColumnInfo, columnOrder: string[]): void {
+  if (columnOrder.length === 0) return;
+  const orderIndex = buildColumnOrderIndex(columnOrder);
+  sortColumnChildrenByOrder(columnRoot, orderIndex);
+}
+
 export type FlattenedColumn = {
   id: string;
   name: string;
@@ -547,6 +577,7 @@ function validateChartSettings(chartSettings: ChartSettingsInfoTSC, primaryUnit:
 
 export type ChartEditOptions = {
   hideDatapackDefaults?: boolean;
+  columnOrder?: string[];
 };
 
 function shouldPreserveColumnOn(col: ColumnInfo): boolean {
@@ -604,6 +635,10 @@ export async function generateChartWithEdits(
 
   if (Object.keys(normalizedToggles).length > 0) {
     applyTogglesToColumnInfo(columnRoot, normalizedToggles);
+  }
+
+  if (options?.columnOrder && options.columnOrder.length > 0) {
+    applyColumnOrderToColumnInfo(columnRoot, options.columnOrder);
   }
 
   if (Object.keys(normalizedOverrides).length > 0) {
