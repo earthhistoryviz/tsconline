@@ -885,56 +885,58 @@ export const setLoadingDatapackPriority = action((loading: boolean) => {
   state.admin.datapackPriorityLoading = loading;
 });
 
-export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[], options?: { silent?: boolean }) => {
-  try {
-    setLoadingDatapackPriority(true);
-    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY);
-    if (!recaptchaToken) return;
-    const response = await fetcher("/admin/official/datapack/priority", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "recaptcha-token": recaptchaToken
-      },
-      body: JSON.stringify({ tasks }),
-      credentials: "include"
-    });
-    const json = await response.json();
+export const adminUpdateDatapackPriority = action(
+  async (tasks: DatapackPriorityChangeRequest[], options?: { silent?: boolean }) => {
     try {
-      if (response.ok) {
-        assertDatapackPriorityUpdateSuccess(json);
-        json.completedRequests.forEach((datapack) => {
-          const index = state.datapackMetadata.findIndex((d) => d.title === datapack.id);
-          if (index !== -1) {
-            runInAction(() => {
-              state.datapackMetadata[index].priority = datapack.priority;
-            });
+      setLoadingDatapackPriority(true);
+      const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY);
+      if (!recaptchaToken) return;
+      const response = await fetcher("/admin/official/datapack/priority", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body: JSON.stringify({ tasks }),
+        credentials: "include"
+      });
+      const json = await response.json();
+      try {
+        if (response.ok) {
+          assertDatapackPriorityUpdateSuccess(json);
+          json.completedRequests.forEach((datapack) => {
+            const index = state.datapackMetadata.findIndex((d) => d.title === datapack.id);
+            if (index !== -1) {
+              runInAction(() => {
+                state.datapackMetadata[index].priority = datapack.priority;
+              });
+            }
+          });
+          if (!options?.silent) {
+            pushSnackbar("Datapack priorities updated successfully", "success");
           }
-        });
-        if (!options?.silent) {
-          pushSnackbar("Datapack priorities updated successfully", "success");
+        } else {
+          assertDatapackPriorityPartialUpdateSuccess(json);
+          if (!options?.silent) {
+            pushSnackbar("Some datapack priorities were not updated", "warning");
+          }
         }
-      } else {
-        assertDatapackPriorityPartialUpdateSuccess(json);
-        if (!options?.silent) {
-          pushSnackbar("Some datapack priorities were not updated", "warning");
-        }
+      } catch (e) {
+        console.error(e);
+        displayServerError(
+          await response.json(),
+          ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED,
+          ErrorMessages[ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED]
+        );
       }
     } catch (e) {
       console.error(e);
-      displayServerError(
-        await response.json(),
-        ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED,
-        ErrorMessages[ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED]
-      );
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    } finally {
+      setLoadingDatapackPriority(false);
     }
-  } catch (e) {
-    console.error(e);
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-  } finally {
-    setLoadingDatapackPriority(false);
   }
-});
+);
 
 export const adminUpdateOfficialDatapackHeaders = action(
   async (
@@ -964,7 +966,9 @@ export const adminUpdateOfficialDatapackHeaders = action(
       }
       runInAction(() => {
         for (const task of tasks) {
-          const index = state.datapackMetadata.findIndex((datapack) => datapack.title === task.id && datapack.type === "official");
+          const index = state.datapackMetadata.findIndex(
+            (datapack) => datapack.title === task.id && datapack.type === "official"
+          );
           if (index !== -1) {
             state.datapackMetadata[index].officialHeader = task.officialHeader;
             state.datapackMetadata[index].officialHeaderOrder = task.officialHeaderOrder;
@@ -1000,11 +1004,7 @@ export const adminFetchOfficialHeaderConfig = action(async () => {
       return;
     }
     const json = await response.json();
-    if (
-      !json ||
-      !Array.isArray(json.headers) ||
-      !json.headers.every((header: unknown) => typeof header === "string")
-    ) {
+    if (!json || !Array.isArray(json.headers) || !json.headers.every((header: unknown) => typeof header === "string")) {
       pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
       return;
     }
@@ -1059,7 +1059,8 @@ export const adminSaveOfficialDatapackConfig = action(async () => {
         .filter((datapack) => datapack.type === "official" && datapack.isPublic)
         .map((datapack) => [datapack.title, datapack])
     );
-    const headerTasks: (DatapackPriorityChangeRequest & { officialHeader?: string; officialHeaderOrder?: number })[] = [];
+    const headerTasks: (DatapackPriorityChangeRequest & { officialHeader?: string; officialHeaderOrder?: number })[] =
+      [];
     for (const datapack of nextDatapacks) {
       const original = originalMap.get(datapack.title);
       if (!original) continue;

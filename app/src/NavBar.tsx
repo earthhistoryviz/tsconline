@@ -19,7 +19,7 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { context } from "./state";
-import { TSCMenuItem, TSCButton, TSCSplitButton } from "./components";
+import { TSCMenuItem, TSCSplitButton } from "./components";
 import {
   Menu as MenuIcon,
   TableChart,

@@ -1,4 +1,15 @@
-import { Autocomplete, Box, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, TextField, Typography, useTheme } from "@mui/material";
+import {
+  Autocomplete,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  TextField,
+  Typography,
+  useTheme
+} from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
 import { useContext, useRef, useState } from "react";
@@ -17,7 +28,11 @@ import {
   MAX_DATAPACK_TITLE_LENGTH,
   assertDatapackMetadata
 } from "@tsconline/shared";
-import { compareExistingDatapacks, formatDateForDatapack, getPublicOfficialDatapacksMetadata, groupOfficialDatapacks } from "../state/non-action-util";
+import {
+  formatDateForDatapack,
+  getPublicOfficialDatapacksMetadata,
+  groupOfficialDatapacks
+} from "../state/non-action-util";
 import { pushError } from "../state/actions";
 import { ErrorCodes } from "../util/error-codes";
 import { useTranslation } from "react-i18next";
@@ -81,7 +96,11 @@ function getGroupTitle(group: ReturnType<typeof groupOfficialDatapacks>[number],
   return group.subgroup ? t(`settings.datapacks.official-subgroup.${group.subgroup}`) : group.label;
 }
 
-function buildGridRows(datapacks: DatapackMetadata[], t: (key: string) => string, persistedHeaderTitles: string[] = []): AdminGridRow[] {
+function buildGridRows(
+  datapacks: DatapackMetadata[],
+  t: (key: string) => string,
+  persistedHeaderTitles: string[] = []
+): AdminGridRow[] {
   const rows: AdminGridRow[] = [];
   const groups = groupOfficialDatapacks(datapacks);
   const groupedByTitle = new Map(groups.map((group) => [getGroupTitle(group, t), group] as const));
@@ -218,8 +237,20 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       flex: 0.9,
       valueFormatter: ({ data }) => (isDatapackRow(data) ? data.officialHeader || "Unassigned" : "")
     },
-    { headerName: "File Name", field: "originalFileName", flex: 1, sortable: true, filter: true, valueFormatter: ({ data }) => (isDatapackRow(data) ? data.originalFileName : "") },
-    { headerName: "Description", field: "description", flex: 1, valueFormatter: ({ data }) => (isDatapackRow(data) ? data.description : "") }
+    {
+      headerName: "File Name",
+      field: "originalFileName",
+      flex: 1,
+      sortable: true,
+      filter: true,
+      valueFormatter: ({ data }) => (isDatapackRow(data) ? data.originalFileName : "")
+    },
+    {
+      headerName: "Description",
+      field: "description",
+      flex: 1,
+      valueFormatter: ({ data }) => (isDatapackRow(data) ? data.description : "")
+    }
   ];
 
   const deleteDatapacks = async () => {
@@ -243,7 +274,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const openEditDialog = () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes() || [];
     const selectedDatapacks = selectedNodes.map((node) => node.data).filter(isDatapackRowOrUndefined);
-    
+
     if (selectedDatapacks.length !== 1) return;
     const datapack = selectedDatapacks[0];
     setEditableDatapack({
@@ -311,7 +342,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
           });
           fallbackHeaderFound = true;
         }
-        const fallbackIndex = nextRows.findIndex((candidate) => isHeaderRow(candidate) && candidate.title === fallbackHeaderTitle);
+        const fallbackIndex = nextRows.findIndex(
+          (candidate) => isHeaderRow(candidate) && candidate.title === fallbackHeaderTitle
+        );
         nextRows.splice(fallbackIndex + 1, 0, row);
       } else {
         nextRows.push(row);
@@ -366,20 +399,17 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
     const selectedDatapacks = selectedNodes.map((node) => node.data).filter(isDatapackRowOrUndefined);
     if (selectedDatapacks.length !== 1 || !editableDatapack) return;
     const originalDatapack = selectedDatapacks[0];
-    const updatedDatapack = await actions.adminEditOfficialDatapack(
-      originalDatapack,
-      {
-        title: editableDatapack.title,
-        isPublic: editableDatapack.isPublic,
-        authoredBy: editableDatapack.authoredBy,
-        description: editableDatapack.description,
-        priority: editableDatapack.priority,
-        tags: editableDatapack.tags,
-        ...(editableDatapack.contact.trim() ? { contact: editableDatapack.contact.trim() } : { contact: "" }),
-        ...(editableDatapack.notes.trim() ? { notes: editableDatapack.notes.trim() } : { notes: "" }),
-        ...(editableDatapack.date ? { date: formatDateForDatapack(editableDatapack.date) } : { date: "" })
-      }
-    );
+    const updatedDatapack = await actions.adminEditOfficialDatapack(originalDatapack, {
+      title: editableDatapack.title,
+      isPublic: editableDatapack.isPublic,
+      authoredBy: editableDatapack.authoredBy,
+      description: editableDatapack.description,
+      priority: editableDatapack.priority,
+      tags: editableDatapack.tags,
+      ...(editableDatapack.contact.trim() ? { contact: editableDatapack.contact.trim() } : { contact: "" }),
+      ...(editableDatapack.notes.trim() ? { notes: editableDatapack.notes.trim() } : { notes: "" }),
+      ...(editableDatapack.date ? { date: formatDateForDatapack(editableDatapack.date) } : { date: "" })
+    });
     if (!updatedDatapack) return;
     setEditOpen(false);
     setEditableDatapack(null);
@@ -419,7 +449,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
           Confirm Order Changes
         </TSCButton>
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
-          <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.adminUploadOfficialDatapack} type={{ type: "official" }} />
+          <DatapackUploadForm
+            close={() => setFormOpen(false)}
+            upload={actions.adminUploadOfficialDatapack}
+            type={{ type: "official" }}
+          />
         </Dialog>
         <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
           <DialogTitle>Edit Official Datapack</DialogTitle>
@@ -429,7 +463,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
                 label="Datapack Name"
                 value={editableDatapack?.title ?? ""}
                 inputProps={{ maxLength: MAX_DATAPACK_TITLE_LENGTH }}
-                onChange={(event) => setEditableDatapack((current) => (current ? { ...current, title: event.target.value } : current))}
+                onChange={(event) =>
+                  setEditableDatapack((current) => (current ? { ...current, title: event.target.value } : current))
+                }
                 fullWidth
               />
               <TextField
@@ -448,14 +484,18 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
                 minRows={4}
                 inputProps={{ maxLength: MAX_DATAPACK_DESC_LENGTH }}
                 onChange={(event) =>
-                  setEditableDatapack((current) => (current ? { ...current, description: event.target.value } : current))
+                  setEditableDatapack((current) =>
+                    current ? { ...current, description: event.target.value } : current
+                  )
                 }
                 fullWidth
               />
               <DatePicker
                 value={editableDatapack?.date ?? null}
                 maxDate={dayjs()}
-                onChange={(value) => setEditableDatapack((current) => (current ? { ...current, date: value } : current))}
+                onChange={(value) =>
+                  setEditableDatapack((current) => (current ? { ...current, date: value } : current))
+                }
                 slotProps={{
                   textField: {
                     fullWidth: true
@@ -484,7 +524,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
                   <TSCSwitch
                     checked={editableDatapack?.isPublic ?? false}
                     onChange={(event) =>
-                      setEditableDatapack((current) => (current ? { ...current, isPublic: event.target.checked } : current))
+                      setEditableDatapack((current) =>
+                        current ? { ...current, isPublic: event.target.checked } : current
+                      )
                     }
                   />
                 }
@@ -531,7 +573,8 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         </Dialog>
       </Box>
       <Typography variant="body2" sx={{ mx: 2, mb: 1, opacity: 0.75 }}>
-        Headers are draggable rows in this list. They are not editable datapacks, but moving a datapack under a header assigns it to that header.
+        Headers are draggable rows in this list. They are not editable datapacks, but moving a datapack under a header
+        assigns it to that header.
       </Typography>
       <AgGridReact
         ref={gridRef}
@@ -557,13 +600,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
           onRowDragEnd,
           getRowId: (params) => (isHeaderRow(params.data) ? params.data.id : params.data.title)
         }}
-        onSelectionChanged={() =>
-          {
-            const selectedRows = (gridRef.current?.api.getSelectedNodes() || []).map((node) => node.data);
-            setSelectedCount(selectedRows.filter(isDatapackRowOrUndefined).length);
-            setSelectedHeaderCount(selectedRows.filter(isHeaderRowOrUndefined).length);
-          }
-        }
+        onSelectionChanged={() => {
+          const selectedRows = (gridRef.current?.api.getSelectedNodes() || []).map((node) => node.data);
+          setSelectedCount(selectedRows.filter(isDatapackRowOrUndefined).length);
+          setSelectedHeaderCount(selectedRows.filter(isHeaderRowOrUndefined).length);
+        }}
         rowMultiSelectWithClick
         rowData={currentRows}
       />

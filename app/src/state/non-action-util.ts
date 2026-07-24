@@ -189,7 +189,11 @@ export function groupOfficialDatapacks(datapacks: DatapackMetadata[]): OfficialD
       if (existing) {
         existing.datapacks.push(datapack);
       } else {
-        groups.set(label, { label, subgroup: getOfficialDatapackSubgroupFromHeaderLabel(label), datapacks: [datapack] });
+        groups.set(label, {
+          label,
+          subgroup: getOfficialDatapackSubgroupFromHeaderLabel(label),
+          datapacks: [datapack]
+        });
       }
     }
     const customGroups = Array.from(groups.values())
