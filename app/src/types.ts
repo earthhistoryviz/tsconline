@@ -1,4 +1,4 @@
-import { AccessTime, Dataset, FontDownload, LocationOn, Search, Settings, ViewColumn } from "@mui/icons-material";
+import { AccessTime, FontDownload, LocationOn, Search, Settings, ViewColumn } from "@mui/icons-material";
 import {
   ColumnInfo,
   DataMiningPointDataType,
@@ -226,10 +226,6 @@ export const SettingsMenuOptionLabels = {
   mappoints: {
     label: "Map Points",
     icon: LocationOn
-  },
-  datapacks: {
-    label: "Datapacks",
-    icon: Dataset
   }
 };
 

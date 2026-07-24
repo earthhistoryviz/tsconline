@@ -19,7 +19,7 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { context } from "./state";
-import { TSCMenuItem, TSCButton } from "./components";
+import { TSCMenuItem, TSCSplitButton } from "./components";
 import {
   Menu as MenuIcon,
   TableChart,
@@ -28,7 +28,8 @@ import {
   Campaign,
   School,
   AccountCircle,
-  AutoAwesome
+  AutoAwesome,
+  CompareArrows
 } from "@mui/icons-material";
 import { ControlledMenu, Menu, MenuDivider, MenuHeader, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
@@ -42,6 +43,7 @@ import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 import React from "react";
 import languageList from "@tsconline/shared/translations/available-languages.json";
+import { isTempDatapack } from "@tsconline/shared";
 import Switch from "@mui/material/Switch";
 import { CustomFormControlLabel } from "./components/TSCComponents";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -85,6 +87,30 @@ export const NavBar = observer(function Navbar() {
     navigate(path);
     setMenuDrawerOpen(false);
   };
+
+  const generateChart = async () => {
+    if (location.pathname !== "/crossplot") {
+      await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
+      actions.initiateChartGeneration(navigate, location.pathname);
+    } else {
+      await actions.generateConvertedCrossPlotChart(navigate);
+    }
+  };
+
+  const openCrossplot = async () => {
+    navigate("/crossplot");
+    actions.setTab(0);
+    for (const datapack of state.unsavedDatapackConfig) {
+      if (isTempDatapack(datapack)) {
+        return;
+      }
+    }
+    await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), {
+      setter: actions.setCrossPlotDatapackConfig,
+      currentConfig: state.crossPlot.datapacks
+    });
+  };
+
   return (
     <StyledAppBar position="sticky" className="nav-bar">
       <Toolbar>
@@ -209,20 +235,27 @@ export const NavBar = observer(function Navbar() {
           </>
         )}
         <div style={{ flexGrow: 1 }} />
-        <TSCButton
+        <TSCSplitButton
           buttonType="gradient"
           disabled={state.loadingDatapacks}
-          startIcon={<AutoAwesome />}
-          onClick={async () => {
-            if (location.pathname !== "/crossplot") {
-              await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
-              actions.initiateChartGeneration(navigate, location.pathname);
-            } else {
-              await actions.generateConvertedCrossPlotChart(navigate);
+          main={{
+            label: t("button.generate-chart"),
+            onClick: () => {
+              void generateChart();
+            },
+            showText: true,
+            icon: <AutoAwesome />
+          }}
+          options={[
+            {
+              label: "Generate Crossplot",
+              onClick: () => {
+                void openCrossplot();
+              },
+              icon: <CompareArrows />
             }
-          }}>
-          {t("button.generate-chart")}
-        </TSCButton>
+          ]}
+        />
 
         {state.isLoggedIn ? (
           <AccountMenu />
