@@ -8,6 +8,68 @@ import {
   snapshotColumnOnStates
 } from "./default-column-map";
 
+function buildColumnOrderIndex(columnOrder: string[]): Map<string, number> {
+  const orderIndex = new Map<string, number>();
+  columnOrder.forEach((columnName, index) => {
+    if (!orderIndex.has(columnName)) {
+      orderIndex.set(columnName, index);
+    }
+  });
+  return orderIndex;
+}
+
+function sortColumnNamesByOrder(columnNames: string[], orderIndex: Map<string, number>): string[] {
+  return [...columnNames].sort((left, right) => {
+    const leftIndex = orderIndex.get(left) ?? Number.MAX_SAFE_INTEGER;
+    const rightIndex = orderIndex.get(right) ?? Number.MAX_SAFE_INTEGER;
+    return leftIndex - rightIndex;
+  });
+}
+
+function reorderRenderColumnTree(
+  column: RenderColumnInfo,
+  columnHashMap: Map<string, RenderColumnInfo>,
+  orderIndex: Map<string, number>
+): void {
+  const orderedChildren = sortColumnNamesByOrder(column.children, orderIndex);
+  const orderedRefs = orderedChildren
+    .map((childName) => column.columnRef.children[column.children.indexOf(childName)])
+    .filter((child): child is RenderColumnInfo["columnRef"] => child !== undefined);
+
+  column.children = orderedChildren;
+  column.columnRef.children = orderedRefs;
+
+  for (const childName of orderedChildren) {
+    const child = columnHashMap.get(childName);
+    if (child) {
+      reorderRenderColumnTree(child, columnHashMap, orderIndex);
+    }
+  }
+}
+
+function applyColumnOrderToState(state: State, columnOrder: string[]): void {
+  if (!state.settingsTabs.renderColumns || columnOrder.length === 0) {
+    return;
+  }
+
+  const orderIndex = buildColumnOrderIndex(columnOrder);
+  const orderedRootChildren = sortColumnNamesByOrder(state.settingsTabs.renderColumns.children, orderIndex);
+  state.settingsTabs.renderColumns.children = orderedRootChildren;
+  const rootColumnRef = state.settingsTabs.renderColumns.columnRef;
+  if (rootColumnRef) {
+    rootColumnRef.children = orderedRootChildren
+      .map((childName) => state.settingsTabs.columnHashMap.get(childName)?.columnRef)
+      .filter((child): child is RenderColumnInfo["columnRef"] => child !== undefined);
+  }
+
+  for (const childName of orderedRootChildren) {
+    const child = state.settingsTabs.columnHashMap.get(childName);
+    if (child) {
+      reorderRenderColumnTree(child, state.settingsTabs.columnHashMap, orderIndex);
+    }
+  }
+}
+
 function findRenderColumn(
   columnHashMap: Map<string, RenderColumnInfo>,
   columnId: string
@@ -122,4 +184,5 @@ export function applyMcpChartStateToApp(state: State, chartState: MCPChartState)
 
   const parentMap = buildParentMap(columnHashMap);
   applyMcpColumnToggles(columnHashMap, chartState.columnToggles, parentMap);
+  applyColumnOrderToState(state, chartState.columnOrder);
 }
