@@ -43,42 +43,31 @@ describe("applyMcpChartStateToApp", () => {
     const firstColumn = "Era";
     const secondColumn = "Period";
     const nestedColumn = "Stage";
+    const sourceRoot = {
+      name: "Chart Title",
+      children: [
+        { name: firstColumn, on: true, children: [{ name: nestedColumn, on: true, children: [] }] },
+        { name: secondColumn, on: true, children: [] }
+      ]
+    };
 
     const state = {
       settings: { timeSettings: {} },
       config: { datapacks: [{ title: "GTS2020" }] },
-      columns: {
-        name: "Chart Title",
-        children: [
-          { name: firstColumn, on: true, children: [{ name: nestedColumn, on: true, children: [] }] },
-          { name: secondColumn, on: true, children: [] }
-        ]
-      },
       datapacks: [
         {
           title: "GTS2020",
-          columnInfo: {
-            name: "Chart Title",
-            children: [
-              { name: firstColumn, on: true, children: [{ name: nestedColumn, on: true, children: [] }] },
-              { name: secondColumn, on: true, children: [] }
-            ]
-          }
+          columnInfo: sourceRoot
         }
       ],
       settingsTabs: {
         hideDatapackDefaults: false,
         columnOnSnapshot: null,
+        columns: sourceRoot,
         renderColumns: {
           name: defaultColumnRoot.name,
           children: [firstColumn, secondColumn],
-          columnRef: {
-            name: "Chart Title",
-            children: [
-              { name: firstColumn, on: true, children: [{ name: nestedColumn, on: true, children: [] }] },
-              { name: secondColumn, on: true, children: [] }
-            ]
-          }
+          columnRef: sourceRoot
         },
         columnHashMap: new Map([
           [
@@ -120,7 +109,10 @@ describe("applyMcpChartStateToApp", () => {
     });
 
     expect(state.settingsTabs.renderColumns.children).toEqual([secondColumn, firstColumn]);
-    expect(state.columns.children.map((child: { name: string }) => child.name)).toEqual([secondColumn, firstColumn]);
+    expect(state.settingsTabs.columns.children.map((child: { name: string }) => child.name)).toEqual([
+      secondColumn,
+      firstColumn
+    ]);
     expect(state.settingsTabs.columnHashMap.get(firstColumn)?.children).toEqual([nestedColumn]);
   });
 

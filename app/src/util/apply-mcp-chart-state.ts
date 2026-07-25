@@ -26,14 +26,23 @@ function sortColumnNamesByOrder(columnNames: string[], orderIndex: Map<string, n
   });
 }
 
+function buildChildRefMap(children: RenderColumnInfo["columnRef"][]): Map<string, RenderColumnInfo["columnRef"]> {
+  const childRefMap = new Map<string, RenderColumnInfo["columnRef"]>();
+  for (const child of children) {
+    childRefMap.set(child.name, child);
+  }
+  return childRefMap;
+}
+
 function reorderRenderColumnTree(
   column: RenderColumnInfo,
   columnHashMap: Map<string, RenderColumnInfo>,
   orderIndex: Map<string, number>
 ): void {
+  const childRefMap = buildChildRefMap(column.columnRef.children);
   const orderedChildren = sortColumnNamesByOrder(column.children, orderIndex);
   const orderedRefs = orderedChildren
-    .map((childName) => column.columnRef.children[column.children.indexOf(childName)])
+    .map((childName) => childRefMap.get(childName))
     .filter((child): child is RenderColumnInfo["columnRef"] => child !== undefined);
 
   column.children = orderedChildren;
@@ -47,8 +56,8 @@ function reorderRenderColumnTree(
   }
 }
 
-function applyColumnOrderToState(state: State, columnOrder: string[]): void {
-  if (!state.settingsTabs.renderColumns || columnOrder.length === 0) {
+function applyColumnOrderToState(state: State, columnOrder?: string[]): void {
+  if (!state.settingsTabs.renderColumns || !columnOrder || columnOrder.length === 0) {
     return;
   }
 
@@ -57,8 +66,9 @@ function applyColumnOrderToState(state: State, columnOrder: string[]): void {
   state.settingsTabs.renderColumns.children = orderedRootChildren;
   const rootColumnRef = state.settingsTabs.renderColumns.columnRef;
   if (rootColumnRef) {
+    const rootChildRefMap = buildChildRefMap(rootColumnRef.children);
     rootColumnRef.children = orderedRootChildren
-      .map((childName) => state.settingsTabs.columnHashMap.get(childName)?.columnRef)
+      .map((childName) => rootChildRefMap.get(childName) ?? state.settingsTabs.columnHashMap.get(childName)?.columnRef)
       .filter((child): child is RenderColumnInfo["columnRef"] => child !== undefined);
   }
 
