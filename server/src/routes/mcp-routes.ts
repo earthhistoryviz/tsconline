@@ -299,8 +299,8 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
     const hideDatapackDefaults = overrides.hideDatapackDefaults === true;
 
     const settingsXml = await generateChartWithEdits(requestedDatapacks, overrides, columnToggles, {
-       hideDatapackDefaults,
-       columnOrder
+      hideDatapackDefaults,
+      columnOrder
     });
 
     sendMcpSocketMessage(sessionId, {

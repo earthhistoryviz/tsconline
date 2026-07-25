@@ -253,7 +253,11 @@ export function extractCurrentChartState(state: State): ExtractedChartState {
       );
     }
 
-    collectColumnOrder(state.settingsTabs.renderColumns.children, state.settingsTabs.columnHashMap, chartState.columnOrder);
+    collectColumnOrder(
+      state.settingsTabs.renderColumns.children,
+      state.settingsTabs.columnHashMap,
+      chartState.columnOrder
+    );
 
     chartState.columnToggles = columnToggleSettings;
   }

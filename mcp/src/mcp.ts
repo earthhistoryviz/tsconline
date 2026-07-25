@@ -264,7 +264,7 @@ const updateChartArgsSchema = z.object({
     .array(z.string())
     .optional()
     .describe(
-      'Flat list of column names in the exact sibling order to apply within each parent group. Use this to reorder columns such as Eon, Era, Period. Any column not listed keeps its relative position after the listed columns.'
+      "Flat list of column names in the exact sibling order to apply within each parent group. Use this to reorder columns such as Eon, Era, Period. Any column not listed keeps its relative position after the listed columns."
     ),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),
