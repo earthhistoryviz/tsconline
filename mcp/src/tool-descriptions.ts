@@ -18,7 +18,12 @@ LIVE CHART SYNC (getUserStatus):
 COLUMN DISCOVERY (listColumns):
 - Column names are ambiguous without inspection. If you will generate a chart using specific columns (columnToggles), you should have called listColumns on that datapack at some point in the workflow — not guessed names.
 - listColumns is NOT required on every message the way getUserStatus is; it is a one-time discovery step per datapack/topic when you need to map a subject to real column names.
-- Typical flow for a topic-focused chart: listDatapacks (if needed) → listColumns → getUserStatus → updateChartState with chosen column names in columnToggles.`;
+- Typical flow for a topic-focused chart: listDatapacks (if needed) → listColumns → getUserStatus → updateChartState with chosen column names in columnToggles.
+
+TOPIC EXPLORATION ACROSS ALL DATAPACKS (grepColumns):
+- When the user wants to learn about / explore a subject (e.g. "teach me about planets", "show me vertebrates", "what do you have on mammals"), prefer grepColumns over listColumns.
+- grepColumns is discovery only (like listColumns): it searches EVERY accessible datapack and returns matches + suggested datapackTitles + grepPhrase.
+- Typical flow: grepColumns → getUserStatus → updateChartState with datapackTitles and grepPhrase from the grep result (do not invent columnToggles for the grep — grepPhrase handles enabling matches while keeping the current chart's columns).`;
 
 export const TOOL_DESCRIPTIONS = {
   getUserStatus: {
@@ -101,7 +106,7 @@ Works with or without authentication.
   - Changes sync to the user's open TSCOnline session in real time before the chart finishes rendering
 
   Input:
-  - { datapackTitles: string[]; overrides?: { fonts?: Record<FontTarget, FontSettings>; [key: string]: unknown }; columnToggles?: Record<string, { on?: boolean; width?: number; enableTitle?: boolean; showAgeLabels?: boolean; fonts?: Record<FontTarget, FontSettings>; }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
+  - { datapackTitles: string[]; overrides?: { fonts?: Record<FontTarget, FontSettings>; [key: string]: unknown }; columnToggles?: Record<string, { on?: boolean; width?: number; enableTitle?: boolean; showAgeLabels?: boolean; fonts?: Record<FontTarget, FontSettings>; }>; grepPhrase?: string; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
   Output data:
   - { directUrl, embeddedChartUrl, currentState }
 
@@ -121,6 +126,7 @@ Works with or without authentication.
   - If the user says "text inside the chart" or is ambiguous, prefer the column's own likely label target, such as "Zone Column Label" for zone columns, instead of overrides.fonts.
   - If you used listColumns to identify relevant columns, do not stop there; carry those chosen column names into columnToggles when calling updateChartState.
   - A request like "teach me about planetary systems using this datapack" should usually produce a focused updateChartState call with planet-related columns toggled on, not a bare datapack-only request.
+  - If the user wants to explore a topic across ALL datapacks, call grepColumns first, then updateChartState with the returned datapackTitles and grepPhrase (omit hand-built columnToggles for that step).
   - columnToggles must be a flat object whose keys are actual column names/identifiers, not the nested object structure returned by listColumns.
   - columnToggles entries may include enableTitle to control whether a column's title is shown.
   - columnToggles entries may include showAgeLabels to control whether a column's age label is shown.
@@ -180,6 +186,41 @@ Response format:
 
 Input:
 - { datapackTitles: string[]; sessionId?: string }
+
+${SESSION_GUIDANCE}`
+  },
+
+  grepColumns: {
+    title: "Grep Columns Across All Datapacks",
+    description: `Search EVERY accessible datapack for columns matching a word or phrase (discovery only — like listColumns).
+
+Works with or without authentication.
+- Unauthenticated sessions search public + official datapacks.
+- Authenticated sessions ALSO search the user's personal datapacks.
+- No login is required; do not ask the user to log in just to grep public datapacks.
+
+Use this instead of listColumns when the user wants to learn about or explore a topic without having already committed to a single datapack:
+- "teach me about planets", "show me vertebrates", "what do you have on mammals", "add anything about dinosaurs".
+- listColumns only inspects datapacks you name; grepColumns searches all of them at once.
+
+Required follow-up (same pattern as listColumns → updateChartState):
+1. grepColumns(phrase)
+2. getUserStatus
+3. updateChartState({ datapackTitles, grepPhrase }) using the values returned by grepColumns
+   - Do NOT hand-build columnToggles for the grep step; grepPhrase tells the server to keep the current chart's columns and append only the matched columns from newly added datapacks.
+
+Input:
+- { phrase: string; sessionId?: string }
+
+Output data:
+- { phrase, totalMatched, matchedDatapackCount, matchedByDatapack, datapackTitles, grepPhrase, nextStep }
+- matchedByDatapack summarizes which datapacks/columns matched.
+- If nothing matches, totalMatched is 0; suggest a broader phrase.
+
+Notes:
+- Discovery only — always call updateChartState afterward to render.
+- Briefly tell the user which datapacks matched; do not dump every column.
+- A very broad phrase may match a huge number of columns; that is expected behavior.
 
 ${SESSION_GUIDANCE}`
   },

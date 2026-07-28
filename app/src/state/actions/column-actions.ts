@@ -428,9 +428,7 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
 
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
   const columnName = extractName(settings._id);
-  let curcol: RenderColumnInfo | undefined =
-    state.settingsTabs.columnHashMap.get(columnName) ||
-    state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
+  let curcol: RenderColumnInfo | undefined = findRenderColumnForSettings(settings);
   if (curcol) {
     setColumnProperties(curcol, settings);
   }
@@ -454,6 +452,25 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     }
   }
 });
+
+function findRenderColumnForSettings(settings: ColumnInfoTSC): RenderColumnInfo | undefined {
+  // Normal name lookup as before 
+  const columnName = extractName(settings._id);
+  const direct =
+    state.settingsTabs.columnHashMap.get(columnName) ||
+    state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
+  if (direct) return direct;
+
+  // Fallback: match settings column to the UI hash map by originalTscId when names diverged after merge.
+  const targetId = settings._id.toLowerCase();
+  for (const column of state.settingsTabs.columnHashMap.values()) {
+    const ref = column.columnRef as ColumnInfo & { originalTscId?: string };
+    if (ref.originalTscId?.toLowerCase() === targetId) {
+      return column;
+    }
+  }
+  return undefined;
+}
 
 /**
  * aligns the row order of the columns to the order specified by the loaded settings file

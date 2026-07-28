@@ -261,6 +261,12 @@ const updateChartArgsSchema = z.object({
     .describe(
       'Flat object keyed by actual column names/identifiers. Use { "on": true } to enable a column and { "on": false } to disable default-on columns. Width overrides use { "width": number }. Example: { "Period (Lunar)": { "on": true }, "Events": { "on": false } }'
     ),
+  grepPhrase: z
+    .string()
+    .optional()
+    .describe(
+      "After grepColumns: pass the same phrase here (and datapackTitles from grepColumns). The server keeps the current chart's columns and appends only the matched columns from newly added datapacks."
+    ),
   useCache: z.boolean().optional(),
   isCrossPlot: z.boolean().optional(),
   sessionId: z
@@ -423,6 +429,9 @@ export const createMCPServer = () => {
 
       const st = entry.userChartState;
 
+      // Snapshot of datapack titles before update so grep can preserve pre-grep chart columns from these datapacks.
+      const preserveDatapackTitles = [...st.datapackTitles];
+
       // Merge args into session chart state
       st.datapackTitles = args.datapackTitles;
 
@@ -453,7 +462,9 @@ export const createMCPServer = () => {
             useCache: args.useCache ?? true,
             isCrossPlot: args.isCrossPlot ?? false,
             uuid: entry.userInfo?.uuid,
-            sessionId: sess.sessionId
+            sessionId: sess.sessionId,
+            // Extra field on updatechart calls that follow after grep calls:  pass phrase + pre-update titles so the server preserves the current chart
+            ...(args.grepPhrase ? { grepPhrase: args.grepPhrase, preserveDatapackTitles } : {})
           })
         });
 
@@ -569,6 +580,91 @@ export const createMCPServer = () => {
         return wrapResponse(json, sess.sessionId);
       } catch (e) {
         return wrapResponse({ error: `Error listing columns: ${String(e)}` }, sess.sessionId);
+      }
+    }
+  );
+
+  // Grep every accessible datapack for columns matching a phrase
+  server.registerTool(
+    "grepColumns",
+    {
+      title: TOOL_DESCRIPTIONS.grepColumns.title,
+      description: TOOL_DESCRIPTIONS.grepColumns.description,
+      inputSchema: {
+        phrase: z
+          .string()
+          .describe("Word or phrase to search for across every accessible datapack (e.g., 'Vertebrates')"),
+        sessionId: z.string().optional().describe("Session ID from login tool for authenticated access")
+      }
+    },
+    async ({ phrase, sessionId }) => {
+      const es = verifyMCPSession(sessionId);
+      const sess = requireSession(es);
+      const entry = sess.entry;
+
+      try {
+        // Get current live chart state and store it on this session before grepping.
+        const token = process.env.MCP_AUTH_TOKEN;
+        if (token) {
+          try {
+            await fetch(`${internalServerUrl}/mcp/request-chart-state`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ sessionId: sess.sessionId })
+            });
+          } catch {
+            // Fall back to last known state if the client is offline/unreachable.
+          }
+        }
+
+        // Calls grepColumns server endpoint to grep every accessible datapack for columns matching a phrase.
+        const grepRes = await fetch(`${internalServerUrl}/mcp/grep-columns`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phrase,
+            uuid: entry.userInfo?.uuid,
+            currentChartState: entry.userChartState
+          })
+        });
+
+        const grepJson = await grepRes.json();
+
+        // If the grep call fails, return an error message.
+        if (!grepRes.ok) {
+          return wrapResponse({ error: `Server error ${grepRes.status}: ${JSON.stringify(grepJson)}` }, sess.sessionId);
+        }
+
+        // If no columns matched, return an error message.
+        if (!grepJson.totalMatched) {
+          return wrapResponse(
+            {
+              message: `No columns matched "${phrase}" in any accessible datapack. Try a broader or different phrase.`,
+              phrase,
+              totalMatched: 0,
+              matchedByDatapack: []
+            },
+            sess.sessionId
+          );
+        }
+
+        return wrapResponse(
+          {
+            phrase: grepJson.phrase, // The phrase that was searched
+            totalMatched: grepJson.totalMatched, // Total matching columns across all datapacks
+            matchedDatapackCount: grepJson.matchedDatapackCount, // How many datapacks had at least one match
+            matchedByDatapack: grepJson.matchedByDatapack, // Per datapack match summary
+            // Following two are passed to agent for updateCharte using datapackTitles and grepPhrase and grephrase
+            grepPhrase: grepJson.grepPhrase, 
+            datapackTitles: grepJson.datapackTitles,
+            // Instructions for the agent on how to render the grep result
+            nextStep:
+              "Call getUserStatus, then updateChartState with datapackTitles and grepPhrase from this result. Do not invent columnToggles for the grep — grepPhrase handles match enabling."
+          },
+          sess.sessionId
+        );
+      } catch (e) {
+        return wrapResponse({ error: `Error during grep: ${String(e)}` }, sess.sessionId);
       }
     }
   );
