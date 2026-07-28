@@ -397,11 +397,11 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       sendMcpSocketMessage(sessionId, {
         type: "apply-chart-state",
         requestId,
-        chartState: { 
+        chartState: {
           datapackTitles,
           overrides,
           columnToggles
-         }
+        }
       });
     }
 

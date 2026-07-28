@@ -663,7 +663,7 @@ export function listColumns(datapacks: Datapack[]): FlattenedColumn[] {
 
 // Result shape for grepColumnsAcrossDatapacks
 export type GrepColumnMatch = {
-  name: string; 
+  name: string;
   editName: string;
   path: string;
   type: string;
@@ -675,7 +675,7 @@ export type GrepDatapackResult = {
   title: string;
   isPublic: boolean;
   matches: GrepColumnMatch[];
-  enabledColumnCount: number; // Total columns turned on across all matches 
+  enabledColumnCount: number; // Total columns turned on across all matches
 };
 
 export type GrepColumnRootParams = {
@@ -782,7 +782,6 @@ export function buildGrepColumnRoot(params: GrepColumnRootParams): ColumnInfo {
 
   const prepared: Datapack[] = [];
   for (const dp of unionDatapacks) {
-    
     // Clone DP
     const clone: Datapack = { ...dp, columnInfo: _.cloneDeep(dp.columnInfo) };
     const isCurrent = currentTitles.includes(dp.title);

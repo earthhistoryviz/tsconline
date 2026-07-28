@@ -454,7 +454,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
 });
 
 function findRenderColumnForSettings(settings: ColumnInfoTSC): RenderColumnInfo | undefined {
-  // Normal name lookup as before 
+  // Normal name lookup as before
   const columnName = extractName(settings._id);
   const direct =
     state.settingsTabs.columnHashMap.get(columnName) ||

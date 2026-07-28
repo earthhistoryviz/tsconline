@@ -655,7 +655,7 @@ export const createMCPServer = () => {
             matchedDatapackCount: grepJson.matchedDatapackCount, // How many datapacks had at least one match
             matchedByDatapack: grepJson.matchedByDatapack, // Per datapack match summary
             // Following two are passed to agent for updateCharte using datapackTitles and grepPhrase and grephrase
-            grepPhrase: grepJson.grepPhrase, 
+            grepPhrase: grepJson.grepPhrase,
             datapackTitles: grepJson.datapackTitles,
             // Instructions for the agent on how to render the grep result
             nextStep:
