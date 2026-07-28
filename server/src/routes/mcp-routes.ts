@@ -284,20 +284,10 @@ export async function mcpGrepColumns(_request: FastifyRequest, reply: FastifyRep
     const grepResults = grepColumnsAcrossDatapacks(searchableDatapacks, phrase);
     const totalMatched = grepResults.reduce((sum, r) => sum + r.matches.length, 0);
 
-    // Per-datapack match summary for the agent
+    // Compact per-datapack summary for the agent (avoid dumping every matched column)
     const matchedByDatapack = grepResults.map((r) => ({
       title: r.title,
-      isPublic: r.isPublic,
-      matchCount: r.matches.length,
-      enabledColumnCount: r.enabledColumnCount,
-      columns: r.matches.map((m) => ({
-        name: m.name,
-        editName: m.editName,
-        path: m.path,
-        type: m.type,
-        isGroup: m.isGroup,
-        descendantCount: m.descendantCount
-      }))
+      matchCount: r.matches.length
     }));
 
     const currentTitles = currentChartState?.datapackTitles ?? [];
@@ -313,8 +303,7 @@ export async function mcpGrepColumns(_request: FastifyRequest, reply: FastifyRep
       matchedByDatapack,
       // Hand these to updateChartState next (with grepPhrase) to render
       datapackTitles,
-      grepPhrase: phrase.trim(),
-      preserveDatapackTitles: currentTitles
+      grepPhrase: phrase.trim()
     });
   } catch (err) {
     reply.status(500).send({ error: String(err) });

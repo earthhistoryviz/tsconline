@@ -389,9 +389,9 @@ describe("mcpGrepColumns", () => {
       expect.objectContaining({
         phrase: "mammals",
         totalMatched: 1,
+        matchedByDatapack: [{ title: "Vertebrate Evolution", matchCount: 1 }],
         datapackTitles: ["Internal Datapack", "Vertebrate Evolution"],
-        grepPhrase: "mammals",
-        preserveDatapackTitles: ["Internal Datapack"]
+        grepPhrase: "mammals"
       })
     );
   });

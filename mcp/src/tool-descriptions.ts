@@ -214,13 +214,13 @@ Input:
 
 Output data:
 - { phrase, totalMatched, matchedDatapackCount, matchedByDatapack, datapackTitles, grepPhrase, nextStep }
-- matchedByDatapack summarizes which datapacks/columns matched.
+- matchedByDatapack is compact: [{ title, matchCount }] only (no full column lists).
 - If nothing matches, totalMatched is 0; suggest a broader phrase.
 
 Notes:
 - Discovery only — always call updateChartState afterward to render.
-- Briefly tell the user which datapacks matched; do not dump every column.
-- A very broad phrase may match a huge number of columns; that is expected behavior.
+- Briefly tell the user which datapacks matched; do not invent column lists.
+- Pass datapackTitles and grepPhrase from this result into updateChartState.
 
 ${SESSION_GUIDANCE}`
   },
