@@ -3037,7 +3037,7 @@ __metadata:
     "@types/validator": "npm:^13"
     "@types/ws": "npm:^8.18.1"
     "@xmldom/xmldom": "npm:^0.9.10"
-    adm-zip: "npm:^0.5.16"
+    adm-zip: "npm:^0.6.0"
     archiver: "npm:^7.0.1"
     async-mutex: "npm:^0.5.0"
     bcrypt-ts: "npm:^5.0.2"
@@ -4511,10 +4511,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"adm-zip@npm:^0.5.16":
-  version: 0.5.16
-  resolution: "adm-zip@npm:0.5.16"
-  checksum: e167d1b9e60cde37334efda828fa514680af9facbd4183952f36526390e5c7da9a90ca1e6880dfd3aba7b3517f1506c6178e0dc29cd630b26b98c795f97fc599
+"adm-zip@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "adm-zip@npm:0.6.0"
+  checksum: 6a49ab39055d8f716958d3a2055491ab86fe3359c4afeed9b14bbce78fb847bcd3cbaa0ff4921aaa19824aaa29d06691def1f53263db5224d06c068f922c5ba2
   languageName: node
   linkType: hard
 
