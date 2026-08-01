@@ -28,6 +28,7 @@ import {
   assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
+  assertZoneColumnInfoTSC,
   assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
@@ -146,6 +147,12 @@ function setColumnProperties(column: RenderColumnInfo, settings: ColumnInfoTSC) 
         drawNameLabel: settings.drawNameLabel,
         type: settings.type
       });
+      break;
+    case "ZoneColumn":
+      // Restore label orientation from loaded settings XML into the column menu
+      assertZoneColumnInfoTSC(settings);
+      assertZoneSettings(column.columnSpecificSettings);
+      column.columnSpecificSettings.orientation = settings.orientation;
       break;
   }
 }

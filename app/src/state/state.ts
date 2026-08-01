@@ -38,6 +38,7 @@ import type {
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
+import type { DefaultColumnState } from "../util/default-column-map";
 import {
   adjustScaleOfMarkers,
   adjustScaleOfModels,
@@ -112,7 +113,7 @@ export type State = {
     columns: ColumnInfo | undefined;
     renderColumns: RenderColumnInfo | undefined;
     columnHashMap: Map<string, RenderColumnInfo>;
-    defaultColumnMap: Map<string, Pick<ColumnInfo, "on" | "width" | "rgb" | "enableTitle" | "showAgeLabels">> | null;
+    defaultColumnMap: Map<string, DefaultColumnState> | null;
     columnSearchTerm: string;
     showColumnSearchLoader: boolean;
     hideDatapackDefaults: boolean;
