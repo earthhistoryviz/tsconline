@@ -13,8 +13,12 @@ async function removeAutoLoadedDatapack(page: Page) {
   await expect(page.locator("text=Loading Datapacks")).toBeHidden();
 }
 
+function datapackContainer(page: Page, title: string) {
+  return page.locator(`xpath=//div[.//*[normalize-space(text())="${title}"] and .//*[contains(@class,"datapack-chart-action")]]`).first();
+}
+
 async function generateBasicChart(page: Page) {
-  const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
+  const container = datapackContainer(page, "Africa Bight");
   const addButton = container.locator(".datapack-chart-action");
 
   await expect(addButton).toBeVisible();
@@ -53,17 +57,22 @@ test.beforeEach(async ({ page }) => {
   await page.waitForTimeout(1000);
   await removeAutoLoadedDatapack(page);
 
+  await expect(page).toHaveURL(/.*\/datapacks/);
+  await expect(page.locator("text=Add Datapacks")).toBeVisible();
+  await expect(page.locator("text=Pick the packs you want, then generate the chart.")).toBeVisible();
   await expect(page.locator("text=Africa Bight")).toBeVisible();
 });
 
 test("datapack button is clickable", async ({ page }) => {
-  const AfricaBightButton = page.locator("text=Africa Bight");
+  const AfricaBightButton = datapackContainer(page, "Africa Bight").getByText("Africa Bight").first();
   await AfricaBightButton.waitFor({ state: "visible" });
   await expect(AfricaBightButton).toBeVisible();
   await AfricaBightButton.click();
 
-  await expect(page.locator("text=Description")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/datapack\/Africa%20Bight/);
   await expect(page.locator("text=Africa Bight Map")).toBeVisible();
+  await expect(page.getByRole("button", { name: "About" })).toBeVisible();
+  await expect(page.locator("text=Description")).toBeVisible();
   await expect(page.locator("text=Authored By")).toBeVisible();
   await expect(page.locator("text=James Ogg")).toBeVisible();
   await expect(page.locator("text=Privacy")).toBeVisible();
@@ -71,13 +80,13 @@ test("datapack button is clickable", async ({ page }) => {
   await expect(page.locator("text=File Name")).toBeVisible();
   await expect(page.locator("text=AfricaBight.map")).toBeVisible();
 
-  await expect(page.locator("text=View Data")).toBeVisible();
-  await expect(page.locator("text=Discussion")).toBeVisible();
-  await expect(page.locator("text=Warnings")).toBeVisible();
+  await expect(page.getByRole("button", { name: "View Data" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Discussion" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Warnings/ })).toBeVisible();
 });
 
 test("datapack add-to-chart button is clickable", async ({ page }) => {
-  const addButton = page.locator(".datapack-chart-action").nth(0);
+  const addButton = datapackContainer(page, "Africa Bight").locator(".datapack-chart-action");
   await expect(addButton).toBeVisible();
   await addButton.click();
 
@@ -86,7 +95,7 @@ test("datapack add-to-chart button is clickable", async ({ page }) => {
 });
 
 test("check if confirm selection works", async ({ page }) => {
-  const addButton = page.locator(".datapack-chart-action").nth(0);
+  const addButton = datapackContainer(page, "Africa Bight").locator(".datapack-chart-action");
   await expect(addButton).toBeVisible();
   await addButton.click();
 
@@ -194,7 +203,7 @@ test("Load Basic Settings", async ({ page }) => {
 });
 
 test("check if generate crossplot works", async ({ page }) => {
-  const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
+  const container = datapackContainer(page, "Africa Bight");
   const addButton = container.locator(".datapack-chart-action");
 
   await expect(addButton).toBeVisible();

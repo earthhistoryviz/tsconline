@@ -24,7 +24,7 @@ import * as logger from "../src/error-logger";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import * as uploadDatapack from "../src/upload-datapack";
-import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-routes";
+import { adminFetchOfficialHeaderConfig, adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-routes";
 import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 
 vi.mock("validator", async () => {
@@ -57,7 +57,8 @@ vi.mock("../src/error-logger", async () => {
 
 vi.mock("../src/admin/admin-handler", async () => {
   return {
-    editAdminDatapackPriorities: vi.fn().mockResolvedValue({})
+    editAdminDatapackPriorities: vi.fn().mockResolvedValue({}),
+    editAdminDatapackHeaders: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -521,6 +522,22 @@ const routes: { method: HTTPMethods; url: string; body?: object; recaptchaAction
     url: "/admin/official/datapack/priority",
     recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY,
     body: [{ uuid: "test", id: "test", priority: 1 }]
+  },
+  {
+    method: "PATCH",
+    url: "/admin/official/datapack/headers",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK
+  },
+  {
+    method: "GET",
+    url: "/admin/official/datapack/header-config",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK
+  },
+  {
+    method: "PATCH",
+    url: "/admin/official/datapack/header-config",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK,
+    body: { headers: ["Group A", "Group B"] }
   },
   {
     method: "POST",
@@ -2900,6 +2917,217 @@ describe("adminEditDatapackPriorities", () => {
     });
     expect(loggerError).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminEditDatapackHeaders", () => {
+  const url = "/admin/official/datapack/headers";
+  const headerTaskOne = {
+    id: 1,
+    priority: 1,
+    uuid: "uuid1",
+    officialHeader: "Group A",
+    officialHeaderOrder: 1
+  };
+  const headerTaskTwo = {
+    id: 2,
+    priority: 2,
+    uuid: "uuid2",
+    officialHeader: "Group B",
+    officialHeaderOrder: 2
+  };
+  const editAdminDatapackHeaders = vi.mocked(adminHandler.editAdminDatapackHeaders);
+  const loggerError = vi.mocked(logger.default.error);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 400 if body does not contain header update tasks", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload: { tasks: [] },
+      headers
+    });
+    expect(editAdminDatapackHeaders).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "No header update tasks provided" });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 500 if all header updates fail", async () => {
+    editAdminDatapackHeaders.mockRejectedValueOnce(new Error("failed"));
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload: { tasks: [headerTaskOne] },
+      headers
+    });
+    expect(editAdminDatapackHeaders).toHaveBeenCalledTimes(1);
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({
+      error: "Unknown error, no headers updated",
+      failedRequests: [headerTaskOne],
+      completedRequests: []
+    });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return 500 if some header updates fail", async () => {
+    editAdminDatapackHeaders.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error("failed"));
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload: { tasks: [headerTaskOne, headerTaskTwo] },
+      headers
+    });
+    expect(editAdminDatapackHeaders).toHaveBeenCalledTimes(2);
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({
+      error: "Some headers updated",
+      failedRequests: [headerTaskTwo],
+      completedRequests: [headerTaskOne]
+    });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return 200 if all header updates succeed", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload: { tasks: [headerTaskOne, headerTaskTwo] },
+      headers
+    });
+    expect(editAdminDatapackHeaders).toHaveBeenCalledTimes(2);
+    expect(loggerError).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      message: "Headers updated",
+      completedRequests: [headerTaskOne, headerTaskTwo]
+    });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("admin official header config", () => {
+  const readFile = vi.mocked(fsPromises.readFile);
+  const writeFile = vi.mocked(fsPromises.writeFile);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return filtered official header config", async () => {
+    readFile.mockResolvedValueOnce(JSON.stringify(["Group A", 2, "Group B", null]) as never);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/datapack/header-config",
+      headers
+    });
+    expect(readFile).toHaveBeenCalledWith(
+      expect.stringMatching(/assets\/official-header-config\.json$/),
+      "utf-8"
+    );
+    expect(await response.json()).toEqual({ headers: ["Group A", "Group B"] });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return empty header config when stored config is not an array", async () => {
+    readFile.mockResolvedValueOnce(JSON.stringify({ headers: ["Group A"] }) as never);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/datapack/header-config",
+      headers
+    });
+    expect(await response.json()).toEqual({ headers: [] });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return empty header config when stored config is invalid", async () => {
+    readFile.mockResolvedValueOnce("not-json" as never);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/datapack/header-config",
+      headers
+    });
+    expect(await response.json()).toEqual({ headers: [] });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return empty header config when reading stored config fails", async () => {
+    readFile.mockRejectedValueOnce(new Error("read failed"));
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/datapack/header-config",
+      headers
+    });
+    expect(await response.json()).toEqual({ headers: [] });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return 500 if sending official header config fails", async () => {
+    readFile.mockResolvedValueOnce(JSON.stringify(["Group A"]) as never);
+    const errorSend = vi.fn();
+    const status = vi.fn().mockReturnValue({ send: errorSend });
+    const reply = {
+      send: vi.fn(() => {
+        throw new Error("send failed");
+      }),
+      status
+    };
+    await adminFetchOfficialHeaderConfig({} as never, reply as never);
+    expect(status).toHaveBeenCalledWith(500);
+    expect(errorSend).toHaveBeenCalledWith({ error: "Failed to fetch official header configuration" });
+  });
+
+  it("should return 400 if header config payload is invalid", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/official/datapack/header-config",
+      payload: { headers: ["Group A", 2] },
+      headers
+    });
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid official header configuration" });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 400 if header config payload headers is not an array", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/official/datapack/header-config",
+      payload: { headers: "Group A" },
+      headers
+    });
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid official header configuration" });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should trim and save official header config", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/official/datapack/header-config",
+      payload: { headers: [" Group A ", "", "Group B", "   "] },
+      headers
+    });
+    expect(writeFile).toHaveBeenCalledWith(
+      expect.stringMatching(/assets\/official-header-config\.json$/),
+      JSON.stringify(["Group A", "Group B"], null, 2)
+    );
+    expect(await response.json()).toEqual({ message: "Official header configuration updated" });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return 500 if saving official header config fails", async () => {
+    writeFile.mockRejectedValueOnce(new Error("write failed"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/official/datapack/header-config",
+      payload: { headers: ["Group A"] },
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Failed to save official header configuration" });
+    expect(response.statusCode).toBe(500);
   });
 });
 

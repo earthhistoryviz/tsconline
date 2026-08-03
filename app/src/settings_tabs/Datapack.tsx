@@ -42,6 +42,8 @@ export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
   const added = datapackAddedColors(theme);
   const selectedCount = state.unsavedDatapackConfig.length;
+  const hasPendingSelectionChanges =
+    JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
   const shouldLoadRecaptcha =
     state.isLoggedIn &&
     (formOpen ||
@@ -171,7 +173,7 @@ export const Datapacks = observer(function Datapacks() {
           <TSCButton
             className={styles.dockButton}
             data-tour="datapack-confirm-button"
-            disabled={state.loadingDatapacks || selectedCount === 0}
+            disabled={state.loadingDatapacks || !hasPendingSelectionChanges}
             onClick={async () => {
               await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
             }}>
@@ -183,6 +185,7 @@ export const Datapacks = observer(function Datapacks() {
               <IconButton
                 className={styles.clearButton}
                 data-tour="datapack-deselect-button"
+                aria-label="Deselect All"
                 disabled={selectedCount === 0}
                 onClick={async () => {
                   actions.setUnsavedDatapackConfig([]);

@@ -349,7 +349,8 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   fastify.get(
     "/official/datapack/header-config",
     {
-      config: { rateLimit: moderateRateLimit }
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK)]
     },
     adminFetchOfficialHeaderConfig
   );

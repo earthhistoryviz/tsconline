@@ -991,8 +991,13 @@ export const adminUpdateOfficialDatapackHeaders = action(
 
 export const adminFetchOfficialHeaderConfig = action(async () => {
   try {
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK);
+    if (!recaptchaToken) return;
     const response = await fetcher("/admin/official/datapack/header-config", {
       method: "GET",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      },
       credentials: "include"
     });
     if (!response.ok) {
