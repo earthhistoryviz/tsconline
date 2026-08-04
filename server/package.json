@@ -9,7 +9,7 @@
     "@fastify/multipart": "^8.3.1",
     "@fastify/rate-limit": "^9.1.0",
     "@fastify/secure-session": "^7.4.0",
-    "@fastify/static": "^10.1.2",
+    "@fastify/static": "^6.10.1",
     "@fastify/websocket": "10.0.1",
     "@tsconline/shared": "1.0.0",
     "@xmldom/xmldom": "^0.9.10",
