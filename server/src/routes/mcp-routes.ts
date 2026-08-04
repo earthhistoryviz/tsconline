@@ -1,8 +1,10 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import {
+  Datapack,
   DatapackMetadata,
   ChartRequest,
   ChartProgressUpdate,
+  MCPChartState,
   MCPChartSyncClientMessage,
   MCPChartSyncServerMessage
 } from "@tsconline/shared";
@@ -17,10 +19,16 @@ import { findUser } from "../database.js";
 import {
   generateChartWithEdits,
   listColumns,
+  grepColumnsAcrossDatapacks,
+  buildGrepColumnRoot,
+  buildChartXmlFromPreparedColumnRoot,
   SchemaOverrides,
   ColumnToggles
 } from "../settings-generation/build-settings.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
+
+// Excluding UCL TSC Chron from the grep results for now (buggy)
+const GREP_EXCLUDED_DATAPACK_TITLES = ["UCL TSC Chron"];
 
 type PendingChartStateRequest = {
   resolve: (value: { ok: boolean; error?: string }) => void;
@@ -253,6 +261,55 @@ export async function mcpListColumns(_request: FastifyRequest, reply: FastifyRep
   }
 }
 
+// Returns a match summary plus datapackTitles/grepPhrase for a follow-up updateChartState call
+export async function mcpGrepColumns(_request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { phrase, uuid, currentChartState } = (_request.body ?? {}) as {
+      phrase?: string;
+      uuid?: string;
+      currentChartState?: MCPChartState;
+    };
+    // Phrase is the search phrase to grep for
+    if (!phrase || typeof phrase !== "string" || !phrase.trim()) {
+      reply.status(400).send({ error: "phrase is required" });
+      return;
+    }
+    // Load all datapacks from the public, official, and user's private datapacks
+    const publicDatapacks = await loadPublicUserDatapacks();
+    const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
+    const userDatapacks = uuid ? await fetchAllUsersDatapacks(uuid) : [];
+    const allDatapacks = [...publicDatapacks, ...officialDatapacks, ...userDatapacks];
+    const searchableDatapacks = allDatapacks.filter((dp) => !GREP_EXCLUDED_DATAPACK_TITLES.includes(dp.title)); // Excludes datapacks like UCL TSC Chron that are buggy for grep (see GREP_EXCLUDED_DATAPACK_TITLES).
+
+    const grepResults = grepColumnsAcrossDatapacks(searchableDatapacks, phrase);
+    const totalMatched = grepResults.reduce((sum, r) => sum + r.matches.length, 0);
+
+    // Compact per-datapack summary for the agent (avoid dumping every matched column)
+    const matchedByDatapack = grepResults.map((r) => ({
+      title: r.title,
+      matchCount: r.matches.length
+    }));
+
+    const currentTitles = currentChartState?.datapackTitles ?? [];
+
+    // Current chart packs first, then newly matched packs
+    const matchedTitles = grepResults.map((r) => r.title);
+    const datapackTitles = [...currentTitles, ...matchedTitles.filter((t) => !currentTitles.includes(t))];
+
+    reply.send({
+      phrase,
+      totalMatched,
+      matchedDatapackCount: grepResults.length,
+      matchedByDatapack,
+      // Hand these to updateChartState next (with grepPhrase) to render
+      datapackTitles,
+      grepPhrase: phrase.trim()
+    });
+  } catch (err) {
+    reply.status(500).send({ error: String(err) });
+  }
+}
+
 /**
  * MCP route: Generate chart with small edit payload (overrides + column toggles)
  */
@@ -267,7 +324,9 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       useCache,
       isCrossPlot,
       uuid,
-      sessionId
+      sessionId,
+      grepPhrase,
+      preserveDatapackTitles
     } = (_request.body ?? {}) as {
       datapackTitles?: string[];
       overrides?: SchemaOverrides & Record<string, unknown>;
@@ -276,6 +335,8 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
       isCrossPlot?: boolean;
       uuid?: string;
       sessionId?: string;
+      grepPhrase?: string;
+      preserveDatapackTitles?: string[];
     };
 
     if (!datapackTitles || !Array.isArray(datapackTitles) || datapackTitles.length === 0) {
@@ -287,28 +348,51 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
     const officialDatapacks = await fetchAllPrivateOfficialDatapacks();
     const userDatapacks = uuid ? await fetchAllUsersDatapacks(uuid) : [];
     const allDatapacks = [...publicDatapacks, ...officialDatapacks, ...userDatapacks];
-    const requestedDatapacks = allDatapacks.filter((dp) => datapackTitles.includes(dp.title));
+    // Have datapacks that make up current chart appear first followed by added ones in that order
+    const requestedDatapacks = datapackTitles
+      .map((title) => allDatapacks.find((dp) => dp.title === title))
+      .filter((dp): dp is Datapack => Boolean(dp));
 
     const missingDatapacks = datapackTitles.filter((dp) => !requestedDatapacks.some((rdp) => rdp.title === dp));
     if (missingDatapacks.length > 0) {
       reply.status(404).send({ error: `No matching datapacks found for titles: ${missingDatapacks.join(", ")}` });
       return;
     }
-    const hideDatapackDefaults = overrides.hideDatapackDefaults === true;
 
-    const settingsXml = await generateChartWithEdits(requestedDatapacks, overrides, columnToggles, {
-      hideDatapackDefaults
-    });
+    // Built differently depending on whether this is was called after grepcolumns call or not (normal)
+    let settingsXml: string;
 
-    sendMcpSocketMessage(sessionId, {
-      type: "apply-chart-state",
-      requestId,
-      chartState: {
-        datapackTitles,
-        overrides,
-        columnToggles
-      }
-    });
+    // Function follows after grepcolumns call: keep current packs as-is, blank-slate new packs, enable only phrase matches
+    if (grepPhrase && typeof grepPhrase === "string" && grepPhrase.trim()) {
+      const currentTitles = Array.isArray(preserveDatapackTitles) ? preserveDatapackTitles : [];
+      const currentHideDatapackDefaults = overrides.hideDatapackDefaults === true;
+      // Compute on/off per datapack then merge.
+      const columnRoot = buildGrepColumnRoot({
+        unionDatapacks: requestedDatapacks,
+        currentTitles,
+        currentToggles: columnToggles,
+        currentHideDatapackDefaults,
+        phrase: grepPhrase
+      });
+      settingsXml = buildChartXmlFromPreparedColumnRoot(columnRoot, requestedDatapacks, overrides);
+      // Skip apply-chart-state call in this case; loadMcpChartLink applies the real settings after render.
+    } else {
+      // Normal updatechart call (unchanged original behavior)
+      const hideDatapackDefaults = overrides.hideDatapackDefaults === true;
+      settingsXml = await generateChartWithEdits(requestedDatapacks, overrides, columnToggles, {
+        hideDatapackDefaults
+      });
+
+      sendMcpSocketMessage(sessionId, {
+        type: "apply-chart-state",
+        requestId,
+        chartState: {
+          datapackTitles,
+          overrides,
+          columnToggles
+        }
+      });
+    }
 
     const chartRequest: ChartRequest = {
       settings: settingsXml,
