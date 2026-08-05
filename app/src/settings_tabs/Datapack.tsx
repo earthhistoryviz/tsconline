@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { DatapackUploadForm, TSCButton, CustomTooltip, CustomDivider, StyledScrollbar } from "../components";
 import { context } from "../state";
+import Color from "color";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -66,8 +67,8 @@ export const Datapacks = observer(function Datapacks() {
     <StyledScrollbar className={styles.dc + " settings-datapack-container"}>
       <Box className={styles.topbar}>
         <Box>
-          <Typography className={styles.pageTitle}>Add Datapacks</Typography>
-          <Typography className={styles.pageSubtitle}>Pick the packs you want, then generate the chart.</Typography>
+          <Typography className={styles.pageTitle}>{t("settings.datapacks.page-title")}</Typography>
+          <Typography className={styles.pageSubtitle}>{t("settings.datapacks.page-subtitle")}</Typography>
         </Box>
         <Box className={styles.topbarActions}>
           <ToggleButtonGroup
@@ -154,13 +155,24 @@ export const Datapacks = observer(function Datapacks() {
           />
         )}
       </Box>
-      <Box className={styles.actionDock}>
-        <Box className={styles.selectionBadge} sx={{ borderColor: actionBorder }}>
+      <Box
+        className={styles.actionDock}
+        sx={{
+          backgroundColor: Color(theme.palette.secondaryBackground.main).alpha(0.88).string(),
+          borderColor: Color(theme.palette.divider).alpha(0.22).string(),
+          backdropFilter: "blur(.5px)"
+        }}>
+        <Box
+          className={styles.selectionBadge}
+          sx={{
+            borderColor: actionBorder || Color(theme.palette.divider).alpha(0.22).string(),
+            backgroundColor: theme.palette.secondaryBackground.main
+          }}>
           <Typography className={styles.selectionCount} sx={{ color: actionBorder }}>
             {selectedCount}
           </Typography>
           <Typography className={styles.selectionLabel} color="text.primary">
-            {selectedCount === 1 ? "datapack staged" : "datapacks staged"}
+            {t("settings.datapacks.staged-count", { count: selectedCount })}
           </Typography>
         </Box>
         <Box className={styles.dockButtons}>
