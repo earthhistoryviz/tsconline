@@ -3023,10 +3023,7 @@ describe("admin official header config", () => {
       url: "/admin/official/datapack/header-config",
       headers
     });
-    expect(readFile).toHaveBeenCalledWith(
-      expect.stringMatching(/assets\/official-header-config\.json$/),
-      "utf-8"
-    );
+    expect(readFile).toHaveBeenCalledWith(expect.stringMatching(/assets\/official-header-config\.json$/), "utf-8");
     expect(await response.json()).toEqual({ headers: ["Group A", "Group B"] });
     expect(response.statusCode).toBe(200);
   });

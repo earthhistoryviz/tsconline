@@ -48,7 +48,10 @@ async function saveChartAs(page: Page, filetype: "svg" | "pdf" | "png") {
   await page.getByRole("option", { name: `.${filetype}` }).click();
 
   if (filetype === "svg") {
-    const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Save" }).click()]);
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      dialog.getByRole("button", { name: "Save" }).click()
+    ]);
     await expect(dialog).toBeHidden();
     return download;
   }
