@@ -88,7 +88,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
         {skeleton ? (
           <Skeleton width={124} height={32} sx={{ borderRadius: 1 }} />
         ) : (
-          <DatapackChartAction selected={!!value} loading={loading} onClick={toggleChart} />
+          <DatapackChartAction selected={!!value} loading={loading} datapackTitle={datapack.title} onClick={toggleChart} />
         )}
         {!skeleton && isOwnedByUser(datapack, state.user?.uuid) && (
           <div className={styles.right}>

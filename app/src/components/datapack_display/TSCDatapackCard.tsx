@@ -46,10 +46,18 @@ type DatapackChartActionProps = {
   loading?: boolean;
   compact?: boolean;
   fullWidth?: boolean;
+  datapackTitle?: string;
   onClick: (e: React.MouseEvent) => void | Promise<void>;
 };
 
-export const DatapackChartAction = ({ selected, loading, compact, fullWidth, onClick }: DatapackChartActionProps) => {
+export const DatapackChartAction = ({
+  selected,
+  loading,
+  compact,
+  fullWidth,
+  datapackTitle,
+  onClick
+}: DatapackChartActionProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
   const added = datapackAddedColors(theme);
@@ -76,6 +84,7 @@ export const DatapackChartAction = ({ selected, loading, compact, fullWidth, onC
     return (
       <Button
         className="datapack-chart-action"
+        aria-label={datapackTitle ? `${addLabel} ${datapackTitle}` : addLabel}
         size="small"
         variant="outlined"
         fullWidth={fullWidth}
@@ -134,7 +143,7 @@ export const DatapackChartAction = ({ selected, loading, compact, fullWidth, onC
           <IconButton
             className="datapack-chart-remove"
             size="small"
-            aria-label={removeLabel}
+            aria-label={datapackTitle ? `${removeLabel} ${datapackTitle}` : removeLabel}
             onClick={handleClick}
             sx={{
               p: 0.5,
@@ -152,6 +161,7 @@ export const DatapackChartAction = ({ selected, loading, compact, fullWidth, onC
       ) : (
         <Button
           className="datapack-chart-remove"
+          aria-label={datapackTitle ? `${removeLabel} ${datapackTitle}` : removeLabel}
           size="small"
           variant="outlined"
           startIcon={<CloseIcon sx={{ fontSize: 16 }} />}
@@ -257,7 +267,13 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, valu
           {skeleton ? (
             <Skeleton height={36} sx={{ borderRadius: 1 }} />
           ) : (
-            <DatapackChartAction selected={!!value} loading={loading} fullWidth onClick={toggleChart} />
+            <DatapackChartAction
+              selected={!!value}
+              loading={loading}
+              fullWidth
+              datapackTitle={datapack.title}
+              onClick={toggleChart}
+            />
           )}
         </Box>
         <div className={styles.vc}>
