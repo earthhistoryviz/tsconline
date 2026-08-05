@@ -122,10 +122,19 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["uuid", "datapackTitle"]
   };
+  // history folders are named with Date.now() (epoc milliseconds - 13 digits until November 20, 2286 - needs to be updated to 14 )
   const fetchUserHistoryParams = {
     type: "object",
     properties: {
-      timestamp: { type: "string", format: "date-time", minLength: 1 }
+      timestamp: { type: "string", pattern: "^\\d{13}$" }
+    },
+    required: ["timestamp"]
+  };
+  // separate from fetchUserHistoryParams: DELETE also accepts "-1" to clear all history (fetch one only takes in 13 digits which doesnt account for delete all using "-1")
+  const deleteUserHistoryParams = {
+    type: "object",
+    properties: {
+      timestamp: { type: "string", pattern: "^(\\d{13}|-1)$" }
     },
     required: ["timestamp"]
   };
@@ -179,7 +188,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
         rateLimit: looseRateLimit
       },
       schema: {
-        params: fetchUserHistoryParams
+        // new delete params schema to account for both epoc ID or "-1" for delete all
+        params: deleteUserHistoryParams
       },
       preHandler: [verifySession]
     },

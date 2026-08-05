@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { ColumnInfo } from "@tsconline/shared";
 import {
   applyHideDatapackDefaults,
+  buildDefaultColumnMap,
   restoreColumnOnSnapshot,
+  restoreDatapackDefaultOnStates,
   shouldPreserveColumnOn,
   snapshotColumnOnStates
 } from "../src/util/default-column-map";
@@ -65,5 +67,56 @@ describe("default-column-map", () => {
 
     restoreColumnOnSnapshot(hashMap, snapshot);
     expect(hashMap.get("Events")!.on).toBe(true);
+  });
+
+  it("keeps duplicate semantic labels isolated by the merged tree's unique names", () => {
+    const defaultRoot = {
+      name: "Chart Root",
+      on: true,
+      width: 20,
+      children: [
+        {
+          name: "Marsupials",
+          on: true,
+          width: 20,
+          children: []
+        },
+        {
+          name: "Marsupials for Ranges of mammal fossils (open to select)",
+          on: false,
+          width: 20,
+          children: []
+        },
+        {
+          name: "Primates for Ranges of mammal fossils (open to select)",
+          on: false,
+          width: 20,
+          children: []
+        }
+      ]
+    } as unknown as ColumnInfo;
+
+    const defaultMap = buildDefaultColumnMap(defaultRoot);
+    const hashMap = new Map<string, RenderColumnInfo>([
+      ["Marsupials", makeRenderColumn({ name: "Marsupials", on: true })],
+      [
+        "Marsupials for Ranges of mammal fossils (open to select)",
+        makeRenderColumn({ name: "Marsupials for Ranges of mammal fossils (open to select)", on: true })
+      ],
+      [
+        "Primates for Ranges of mammal fossils (open to select)",
+        makeRenderColumn({ name: "Primates for Ranges of mammal fossils (open to select)", on: true })
+      ]
+    ]);
+
+    applyHideDatapackDefaults(hashMap, defaultMap);
+    expect(hashMap.get("Marsupials")!.on).toBe(false);
+    expect(hashMap.get("Marsupials for Ranges of mammal fossils (open to select)")!.on).toBe(true);
+    expect(hashMap.get("Primates for Ranges of mammal fossils (open to select)")!.on).toBe(true);
+
+    restoreDatapackDefaultOnStates(hashMap, defaultMap);
+    expect(hashMap.get("Marsupials")!.on).toBe(true);
+    expect(hashMap.get("Marsupials for Ranges of mammal fossils (open to select)")!.on).toBe(false);
+    expect(hashMap.get("Primates for Ranges of mammal fossils (open to select)")!.on).toBe(false);
   });
 });

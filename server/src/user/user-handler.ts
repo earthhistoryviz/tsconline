@@ -229,7 +229,13 @@ export async function deleteDatapackFileAndDecryptedCounterpart(uuid: string, da
  * TODO: write tests
  */
 export async function deleteOfficialDatapack(datapack: string): Promise<void> {
-  const datapackPath = await fetchUserDatapackDirectory("official", datapack);
+  let datapackPath: string;
+  try {
+    datapackPath = await fetchUserDatapackDirectory("official", datapack);
+  } catch {
+    // Idempotent: London sync may request delete of legacy titles that were never installed.
+    return;
+  }
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }

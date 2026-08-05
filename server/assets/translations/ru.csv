@@ -322,11 +322,12 @@ translation.settings.datapacks.title.public-official,Официальные да
 translation.settings.datapacks.title.contributed,Датапаки пользователей
 translation.settings.datapacks.title.workshop,Датапаки воркшопов
 translation.settings.datapacks.title.your,Ваши датапаки
-translation.settings.datapacks.title.treatise,Датапаки из трактатов
+translation.settings.datapacks.title.treatise,Разнообразие групп ископаемых организмов по данным «Трактата по палеонтологии беспозвоночных» (treatise.geolex.org)
 translation.settings.datapacks.title.lexicon,Датапаки из лексикона
 translation.settings.datapacks.official-subgroup.global,Глобальная шкала времени
 translation.settings.datapacks.official-subgroup.regional,Региональные датапаки
 translation.settings.datapacks.official-subgroup.evolution-culture,Эволюция и культура
+translation.settings.datapacks.official-subgroup.workshop,Воркшоп
 translation.settings.datapacks.official-subgroup.other,Другое
 translation.settings.datapacks.no,Нет
 translation.settings.datapacks.avaliable,Доступно

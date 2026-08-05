@@ -10,6 +10,7 @@ import {
   MCPFontSettingsByTarget,
   ValidFontOptions
 } from "@tsconline/shared";
+import Color from "color";
 import _ from "lodash";
 import { jsonToXml } from "./settings-to-xml.js";
 
@@ -59,6 +60,7 @@ export type ColumnToggles = Record<
   {
     on?: boolean;
     width?: number;
+    backgroundColor?: string;
     enableTitle?: boolean;
     showAgeLabels?: boolean;
     fonts?: MCPFontSettingsByTarget; // Allow font overrides at the individual column level as well
@@ -361,6 +363,14 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
       }
     },
     (col, settings) => {
+      if (settings.backgroundColor !== undefined) {
+        const [r = NaN, g = NaN, b = NaN] = Color(settings.backgroundColor).rgb().array();
+        col.rgb.r = Math.round(r);
+        col.rgb.g = Math.round(g);
+        col.rgb.b = Math.round(b);
+      }
+    },
+    (col, settings) => {
       if (settings.enableTitle !== undefined) {
         col.enableTitle = settings.enableTitle;
       }
@@ -381,10 +391,11 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
     addNormalizedToggleCandidates(normalizedToggles, columnId, settings);
   }
 
-  const visit = (col: ColumnInfo, ancestors: ColumnInfo[] = []) => {
+  const visit = (col: ColumnInfo, ancestors: ColumnInfo[] = [], parentBackgroundColor?: string) => {
     const candidates = getPossibleColumnIdentifiers(col);
     const matchedId = candidates.find((id) => normalizedToggles.has(id));
     const settings = matchedId ? normalizedToggles.get(matchedId) : undefined;
+    const realBackgroundColor = settings?.backgroundColor ?? parentBackgroundColor;
 
     if (settings) {
       if (settings.on === true) {
@@ -398,8 +409,15 @@ export function applyTogglesToColumnInfo(columnRoot: ColumnInfo, toggles: Column
       }
     }
 
+    if (realBackgroundColor && (!settings || settings.backgroundColor === undefined)) {
+      const [r = NaN, g = NaN, b = NaN] = Color(realBackgroundColor).rgb().array();
+      col.rgb.r = Math.round(r);
+      col.rgb.g = Math.round(g);
+      col.rgb.b = Math.round(b);
+    }
+
     if (col.children) {
-      col.children.forEach((child) => visit(child, [...ancestors, col]));
+      col.children.forEach((child) => visit(child, [...ancestors, col], realBackgroundColor));
     }
   };
 

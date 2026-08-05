@@ -81,7 +81,7 @@ async function processConfig({
 
         const exists = await doesDatapackFolderExistInAllUUIDDirectories("official", datapack.title);
         if (exists) {
-          if (alwaysOverwrite || args.includes("--overwrite")) {
+          if (alwaysOverwrite || args.includes("--overwrite") || configType === "london") {
             await deleteOfficialDatapack(datapack.title);
           } else {
             console.log(chalk.yellow("Datapack already exists in all UUID directories, skipping..."));

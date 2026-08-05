@@ -34,6 +34,7 @@ import {
 import { state, State } from "../state";
 import { devSafeUrl, executeRecaptcha, fetcher } from "../../util";
 import { applyMcpChartStateToApp } from "../../util/apply-mcp-chart-state";
+import { buildDefaultColumnMap } from "../../util/default-column-map";
 import {
   applyChartColumnSettings,
   applyRowOrder,
@@ -554,6 +555,7 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   const renderColumnRoot = convertColumnInfoToRenderColumnInfo(columnRoot);
   state.settingsTabs.columns = columnRoot;
   state.settingsTabs.renderColumns = renderColumnRoot;
+  state.settingsTabs.defaultColumnMap = buildDefaultColumnMap(columnRoot);
   state.settings.datapackContainsSuggAge = false;
   state.mapState.mapHierarchy = {};
   state.mapState.mapInfo = {};
@@ -700,6 +702,7 @@ export const setDatapackConfig = action(
     resetSettings();
     state.settingsTabs.columns = columnRoot;
     state.settingsTabs.renderColumns = convertColumnInfoToRenderColumnInfo(columnRoot);
+    state.settingsTabs.defaultColumnMap = buildDefaultColumnMap(columnRoot);
     state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.mapState.mapInfo = mapInfo;
