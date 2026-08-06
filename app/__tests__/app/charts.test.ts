@@ -15,12 +15,9 @@ async function removeAutoLoadedDatapack(page: Page) {
   if (await deselectButton.isDisabled()) return;
 
   await deselectButton.click();
-  await page.waitForTimeout(150);
-
-  if (await confirmButton.isEnabled().catch(() => false)) {
-    await confirmButton.click();
-    await expect(page.locator("text=Loading Datapacks")).toBeHidden();
-  }
+  if (await confirmButton.isDisabled()) return;
+  await confirmButton.click();
+  await expect(page.getByText("Loading Datapacks")).toBeHidden();
 }
 
 function datapackTitle(page: Page, title: string) {
@@ -29,6 +26,10 @@ function datapackTitle(page: Page, title: string) {
 
 function datapackAddButton(page: Page, title: string) {
   return page.getByRole("button", { name: `Add to chart ${title}` }).first();
+}
+
+function columnCheckbox(page: Page, index: number) {
+  return page.locator(".column-checkbox input[type='checkbox']").nth(index);
 }
 
 async function openCrossplotFromNav(page: Page) {
@@ -71,40 +72,40 @@ async function generateBasicChart(page: Page) {
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
 
-  const confirmButton = page.locator("text=Confirm Selection");
-  await expect(confirmButton).toBeVisible();
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+  await expect(confirmButton).toBeEnabled();
   await confirmButton.click();
 
-  const loading = page.locator("text=Loading Datapacks");
+  const loading = page.getByText("Loading Datapacks");
   await expect(loading).toBeHidden();
 
-  const configMessage = page.locator("text=Datapack Config Updated");
+  const configMessage = page.getByText("Datapack Config Updated");
   await configMessage.waitFor({ state: "visible" }).catch(() => {
     console.warn("Datapack Config Updated message not shown");
   });
 
-  const generateChart = page.locator("text=Generate Chart");
-  await expect(generateChart).toBeVisible();
+  const generateChart = page.getByRole("button", { name: "Generate Chart" });
+  await expect(generateChart).toBeEnabled();
   await generateChart.click();
 
-  await expect(page.locator("text=Loading Chart")).toBeHidden();
-  await expect(page.locator("text=Successfully generated chart")).toBeVisible();
-  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
+  await expect(page.getByText("Loading Chart")).toBeHidden();
+  await expect(page.getByText("Successfully generated chart")).toBeVisible();
+  await expect(
+    page.locator(".react-transform-component svg text").filter({ hasText: "Central Africa Cenozoic" })
+  ).toBeVisible();
 }
 
 test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
-  await page.waitForTimeout(5000);
 
   // Navigate to datapacks page
   await page.locator(".qsg-datapacks").click();
-  await page.waitForTimeout(1000);
   await removeAutoLoadedDatapack(page);
 
   await expect(page).toHaveURL(/.*\/datapacks/);
-  await expect(page.locator("text=Add Datapacks")).toBeVisible();
-  await expect(page.locator("text=Pick the packs you want, then generate the chart.")).toBeVisible();
-  await expect(page.locator("text=Africa Bight")).toBeVisible();
+  await expect(page.getByText("Add Datapacks")).toBeVisible();
+  await expect(page.getByText("Pick the packs you want, then generate the chart.")).toBeVisible();
+  await expect(datapackTitle(page, "Africa Bight")).toBeVisible();
 });
 
 test("datapack button is clickable", async ({ page }) => {
@@ -146,20 +147,22 @@ test("check if confirm selection works", async ({ page }) => {
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
 
-  const confirmButton = page.locator("text=Confirm Selection");
-  await expect(confirmButton).toBeVisible();
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+  await expect(confirmButton).toBeEnabled();
   await confirmButton.click();
 
-  await expect(page.locator("text=Loading Datapacks")).toBeHidden();
+  await expect(page.getByText("Loading Datapacks")).toBeHidden();
 
-  await page.waitForSelector("text=Datapack Config Updated");
+  await expect(page.getByText("Datapack Config Updated")).toBeVisible();
 });
 
 test("check if generate chart and save chart works", async ({ page }) => {
   await generateBasicChart(page);
 
   const chartSvg = page.locator(".react-transform-component svg");
-  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
+  await expect(
+    page.locator(".react-transform-component svg text").filter({ hasText: "Central Africa Cenozoic" })
+  ).toBeVisible();
 
   await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
 
@@ -190,12 +193,14 @@ test("check if generate chart and save chart works", async ({ page }) => {
 
   await page.locator("text=Column").nth(1).click();
   await page.locator("data-testid=ArrowForwardIosSharpIcon").nth(1).click();
-  await page.locator("data-testid=CheckBoxIcon").nth(4).click();
+  await columnCheckbox(page, 4).click();
 
   await page.locator("text=Generate Chart").click();
 
   await expect(page.locator("text=Loading Chart")).toBeHidden();
-  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
+  await expect(
+    page.locator(".react-transform-component svg text").filter({ hasText: "Central Africa Cenozoic" })
+  ).toBeVisible();
 
   await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
 
@@ -246,14 +251,14 @@ test("check if generate crossplot works", async ({ page }) => {
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
 
-  const confirmButton = page.locator("text=Confirm Selection");
-  await expect(confirmButton).toBeVisible();
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+  await expect(confirmButton).toBeEnabled();
   await confirmButton.click();
 
-  const loading = page.locator("text=Loading Datapacks");
+  const loading = page.getByText("Loading Datapacks");
   await expect(loading).toBeHidden();
 
-  const configMessage = page.locator("text=Datapack Config Updated");
+  const configMessage = page.getByText("Datapack Config Updated");
   await configMessage.waitFor({ state: "visible" }).catch(() => {
     console.warn("Datapack Config Updated message not shown");
   });
@@ -306,14 +311,17 @@ test("check sync of preview with window", async ({ page, context }) => {
   const addButton = datapackAddButton(page, "Australia");
   await addButton.click();
 
-  const confirmButton = page.locator("text=Confirm Selection");
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+  await expect(confirmButton).toBeEnabled();
   await confirmButton.click();
 
-  const generateChart = page.locator("text=Generate Chart");
+  const generateChart = page.getByRole("button", { name: "Generate Chart" });
   await generateChart.click();
   //wait for chart to load
-  await expect(page.locator("text=Loading Chart")).toBeHidden();
-  await expect(page.locator("text=Greater NW Shelf")).toBeVisible();
+  await expect(page.getByText("Loading Chart")).toBeHidden();
+  await expect(
+    page.locator(".react-transform-component svg text").filter({ hasText: "Greater NW Shelf" })
+  ).toBeVisible();
 
   //bring new page to front and check for update
   await newPage.bringToFront();

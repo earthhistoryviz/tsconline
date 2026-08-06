@@ -262,15 +262,15 @@
                 "not-avaliable": "该数据包暂无地图可用"
             },
             "datapacks": {
-                "page-title": "添加数据包",
-                "page-subtitle": "选择你想要的包，然后生成图表。",
+                "page-title": "数据包",
+                "page-subtitle": "选择一个或多个数据包来构建图表。",
+                "staged-count": "已暂存 {{count}} 个",
                 "see-info-guidance": "点击数据包以查看更多信息！",
                 "add-datapack-guidance": "选择一个或多个数据包来构建图表。每个数据包都会添加地质事件。确认选择后生成图表。",
                 "add-to-chart": "添加到图表",
                 "add-short": "添加",
                 "in-chart-short": "已添加",
                 "remove-from-chart": "移除",
-                "staged-count_other": "个数据包已加入待生成",
                 "selected-count": "已选择 {{count}} 个",
                 "title": {
                     "private-official": "私有官方数据包",
