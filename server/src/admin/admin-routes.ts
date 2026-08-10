@@ -826,17 +826,16 @@ export const adminEditDatapackHeaders = async function adminEditDatapackHeaders(
     reply.status(400).send({ error: "No header update tasks provided" });
     return;
   }
-  const failedRequests = [...tasks];
+  const failedRequests: typeof tasks = [];
   const completedRequests: typeof tasks = [];
   for (const task of tasks) {
     try {
       await editAdminDatapackHeaders(task);
+      completedRequests.push(task);
     } catch (e) {
       logger.error(e);
-      continue;
+      failedRequests.push(task);
     }
-    failedRequests.shift();
-    completedRequests.push(task);
   }
   if (failedRequests.length > 0) {
     reply.status(500).send({
