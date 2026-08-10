@@ -924,7 +924,7 @@ export const adminUpdateDatapackPriority = action(
       } catch (e) {
         console.error(e);
         displayServerError(
-          await response.json(),
+          json,
           ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED,
           ErrorMessages[ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED]
         );
