@@ -9,7 +9,7 @@ import {
   IconButtonProps,
   Typography
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import { createGradient } from "../util/util";
 import { forwardRef, useRef } from "react";
 import { ArrowDropDown } from "@mui/icons-material";
@@ -17,6 +17,17 @@ import React from "react";
 import { ControlledMenu, useClick, useMenuState } from "@szhsin/react-menu";
 import { CustomTooltip, TSCMenuItem } from "./TSCComponents";
 import styles from "./TSCComponents.module.css";
+import Color from "color";
+
+const SplitButtonMenuItem = styled(TSCMenuItem)(({ theme }) => ({
+  borderRadius: 10,
+  transition: "background-color 0.18s ease, color 0.18s ease",
+  "&.szh-menu__item--hover": {
+    backgroundColor: Color(theme.palette.button.main)
+      .alpha(theme.palette.mode === "dark" ? 0.22 : 0.14)
+      .string()
+  }
+}));
 
 type TSCIconButtonProps = {
   buttonType?: "primary" | "secondary" | "gradient";
@@ -206,10 +217,13 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({
           border: `1px solid ${theme.palette.divider}`
         }}
         onClose={() => toggleMenu(false)}>
-        {options.map(({ label, onClick }) => (
-          <TSCMenuItem key={label} className="" onClick={onClick}>
-            <Typography>{label}</Typography>
-          </TSCMenuItem>
+        {options.map(({ label, onClick, icon }) => (
+          <SplitButtonMenuItem key={label} onClick={onClick}>
+            <Typography sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 180 }}>
+              {icon}
+              {label}
+            </Typography>
+          </SplitButtonMenuItem>
         ))}
       </ControlledMenu>
     </>

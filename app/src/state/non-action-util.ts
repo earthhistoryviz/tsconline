@@ -124,6 +124,11 @@ export function getPublicOfficialDatapacksMetadata(datapacks: DatapackMetadata[]
 }
 
 export type OfficialDatapackSubgroup = "global" | "regional" | "evolution-culture" | "workshop" | "other";
+export type OfficialDatapackGroup = {
+  subgroup?: OfficialDatapackSubgroup;
+  label: string;
+  datapacks: DatapackMetadata[];
+};
 
 const officialSubgroupOrder: OfficialDatapackSubgroup[] = [
   "global",
@@ -132,6 +137,18 @@ const officialSubgroupOrder: OfficialDatapackSubgroup[] = [
   "workshop",
   "other"
 ];
+
+const officialSubgroupAliases: Record<string, OfficialDatapackSubgroup> = {
+  global: "global",
+  "global timescale": "global",
+  regional: "regional",
+  "regional datapacks": "regional",
+  "evolution-culture": "evolution-culture",
+  "evolution & culture": "evolution-culture",
+  "evolution and culture": "evolution-culture",
+  workshop: "workshop",
+  other: "other"
+};
 
 // which official datapack goes in which sub-section (add new official packs here)
 const officialDatapackSubgroupByTitle: Record<string, OfficialDatapackSubgroup> = {
@@ -157,8 +174,63 @@ export function getOfficialDatapackSubgroup(datapack: DatapackMetadata): Officia
   return officialDatapackSubgroupByTitle[datapack.title] ?? "other";
 }
 
+function getOfficialDatapackSubgroupFromHeaderLabel(label: string): OfficialDatapackSubgroup | undefined {
+  return officialSubgroupAliases[label.trim().toLowerCase()];
+}
+
 // sort official datapacks into ordered sub-sections for the datapacks page
-export function groupOfficialDatapacks(datapacks: DatapackMetadata[]) {
+export function groupOfficialDatapacks(datapacks: DatapackMetadata[]): OfficialDatapackGroup[] {
+  const customHeaderDatapacks = datapacks.filter((datapack) => datapack.officialHeader?.trim());
+  if (customHeaderDatapacks.length > 0) {
+    const groups = new Map<string, OfficialDatapackGroup>();
+    for (const datapack of customHeaderDatapacks) {
+      const label = datapack.officialHeader!.trim();
+      const existing = groups.get(label);
+      if (existing) {
+        existing.datapacks.push(datapack);
+      } else {
+        groups.set(label, {
+          label,
+          subgroup: getOfficialDatapackSubgroupFromHeaderLabel(label),
+          datapacks: [datapack]
+        });
+      }
+    }
+    const customGroups = Array.from(groups.values())
+      .sort((a, b) => {
+        const aOrder = Math.min(...a.datapacks.map((datapack) => datapack.officialHeaderOrder ?? datapack.priority));
+        const bOrder = Math.min(...b.datapacks.map((datapack) => datapack.officialHeaderOrder ?? datapack.priority));
+        return aOrder - bOrder || a.label.localeCompare(b.label);
+      })
+      .map((group) => ({
+        ...group,
+        datapacks: group.datapacks.sort((a, b) => a.priority - b.priority)
+      }));
+    const unassignedDatapacks = datapacks.filter((datapack) => !datapack.officialHeader?.trim());
+    if (unassignedDatapacks.length === 0) {
+      return customGroups;
+    }
+    const fallbackGroups = groupOfficialDatapacks(unassignedDatapacks);
+    const mergedGroups = [...customGroups];
+    for (const fallbackGroup of fallbackGroups) {
+      const existingGroup = mergedGroups.find(
+        (group) =>
+          group.label.trim().toLowerCase() === fallbackGroup.label.trim().toLowerCase() ||
+          (group.subgroup && fallbackGroup.subgroup && group.subgroup === fallbackGroup.subgroup)
+      );
+      if (existingGroup) {
+        existingGroup.datapacks = [...existingGroup.datapacks, ...fallbackGroup.datapacks].sort(
+          (a, b) => a.priority - b.priority
+        );
+        if (!existingGroup.subgroup && fallbackGroup.subgroup) {
+          existingGroup.subgroup = fallbackGroup.subgroup;
+        }
+      } else {
+        mergedGroups.push(fallbackGroup);
+      }
+    }
+    return mergedGroups;
+  }
   const groups: Record<OfficialDatapackSubgroup, DatapackMetadata[]> = {
     global: [],
     regional: [],
@@ -171,7 +243,11 @@ export function groupOfficialDatapacks(datapacks: DatapackMetadata[]) {
   }
   return officialSubgroupOrder
     .filter((subgroup) => groups[subgroup].length > 0)
-    .map((subgroup) => ({ subgroup, datapacks: groups[subgroup] }));
+    .map((subgroup) => ({
+      subgroup,
+      label: subgroup,
+      datapacks: groups[subgroup]
+    }));
 }
 export function getPrivateOfficialDatapackMetadatas(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);

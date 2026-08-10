@@ -9,11 +9,13 @@ import {
   assertarkL_intervalsArray
 } from "./schema.js";
 import { join } from "path";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, readdir, unlink, writeFile } from "fs/promises";
 import chalk from "chalk";
 import { calculateAutoScale } from "@tsconline/shared";
 
 const outputDir = join("db", "london", "output");
+const LONDON_DATAPACK_RETENTION_LIMIT = 10;
+const LONDON_DATAPACK_FILE_REGEX = /^UCL_TSC_Chronostrat_(\d{2}[A-Z][a-z]{2}\d{4})\.txt$/;
 
 /** Stable official datapack title (UI sync + server migrate key). Filename suffix reflects validation mode. */
 export const LONDON_DATAPACK_TITLE = "UCL TSC Chron";
@@ -1029,6 +1031,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
 async function processBlockColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
   const blockColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
+    if (isStandaloneFaciesSupportColumn(columns, column)) continue;
     if (
       column.column_type?.includes("interval") &&
       !column.interval_type?.includes("sequence") &&
@@ -1295,6 +1298,17 @@ function findFaciesFormationLabelColumn(columns: arkL_columns[], faciesColumn: a
   );
 }
 
+function isStandaloneFaciesSupportColumn(columns: arkL_columns[], column: arkL_columns): boolean {
+  if (column.column_type !== "intervals") return false;
+  const name = column.columnx ?? "";
+  const isSupportColumn = /\bSeries\b/i.test(name) || name.includes("Facies Label") || name.includes("Formations");
+  if (!isSupportColumn) return false;
+  return columns.some(
+    (candidate) =>
+      isFaciesGraphicColumn(candidate) && candidate.dataset_id === column.dataset_id && candidate.path === column.path
+  );
+}
+
 /** Match TSC pattern PNG basename (e.g. Shallow-marine marl, Fine-grained sandstone). */
 function tscPatternNameFromLithology(lithology: string): string {
   const trimmed = lithology.trim();
@@ -1532,10 +1546,41 @@ function formatRangeBound(value: number): string {
   return String(rounded);
 }
 
+function makeUniqueMetaColumnLabel(label: string, usedNames: Set<string>): string {
+  let candidate = `${label} group`;
+  let counter = 2;
+  while (usedNames.has(candidate)) {
+    candidate = `${label} group ${counter}`;
+    counter++;
+  }
+  return candidate;
+}
+
 const organizeColumn = (entries: ProcessColumnOutput[], pathDict: StringDictSet, linesDict: StringDict) => {
+  const columnNames = new Set(entries.map((entry) => entry.column.trim()));
+  const usedNames = new Set(columnNames);
+  const pathAliases = new Map<string, string>();
+
   for (const entry of entries) {
     const { path, column, lines } = entry;
-    const pathArray = customSplit(path);
+    let pathArray = customSplit(path);
+    // Avoid emitting a redundant metacolumn whose name is identical to its only child column.
+    // TSC's Java loader is brittle here, especially for chron columns.
+    if (pathArray.length > 1 && pathArray[pathArray.length - 1]?.trim() === column.trim()) {
+      pathArray = pathArray.slice(0, -1);
+    }
+    pathArray = pathArray.map((segment, index) => {
+      const trimmed = segment.trim();
+      const aliasKey = pathArray.slice(0, index + 1).join("\u0000");
+      const existingAlias = pathAliases.get(aliasKey);
+      if (existingAlias) return existingAlias;
+      if (!columnNames.has(trimmed)) return segment;
+
+      const alias = makeUniqueMetaColumnLabel(trimmed, usedNames);
+      usedNames.add(alias);
+      pathAliases.set(aliasKey, alias);
+      return alias;
+    });
     for (let i = 0; i < pathArray.length; i++) {
       const currentPath = pathArray[i]!;
       if (!currentPath) continue;
@@ -1644,6 +1689,42 @@ export async function generateAndWriteConfig(fileName: string) {
   await writeFile(configPath, JSON.stringify(config, null, 2), "utf8");
 }
 
+function parseLondonDatapackDate(fileName: string): number | null {
+  const match = fileName.match(LONDON_DATAPACK_FILE_REGEX);
+  if (!match) return null;
+
+  const parsed = Date.parse(`${match[1]} UTC`);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+async function pruneLondonDatapackHistory(currentFileName: string) {
+  const entries = await readdir(outputDir, { withFileTypes: true });
+  const datapackFiles = entries
+    .filter((entry) => entry.isFile() && LONDON_DATAPACK_FILE_REGEX.test(entry.name))
+    .map((entry) => ({
+      fileName: entry.name,
+      timestamp: parseLondonDatapackDate(entry.name)
+    }))
+    .filter((entry): entry is { fileName: string; timestamp: number } => entry.timestamp !== null)
+    .sort((a, b) => b.timestamp - a.timestamp);
+
+  const keep = new Set(datapackFiles.slice(0, LONDON_DATAPACK_RETENTION_LIMIT).map((entry) => entry.fileName));
+  keep.add(currentFileName);
+
+  const staleFiles = datapackFiles.filter((entry) => !keep.has(entry.fileName));
+  for (const staleFile of staleFiles) {
+    await unlink(join(outputDir, staleFile.fileName));
+  }
+
+  if (staleFiles.length > 0) {
+    console.log(
+      chalk.cyan(
+        `Pruned ${staleFiles.length} old London datapack(s); kept latest ${Math.min(datapackFiles.length, LONDON_DATAPACK_RETENTION_LIMIT)}`
+      )
+    );
+  }
+}
+
 export async function generateLondonDatapack(): Promise<File | undefined> {
   try {
     const { datasets, columns, events, intervals, lithologyById } = await loadJSONS();
@@ -1695,6 +1776,7 @@ export async function generateLondonDatapack(): Promise<File | undefined> {
     organizeColumn(allColumns, pathDict, linesDict);
     const lines = await linesFromDicts(pathDict, linesDict);
     await writeFile(filePath, lines.join("\n"));
+    await pruneLondonDatapackHistory(fileName);
     await generateAndWriteConfig(fileName);
 
     // Read the file back and return as a File object (browser-compatible)

@@ -1026,6 +1026,7 @@ describe("login-routes tests", () => {
       });
 
       expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(payload.recaptchaToken, "sendForgotPasswordEmail");
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(422);
       expect(response.json().error).toBe("Recaptcha failed");
@@ -1195,6 +1196,7 @@ describe("login-routes tests", () => {
       });
 
       expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(payload.recaptchaToken, "resetpassword");
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(422);
       expect(response.json().error).toBe("Recaptcha failed");

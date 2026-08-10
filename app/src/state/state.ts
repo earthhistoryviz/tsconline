@@ -128,6 +128,8 @@ export type State = {
     datapackConfig: {
       tempRowData: DatapackMetadata[] | null;
       rowPriorityUpdates: DatapackPriorityChangeRequest[];
+      headerTitles: string[];
+      tempHeaderTitles: string[] | null;
     };
   };
   workshops: SharedWorkshop[];
@@ -267,7 +269,9 @@ export const state = observable<State>({
     datapackPriorityLoading: false,
     datapackConfig: {
       tempRowData: null,
-      rowPriorityUpdates: []
+      rowPriorityUpdates: [],
+      headerTitles: [],
+      tempHeaderTitles: null
     }
   },
   workshops: [],
