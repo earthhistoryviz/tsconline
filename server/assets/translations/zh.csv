@@ -186,7 +186,7 @@ translation.settings.font.notes3,注意：可以通过每列的“字体”按�
 translation.settings.map-points.not-avaliable,该数据包暂无地图可用
 translation.settings.datapacks.page-title,数据包
 translation.settings.datapacks.page-subtitle,选择一个或多个数据包来构建图表。
-translation.settings.datapacks.staged-count,已暂存 {{count}} 个
+translation.settings.datapacks.staged-count,已暂存
 translation.settings.datapacks.see-info-guidance,点击数据包以查看更多信息！
 translation.settings.datapacks.add-datapack-guidance,选择一个或多个数据包来构建图表。每个数据包都会添加地质事件。确认选择后生成图表。
 translation.settings.datapacks.add-to-chart,添加到图表
