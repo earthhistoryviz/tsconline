@@ -107,6 +107,7 @@ export type MCPChartState = {
   datapackTitles: string[];
   overrides: Record<string, unknown>;
   columnToggles: MCPColumnToggles;
+  columnOrder: string[];
   lastChartPath?: string;
   lastModified?: Date;
 };
@@ -140,7 +141,7 @@ export type MCPChartSyncServerMessage =
   | {
       type: "apply-chart-state";
       requestId: string;
-      chartState: Pick<MCPChartState, "datapackTitles" | "overrides" | "columnToggles">;
+      chartState: Pick<MCPChartState, "datapackTitles" | "overrides" | "columnToggles" | "columnOrder">;
     }
   | {
       type: "geogpt-chart-update-start";
@@ -162,7 +163,7 @@ export type MCPChartSyncServerMessage =
     };
 
 export function newMCPChartState(): MCPChartState {
-  return { datapackTitles: [], overrides: {}, columnToggles: {} };
+  return { datapackTitles: [], overrides: {}, columnToggles: {}, columnOrder: [] };
 }
 
 export type CachedChartResponseInfo = {
