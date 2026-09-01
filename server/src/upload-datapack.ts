@@ -76,6 +76,7 @@ export const processAndUploadDatapack = async (
   const user = await findUser({ uuid }).catch(() => {
     return [];
   });
+
   if ((!uuid || !user || !user[0]) && uuid !== "official") {
     return { code: 404, message: "Error finding user" };
   }
@@ -116,6 +117,14 @@ export const processAndUploadDatapack = async (
     if (await doesDatapackFolderExistInAllUUIDDirectories(uuidDirectoryToDownloadTo, datapackMetadata.title)) {
       return { code: 409, message: "Datapack with the same title already exists" };
     }
+
+    console.log("Temp Upload Debugging");
+    console.log("datapackMetadata", datapackMetadata);
+    console.log("uuidDirectoryToDownloadTo", uuidDirectoryToDownloadTo);
+    console.log("filepath", filepath);
+    console.log("tempProfilePictureFilepath", tempProfilePictureFilepath);
+    console.log("pdfFields", pdfFields);
+
     try {
       await setupNewDatapackDirectoryInUUIDDirectory(
         uuidDirectoryToDownloadTo,

@@ -51,6 +51,10 @@ jobs:
           username: deployuser
           key: ${{ secrets.SSH_KEY }}
           script: |
+            if [ -z "${{ secrets.TMP_USR_SESSION_ID }}" ]; then
+              echo "Error: Missing required TMP_USR_SESSION_ID repository secret."
+              exit 1
+            fi
             if [ ! -d /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} ]; then
               echo "Error: Directory /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} not found."
               exit 1

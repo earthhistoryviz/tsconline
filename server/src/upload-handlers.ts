@@ -96,7 +96,8 @@ export async function uploadUserDatapackHandler(
     datapackImage,
     tempProfilePictureFilepath,
     priority,
-    hasFiles
+    hasFiles,
+    sessionId
   } = fields;
   let { references, tags } = fields;
   if (
@@ -115,6 +116,11 @@ export async function uploadUserDatapackHandler(
     await userUploadHandler(filepath, tempProfilePictureFilepath);
     return { code: 400, message: "Missing required fields" };
   }
+  let tempUpload = false;
+  if (uuid === process.env.TMP_USR_SESSION_ID) {
+    tempUpload = true;
+  }
+
   if (title === "__proto__" || title === "constructor" || title === "prototype" || title.trim() !== title) {
     await userUploadHandler(filepath, tempProfilePictureFilepath);
     return { code: 400, message: "Invalid title" };
@@ -186,6 +192,7 @@ export async function uploadUserDatapackHandler(
     await userUploadHandler(filepath, tempProfilePictureFilepath);
     return { code: 400, message: `Max contact length is ${MAX_DATAPACK_CONTACT_LENGTH}` };
   }
+
   try {
     const metadata = {
       originalFileName,
@@ -205,7 +212,8 @@ export async function uploadUserDatapackHandler(
       ...(tempProfilePictureFilepath && { tempProfilePictureFilepath }),
       ...(contact && { contact }),
       ...(notes && { notes }),
-      ...(date && { date })
+      ...(date && { date }),
+      ...(tempUpload && { sessionId })
     };
     assertDatapackMetadata(metadata);
     return metadata;
