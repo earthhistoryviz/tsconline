@@ -335,6 +335,7 @@ const looseRateLimit = rateLimitConfig(30);
 
 server.post("/mcp/datapacks", looseRateLimit, mcpRoutes.mcpListDatapacks);
 server.post("/mcp/list-columns", looseRateLimit, mcpRoutes.mcpListColumns);
+server.post("/mcp/grep-columns", looseRateLimit, mcpRoutes.mcpGrepColumns);
 server.post("/mcp/render-chart-with-edits", looseRateLimit, mcpRoutes.mcpRenderChartWithEdits);
 server.post("/mcp/user-info", moderateRateLimit, mcpRoutes.mcpUserInfoProxy);
 server.post("/mcp/create-session", strictRateLimit, mcpRoutes.mcpCreateSession);

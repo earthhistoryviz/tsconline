@@ -19,7 +19,10 @@ vi.mock("../src/util.js", () => ({ extractMetadataFromDatapack: vi.fn() }));
 vi.mock("../src/chart-generation/generate-chart.js", () => ({ generateChart: vi.fn() }));
 vi.mock("../src/settings-generation/build-settings.js", () => ({
   generateChartWithEdits: vi.fn(),
-  listColumns: vi.fn()
+  listColumns: vi.fn(),
+  grepColumnsAcrossDatapacks: vi.fn(),
+  buildGrepColumnRoot: vi.fn(),
+  buildChartXmlFromPreparedColumnRoot: vi.fn()
 }));
 vi.mock("../src/database.js", () => ({ findUser: vi.fn() }));
 vi.mock("../src/upload-datapack.js", () => ({
@@ -31,6 +34,7 @@ import {
   handleMcpChartStateSync,
   mcpListDatapacks,
   mcpListColumns,
+  mcpGrepColumns,
   mcpRenderChartWithEdits,
   mcpUserInfoProxy,
   mcpUploadDatapack,
@@ -43,7 +47,11 @@ import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
 import { fetchAllPrivateOfficialDatapacks, fetchAllUsersDatapacks } from "../src/user/user-handler.js";
 import { extractMetadataFromDatapack } from "../src/util.js";
 import { generateChart } from "../src/chart-generation/generate-chart.js";
-import { generateChartWithEdits, listColumns } from "../src/settings-generation/build-settings.js";
+import {
+  generateChartWithEdits,
+  listColumns,
+  grepColumnsAcrossDatapacks
+} from "../src/settings-generation/build-settings.js";
 import { findUser } from "../src/database.js";
 
 function makeMockWebSocket() {
@@ -330,6 +338,62 @@ describe("mcpListColumns", () => {
       datapackTitles: ["Nested"],
       columns: { Group: { Subgroup: ["Column"] } }
     });
+  });
+});
+
+describe("mcpGrepColumns", () => {
+  it("returns matched datapacks and grep follow-up fields", async () => {
+    // Current chart pack + a newly matched pack. UCL is loaded but should be filtered out of the search currently
+    const currentDp = { title: "Internal Datapack", isPublic: true };
+    const matchedDp = { title: "Vertebrate Evolution", isPublic: true };
+    const excludedDp = { title: "UCL TSC Chron", isPublic: true };
+
+    (loadPublicUserDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      currentDp,
+      matchedDp,
+      excludedDp
+    ]);
+    (fetchAllPrivateOfficialDatapacks as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    // Discovery result: only the new pack matched the phrase
+    (grepColumnsAcrossDatapacks as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce([
+      {
+        title: "Vertebrate Evolution",
+        isPublic: true,
+        enabledColumnCount: 1,
+        matches: [
+          {
+            name: "Mammals",
+            editName: "Mammals",
+            path: "Mammals",
+            type: "BlockSeriesMetaColumn",
+            isGroup: false,
+            descendantCount: 0
+          }
+        ]
+      }
+    ]);
+
+    const req = {
+      body: {
+        phrase: "mammals",
+        currentChartState: { datapackTitles: ["Internal Datapack"] }
+      }
+    } as unknown as FastifyRequest;
+    const reply = { send: vi.fn(), status: vi.fn().mockReturnThis() } as unknown as FastifyReply;
+
+    await mcpGrepColumns(req, reply);
+
+    // Search skips UCL. Response keeps current pack first then the matched pack
+    expect(grepColumnsAcrossDatapacks).toHaveBeenCalledWith([currentDp, matchedDp], "mammals");
+    expect(reply.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        phrase: "mammals",
+        totalMatched: 1,
+        matchedByDatapack: [{ title: "Vertebrate Evolution", matchCount: 1 }],
+        datapackTitles: ["Internal Datapack", "Vertebrate Evolution"],
+        grepPhrase: "mammals"
+      })
+    );
   });
 });
 
