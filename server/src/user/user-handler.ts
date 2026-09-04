@@ -421,6 +421,14 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
       case "isPublic":
         partial.isPublic = fields[key] === "true";
         break;
+      case "officialHeaderOrder": {
+        const officialHeaderOrder = Number(value);
+        if (!Number.isFinite(officialHeaderOrder)) {
+          throw new Error("Invalid official header order");
+        }
+        partial.officialHeaderOrder = officialHeaderOrder;
+        break;
+      }
       case "date":
         if (!isDateValid(value)) {
           throw new Error("Invalid date");
@@ -435,6 +443,7 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
       case "authoredBy":
       case "contact":
       case "notes":
+      case "officialHeader":
       case "originalFileName":
       case "storedFileName":
       case "datapackImage":

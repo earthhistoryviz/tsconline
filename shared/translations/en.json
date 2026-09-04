@@ -473,6 +473,9 @@
                 "not-avaliable": "No Map Points available for this datapack"
             },
             "datapacks": {
+                "page-title": "Add Datapacks",
+                "page-subtitle": "Pick the packs you want, then generate the chart.",
+                "staged-count": "staged",
                 "see-info-guidance": "Click a datapack to see more information!",
                 "add-datapack-guidance": "Select one or more datapacks to build your chart. Each adds geologic events. Confirm your selection, then generate your chart.",
                 "add-to-chart": "Add to chart",

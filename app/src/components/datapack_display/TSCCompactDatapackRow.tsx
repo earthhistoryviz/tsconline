@@ -88,7 +88,13 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         {skeleton ? (
           <Skeleton width={76} height={28} sx={{ borderRadius: 1 }} />
         ) : (
-          <DatapackChartAction selected={!!value} loading={loading} compact onClick={toggleChart} />
+          <DatapackChartAction
+            selected={!!value}
+            loading={loading}
+            compact
+            datapackTitle={datapack.title}
+            onClick={toggleChart}
+          />
         )}
         {!skeleton && isOwnedByUser(datapack, state.user?.uuid) && (
           <Box

@@ -6,6 +6,7 @@ import Toolbar from "@mui/material/Toolbar";
 import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
 import {
+  Button,
   Drawer,
   IconButton,
   List,
@@ -19,7 +20,7 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { context } from "./state";
-import { TSCMenuItem, TSCButton } from "./components";
+import { TSCMenuItem, TSCSplitButton } from "./components";
 import {
   Menu as MenuIcon,
   TableChart,
@@ -28,7 +29,8 @@ import {
   Campaign,
   School,
   AccountCircle,
-  AutoAwesome
+  AutoAwesome,
+  CompareArrows
 } from "@mui/icons-material";
 import { ControlledMenu, Menu, MenuDivider, MenuHeader, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
@@ -42,6 +44,7 @@ import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 import React from "react";
 import languageList from "@tsconline/shared/translations/available-languages.json";
+import { isTempDatapack } from "@tsconline/shared";
 import Switch from "@mui/material/Switch";
 import { CustomFormControlLabel } from "./components/TSCComponents";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -65,6 +68,15 @@ export const NavBar = observer(function Navbar() {
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
   const [menuDrawerOpen, setMenuDrawerOpen] = React.useState(false);
   const { t } = useTranslation();
+  const navControlSx = {
+    color: theme.palette.icon.main,
+    "& .MuiSvgIcon-root": {
+      color: "inherit"
+    },
+    "&:hover": {
+      color: "#ffffff"
+    }
+  } as const;
   const menuItems = [
     { label: t("navBar.presets"), path: "/presets-view", icon: <Dataset />, className: "qsg-presets" },
     { label: t("navBar.datapacks"), path: "/datapacks", icon: <Dataset />, className: "qsg-datapacks" },
@@ -85,6 +97,30 @@ export const NavBar = observer(function Navbar() {
     navigate(path);
     setMenuDrawerOpen(false);
   };
+
+  const generateChart = async () => {
+    if (location.pathname !== "/crossplot") {
+      await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
+      actions.initiateChartGeneration(navigate, location.pathname);
+    } else {
+      await actions.generateConvertedCrossPlotChart(navigate);
+    }
+  };
+
+  const openCrossplot = async () => {
+    navigate("/crossplot");
+    actions.setTab(0);
+    for (const datapack of state.unsavedDatapackConfig) {
+      if (isTempDatapack(datapack)) {
+        return;
+      }
+    }
+    await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), {
+      setter: actions.setCrossPlotDatapackConfig,
+      currentConfig: state.crossPlot.datapacks
+    });
+  };
+
   return (
     <StyledAppBar position="sticky" className="nav-bar">
       <Toolbar>
@@ -93,17 +129,13 @@ export const NavBar = observer(function Navbar() {
             <Link to="/">
               <IconButton
                 size="large"
-                sx={{
-                  "&:hover": {
-                    opacity: 0.9
-                  }
-                }}
+                sx={navControlSx}
                 value={0}
                 onClick={() => {
                   actions.setTab(0);
                   actions.setUseCache(true);
                 }}>
-                <HomeIcon sx={{ color: "button.light" }} />
+                <HomeIcon />
               </IconButton>
             </Link>
             <Tabs
@@ -209,38 +241,56 @@ export const NavBar = observer(function Navbar() {
           </>
         )}
         <div style={{ flexGrow: 1 }} />
-        <TSCButton
+        <TSCSplitButton
           buttonType="gradient"
           disabled={state.loadingDatapacks}
-          startIcon={<AutoAwesome />}
-          onClick={async () => {
-            if (location.pathname !== "/crossplot") {
-              await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
-              actions.initiateChartGeneration(navigate, location.pathname);
-            } else {
-              await actions.generateConvertedCrossPlotChart(navigate);
+          main={{
+            label: t("button.generate-chart"),
+            onClick: () => {
+              void generateChart();
+            },
+            showText: true,
+            icon: <AutoAwesome />
+          }}
+          options={[
+            {
+              label: "Generate Crossplot",
+              onClick: () => {
+                void openCrossplot();
+              },
+              icon: <CompareArrows />
             }
-          }}>
-          {t("button.generate-chart")}
-        </TSCButton>
+          ]}
+        />
 
         {state.isLoggedIn ? (
           <AccountMenu />
         ) : (
-          <Tab
-            className="login-tab"
-            value={8}
-            label={t("login.signin")}
-            icon={<AccountCircle />}
+          <Button
             to="/login"
             component={Link}
+            startIcon={<AccountCircle />}
+            disableRipple
             sx={{
-              color: theme.palette.primary.main,
+              ...navControlSx,
+              ml: 1.5,
+              px: 0,
+              py: 0,
+              minHeight: "auto",
+              minWidth: "auto",
+              textTransform: "none",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              "& .MuiButton-startIcon": {
+                marginRight: 0.5
+              },
               "&:hover": {
-                color: theme.palette.selection.light
+                color: "#ffffff",
+                backgroundColor: "transparent"
               }
-            }}
-          />
+            }}>
+            {t("login.signin")}
+          </Button>
         )}
         <NonUserSettings />
       </Toolbar>
@@ -251,10 +301,19 @@ const NonUserSettings: React.FC = () => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
+  const navControlSx = {
+    color: theme.palette.icon.main,
+    "& .MuiSvgIcon-root": {
+      color: "inherit"
+    },
+    "&:hover": {
+      color: "#ffffff"
+    }
+  } as const;
   return (
     <Menu
       menuButton={
-        <IconButton>
+        <IconButton sx={navControlSx}>
           <SettingsIcon />
         </IconButton>
       }

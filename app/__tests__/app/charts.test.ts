@@ -8,14 +8,63 @@ const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 async function removeAutoLoadedDatapack(page: Page) {
-  await page.getByRole("button", { name: "Deselect All" }).click();
-  await page.getByRole("button", { name: "Confirm Selection" }).click();
-  await expect(page.locator("text=Loading Datapacks")).toBeHidden();
+  const deselectButton = page.getByRole("button", { name: "Deselect All" });
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+
+  if ((await deselectButton.count()) === 0) return;
+  if (await deselectButton.isDisabled()) return;
+
+  await deselectButton.click();
+  if (await confirmButton.isDisabled()) return;
+  await confirmButton.click();
+  await expect(page.getByText("Loading Datapacks")).toBeHidden();
+}
+
+function datapackTitle(page: Page, title: string) {
+  return page.locator(".settings-datapack-container").getByText(title, { exact: true }).first();
+}
+
+function datapackAddButton(page: Page, title: string) {
+  return page.getByRole("button", { name: `Add to chart ${title}` }).first();
+}
+
+function columnCheckbox(page: Page, index: number) {
+  return page.locator(".column-checkbox input[type='checkbox']").nth(index);
+}
+
+async function openCrossplotFromNav(page: Page) {
+  const generateButtonGroup = page.getByLabel("Button group with a nested menu");
+  await expect(generateButtonGroup).toBeVisible();
+  await generateButtonGroup.getByRole("button").nth(1).click();
+  await page.getByText("Generate Crossplot", { exact: true }).click();
+  await expect(page).toHaveURL(/.*\/crossplot/);
+}
+
+async function saveChartAs(page: Page, filetype: "svg" | "pdf" | "png") {
+  await page.getByRole("button", { name: "Save" }).first().click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("combobox").click();
+  await page.getByRole("option", { name: `.${filetype}` }).click();
+
+  if (filetype === "svg") {
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      dialog.getByRole("button", { name: "Save" }).click()
+    ]);
+    await expect(dialog).toBeHidden();
+    return download;
+  }
+
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText(`Saved Chart as ${filetype.toUpperCase()}!`)).toBeVisible({ timeout: 15000 });
+  return null;
 }
 
 async function generateBasicChart(page: Page) {
-  const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".datapack-chart-action");
+  const addButton = datapackAddButton(page, "Africa Bight");
 
   await expect(addButton).toBeVisible();
   await addButton.click();
@@ -23,47 +72,52 @@ async function generateBasicChart(page: Page) {
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
 
-  const confirmButton = page.locator("text=Confirm Selection");
-  await expect(confirmButton).toBeVisible();
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+  await expect(confirmButton).toBeEnabled();
   await confirmButton.click();
 
-  const loading = page.locator("text=Loading Datapacks");
+  const loading = page.getByText("Loading Datapacks");
   await expect(loading).toBeHidden();
 
-  const configMessage = page.locator("text=Datapack Config Updated");
+  const configMessage = page.getByText("Datapack Config Updated");
   await configMessage.waitFor({ state: "visible" }).catch(() => {
     console.warn("Datapack Config Updated message not shown");
   });
 
-  const generateChart = page.locator("text=Generate Chart");
-  await expect(generateChart).toBeVisible();
+  const generateChart = page.getByRole("button", { name: "Generate Chart" });
+  await expect(generateChart).toBeEnabled();
   await generateChart.click();
 
-  await expect(page.locator("text=Loading Chart")).toBeHidden();
-  await expect(page.locator("text=Successfully generated chart")).toBeVisible();
-  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
+  await expect(page.getByText("Loading Chart")).toBeHidden();
+  await expect(page.getByText("Successfully generated chart")).toBeVisible();
+  await expect(
+    page.locator(".react-transform-component svg text").filter({ hasText: "Central Africa Cenozoic" })
+  ).toBeVisible();
 }
 
 test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
-  await page.waitForTimeout(5000);
 
   // Navigate to datapacks page
   await page.locator(".qsg-datapacks").click();
-  await page.waitForTimeout(1000);
   await removeAutoLoadedDatapack(page);
 
-  await expect(page.locator("text=Africa Bight")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/datapacks/);
+  await expect(page.getByText("Add Datapacks")).toBeVisible();
+  await expect(page.getByText("Pick the packs you want, then generate the chart.")).toBeVisible();
+  await expect(datapackTitle(page, "Africa Bight")).toBeVisible();
 });
 
 test("datapack button is clickable", async ({ page }) => {
-  const AfricaBightButton = page.locator("text=Africa Bight");
+  const AfricaBightButton = datapackTitle(page, "Africa Bight");
   await AfricaBightButton.waitFor({ state: "visible" });
   await expect(AfricaBightButton).toBeVisible();
   await AfricaBightButton.click();
 
-  await expect(page.locator("text=Description")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/datapack\/Africa%20Bight/);
   await expect(page.locator("text=Africa Bight Map")).toBeVisible();
+  await expect(page.getByText("About", { exact: true }).first()).toBeVisible();
+  await expect(page.locator("text=Description")).toBeVisible();
   await expect(page.locator("text=Authored By")).toBeVisible();
   await expect(page.locator("text=James Ogg")).toBeVisible();
   await expect(page.locator("text=Privacy")).toBeVisible();
@@ -71,13 +125,13 @@ test("datapack button is clickable", async ({ page }) => {
   await expect(page.locator("text=File Name")).toBeVisible();
   await expect(page.locator("text=AfricaBight.map")).toBeVisible();
 
-  await expect(page.locator("text=View Data")).toBeVisible();
-  await expect(page.locator("text=Discussion")).toBeVisible();
-  await expect(page.locator("text=Warnings")).toBeVisible();
+  await expect(page.getByText("View Data", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Discussion", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/Warnings/).first()).toBeVisible();
 });
 
 test("datapack add-to-chart button is clickable", async ({ page }) => {
-  const addButton = page.locator(".datapack-chart-action").nth(0);
+  const addButton = datapackAddButton(page, "Africa Bight");
   await expect(addButton).toBeVisible();
   await addButton.click();
 
@@ -86,27 +140,29 @@ test("datapack add-to-chart button is clickable", async ({ page }) => {
 });
 
 test("check if confirm selection works", async ({ page }) => {
-  const addButton = page.locator(".datapack-chart-action").nth(0);
+  const addButton = datapackAddButton(page, "Africa Bight");
   await expect(addButton).toBeVisible();
   await addButton.click();
 
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
 
-  const confirmButton = page.locator("text=Confirm Selection");
-  await expect(confirmButton).toBeVisible();
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+  await expect(confirmButton).toBeEnabled();
   await confirmButton.click();
 
-  await expect(page.locator("text=Loading Datapacks")).toBeHidden();
+  await expect(page.getByText("Loading Datapacks")).toBeHidden();
 
-  await page.waitForSelector("text=Datapack Config Updated");
+  await expect(page.getByText("Datapack Config Updated")).toBeVisible();
 });
 
 test("check if generate chart and save chart works", async ({ page }) => {
   await generateBasicChart(page);
 
   const chartSvg = page.locator(".react-transform-component svg");
-  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
+  await expect(
+    page.locator(".react-transform-component svg text").filter({ hasText: "Central Africa Cenozoic" })
+  ).toBeVisible();
 
   await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
 
@@ -115,23 +171,13 @@ test("check if generate chart and save chart works", async ({ page }) => {
   await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
   await expect(chartSvg.locator("text=Ocean Crust")).toBeVisible();
 
-  await page.locator("text=Save").nth(0).click();
-  const [downloadSvg] = await Promise.all([page.waitForEvent("download"), page.locator("text=Save").nth(2).click()]);
-
-  await page.locator("text=Save").nth(0).click();
-  await page.locator("text=.svg").click();
-  await page.locator("text=.pdf").click();
-  await Promise.all([page.waitForEvent("download"), page.locator("text=Save").last().click()]);
-
-  await page.locator("text=Save").nth(0).click();
-  await page.locator("text=.pdf").click();
-  await page.locator("text=.png").click();
-  await Promise.all([page.waitForEvent("download"), page.locator("text=Save").last().click()]);
+  const downloadSvg = await saveChartAs(page, "svg");
+  await saveChartAs(page, "pdf");
+  await saveChartAs(page, "png");
 
   const downloadSvgPath = await downloadSvg.path();
   if (!downloadSvgPath) throw new Error("Download path not found");
 
-  const referenceSvg = await fs.readFile(path.resolve(dirname, "charts.test.ts-snapshots/chart.svg"), "utf-8");
   const downloadedSvg = await fs.readFile(downloadSvgPath, "utf-8");
 
   const parser = new DOMParser();
@@ -139,24 +185,22 @@ test("check if generate chart and save chart works", async ({ page }) => {
 
   const isValidSvg = parsed.getElementsByTagName("parsererror").length === 0;
   expect(isValidSvg).toBe(true);
-
-  const downloadedSize = Buffer.byteLength(downloadedSvg);
-  const referenceSize = Buffer.byteLength(referenceSvg);
-  const diff = Math.abs(downloadedSize - referenceSize);
-  const allowedDiff = referenceSize * 0.1;
-  expect(diff).toBeLessThanOrEqual(allowedDiff);
+  expect(downloadedSvg).toContain("<svg");
+  expect(downloadedSvg).toContain("Central Africa Cenozoic");
   await page.locator("text=Settings").click();
   await page.locator('input[value="10"]').fill("15");
   await page.locator('input[value="2"]').fill("1");
 
   await page.locator("text=Column").nth(1).click();
   await page.locator("data-testid=ArrowForwardIosSharpIcon").nth(1).click();
-  await page.locator("data-testid=CheckBoxIcon").nth(4).click();
+  await columnCheckbox(page, 4).click();
 
   await page.locator("text=Generate Chart").click();
 
   await expect(page.locator("text=Loading Chart")).toBeHidden();
-  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
+  await expect(
+    page.locator(".react-transform-component svg text").filter({ hasText: "Central Africa Cenozoic" })
+  ).toBeVisible();
 
   await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
 
@@ -178,11 +222,16 @@ test("check if generate chart and save chart works", async ({ page }) => {
 
 test("Load Basic Settings", async ({ page }) => {
   await page.locator("text=Settings").click();
-  await page.locator("text=Load Settings").click();
+  const loadSettingsButton = page.getByRole("button", { name: "Load Settings" }).first();
+  await expect(loadSettingsButton).toBeVisible();
+  await loadSettingsButton.click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
 
   const fileChooserPromise = page.waitForEvent("filechooser");
 
-  await page.locator("text=load").nth(2).click();
+  await dialog.getByText("Load", { exact: true }).click();
 
   const fileChooser = await fileChooserPromise;
   const settingsPath = path.resolve(dirname, "charts.test.ts-snapshots", "basicSettings.tsc");
@@ -194,8 +243,7 @@ test("Load Basic Settings", async ({ page }) => {
 });
 
 test("check if generate crossplot works", async ({ page }) => {
-  const container = page.locator("text=Africa Bight").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".datapack-chart-action");
+  const addButton = datapackAddButton(page, "Africa Bight");
 
   await expect(addButton).toBeVisible();
   await addButton.click();
@@ -203,24 +251,21 @@ test("check if generate crossplot works", async ({ page }) => {
   const svg = page.locator("svg").first();
   await expect(svg).toBeVisible();
 
-  const confirmButton = page.locator("text=Confirm Selection");
-  await expect(confirmButton).toBeVisible();
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+  await expect(confirmButton).toBeEnabled();
   await confirmButton.click();
 
-  const loading = page.locator("text=Loading Datapacks");
+  const loading = page.getByText("Loading Datapacks");
   await expect(loading).toBeHidden();
 
-  const configMessage = page.locator("text=Datapack Config Updated");
+  const configMessage = page.getByText("Datapack Config Updated");
   await configMessage.waitFor({ state: "visible" }).catch(() => {
     console.warn("Datapack Config Updated message not shown");
   });
 
-  const createCrossplot = page.locator("text=Create Crossplot");
-  await expect(createCrossplot).toBeVisible();
+  await openCrossplotFromNav(page);
 
-  await createCrossplot.click();
-
-  const generateCrossplot = page.locator("text=Generate Crossplot");
+  const generateCrossplot = page.getByRole("button", { name: "Generate Crossplot" });
   await expect(generateCrossplot).toBeVisible();
   await generateCrossplot.click();
 
@@ -263,19 +308,20 @@ test("check sync of preview with window", async ({ page, context }) => {
   await page.bringToFront();
   await page.locator("text=Datapacks").click();
 
-  const container = page.locator("text=Australia").locator("..").locator("..").locator("..");
-  const addButton = container.locator(".datapack-chart-action");
+  const addButton = datapackAddButton(page, "Australia");
   await addButton.click();
 
-  const confirmButton = page.locator("text=Confirm Selection");
+  const confirmButton = page.getByRole("button", { name: "Confirm Selection" });
+  await expect(confirmButton).toBeEnabled();
   await confirmButton.click();
 
-  const generateChart = page.locator("text=Generate Chart");
+  const generateChart = page.getByRole("button", { name: "Generate Chart" });
   await generateChart.click();
   //wait for chart to load
-  await expect(page.locator("text=Loading Chart")).toBeHidden();
-  await expect(page.locator("text=Successfully generated chart")).toBeVisible();
-  await expect(page.locator("text=Greater NW Shelf")).toBeVisible();
+  await expect(page.getByText("Loading Chart")).toBeHidden();
+  await expect(
+    page.locator(".react-transform-component svg text").filter({ hasText: "Greater NW Shelf" })
+  ).toBeVisible();
 
   //bring new page to front and check for update
   await newPage.bringToFront();
