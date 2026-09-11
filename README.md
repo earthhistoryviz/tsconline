@@ -20,6 +20,14 @@ You'll first want to gain access to write access so you can start pull requests,
 
 Additionally, you'll want access to the dropbox for the required datapacks and jars will be pulled from
 
+WSL AND KEYGEN INFORMATION:
+To install WSL, type wsl --install
+In WSL, type ssh-keygen -t ed25519
+If prompted for anything, press enter
+Then, type cat ~/.ssh/id_ed25519.pub
+This will print the key. Copy it and then add it to Github by clicking profile -> settings -> SSH and GPG keys -> new SSH key.
+Then paste the copied SSH key and add it.
+
 Now, clone this repo to your local device:
 ```
 git clone git@github.com:earthhistoryviz/tsconline.git
