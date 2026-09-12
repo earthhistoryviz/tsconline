@@ -466,6 +466,7 @@ export const forgotPassword = async function forgotPassword(
       throw new Error("User not found");
     }
     request.session.set("uuid", userRow["uuid"]);
+    await updateUser({ uuid: userRow["uuid"] }, { lastLogin: new Date().toISOString() });
     reply.send({ message: "Password reset" });
   } catch (error) {
     console.error("Error during reset:", error);
@@ -641,6 +642,7 @@ export const verifyEmail = async function verifyEmail(
     }
     await updateUser({ userId }, { emailVerified: 1 });
     request.session.set("uuid", uuid);
+    await updateUser({ uuid }, { lastLogin: new Date().toISOString() });
     const response: { message: string; mcpToken?: string } = { message: "Email verified" };
     if (mcpToken) {
       response.mcpToken = mcpToken;
@@ -759,6 +761,7 @@ export const login = async function login(
         return;
       }
       request.session.set("uuid", uuid);
+      await updateUser({ uuid }, { lastLogin: new Date().toISOString() });
       reply.send({ message: "Login successful" });
       return;
     }
@@ -801,6 +804,7 @@ export const googleLogin = async function googleLogin(
         reply.status(409).send({ error: "User already exists" });
       } else {
         request.session.set("uuid", uuid);
+        await updateUser({ uuid }, { lastLogin: new Date().toISOString() });
         reply.send({ message: "Login successful" });
       }
       return;
@@ -823,6 +827,7 @@ export const googleLogin = async function googleLogin(
       throw new Error("User not inserted");
     }
     request.session.set("uuid", uuid);
+    await updateUser({ uuid }, { lastLogin: new Date().toISOString() });
     reply.send({ message: "Login successful" });
   } catch (error) {
     console.error("Error during login:", error);

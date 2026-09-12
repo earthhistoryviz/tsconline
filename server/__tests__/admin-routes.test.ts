@@ -354,7 +354,9 @@ const testAdminUser2: User = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  accountType: "default"
+  accountType: "default",
+  createdAt: "2026-09-11T20:00:00.000Z",
+  lastLogin: "2026-09-11T20:00:00.000Z"
 };
 
 const testAdminUser: User = {
@@ -367,7 +369,9 @@ const testAdminUser: User = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  accountType: "default"
+  accountType: "default",
+  createdAt: "2026-09-11T20:00:00.000Z",
+  lastLogin: "2026-09-11T20:00:00.000Z"
 };
 const testNonAdminUser = {
   ...testAdminUser,
@@ -383,7 +387,9 @@ const testSharedAdminUser = {
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
   accountType: "default",
-  historyEntries: []
+  historyEntries: [],
+  createdAt: "2026-09-11T20:00:00.000Z",
+  lastLogin: "2026-09-11T20:00:00.000Z"
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,

@@ -14,6 +14,8 @@ export type AccountType = "pro" | "default";
 
 export interface UserTable {
   userId: Generated<number>;
+  createdAt: Generated<string | null>;
+  lastLogin: string | null;
   username: string;
   email: string;
   hashedPassword: string | null;
