@@ -24,6 +24,7 @@ import * as logger from "../src/error-logger";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import * as uploadDatapack from "../src/upload-datapack";
+import * as chartHistory from "../src/user/chart-history";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-routes";
 import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 
@@ -247,6 +248,12 @@ vi.mock("../src/file-metadata-handler", async () => {
 vi.mock("../src/parse-excel-file", async () => {
   return {
     parseExcelFile: vi.fn().mockResolvedValue([])
+  };
+});
+
+vi.mock("../src/user/chart-history", async () => {
+  return {
+    getChartHistoryMetadata: vi.fn().mockResolvedValue([])
   };
 });
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
@@ -1363,6 +1370,32 @@ describe("getUsers", () => {
     });
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(404);
+  });
+  it("should fall back to empty historyEntries when getChartHistoryMetadata rejects", async () => {
+    const getChartHistoryMetadata = vi.mocked(chartHistory.getChartHistoryMetadata);
+    getChartHistoryMetadata.mockRejectedValueOnce(new Error("db error"));
+    findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/users",
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    const body = await response.json();
+    expect(body.users[0].historyEntries).toEqual([]);
+  });
+  it("should return null for createdAt and lastLogin when they are null on the user", async () => {
+    const userWithNulls: User = { ...testAdminUser, createdAt: null, lastLogin: null };
+    findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([userWithNulls]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/users",
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    const body = await response.json();
+    expect(body.users[0].createdAt).toBeNull();
+    expect(body.users[0].lastLogin).toBeNull();
   });
 });
 
