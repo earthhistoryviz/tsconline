@@ -22,7 +22,7 @@ import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import useEditUser from "./edit-user-stats-hook";
 import { useContext } from "react";
 import { context } from "../state";
-import { formatDate } from "../state/non-action-util";
+import { formatAdminDate, formatDate } from "../state/non-action-util";
 
 type ShowAdditionalUserInfoProps = {
   data: AdminSharedUser;
@@ -151,6 +151,17 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               </Typography>
             </Box>
 
+            <Box mb={1}>
+              <Typography variant="body1">
+                <strong>Created:</strong> {formatAdminDate(props.data.createdAt)}
+              </Typography>
+            </Box>
+            <Box mb={1}>
+              <Typography variant="body1">
+                <strong>Last login:</strong> {formatAdminDate(props.data.lastLogin)}
+              </Typography>
+            </Box>
+
             {/* Admin Status */}
             <Box display="flex" alignItems="center" mb={2}>
               <Typography variant="body1" mr={1} fontWeight={"bold"}>
@@ -223,6 +234,36 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
           <Box>
             <WorkshopsList />
           </Box>
+
+          <Typography variant="h6" mt={3} mb={2}>
+            Created Charts ({props.data.historyEntries?.length ?? 0})
+          </Typography>
+          <TableContainer component={Paper} sx={{ backgroundColor: "tableContainer.main", maxWidth: "100%" }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Created</TableCell>
+                  <TableCell>Datapacks</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!props.data.historyEntries || props.data.historyEntries.length === 0 ? (
+                  <TableRow>
+                    <TableCell align="center" colSpan={2}>
+                      <Typography fontWeight="bold">No charts created</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  props.data.historyEntries.map((entry) => (
+                    <TableRow key={entry.timestamp}>
+                      <TableCell>{formatDate(entry.timestamp)}</TableCell>
+                      <TableCell>{entry.datapacks.map((datapack) => datapack.title).join(", ") || "None"}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
       </Dialog>
       <TSCYesNoPopup
