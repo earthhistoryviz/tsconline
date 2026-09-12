@@ -18,18 +18,23 @@ import {
 } from "@tsconline/shared";
 import { ErrorCodes } from "./util/error-codes";
 import { backendUrl } from "./util/constant";
+import { WORKSHOP_TOUR_DEMO_COVER_IMAGE, WORKSHOP_TOUR_DEMO_ID, workshopTourDemoWorkshop } from "./workshop-tour-demo";
 
 type WorkshopReservedFileProps = {
   renderLink: boolean;
   fileType: ReservedWorkshopFileKey;
   workshopId: number;
   userInWorkshop: boolean;
+  tourMode: boolean;
+  onTourFileClick: () => void;
 };
 const WorkshopReservedFile: React.FC<WorkshopReservedFileProps> = ({
   renderLink,
   fileType,
   workshopId,
-  userInWorkshop
+  userInWorkshop,
+  tourMode,
+  onTourFileClick
 }) => {
   const { t } = useTranslation();
   return (
@@ -42,8 +47,15 @@ const WorkshopReservedFile: React.FC<WorkshopReservedFileProps> = ({
           <CustomTooltip title={userInWorkshop ? "" : t("workshops.details-page.please-register")}>
             <span>
               <a
-                href={userInWorkshop ? `${backendUrl}/workshop/${workshopId}/files/${fileType}` : undefined}
+                href={
+                  userInWorkshop && !tourMode ? `${backendUrl}/workshop/${workshopId}/files/${fileType}` : undefined
+                }
                 onClick={(e) => {
+                  if (tourMode) {
+                    e.preventDefault();
+                    onTourFileClick();
+                    return;
+                  }
                   if (!userInWorkshop) e.preventDefault();
                 }}
                 target="_blank"
@@ -69,9 +81,14 @@ export const WorkshopDetails = observer(() => {
   const { id } = useParams();
   const { t } = useTranslation();
   const [loadingRegister, setLoadingRegister] = useState(false);
+  const [tourRegistered, setTourRegistered] = useState(false);
+  const isWorkshopTourOpen = state.guides.isWorkshopsTourOpen;
 
   const fetchWorkshop = () => {
     if (!id) return;
+    if (isWorkshopTourOpen && Number(id) === WORKSHOP_TOUR_DEMO_ID) {
+      return workshopTourDemoWorkshop;
+    }
     const workshop = state.workshops.find((d) => d.workshopId === Number(id));
     return workshop;
   };
@@ -84,6 +101,10 @@ export const WorkshopDetails = observer(() => {
     };
   }, []);
   async function downloadWorkshopFiles() {
+    if (isWorkshopTourOpen && workshop?.workshopId === WORKSHOP_TOUR_DEMO_ID) {
+      actions.pushSnackbar("This is a tour demo workshop. The file actions are shown for illustration only.", "info");
+      return;
+    }
     if (workshop && workshop.files && workshop.files.length > 0) {
       await actions.fetchWorkshopFilesForDownload(workshop);
     } else {
@@ -91,6 +112,10 @@ export const WorkshopDetails = observer(() => {
     }
   }
   async function downloadWorkshopFile(fileName: string) {
+    if (isWorkshopTourOpen && workshop?.workshopId === WORKSHOP_TOUR_DEMO_ID) {
+      actions.pushSnackbar(`Tour demo file preview: ${fileName}`, "info");
+      return;
+    }
     if (workshop && workshop.files && workshop.files.length > 0) {
       await actions.fetchWorkshopFile(fileName, workshop);
     } else {
@@ -98,6 +123,10 @@ export const WorkshopDetails = observer(() => {
     }
   }
   async function downloadWorkshopDatapack(dataPackTitle: string) {
+    if (isWorkshopTourOpen && workshop?.workshopId === WORKSHOP_TOUR_DEMO_ID) {
+      actions.pushSnackbar(`Tour demo datapack: ${dataPackTitle}`, "info");
+      return;
+    }
     if (workshop && workshop.files && workshop.files.length > 0) {
       await actions.fetchWorkshopDetailsDatapack(dataPackTitle, workshop);
     } else {
@@ -106,7 +135,12 @@ export const WorkshopDetails = observer(() => {
   }
 
   if (!workshop || !id) return <PageNotFound />;
-  const isRegistered = state.user.isAdmin || state.user.workshopIds?.includes(workshop.workshopId) || false;
+  const isTourWorkshop = isWorkshopTourOpen && workshop.workshopId === WORKSHOP_TOUR_DEMO_ID;
+  const isRegistered =
+    (isTourWorkshop ? tourRegistered : false) ||
+    state.user.isAdmin ||
+    state.user.workshopIds?.includes(workshop.workshopId) ||
+    false;
   const isPublicWorkshop = !workshop.regRestrict;
   const isDisabled = !isPublicWorkshop && !isRegistered;
   return (
@@ -118,7 +152,10 @@ export const WorkshopDetails = observer(() => {
           </IconButton>
           <Typography className={styles.ht}>{workshop.title}</Typography>
 
-          <img className={styles.di} src={getWorkshopCoverImage(workshop.workshopId)} />
+          <img
+            className={styles.di}
+            src={isTourWorkshop ? WORKSHOP_TOUR_DEMO_COVER_IMAGE : getWorkshopCoverImage(workshop.workshopId)}
+          />
         </div>
         <CustomDivider className={styles.divider} />
         <Box className={styles.about} bgcolor="secondaryBackground.main">
@@ -166,12 +203,16 @@ export const WorkshopDetails = observer(() => {
                 fileType="instructions"
                 workshopId={workshop.workshopId}
                 userInWorkshop={isRegistered}
+                tourMode={isTourWorkshop}
+                onTourFileClick={() => actions.pushSnackbar("This file is part of the workshop tour demo.", "info")}
               />
               <WorkshopReservedFile
                 renderLink={workshop.files?.includes(RESERVED_PRESENTATION_FILENAME) || false}
                 fileType="presentation"
                 workshopId={workshop.workshopId}
                 userInWorkshop={isRegistered}
+                tourMode={isTourWorkshop}
+                onTourFileClick={() => actions.pushSnackbar("This file is part of the workshop tour demo.", "info")}
               />
               <Typography className={styles.aih}>{t("workshops.details-page.other-files")}</Typography>
               {(() => {
@@ -185,14 +226,19 @@ export const WorkshopDetails = observer(() => {
                       <Typography key={index} className={styles.fileName}>
                         •{" "}
                         <a
-                          href={isRegistered ? "" : undefined}
+                          href={isRegistered && !isTourWorkshop ? "" : undefined}
                           onClick={
-                            isRegistered
+                            isTourWorkshop
                               ? async (e) => {
                                   e.preventDefault();
-                                  await downloadWorkshopFile(file);
+                                  actions.pushSnackbar(`Tour demo file: ${file}`, "info");
                                 }
-                              : undefined
+                              : isRegistered
+                                ? async (e) => {
+                                    e.preventDefault();
+                                    await downloadWorkshopFile(file);
+                                  }
+                                : undefined
                           }>
                           {file}
                         </a>
@@ -222,13 +268,20 @@ export const WorkshopDetails = observer(() => {
                       }
                     }}>
                     <span>
-                      <TSCButton variant="contained" disabled sx={{ backgroundColor: "primary" }}>
+                      <TSCButton
+                        variant="contained"
+                        disabled
+                        sx={{ backgroundColor: "primary" }}
+                        data-tour="workshop-download-all-files">
                         {t("workshops.details-page.download-button")}
                       </TSCButton>
                     </span>
                   </CustomTooltip>
                 ) : (
-                  <TSCButton variant="contained" onClick={downloadWorkshopFiles}>
+                  <TSCButton
+                    variant="contained"
+                    onClick={downloadWorkshopFiles}
+                    data-tour="workshop-download-all-files">
                     {t("workshops.details-page.download-button")}
                   </TSCButton>
                 )}
@@ -243,8 +296,17 @@ export const WorkshopDetails = observer(() => {
                     <TSCLoadingButton
                       variant="contained"
                       sx={{ marginRight: 2, backgroundColor: "primary" }}
+                      data-tour="workshop-register-button"
                       onClick={async () => {
                         try {
+                          if (isTourWorkshop) {
+                            setTourRegistered(true);
+                            actions.pushSnackbar(
+                              "This workshop is a tour demo, so registration is shown but not submitted.",
+                              "info"
+                            );
+                            return;
+                          }
                           setLoadingRegister(true);
                           await actions.registerUserForWorkshop(workshop.workshopId);
                         } finally {
@@ -262,7 +324,7 @@ export const WorkshopDetails = observer(() => {
               </Box>
             </div>
           </div>
-          <div className={styles.additional}>
+          <div className={styles.additional} data-tour="workshop-description">
             <Typography className={styles.dt}>{t("workshops.details-page.description")}</Typography>
             <Typography className={styles.description}>{workshop.description}</Typography>
           </div>
