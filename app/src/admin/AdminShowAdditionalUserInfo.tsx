@@ -161,6 +161,11 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                 <strong>Last login:</strong> {formatAdminDate(props.data.lastLogin)}
               </Typography>
             </Box>
+            <Box mb={1}>
+              <Typography variant="body1">
+                <strong>Charts created:</strong> {props.data.historyEntries?.length ?? 0}
+              </Typography>
+            </Box>
 
             {/* Admin Status */}
             <Box display="flex" alignItems="center" mb={2}>
@@ -249,17 +254,21 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               <TableBody>
                 {!props.data.historyEntries || props.data.historyEntries.length === 0 ? (
                   <TableRow>
-                    <TableCell align="center" colSpan={2}>
+                    <TableCell align="center" colSpan={2} style={{ padding: "13px" }}>
                       <Typography fontWeight="bold">No charts created</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  props.data.historyEntries.map((entry) => (
-                    <TableRow key={entry.timestamp}>
-                      <TableCell>{formatDate(entry.timestamp)}</TableCell>
-                      <TableCell>{entry.datapacks.map((datapack) => datapack.title).join(", ") || "None"}</TableCell>
-                    </TableRow>
-                  ))
+                  [...props.data.historyEntries]
+                    .sort((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp))
+                    .map((entry) => (
+                      <TableRow key={entry.timestamp}>
+                        <TableCell style={{ padding: "13px" }}>{formatDate(entry.timestamp)}</TableCell>
+                        <TableCell style={{ padding: "13px" }}>
+                          {entry.datapacks.map((datapack) => datapack.title).join(", ") || "None"}
+                        </TableCell>
+                      </TableRow>
+                    ))
                 )}
               </TableBody>
             </Table>

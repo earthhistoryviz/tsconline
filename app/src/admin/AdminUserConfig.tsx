@@ -9,7 +9,7 @@ import { Box, Divider, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import { AdminSharedUser, DatapackIndex, assertAdminSharedUser, isUserDatapack, Datapack } from "@tsconline/shared";
 import { TSCButton } from "../components";
-import { formatAdminDate, isOwnedByUser } from "../state/non-action-util";
+import { isOwnedByUser } from "../state/non-action-util";
 import React from "react";
 import { ShowAdditionalUserInfo } from "./AdminShowAdditionalUserInfo";
 
@@ -31,27 +31,7 @@ const userColDefs: ColDef[] = [
     checkboxSelection: true,
     minWidth: 120
   },
-  { headerName: "Email", field: "email", sortable: true, filter: true },
-  {
-    headerName: "Created",
-    field: "createdAt",
-    sortable: true,
-    filter: true,
-    valueFormatter: (params) => formatAdminDate(params.value)
-  },
-  {
-    headerName: "Last Login",
-    field: "lastLogin",
-    sortable: true,
-    filter: true,
-    valueFormatter: (params) => formatAdminDate(params.value)
-  },
-  {
-    headerName: "Charts",
-    field: "historyEntries",
-    valueGetter: (params) => params.data?.historyEntries?.length ?? 0,
-    sortable: true
-  },
+  { headerName: "Email", field: "email", sortable: true, filter: true, maxWidth: 100 },
   { headerName: "UUID", field: "uuid" },
   { headerName: "User ID", field: "userId", flex: 1 },
   {
@@ -141,6 +121,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowMultiSelectWithClick
         rowSelection="multiple"
         rowDragManaged
+        alwaysShowVerticalScroll
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
         components={{ ShowAdditionalUserInfo }}
