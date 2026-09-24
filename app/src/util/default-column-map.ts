@@ -1,9 +1,11 @@
-import { ColumnInfo, defaultColumnRoot } from "@tsconline/shared";
+import { ColumnInfo, ZoneOrientation, defaultColumnRoot } from "@tsconline/shared";
 import type { State } from "../state/state";
 import type { RenderColumnInfo } from "../types";
 import { getDatapackFromArray } from "../state/non-action-util";
 
-export type DefaultColumnState = Pick<ColumnInfo, "on" | "width" | "rgb" | "enableTitle" | "showAgeLabels">;
+export type DefaultColumnState = Pick<ColumnInfo, "on" | "width" | "rgb" | "enableTitle" | "showAgeLabels"> & {
+  orientation?: ZoneOrientation; // Not a top-level ColumnInfo field — lives on Zone columnSpecificSettings
+};
 
 export function collectDefaultColumnMap(column: ColumnInfo, defaultMap: Map<string, DefaultColumnState>): void {
   defaultMap.set(column.name, {
@@ -11,7 +13,12 @@ export function collectDefaultColumnMap(column: ColumnInfo, defaultMap: Map<stri
     width: column.width,
     rgb: column.rgb,
     enableTitle: column.enableTitle,
-    showAgeLabels: column.showAgeLabels
+    showAgeLabels: column.showAgeLabels,
+    // Zone-only setting; undefined for non-Zone columns
+    orientation:
+      column.columnDisplayType === "Zone"
+        ? (column.columnSpecificSettings as { orientation?: ZoneOrientation } | undefined)?.orientation
+        : undefined
   });
   for (const childColumn of column.children) {
     collectDefaultColumnMap(childColumn, defaultMap);

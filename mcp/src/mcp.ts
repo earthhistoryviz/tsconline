@@ -237,6 +237,7 @@ const singleColumnToggleSchema = z
     backgroundColor: z.string().optional(),
     enableTitle: z.boolean().optional(),
     showAgeLabels: z.boolean().optional(),
+    orientation: z.enum(["normal", "vertical"]).optional(),
     fonts: fontsByTargetSchema.optional() // Include font overrides at the individual column level as well - same structure as the global font overrides in the overrides object
   })
   .passthrough();
