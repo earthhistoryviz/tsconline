@@ -173,6 +173,18 @@ describe("chartHistory tests", () => {
         }
       ]);
     });
+
+    it("sorts entries in descending order by timestamp (most recent first)", async () => {
+      const olderTimestamp = (parseInt(mockTimestamp) - 1000).toString();
+      const newerTimestamp = (parseInt(mockTimestamp) + 1000).toString();
+      readdir
+        .mockResolvedValueOnce([olderTimestamp, newerTimestamp] as unknown as Dirent[])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+
+      const result = await getChartHistoryMetadata(mockUUID);
+      expect(result.map((r) => r.timestamp)).toEqual([newerTimestamp, olderTimestamp]);
+    });
   });
 
   describe("getChartHistory", () => {

@@ -31,7 +31,7 @@ const userColDefs: ColDef[] = [
     checkboxSelection: true,
     minWidth: 120
   },
-  { headerName: "Email", field: "email", sortable: true, filter: true },
+  { headerName: "Email", field: "email", sortable: true, filter: true, maxWidth: 100 },
   { headerName: "UUID", field: "uuid" },
   { headerName: "User ID", field: "userId", flex: 1 },
   {
@@ -121,6 +121,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowMultiSelectWithClick
         rowSelection="multiple"
         rowDragManaged
+        alwaysShowVerticalScroll
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
         components={{ ShowAdditionalUserInfo }}

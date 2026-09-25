@@ -1,4 +1,4 @@
-import { School, PersonRemove, Close, Edit } from "@mui/icons-material";
+import { School, PersonRemove, Close, Edit, OpenInNew } from "@mui/icons-material";
 import {
   Typography,
   IconButton,
@@ -16,13 +16,13 @@ import {
   TableHead,
   Button
 } from "@mui/material";
-import { AdminSharedUser } from "@tsconline/shared";
+import { AdminSharedUser, isUserDatapack, isWorkshopDatapack } from "@tsconline/shared";
 import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import useEditUser from "./edit-user-stats-hook";
 import { useContext } from "react";
 import { context } from "../state";
-import { formatDate } from "../state/non-action-util";
+import { formatAdminDate, formatDate, getNavigationRouteForDatapackProfile } from "../state/non-action-util";
 
 type ShowAdditionalUserInfoProps = {
   data: AdminSharedUser;
@@ -151,6 +151,22 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               </Typography>
             </Box>
 
+            <Box mb={1}>
+              <Typography variant="body1">
+                <strong>Created:</strong> {formatAdminDate(props.data.createdAt)}
+              </Typography>
+            </Box>
+            <Box mb={1}>
+              <Typography variant="body1">
+                <strong>Last login:</strong> {formatAdminDate(props.data.lastLogin)}
+              </Typography>
+            </Box>
+            <Box mb={1}>
+              <Typography variant="body1">
+                <strong>Charts created:</strong> {props.data.historyEntries?.length ?? 0}
+              </Typography>
+            </Box>
+
             {/* Admin Status */}
             <Box display="flex" alignItems="center" mb={2}>
               <Typography variant="body1" mr={1} fontWeight={"bold"}>
@@ -223,6 +239,90 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
           <Box>
             <WorkshopsList />
           </Box>
+
+          <Typography variant="h6" mt={3} mb={2}>
+            Created Charts ({props.data.historyEntries?.length ?? 0})
+          </Typography>
+          <TableContainer component={Paper} sx={{ backgroundColor: "tableContainer.main", maxWidth: "100%" }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Created</TableCell>
+                  <TableCell>Datapacks</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!props.data.historyEntries || props.data.historyEntries.length === 0 ? (
+                  <TableRow>
+                    <TableCell align="center" colSpan={2} style={{ padding: "13px" }}>
+                      <Typography fontWeight="bold">No charts created</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  [...props.data.historyEntries]
+                    .sort((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp))
+                    .map((entry) => (
+                      <TableRow key={entry.timestamp}>
+                        <TableCell style={{ padding: "13px" }}>{formatDate(entry.timestamp)}</TableCell>
+                        <TableCell style={{ padding: "13px" }}>
+                          {!entry.datapacks || entry.datapacks.length === 0 ? (
+                            "None"
+                          ) : (
+                            <Box display="flex" flexWrap="wrap" alignItems="center" gap={1}>
+                              {entry.datapacks.map((datapack, index) => {
+                                const type = datapack.type || "official";
+                                const uuid =
+                                  (isUserDatapack(datapack) || isWorkshopDatapack(datapack)
+                                    ? datapack.uuid
+                                    : datapack.type) || "official";
+                                const route = getNavigationRouteForDatapackProfile(uuid, datapack.title, type);
+                                return (
+                                  <Box
+                                    key={datapack.title || index}
+                                    component="span"
+                                    display="inline-flex"
+                                    alignItems="center">
+                                    <a
+                                      href={route}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        color: "inherit",
+                                        textDecoration: "none",
+                                        display: "inline-flex",
+                                        alignItems: "center"
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.textDecoration = "underline";
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.textDecoration = "none";
+                                      }}>
+                                      <span>{datapack.title}</span>
+                                      <CustomTooltip title={`Open ${datapack.title}`}>
+                                        <OpenInNew
+                                          sx={{
+                                            fontSize: "0.95rem",
+                                            ml: 0.5,
+                                            color: "primary.main",
+                                            verticalAlign: "middle"
+                                          }}
+                                        />
+                                      </CustomTooltip>
+                                    </a>
+                                    {index < entry.datapacks.length - 1 && <span style={{ marginLeft: "2px" }}>,</span>}
+                                  </Box>
+                                );
+                              })}
+                            </Box>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
       </Dialog>
       <TSCYesNoPopup

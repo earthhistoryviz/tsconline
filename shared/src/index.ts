@@ -68,6 +68,8 @@ export type AdminSharedUser = {
   uuid: string;
   emailVerified: boolean;
   invalidateSession: boolean;
+  createdAt: string | null;
+  lastLogin: string | null;
 } & SharedUser;
 
 export type SuccessfulServerResponse = {
@@ -1203,6 +1205,10 @@ export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
   if (typeof o.emailVerified !== "boolean") throwError("AdminSharedUser", "emailVerified", "boolean", o.emailVerified);
   if (typeof o.invalidateSession !== "boolean")
     throwError("AdminSharedUser", "invalidateSession", "boolean", o.invalidateSession);
+  if (o.createdAt != null && typeof o.createdAt !== "string")
+    throwError("AdminSharedUser", "createdAt", "string or null", o.createdAt);
+  if (o.lastLogin != null && typeof o.lastLogin !== "string")
+    throwError("AdminSharedUser", "lastLogin", "string or null", o.lastLogin);
   assertSharedUser(o);
 }
 export function assertSharedUser(o: any): asserts o is SharedUser {
