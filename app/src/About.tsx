@@ -169,6 +169,13 @@ const members = [
     homeTown: "Seoul, South Korea",
     timeWorked: "2025 - Present",
     proPic: "HosungRyu.png"
+  },
+  {
+    name: "Aaron Yu",
+    role: "Member",
+    homeTown: "Lexington, Massachussetts",
+    timeWorked: "2026 - Present",
+    proPic: "AaronYu.png"
   }
 ];
 
