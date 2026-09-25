@@ -375,7 +375,7 @@ describe("mcpRenderChartWithEdits", () => {
       mockDatapacks,
       { topAge: 0, baseAge: 10 },
       { "stage-id": { on: false } },
-      { hideDatapackDefaults: false }
+      { hideDatapackDefaults: false, columnOrder: [] }
     );
     expect(generateChart).toHaveBeenCalled();
     expect(reply.send).toHaveBeenCalledWith(mockResult);
@@ -388,7 +388,8 @@ describe("mcpRenderChartWithEdits", () => {
         chartState: {
           datapackTitles: ["GTS2020"],
           overrides: { topAge: 0, baseAge: 10 },
-          columnToggles: { "stage-id": { on: false } }
+          columnToggles: { "stage-id": { on: false } },
+          columnOrder: []
         }
       },
       { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
@@ -471,7 +472,8 @@ describe("mcpRenderChartWithEdits", () => {
         chartState: {
           datapackTitles: ["GTS2020"],
           overrides: {},
-          columnToggles: {}
+          columnToggles: {},
+          columnOrder: []
         }
       },
       { type: "geogpt-chart-update-start", requestId: "mock-request-id" },
