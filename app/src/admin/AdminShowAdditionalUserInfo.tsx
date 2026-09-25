@@ -1,4 +1,4 @@
-import { School, PersonRemove, Close, Edit } from "@mui/icons-material";
+import { School, PersonRemove, Close, Edit, OpenInNew } from "@mui/icons-material";
 import {
   Typography,
   IconButton,
@@ -16,13 +16,13 @@ import {
   TableHead,
   Button
 } from "@mui/material";
-import { AdminSharedUser } from "@tsconline/shared";
+import { AdminSharedUser, isUserDatapack, isWorkshopDatapack } from "@tsconline/shared";
 import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import useEditUser from "./edit-user-stats-hook";
 import { useContext } from "react";
 import { context } from "../state";
-import { formatAdminDate, formatDate } from "../state/non-action-util";
+import { formatAdminDate, formatDate, getNavigationRouteForDatapackProfile } from "../state/non-action-util";
 
 type ShowAdditionalUserInfoProps = {
   data: AdminSharedUser;
@@ -265,7 +265,57 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                       <TableRow key={entry.timestamp}>
                         <TableCell style={{ padding: "13px" }}>{formatDate(entry.timestamp)}</TableCell>
                         <TableCell style={{ padding: "13px" }}>
-                          {entry.datapacks.map((datapack) => datapack.title).join(", ") || "None"}
+                          {!entry.datapacks || entry.datapacks.length === 0 ? (
+                            "None"
+                          ) : (
+                            <Box display="flex" flexWrap="wrap" alignItems="center" gap={1}>
+                              {entry.datapacks.map((datapack, index) => {
+                                const type = datapack.type || "official";
+                                const uuid =
+                                  (isUserDatapack(datapack) || isWorkshopDatapack(datapack)
+                                    ? datapack.uuid
+                                    : datapack.type) || "official";
+                                const route = getNavigationRouteForDatapackProfile(uuid, datapack.title, type);
+                                return (
+                                  <Box
+                                    key={datapack.title || index}
+                                    component="span"
+                                    display="inline-flex"
+                                    alignItems="center">
+                                    <a
+                                      href={route}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        color: "inherit",
+                                        textDecoration: "none",
+                                        display: "inline-flex",
+                                        alignItems: "center"
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.textDecoration = "underline";
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.textDecoration = "none";
+                                      }}>
+                                      <span>{datapack.title}</span>
+                                      <CustomTooltip title={`Open ${datapack.title}`}>
+                                        <OpenInNew
+                                          sx={{
+                                            fontSize: "0.95rem",
+                                            ml: 0.5,
+                                            color: "primary.main",
+                                            verticalAlign: "middle"
+                                          }}
+                                        />
+                                      </CustomTooltip>
+                                    </a>
+                                    {index < entry.datapacks.length - 1 && <span style={{ marginLeft: "2px" }}>,</span>}
+                                  </Box>
+                                );
+                              })}
+                            </Box>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))
