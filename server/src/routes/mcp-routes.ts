@@ -360,6 +360,16 @@ export async function mcpRenderChartWithEdits(_request: FastifyRequest, reply: F
   }
 }
 
+function getMcpInternalUrl(): string {
+  if (process.env.MCP_INTERNAL_URL) {
+    return process.env.MCP_INTERNAL_URL;
+  }
+  if (process.env.NODE_ENV === "test" && process.env.DOMAIN) {
+    return `https://${process.env.DOMAIN}`;
+  }
+  return "http://localhost:3001";
+}
+
 export async function mcpUserInfoProxy(request: FastifyRequest, reply: FastifyReply) {
   const { sessionId } = request.body as { sessionId?: string };
 
@@ -390,7 +400,7 @@ export async function mcpUserInfoProxy(request: FastifyRequest, reply: FastifyRe
   const token = process.env.MCP_AUTH_TOKEN;
   if (!token) return reply.code(500).send({ error: "Missing MCP_AUTH_TOKEN" });
 
-  const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
+  const base = getMcpInternalUrl();
 
   const res = await fetch(`${base}/messages/user-info`, {
     method: "POST",
@@ -416,7 +426,7 @@ export async function mcpCreateSession(request: FastifyRequest, reply: FastifyRe
   if (!token) return reply.code(500).send({ error: "Missing MCP_AUTH_TOKEN" });
 
   // base mcp url
-  const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
+  const base = getMcpInternalUrl();
 
   // Extract chart state from request body if provided
   const { userChartState } = (request.body ?? {}) as MCPCreateSessionRequest;
@@ -455,7 +465,7 @@ export async function mcpUpdateSessionChartState(request: FastifyRequest, reply:
   const token = process.env.MCP_AUTH_TOKEN;
   if (!token) return reply.code(500).send({ error: "Missing MCP_AUTH_TOKEN" });
 
-  const base = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : `http://localhost:3001`;
+  const base = getMcpInternalUrl();
 
   const res = await fetch(`${base}/messages/update-chart-state`, {
     method: "POST",
@@ -517,46 +527,64 @@ export const mcpUploadDatapack = async function uploadDatapack(request: FastifyR
   reply.send({ message: "Datapack uploaded" });
 };
 
-export function mcpProxyHandler(request: FastifyRequest, reply: FastifyReply) {
-  const targetBase = process.env.MCP_INTERNAL_URL || "http://127.0.0.1:3001";
+export function mcpProxyHandler(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+  const targetBase = getMcpInternalUrl();
   const targetUrl = new URL(request.url, targetBase);
-  const headers = { ...request.headers, host: targetUrl.host };
 
-  reply.raw.setTimeout(0);
-
-  const proxyReq = http.request(
-    targetUrl,
-    {
-      method: request.method,
-      headers
-    },
-    (proxyRes) => {
-      reply.raw.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
-      proxyRes.pipe(reply.raw);
-    }
-  );
-
-  proxyReq.on("error", (err) => {
-    request.log.error({ err }, "MCP proxy error");
-    if (!reply.raw.headersSent) {
-      reply.code(502).send({ error: "MCP server unavailable" });
-    }
-  });
-
+  let bodyBuffer: Buffer | string | undefined;
   if (request.body !== undefined && request.body !== null) {
     if (typeof request.body === "string" || Buffer.isBuffer(request.body)) {
-      proxyReq.end(request.body);
+      bodyBuffer = request.body;
     } else if (typeof request.body === "object") {
       const contentType = request.headers["content-type"] || "";
       if (contentType.includes("application/x-www-form-urlencoded")) {
-        proxyReq.end(new URLSearchParams(request.body as Record<string, string>).toString());
+        bodyBuffer = new URLSearchParams(request.body as Record<string, string>).toString();
       } else {
-        proxyReq.end(JSON.stringify(request.body));
+        bodyBuffer = JSON.stringify(request.body);
       }
-    } else {
-      proxyReq.end();
     }
-  } else {
-    request.raw.pipe(proxyReq);
   }
+
+  const headers = { ...request.headers, host: targetUrl.host };
+  if (bodyBuffer !== undefined) {
+    headers["content-length"] = String(Buffer.byteLength(bodyBuffer));
+  }
+
+  reply.raw.setTimeout?.(0, () => {});
+
+  return new Promise<void>((resolve) => {
+    const proxyReq = http.request(
+      targetUrl,
+      {
+        method: request.method,
+        headers
+      },
+      (proxyRes) => {
+        reply.code(proxyRes.statusCode || 500);
+        for (const [key, val] of Object.entries(proxyRes.headers)) {
+          if (val !== undefined) {
+            reply.header(key, val);
+          }
+        }
+        reply.send(proxyRes);
+        resolve();
+      }
+    );
+
+    proxyReq.on("error", (err) => {
+      request.log.error({ err }, "MCP proxy error");
+      if (!reply.sent) {
+        reply.code(502).send({ error: "MCP server unavailable" });
+      }
+      resolve();
+    });
+
+    if (bodyBuffer !== undefined) {
+      proxyReq.end(bodyBuffer);
+    } else if (request.body !== undefined && request.body !== null) {
+      proxyReq.end();
+    } else {
+      request.raw.pipe(proxyReq);
+    }
+  });
 }
