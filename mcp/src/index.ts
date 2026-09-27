@@ -201,9 +201,20 @@ mcpServer.post("/oauth/token", async (req, reply) => {
       });
     }
 
+    let clientId = body.client_id ?? body.clientId ?? "";
+    if (!clientId && req.headers.authorization?.startsWith("Basic ")) {
+      try {
+        const credentials = Buffer.from(req.headers.authorization.slice(6).trim(), "base64").toString("utf-8");
+        const colonIndex = credentials.indexOf(":");
+        clientId = colonIndex >= 0 ? credentials.slice(0, colonIndex) : credentials;
+      } catch {
+        // ignore malformed basic auth
+      }
+    }
+
     const result = exchangeAuthorizationCode({
       code: body.code ?? "",
-      clientId: body.client_id ?? body.clientId ?? "",
+      clientId,
       redirectUri: body.redirect_uri ?? body.redirectUri ?? "",
       codeVerifier: body.code_verifier ?? body.codeVerifier ?? ""
     });

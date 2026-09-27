@@ -264,12 +264,13 @@ export function exchangeAuthorizationCode(input: {
     throw new Error("Invalid or expired authorization code");
   }
 
-  if (stored.clientId !== clientId) {
+  if (clientId && stored.clientId !== clientId) {
     throw new Error("client_id mismatch");
   }
 
-  const client = clients.get(clientId);
-  const uriMatches = stored.redirectUri === redirectUri || (client && isRedirectUriAllowed(client, redirectUri));
+  const client = clients.get(stored.clientId);
+  const uriMatches =
+    !redirectUri || stored.redirectUri === redirectUri || (client && isRedirectUriAllowed(client, redirectUri));
   if (!uriMatches) {
     throw new Error("redirect_uri mismatch");
   }
@@ -336,7 +337,8 @@ export function getOAuthMetadata(baseUrl: string) {
     response_types_supported: ["code"],
     grant_types_supported: ["authorization_code"],
     code_challenge_methods_supported: ["S256"],
-    token_endpoint_auth_methods_supported: ["none"]
+    token_endpoint_auth_methods_supported: ["none", "client_secret_post", "client_secret_basic"],
+    response_modes_supported: ["query"]
   };
 }
 

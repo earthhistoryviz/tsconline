@@ -68,6 +68,15 @@ const server = fastify({
 // predefine "user" property on request to stabilize object shape for JS engine optimizations (per Fastify docs)
 server.decorateRequest("user", undefined);
 
+server.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, (_req, body, done) => {
+  try {
+    const parsed = Object.fromEntries(new URLSearchParams(body as string));
+    done(null, parsed);
+  } catch (err) {
+    done(err as Error, undefined);
+  }
+});
+
 collectDefaultMetrics();
 const httpMetricsLabelNames = ["method", "path", "status"];
 const totalHttpRequestCount = new Counter({
