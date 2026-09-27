@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
+import http from "node:http";
 import {
   DatapackMetadata,
   ChartRequest,
@@ -515,3 +516,47 @@ export const mcpUploadDatapack = async function uploadDatapack(request: FastifyR
   }
   reply.send({ message: "Datapack uploaded" });
 };
+
+export function mcpProxyHandler(request: FastifyRequest, reply: FastifyReply) {
+  const targetBase = process.env.MCP_INTERNAL_URL || "http://127.0.0.1:3001";
+  const targetUrl = new URL(request.url, targetBase);
+  const headers = { ...request.headers, host: targetUrl.host };
+
+  reply.raw.setTimeout(0);
+
+  const proxyReq = http.request(
+    targetUrl,
+    {
+      method: request.method,
+      headers
+    },
+    (proxyRes) => {
+      reply.raw.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
+      proxyRes.pipe(reply.raw);
+    }
+  );
+
+  proxyReq.on("error", (err) => {
+    request.log.error({ err }, "MCP proxy error");
+    if (!reply.raw.headersSent) {
+      reply.code(502).send({ error: "MCP server unavailable" });
+    }
+  });
+
+  if (request.body !== undefined && request.body !== null) {
+    if (typeof request.body === "string" || Buffer.isBuffer(request.body)) {
+      proxyReq.end(request.body);
+    } else if (typeof request.body === "object") {
+      const contentType = request.headers["content-type"] || "";
+      if (contentType.includes("application/x-www-form-urlencoded")) {
+        proxyReq.end(new URLSearchParams(request.body as Record<string, string>).toString());
+      } else {
+        proxyReq.end(JSON.stringify(request.body));
+      }
+    } else {
+      proxyReq.end();
+    }
+  } else {
+    request.raw.pipe(proxyReq);
+  }
+}

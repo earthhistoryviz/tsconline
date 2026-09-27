@@ -342,6 +342,14 @@ server.post("/mcp/update-chart-state", moderateRateLimit, mcpRoutes.mcpUpdateSes
 server.post("/mcp/request-chart-state", moderateRateLimit, mcpRoutes.mcpRequestSessionChartState);
 server.post("/mcp/upload-datapack", moderateRateLimit, mcpRoutes.mcpUploadDatapack);
 
+// Reverse proxy MCP & OAuth endpoints to standalone MCP server (port 3001)
+server.all("/.well-known/oauth-protected-resource", mcpRoutes.mcpProxyHandler);
+server.all("/.well-known/oauth-authorization-server", mcpRoutes.mcpProxyHandler);
+server.all("/oauth/*", mcpRoutes.mcpProxyHandler);
+server.all("/streamable-http", mcpRoutes.mcpProxyHandler);
+server.all("/sse", mcpRoutes.mcpProxyHandler);
+server.all("/messages", mcpRoutes.mcpProxyHandler);
+
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
 
