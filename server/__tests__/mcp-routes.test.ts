@@ -1552,6 +1552,23 @@ describe("mcpProxyHandler", () => {
         });
         return;
       }
+      if (req.url === "/oauth/token" && req.method === "POST") {
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(
+            JSON.stringify({
+              ok: true,
+              contentType: req.headers["content-type"],
+              rawBody: body
+            })
+          );
+        });
+        return;
+      }
       if (req.url === "/streamable-http" && req.method === "GET") {
         res.writeHead(200, { "content-type": "text/plain" });
         res.end("mcp-streamable-ok");
@@ -1590,6 +1607,36 @@ describe("mcpProxyHandler", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ ok: true, received: { sessionId: "sid-test-123" } });
+    await app.close();
+  });
+
+  it("proxies POST requests with application/x-www-form-urlencoded payload (e.g. /oauth/token)", async () => {
+    process.env.MCP_INTERNAL_URL = `http://127.0.0.1:${mcpPort}`;
+
+    const app = fastify();
+    app.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, (_req, body, done) => {
+      try {
+        const parsed = Object.fromEntries(new URLSearchParams(body as string));
+        done(null, parsed);
+      } catch (err) {
+        done(err as Error, undefined);
+      }
+    });
+    app.all("/oauth/*", mcpProxyHandler);
+
+    const formPayload = "grant_type=authorization_code&code=test-auth-code&client_id=claude-client";
+    const response = await app.inject({
+      method: "POST",
+      url: "/oauth/token",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      payload: formPayload
+    });
+
+    expect(response.statusCode).toBe(200);
+    const json = response.json();
+    expect(json.ok).toBe(true);
+    expect(json.contentType).toContain("application/x-www-form-urlencoded");
+    expect(json.rawBody).toContain("code=test-auth-code");
     await app.close();
   });
 
