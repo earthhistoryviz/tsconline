@@ -169,6 +169,13 @@ const members = [
     homeTown: "Seoul, South Korea",
     timeWorked: "2025 - Present",
     proPic: "HosungRyu.png"
+  },
+  {
+    name: "Maddie Reiser",
+    role: "Member",
+    homeTown: "Freehold, New Jersey",
+    timeWorked: "2026 - Present",
+    proPic: "MaddieReiser.jpeg"
   }
 ];
 
