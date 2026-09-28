@@ -8,6 +8,7 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
 import { createMCPServer, sessions } from "./mcp.js";
+import { completeAuthorization, getAuthorizationRequest } from "./oauth.js";
 
 import { newMCPChartState } from "@tsconline/shared";
 import type { SharedUser, MCPCreateSessionRequest, MCPUpdateSessionChartStateRequest } from "@tsconline/shared";
@@ -113,7 +114,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
         streamableSessions.set(id, transport);
         touchStreamable(id);
 
-        const server = createMCPServer();
+        const server = createMCPServer((req as typeof req & { mcpUser?: SharedUser }).mcpUser);
         streamableServers.set(id, server);
         void server.connect(transport);
       }
@@ -179,7 +180,7 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
 
     const transport = new SSEServerTransport("/messages", reply.raw);
 
-    const server = createMCPServer();
+    const server = createMCPServer((_req as unknown as { mcpUser?: SharedUser }).mcpUser);
     legacyServers.set(transport.sessionId, server);
 
     legacySSESessions.set(transport.sessionId, transport);
@@ -266,6 +267,17 @@ export function registerMCPRoutes(app: FastifyInstance, opts: MCPRoutesOptions =
     }
 
     const { sessionId, userInfo } = req.body as { sessionId: string; userInfo: SharedUser };
+
+    const oauthRequest = getAuthorizationRequest(sessionId);
+    if (oauthRequest) {
+      const authorization = completeAuthorization(sessionId, userInfo);
+      return reply.code(200).send({
+        ok: true,
+        sessionId,
+        oauthRedirectUrl: authorization.redirectUrl
+      });
+    }
+
     const entry = sessions.get(sessionId);
     console.log("Received user-info for sessionId:", sessionId, "from authenticated server");
     if (!entry) {
