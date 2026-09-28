@@ -47,6 +47,7 @@ export const Admin = observer(function Admin() {
     loadRecaptcha().then(async () => {
       await actions.adminFetchUsers();
       await actions.adminFetchPrivateOfficialDatapacks();
+      await actions.adminFetchOfficialHeaderConfig();
     });
     return () => {
       removeRecaptcha();
@@ -56,8 +57,7 @@ export const Admin = observer(function Admin() {
   const { showPopup, handleCancel, handleConfirm } = usePopupBlocker({
     shouldBlock: !!state.admin.datapackConfig.tempRowData,
     onConfirm: async () => {
-      await actions.adminUpdateDatapackPriority(state.admin.datapackConfig.rowPriorityUpdates);
-      actions.resetAdminConfigTempState();
+      await actions.adminSaveOfficialDatapackConfig();
     },
     onCancel: async () => {
       actions.resetAdminConfigTempState();

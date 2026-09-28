@@ -85,10 +85,7 @@ function setDatapackTimeDefaults() {
 export const initiateChartGeneration = action(
   "initiateChartGeneration",
   (navigate: NavigateFunction, location: string) => {
-    if (
-      state.settings.datapackContainsSuggAge &&
-      ((location === "/settings" && state.settingsTabs.selected === "datapacks") || location !== "/settings")
-    ) {
+    if (state.settings.datapackContainsSuggAge && location !== "/settings") {
       state.showSuggestedAgePopup = true;
     } else {
       compileChartRequest(navigate, {

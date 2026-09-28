@@ -205,6 +205,8 @@ export type DatapackMetadata = {
   notes?: string;
   datapackImage?: string;
   priority: number;
+  officialHeader?: string;
+  officialHeaderOrder?: number;
   hasFiles: boolean;
 } & DatapackType;
 
@@ -1168,7 +1170,9 @@ export function extractDatapackMetadataFromDatapack(o: Datapack): DatapackMetada
     tags,
     references,
     isPublic,
-    priority
+    priority,
+    officialHeader,
+    officialHeaderOrder
   } = o;
   const datapackMetadata = {
     description,
@@ -1183,6 +1187,8 @@ export function extractDatapackMetadataFromDatapack(o: Datapack): DatapackMetada
     isPublic,
     priority,
     hasFiles,
+    ...(officialHeader !== undefined ? { officialHeader } : {}),
+    ...(officialHeaderOrder !== undefined ? { officialHeaderOrder } : {}),
     ...extractDatapackType(o)
   };
   assertDatapackMetadata(datapackMetadata);
@@ -1564,7 +1570,10 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
     "contact",
     "notes",
     "isPublic",
-    "priority"
+    "priority",
+    "officialHeader",
+    "officialHeaderOrder",
+    "datapackImage"
   ];
   for (const key in o) {
     if (!validKeys.includes(key)) {
@@ -1585,6 +1594,8 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
   if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
   if ("isPublic" in o && typeof o.isPublic !== "boolean") return false;
   if ("priority" in o && typeof o.priority !== "number") return false;
+  if ("officialHeader" in o && typeof o.officialHeader !== "string") return false;
+  if ("officialHeaderOrder" in o && typeof o.officialHeaderOrder !== "number") return false;
   return true;
 }
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
@@ -1612,6 +1623,10 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if ("datapackImage" in o && typeof o.datapackImage !== "string")
     throwError("DatapackMetadata", "datapackImage", "string", o.datapackImage);
   if (typeof o.priority !== "number") throwError("DatapackMetadata", "priority", "number", o.priority);
+  if ("officialHeader" in o && typeof o.officialHeader !== "string")
+    throwError("DatapackMetadata", "officialHeader", "string", o.officialHeader);
+  if ("officialHeaderOrder" in o && typeof o.officialHeaderOrder !== "number")
+    throwError("DatapackMetadata", "officialHeaderOrder", "number", o.officialHeaderOrder);
   if (typeof o.hasFiles !== "boolean") throwError("DatapackMetadata", "hasFiles", "boolean", o.hasFiles);
   assertDatapackType(o);
 }
