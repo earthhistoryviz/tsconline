@@ -124,6 +124,15 @@ function collectLeafColumnToggle(
     settings.showAgeLabels = renderColumn.showAgeLabels;
   }
 
+  // Orientation only exists on Zone columns
+  if (renderColumn.columnDisplayType === "Zone") {
+    const orientation = (renderColumn.columnSpecificSettings as { orientation?: "normal" | "vertical" } | undefined)
+      ?.orientation;
+    if (orientation !== undefined && (defaultColumn === undefined || defaultColumn.orientation !== orientation)) {
+      settings.orientation = orientation;
+    }
+  }
+
   if (Object.keys(settings).length > 0) {
     columnToggleSettings[renderColumn.name] = settings;
   }

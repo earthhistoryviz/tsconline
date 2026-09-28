@@ -98,6 +98,7 @@ export interface MCPColumnToggleSettings {
   backgroundColor?: string;
   enableTitle?: boolean;
   showAgeLabels?: boolean;
+  orientation?: ZoneOrientation; // Zone columns only: "normal" (horizontal) | "vertical"
   fonts?: MCPFontSettingsByTarget; // .fonts is the hashmap (e.g., The Period Column can have a .fonts = fonts: {"Column Header": {"on": true, fontFace: "Courier"}})
 }
 
