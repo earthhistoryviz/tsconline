@@ -384,7 +384,7 @@ export const LandingPageCards = observer(function LandingPageCards() {
       title: t("landing-page.cards.datapack.title"),
       description: t("landing-page.cards.datapack.description"),
       icon: <FolderCopy />,
-      onClick: () => navigate("/help/datapacks")
+      onClick: () => navigate("/datapacks")
     },
     {
       title: t("landing-page.cards.charts.title"),
