@@ -39,6 +39,83 @@ describe("applyMcpChartStateToApp", () => {
     expect(state.settingsTabs.hideDatapackDefaults).toBe(false);
   });
 
+  it("reorders sibling columns using columnOrder", () => {
+    const firstColumn = "Era";
+    const secondColumn = "Period";
+    const nestedColumn = "Stage";
+    const sourceRoot = {
+      name: "Chart Title",
+      children: [
+        { name: firstColumn, on: true, children: [{ name: nestedColumn, on: true, children: [] }] },
+        { name: secondColumn, on: true, children: [] }
+      ]
+    };
+
+    const state = {
+      settings: { timeSettings: {} },
+      config: { datapacks: [{ title: "GTS2020" }] },
+      datapacks: [
+        {
+          title: "GTS2020",
+          columnInfo: sourceRoot
+        }
+      ],
+      settingsTabs: {
+        hideDatapackDefaults: false,
+        columnOnSnapshot: null,
+        columns: sourceRoot,
+        renderColumns: {
+          name: defaultColumnRoot.name,
+          children: [firstColumn, secondColumn],
+          columnRef: sourceRoot
+        },
+        columnHashMap: new Map([
+          [
+            firstColumn,
+            {
+              name: firstColumn,
+              children: [nestedColumn],
+              on: true,
+              columnRef: { name: firstColumn, children: [{ name: nestedColumn, on: true, children: [] }] }
+            }
+          ],
+          [
+            secondColumn,
+            {
+              name: secondColumn,
+              children: [],
+              on: true,
+              columnRef: { name: secondColumn, children: [] }
+            }
+          ],
+          [
+            nestedColumn,
+            {
+              name: nestedColumn,
+              children: [],
+              on: true,
+              columnRef: { name: nestedColumn, children: [] }
+            }
+          ]
+        ])
+      }
+    };
+
+    applyMcpChartStateToApp(state as never, {
+      datapackTitles: ["GTS2020"],
+      overrides: { hideDatapackDefaults: false },
+      columnToggles: {},
+      columnOrder: [secondColumn, firstColumn, nestedColumn]
+    });
+
+    expect(state.settingsTabs.renderColumns.children).toEqual([secondColumn, firstColumn]);
+    expect(state.settingsTabs.columns.children.map((child: { name: string }) => child.name)).toEqual([
+      secondColumn,
+      firstColumn
+    ]);
+    expect(state.settingsTabs.columnHashMap.get(firstColumn)?.children).toEqual([nestedColumn]);
+  });
+
   it("applies blank slate from overrides.hideDatapackDefaults", () => {
     const visibleColumn = "Period";
     const hiddenColumn = "Epoch";
