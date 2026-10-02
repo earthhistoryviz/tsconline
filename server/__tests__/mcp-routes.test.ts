@@ -5,6 +5,7 @@ import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { randomUUID } from "node:crypto";
+import http from "node:http";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants.js";
 
 const ORIGINAL_ENV = { ...process.env };
@@ -36,7 +37,8 @@ import {
   mcpUploadDatapack,
   mcpCreateSession,
   mcpUpdateSessionChartState,
-  mcpRequestSessionChartState
+  mcpRequestSessionChartState,
+  mcpProxyHandler
 } from "../src/routes/mcp-routes.js";
 import * as uploadDatapack from "../src/upload-datapack.js";
 import { loadPublicUserDatapacks } from "../src/public-datapack-handler.js";
@@ -1530,5 +1532,143 @@ describe("handleMcpChartStateSync", () => {
     );
 
     expect(socket.close).not.toHaveBeenCalled();
+  });
+});
+
+describe("mcpProxyHandler", () => {
+  let mockMcpServer: http.Server;
+  let mcpPort: number;
+
+  beforeAll(async () => {
+    mockMcpServer = http.createServer((req, res) => {
+      if (req.url === "/messages/user-info" && req.method === "POST") {
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ ok: true, received: JSON.parse(body) }));
+        });
+        return;
+      }
+      if (req.url === "/oauth/token" && req.method === "POST") {
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(
+            JSON.stringify({
+              ok: true,
+              contentType: req.headers["content-type"],
+              rawBody: body
+            })
+          );
+        });
+        return;
+      }
+      if (req.url === "/streamable-http" && req.method === "GET") {
+        res.writeHead(200, { "content-type": "text/plain" });
+        res.end("mcp-streamable-ok");
+        return;
+      }
+      res.writeHead(404);
+      res.end("Not found");
+    });
+
+    await new Promise<void>((resolve) => {
+      mockMcpServer.listen(0, "127.0.0.1", () => {
+        const addr = mockMcpServer.address() as { port: number };
+        mcpPort = addr.port;
+        resolve();
+      });
+    });
+  });
+
+  afterAll(async () => {
+    delete process.env.MCP_INTERNAL_URL;
+    await new Promise<void>((resolve) => mockMcpServer.close(() => resolve()));
+  });
+
+  it("proxies POST requests with JSON payload to MCP server (e.g. /messages/*)", async () => {
+    process.env.MCP_INTERNAL_URL = `http://127.0.0.1:${mcpPort}`;
+
+    const app = fastify();
+    app.all("/messages/*", mcpProxyHandler);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/messages/user-info",
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({ sessionId: "sid-test-123" })
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ ok: true, received: { sessionId: "sid-test-123" } });
+    await app.close();
+  });
+
+  it("proxies POST requests with application/x-www-form-urlencoded payload (e.g. /oauth/token)", async () => {
+    process.env.MCP_INTERNAL_URL = `http://127.0.0.1:${mcpPort}`;
+
+    const app = fastify();
+    app.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, (_req, body, done) => {
+      try {
+        const parsed = Object.fromEntries(new URLSearchParams(body as string));
+        done(null, parsed);
+      } catch (err) {
+        done(err as Error, undefined);
+      }
+    });
+    app.all("/oauth/*", mcpProxyHandler);
+
+    const formPayload = "grant_type=authorization_code&code=test-auth-code&client_id=claude-client";
+    const response = await app.inject({
+      method: "POST",
+      url: "/oauth/token",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      payload: formPayload
+    });
+
+    expect(response.statusCode).toBe(200);
+    const json = response.json();
+    expect(json.ok).toBe(true);
+    expect(json.contentType).toContain("application/x-www-form-urlencoded");
+    expect(json.rawBody).toContain("code=test-auth-code");
+    await app.close();
+  });
+
+  it("proxies GET requests without body to MCP server (e.g. /streamable-http)", async () => {
+    process.env.MCP_INTERNAL_URL = `http://127.0.0.1:${mcpPort}`;
+
+    const app = fastify();
+    app.all("/streamable-http", mcpProxyHandler);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/streamable-http"
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toBe("mcp-streamable-ok");
+    await app.close();
+  });
+
+  it("returns 502 when MCP server is unreachable", async () => {
+    process.env.MCP_INTERNAL_URL = "http://127.0.0.1:1"; // unreachable port
+
+    const app = fastify();
+    app.all("/streamable-http", mcpProxyHandler);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/streamable-http"
+    });
+
+    expect(response.statusCode).toBe(502);
+    expect(response.json()).toEqual({ error: "MCP server unavailable" });
+    await app.close();
   });
 });
