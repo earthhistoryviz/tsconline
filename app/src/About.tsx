@@ -171,6 +171,13 @@ const members = [
     proPic: "HosungRyu.png"
   },
   {
+    name: "Maddie Reiser",
+    role: "Member",
+    homeTown: "Freehold, New Jersey",
+    timeWorked: "2026 - Present",
+    proPic: "MaddieReiser.jpeg"
+  },
+  {
     name: "Aaron Yu",
     role: "Member",
     homeTown: "Lexington, Massachussetts",
