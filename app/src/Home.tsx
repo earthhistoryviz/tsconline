@@ -390,7 +390,7 @@ export const LandingPageCards = observer(function LandingPageCards() {
       title: t("landing-page.cards.charts.title"),
       description: t("landing-page.cards.charts.description"),
       icon: <TableChart />,
-      onClick: () => navigate("/help/chart")
+      onClick: () => navigate("/chart-view")
     },
     {
       title: t("landing-page.cards.help.title"),
