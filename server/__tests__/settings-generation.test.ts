@@ -211,4 +211,27 @@ describe("build-settings extractUnitScopedTimeOverrides", () => {
     expect(overrides.topAgeByUnit.get("ka")).toBe(100);
     expect(overrides.baseAgeByUnit.has("ka")).toBe(false);
   });
+
+  it("normalizes RootColumn id for non-Ma units by stripping Chart Title in prefix", () => {
+    const col: ColumnInfo = {
+      name: "Chart Title in ka (before AD2000)",
+      editName: "ka (before AD2000)",
+      fontsInfo: defaultFontsInfo,
+      fontOptions: ["Column Header"],
+      popup: "",
+      on: true,
+      width: 100,
+      enableTitle: true,
+      rgb: { r: 255, g: 255, b: 255 },
+      minAge: 0,
+      maxAge: 0,
+      children: [],
+      parent: "Chart Root",
+      units: "ka (before AD2000)",
+      columnDisplayType: "RootColumn"
+    };
+
+    const translated = translateColumnInfoToColumnInfoTSC(col);
+    expect(translated._id).toBe("class datastore.RootColumn:ka (before AD2000)");
+  });
 });
