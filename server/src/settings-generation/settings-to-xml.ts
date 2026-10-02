@@ -82,6 +82,9 @@ function getPreservedColumnId(state: ColumnInfo): string | undefined {
   const withIds = state as ColumnInfoWithPossibleIds;
   for (const candidate of [withIds.originalTscId, withIds._id, withIds.id]) {
     if (candidate && candidate.includes("class datastore.") && candidate.includes(":")) {
+      if (candidate.startsWith("class datastore.RootColumn:Chart Title in ")) {
+        return "class datastore.RootColumn:" + candidate.slice("class datastore.RootColumn:Chart Title in ".length);
+      }
       return candidate;
     }
   }
@@ -96,6 +99,10 @@ function deriveStableColumnName(state: ColumnInfo): string {
 
   const rawName = state.name?.trim();
   if (!rawName) return "";
+
+  if (state.columnDisplayType === "RootColumn" && rawName.startsWith("Chart Title in ")) {
+    return rawName.slice("Chart Title in ".length).trim();
+  }
 
   const parentName = state.parent?.trim();
   if (parentName && rawName.startsWith(`${parentName} `)) {
