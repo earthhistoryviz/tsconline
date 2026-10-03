@@ -28,6 +28,8 @@ Database Schema Details (Post-Migration):
 
 - users Table:
   - userId (integer): Primary key, auto-increment.
+  - createdAt (datetime): Date/time when the account was created (ISO 8601 string).
+  - lastLogin (datetime): Date/time of most recent successful login (ISO 8601 string).
   - username (text): Must be unique.
   - email (text): Must be unique.
   - hashedPassword (text): Must be unique, stores encrypted user passwords.
@@ -157,7 +159,13 @@ export async function initializeDatabase() {
 export { db };
 
 export async function createUser(newUser: NewUser) {
-  return await db.insertInto("users").values(newUser).execute();
+  return await db
+    .insertInto("users")
+    .values({
+      createdAt: new Date().toISOString(),
+      ...newUser
+    })
+    .execute();
 }
 
 export async function findUser(criteria: Partial<User>) {

@@ -252,6 +252,14 @@ export function formatDate(input: string | number | dayjs.Dayjs): string {
 
   return `${datePart} at ${timePart}`;
 }
+
+export function formatAdminDate(date: string | null | undefined): string {
+  if (!date) return "Never";
+  const normalizedDate = date.includes(" ") ? date.replace(" ", "T") + "Z" : date;
+  const parsedDate = new Date(normalizedDate);
+  return Number.isNaN(parsedDate.getTime()) ? "Invalid date" : formatDate(parsedDate.toISOString());
+}
+
 export function formatDateForDatapack(day: Dayjs) {
   return day.format("YYYY-MM-DD");
 }
