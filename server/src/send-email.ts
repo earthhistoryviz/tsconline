@@ -4,14 +4,58 @@ import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
 import "dotenv/config";
 import { CommentType, assertCommentType } from "@tsconline/shared";
+import logger from "./error-logger.js";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+export const transporter = nodemailer.createTransport(
+  process.env.SMTP_HOST
+    ? {
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000
+      }
+    : {
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000
+      }
+);
+
+function formatEmailError(error: unknown): string {
+  if (error && typeof error === "object") {
+    const err = error as { code?: string; response?: string; message?: string };
+    const code = err.code || "UNKNOWN";
+    const details = err.response || err.message || String(error);
+    return `[${code}]: ${details}`;
   }
-});
+  return String(error);
+}
+
+export const verifyEmailTransporter = async () => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    return false;
+  }
+  try {
+    await transporter.verify();
+    console.log("Email service verified successfully");
+    return true;
+  } catch (error) {
+    logger.error("Email service verification failed:", error);
+    console.error(`Email service verification failed ${formatEmailError(error)}`);
+    return false;
+  }
+};
 
 const HtmlTemplate = (
   preHeader: string,
@@ -300,7 +344,8 @@ export const sendEmail = async (email: Email) => {
       html: html
     });
   } catch (error) {
-    console.error("An error occurred:", error);
+    logger.error("An error occurred while sending email:", error);
+    console.error(`Failed to send email to ${email.to} ${formatEmailError(error)}`);
     throw error;
   }
 };
@@ -581,7 +626,8 @@ export const sendCommentsEmail = async (email: CommentsEmail) => {
       html: html
     });
   } catch (error) {
-    console.error("An error occurred:", error);
+    logger.error("An error occurred while sending comments email:", error);
+    console.error(`Failed to send comments email to ${email.to} ${formatEmailError(error)}`);
     throw error;
   }
 };

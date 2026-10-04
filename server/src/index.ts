@@ -23,7 +23,7 @@ import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
 import "dotenv/config";
 import { db, findIp, createIp, updateIp, initializeDatabase, findRecentDatapackComments } from "./database.js";
-import { sendCommentsEmail, sendEmail } from "./send-email.js";
+import { sendCommentsEmail, sendEmail, verifyEmailTransporter } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
@@ -585,6 +585,11 @@ try {
   });
   const address = server.server.address();
   console.log("Server listening on ", address);
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    verifyEmailTransporter().catch((e) => {
+      logger.error("Error during email transporter verification: ", e);
+    });
+  }
 } catch (err) {
   console.log("Server error: " + err);
   server.log.error(err);

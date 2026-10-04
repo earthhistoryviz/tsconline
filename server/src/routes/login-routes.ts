@@ -675,8 +675,20 @@ export const signup = async function signup(
     }
     const check = await checkForUsersWithUsernameOrEmail(username, email);
     if (check.length > 0) {
-      reply.status(409).send({ error: "User with this email or username already exists" });
-      return;
+      const verified = check.filter((u) => u.emailVerified === 1);
+      if (verified.length > 0) {
+        reply.status(409).send({ error: "User with this email or username already exists" });
+        return;
+      }
+      // If the matching account(s) were never verified, delete the stale unverified account(s)
+      for (const unverifiedUser of check) {
+        try {
+          await deleteVerification({ userId: unverifiedUser.userId, reason: "verify" });
+        } catch {
+          // ignore if no verification token existed
+        }
+        await deleteUser({ userId: unverifiedUser.userId });
+      }
     }
     const hashedPassword = await hash(password, 10);
     const newUser: NewUser = {
@@ -719,9 +731,21 @@ export const signup = async function signup(
       reason: "verify"
     };
     await createVerification(newVerification);
-    await sendEmail(authEmail);
+    try {
+      await sendEmail(authEmail);
+    } catch (emailError) {
+      logger.error("Failed to send signup verification email, rolling back user creation:", emailError);
+      try {
+        await deleteVerification({ token, reason: "verify" });
+      } catch {
+        // ignore
+      }
+      await deleteUser({ userId });
+      throw emailError;
+    }
     reply.send({ message: "Email sent" });
   } catch (error) {
+    logger.error("Error during signup:", error);
     console.error("Error during signup:", error);
     reply.status(500).send({ error: "Unknown Error" });
   }
