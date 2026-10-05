@@ -32,6 +32,12 @@ export const GenerateExternalChart: React.FC = () => {
     if (datapackTitle) {
       setLoading(true);
       try {
+        while (state.isInitializing) {
+          if (controller.signal.aborted) return;
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        if (controller.signal.aborted) return;
+
         const fetchedDatapack = await actions.fetchDatapack(
           {
             isPublic: true,
