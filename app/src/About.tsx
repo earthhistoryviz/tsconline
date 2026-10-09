@@ -183,6 +183,13 @@ const members = [
     homeTown: "Lexington, Massachussetts",
     timeWorked: "2026 - Present",
     proPic: "AaronYu.png"
+  },
+  {
+    name: "Sripoorna Modugula",
+    role: "Member",
+    homeTown: "Plano, Texas",
+    timeWorked: "2026 - Present",
+    proPic: "SripoornaModugula.JPG"
   }
 ];
 
