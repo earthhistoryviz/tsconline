@@ -11,6 +11,5 @@
         "copilot/gpt-5-mini"
       ]
     }
-  },
-  "js/ts.tsdk.path": ".yarn/sdks/typescript/lib"
+  }
 }
