@@ -7,7 +7,7 @@
     "@types/node": "^20.11.28",
     "@types/validator": "^13",
     "typescript": "5.2.2",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.11"
   },
   "keywords": [],
   "license": "ISC",
