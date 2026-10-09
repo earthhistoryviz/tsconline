@@ -95,13 +95,14 @@ Works with or without authentication.
   - Turn OFF a default-on leaf: { "Events": { "on": false } }
   - Turn ON a default-off leaf: { "Ranges": { "on": true } }
   - Width only: { "Age/Stage": { "width": 110 } }
+  - Reorder sibling columns: pass a flat columnOrder array with the exact column names in the desired sibling order
   - Blank slate: overrides.hideDatapackDefaults true, then list every kept column (folder or leaf) with { "on": true }
   - Restore datapack defaults: overrides.hideDatapackDefaults false
   - In normal mode, only toggle leaf column names; ancestors are turned on automatically
   - Changes sync to the user's open TSCOnline session in real time before the chart finishes rendering
 
   Input:
-  - { datapackTitles: string[]; overrides?: { fonts?: Record<FontTarget, FontSettings>; [key: string]: unknown }; columnToggles?: Record<string, { on?: boolean; width?: number; enableTitle?: boolean; showAgeLabels?: boolean; fonts?: Record<FontTarget, FontSettings>; }>; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
+  - { datapackTitles: string[]; overrides?: { fonts?: Record<FontTarget, FontSettings>; [key: string]: unknown }; columnToggles?: Record<string, { on?: boolean; width?: number; enableTitle?: boolean; showAgeLabels?: boolean; fonts?: Record<FontTarget, FontSettings>; }>; columnOrder?: string[]; useCache?: boolean; isCrossPlot?: boolean; sessionId?: string }
   Output data:
   - { directUrl, embeddedChartUrl, currentState }
 
@@ -124,6 +125,7 @@ Works with or without authentication.
   - columnToggles must be a flat object whose keys are actual column names/identifiers, not the nested object structure returned by listColumns.
   - columnToggles entries may include enableTitle to control whether a column's title is shown.
   - columnToggles entries may include showAgeLabels to control whether a column's age label is shown.
+  - columnOrder reorders sibling columns inside each parent group. Use it for changes like swapping Eon and Era.
   - Do not concatenate parent and child names with dots or arrows. For example, use "Period (Lunar)" or "Events (Lunar)", not "Moon.Period (Lunar)" or "Planetary Time Scale.Events (Lunar)".
   - The nested structure from listColumns is only for discovery. Convert the selected leaf column names into flat columnToggles keys for updateChartState.
   - Example: if listColumns shows Planetary Time Scale > Moon > Period (Lunar), then updateChartState should use { "Period (Lunar)": { "on": true } }.

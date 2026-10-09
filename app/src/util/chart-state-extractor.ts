@@ -53,6 +53,21 @@ function hasGoldenAncestorPath(
   return true;
 }
 
+function collectColumnOrder(
+  columnNames: string[],
+  columnHashMap: Map<string, RenderColumnInfo>,
+  collected: string[]
+): void {
+  for (const columnName of columnNames) {
+    const column = columnHashMap.get(columnName);
+    if (!column) continue;
+    collected.push(column.name);
+    if (column.children.length > 0) {
+      collectColumnOrder(column.children, columnHashMap, collected);
+    }
+  }
+}
+
 function isReportableLeaf(column: RenderColumnInfo): boolean {
   if (column.name === defaultColumnRoot.name) return false;
   if (shouldPreserveColumnOn(column)) return false;
@@ -200,7 +215,8 @@ export function extractCurrentChartState(state: State): ExtractedChartState {
   const chartState: ExtractedChartState = {
     datapackTitles: [],
     overrides: {},
-    columnToggles: {}
+    columnToggles: {},
+    columnOrder: []
   };
 
   if (state.config.datapacks && Array.isArray(state.config.datapacks)) {
@@ -247,6 +263,12 @@ export function extractCurrentChartState(state: State): ExtractedChartState {
         columnToggleSettings
       );
     }
+
+    collectColumnOrder(
+      state.settingsTabs.renderColumns.children,
+      state.settingsTabs.columnHashMap,
+      chartState.columnOrder
+    );
 
     chartState.columnToggles = columnToggleSettings;
   }
