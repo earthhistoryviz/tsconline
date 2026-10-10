@@ -660,3 +660,171 @@ export function listColumns(datapacks: Datapack[]): FlattenedColumn[] {
   const columnRoot = mergeDatapackColumns(datapacks);
   return flattenColumnsInternal(columnRoot.children, "");
 }
+
+// Result shape for grepColumnsAcrossDatapacks
+export type GrepColumnMatch = {
+  name: string;
+  editName: string;
+  path: string;
+  type: string;
+  isGroup: boolean; // True if this match has children
+  descendantCount: number; // How many descendants also get enabled
+};
+
+export type GrepDatapackResult = {
+  title: string;
+  isPublic: boolean;
+  matches: GrepColumnMatch[];
+  enabledColumnCount: number; // Total columns turned on across all matches
+};
+
+export type GrepColumnRootParams = {
+  unionDatapacks: Datapack[]; // Datapacks in the final chart, current-chart packs first
+  currentTitles: string[]; // Datapack titles that were already on the chart before the grep
+  currentToggles: ColumnToggles; // Session toggles that reproduce the current chart
+  currentHideDatapackDefaults: boolean; // Whether the current chart was in blank-slate mode
+  phrase: string; // Phrase whose matches (and ancestors/subtrees) get turned on
+};
+
+// Count a column and every descendant
+function countSubtreeColumns(column: ColumnInfo): number {
+  let count = 1;
+  for (const child of column.children) {
+    count += countSubtreeColumns(child);
+  }
+  return count;
+}
+
+// Walk one datapack's column tree,  on a match record it and count its whole subtree. Returns total columns matched
+function grepColumnTree(columns: ColumnInfo[], parentPath: string, needle: string, matches: GrepColumnMatch[]): number {
+  let enabledCount = 0;
+
+  for (const col of columns) {
+    const display = col.editName || col.name;
+    const path = parentPath ? `${parentPath} > ${display}` : display;
+
+    if (col.name.toLowerCase().includes(needle) || display.toLowerCase().includes(needle)) {
+      const subtreeCount = countSubtreeColumns(col);
+      enabledCount += subtreeCount;
+      matches.push({
+        name: col.name,
+        editName: display,
+        path,
+        type: col.columnDisplayType,
+        isGroup: col.children.length > 0,
+        descendantCount: subtreeCount - 1
+      });
+      continue;
+    }
+
+    if (col.children.length > 0) {
+      enabledCount += grepColumnTree(col.children, path, needle, matches);
+    }
+  }
+
+  return enabledCount;
+}
+
+// Search each datapack's columns for a phrase. Return matches grouped by datapack
+export function grepColumnsAcrossDatapacks(datapacks: Datapack[], phrase: string): GrepDatapackResult[] {
+  const needle = phrase.trim().toLowerCase();
+  const results: GrepDatapackResult[] = [];
+  if (!needle) return results;
+
+  for (const dp of datapacks) {
+    if (!dp.columnInfo || !dp.columnInfo.children) continue;
+    const matches: GrepColumnMatch[] = [];
+    const enabledColumnCount = grepColumnTree(dp.columnInfo.children, "", needle, matches);
+    if (matches.length > 0) {
+      results.push({ title: dp.title, isPublic: dp.isPublic, matches, enabledColumnCount });
+    }
+  }
+
+  return results;
+}
+
+// Turn on a column and every descendant
+function turnOnSubtree(col: ColumnInfo): void {
+  col.on = true;
+  for (const child of col.children) {
+    turnOnSubtree(child);
+  }
+}
+
+/**
+ * Enable phrase matches inside one datapack
+ * A match turns on its subtree
+ * Ancestors are turned on so the match is visible
+ */
+function enableGrepMatchesInTree(col: ColumnInfo, needle: string): boolean {
+  const display = col.editName || col.name;
+  if (col.name.toLowerCase().includes(needle) || display.toLowerCase().includes(needle)) {
+    turnOnSubtree(col);
+    return true;
+  }
+
+  let anyDescendantOn = false;
+  for (const child of col.children) {
+    if (enableGrepMatchesInTree(child, needle)) {
+      anyDescendantOn = true;
+    }
+  }
+  if (anyDescendantOn) {
+    col.on = true; // Keep ancestor's visibility on in case any match on children
+  }
+  return anyDescendantOn;
+}
+
+// Build the grep chart column tree: set on/off per datapack then merge
+export function buildGrepColumnRoot(params: GrepColumnRootParams): ColumnInfo {
+  const { unionDatapacks, currentTitles, currentToggles, currentHideDatapackDefaults, phrase } = params;
+  const needle = phrase.trim().toLowerCase();
+
+  const prepared: Datapack[] = [];
+  for (const dp of unionDatapacks) {
+    // Clone DP
+    const clone: Datapack = { ...dp, columnInfo: _.cloneDeep(dp.columnInfo) };
+    const isCurrent = currentTitles.includes(dp.title);
+
+    if (isCurrent) {
+      // Current chart pack: restore its previous on/off from session, then grep can still turn matches on
+      applyBlankSlateColumns(clone.columnInfo, currentHideDatapackDefaults);
+      if (Object.keys(currentToggles).length > 0) {
+        applyTogglesToColumnInfo(clone.columnInfo, currentToggles);
+      }
+    } else {
+      // New pack: everything off first so only grep matches (below) will show
+      applyBlankSlateColumns(clone.columnInfo, true);
+    }
+
+    // Turn on phrase matches + ancestors (works for both current and new packs)
+    if (needle) {
+      enableGrepMatchesInTree(clone.columnInfo, needle);
+    }
+
+    prepared.push(clone);
+  }
+
+  return mergeDatapackColumns(prepared);
+}
+
+/** Grep path: turn the prepared column tree into settings XML. */
+export function buildChartXmlFromPreparedColumnRoot(
+  columnRoot: ColumnInfo,
+  datapacks: Datapack[],
+  overrides: SchemaOverrides
+): string {
+  // Column on/off is already decided by buildGrepColumnRoot — only apply ages/fonts/etc., then XML.
+  const chartSettings = generateDefaultChartSettings(datapacks);
+  const primaryUnit = datapacks[0] && datapacks.length > 0 ? datapacks[0].ageUnits : "Ma";
+
+  if (overrides.fonts) {
+    applyGlobalFontsToColumnInfo(columnRoot, overrides.fonts);
+  }
+  if (Object.keys(overrides).length > 0) {
+    applyOverridesToChartSettings(chartSettings, overrides, primaryUnit);
+  }
+
+  validateChartSettings(chartSettings, primaryUnit);
+  return jsonToXml(columnRoot, chartSettings);
+}
