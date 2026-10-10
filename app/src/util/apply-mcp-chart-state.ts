@@ -49,6 +49,23 @@ function enableColumnWithAncestors(
   }
 }
 
+// Apply label orientation to a Zone column, or to Zone descendants if this is a parent folder.
+function applyOrientationToZoneColumns(
+  column: RenderColumnInfo,
+  columnHashMap: Map<string, RenderColumnInfo>,
+  orientation: "normal" | "vertical"
+): void {
+  if (column.columnDisplayType === "Zone") {
+    const zoneSettings = column.columnSpecificSettings as { orientation: "normal" | "vertical" } | undefined;
+    if (zoneSettings) zoneSettings.orientation = orientation;
+    return;
+  }
+  for (const childName of column.children) {
+    const child = columnHashMap.get(childName);
+    if (child) applyOrientationToZoneColumns(child, columnHashMap, orientation);
+  }
+}
+
 function applyMcpColumnToggles(
   columnHashMap: Map<string, RenderColumnInfo>,
   columnToggles: Record<string, Partial<MCPColumnToggleSettings>>,
@@ -66,6 +83,10 @@ function applyMcpColumnToggles(
     }
     if (settings.width !== undefined) {
       column.width = settings.width;
+    }
+    // Label orientation (Zone columns / Zone descendants under a matched parent folder).
+    if (settings.orientation !== undefined) {
+      applyOrientationToZoneColumns(column, columnHashMap, settings.orientation);
     }
   }
 }
