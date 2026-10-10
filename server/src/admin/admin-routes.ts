@@ -65,6 +65,7 @@ import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { getChartHistoryMetadata } from "../user/chart-history.js";
 
 export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPrivateOfficialDatapacksMetadata(
   _request: FastifyRequest,
@@ -121,6 +122,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
       users.map(async (user) => {
         const { hashedPassword, userId, ...displayedUser } = user;
         const userWorkshops = await findUsersWorkshops({ userId });
+        const historyEntries = await getChartHistoryMetadata(displayedUser.uuid).catch(() => []);
         const workshopIds: number[] = [];
         for (const userWorkshop of userWorkshops) {
           const { workshopId } = userWorkshop;
@@ -138,8 +140,10 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
+          createdAt: user.createdAt ?? null,
+          lastLogin: user.lastLogin ?? null,
           ...(workshopIds.length > 0 && { workshopIds }),
-          historyEntries: []
+          historyEntries
         };
       })
     );

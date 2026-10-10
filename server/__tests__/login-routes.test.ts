@@ -150,7 +150,9 @@ const testUser: User = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 0,
-  accountType: "default"
+  accountType: "default",
+  createdAt: null,
+  lastLogin: null
 };
 const mockDate = new Date();
 const testToken: Verification = {

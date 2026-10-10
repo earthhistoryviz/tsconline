@@ -96,7 +96,7 @@ export async function getChartHistoryMetadata(uuid: string): Promise<ChartHistor
       chartContent
     });
   }
-  return validEntries.sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
+  return validEntries.sort((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp));
 }
 
 /**
