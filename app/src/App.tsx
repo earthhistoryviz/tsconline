@@ -260,22 +260,20 @@ export default observer(function App() {
 
   // on theme change, update the background color
   const checkUnsavedChanges = () => {
-    const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
     const isOnDatapackPath = location.pathname === "/datapacks";
     const hasUnsavedChanges = JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
     if (state.isProcessingDatapacks || state.isInitializing) {
       return false;
     }
-    if (hasUnsavedChanges && !(isOnDatapackPath || isOnDatapacksTab)) {
+    if (hasUnsavedChanges && !isOnDatapackPath) {
       return true;
     }
     return false;
   };
   // triggered in two cases, if the user switches away from the datapacks page/tab while fetching datapacks or if fetching datapacks on the presets page
   const checkLoadingDatapacks = () => {
-    const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
     const isOnDatapackPath = location.pathname === "/datapacks";
-    if (state.loadingDatapacks && !(isOnDatapackPath || isOnDatapacksTab)) return true;
+    if (state.loadingDatapacks && !isOnDatapackPath) return true;
     return false;
   };
   // Get query string after route if one exists
