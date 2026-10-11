@@ -82,7 +82,7 @@ export const Login: React.FC = observer(() => {
         await actions.sessionCheck();
         if (mcpSession) {
           try {
-            await fetcher("/mcp/user-info", {
+            const mcpUserInfoResponse = await fetcher("/mcp/user-info", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -92,6 +92,11 @@ export const Login: React.FC = observer(() => {
                 sessionId: mcpSession
               })
             });
+            const mcpUserInfo = (await mcpUserInfoResponse.json()) as { oauthRedirectUrl?: string };
+            if (mcpUserInfo?.oauthRedirectUrl) {
+              window.location.assign(mcpUserInfo.oauthRedirectUrl);
+              return;
+            }
           } catch (e) {
             console.error("Failed to send user info to MCP", e);
           }
@@ -147,6 +152,33 @@ export const Login: React.FC = observer(() => {
     }
   };
 
+  const handleAuthorizeMcp = async () => {
+    if (!mcpSession) return;
+    setLoading(true);
+    try {
+      const response = await fetcher("/mcp/user-info", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          sessionId: mcpSession
+        })
+      });
+      const data = (await response.json()) as { oauthRedirectUrl?: string };
+      if (data?.oauthRedirectUrl) {
+        window.location.assign(data.oauthRedirectUrl);
+        return;
+      }
+      actions.logout();
+      navigate("/mcp_home");
+    } catch (e) {
+      console.error("Failed to authorize MCP session", e);
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -171,6 +203,17 @@ export const Login: React.FC = observer(() => {
       </Avatar>
       {loading ? (
         <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
+      ) : state.isLoggedIn && mcpSession ? (
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, mt: 2, width: "100%" }}>
+          <Typography variant="h6">Authorize Claude</Typography>
+          <Typography variant="body2" sx={{ textAlign: "center" }}>
+            You are logged in as <strong>{state.user?.username || "authenticated user"}</strong>. Click below to
+            authorize Claude to access your TSCOnline account.
+          </Typography>
+          <TSCButton variant="contained" fullWidth onClick={handleAuthorizeMcp} sx={{ mt: 2 }}>
+            Authorize
+          </TSCButton>
+        </Box>
       ) : (
         <>
           <Typography variant="h5">{t("login.signin")}</Typography>

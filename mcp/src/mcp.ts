@@ -66,12 +66,12 @@ export const cleanupInterval = setInterval(
   1 * 60 * 1000 // Run every 1 minute
 ).unref?.();
 
-function createSession(): { sessionId: string; entry: SessionEntry } {
+function createSession(defaultUserInfo?: SharedUser): { sessionId: string; entry: SessionEntry } {
   const sessionId = randomUUID();
   const entry: SessionEntry = {
     createdAt: Date.now(),
     lastActivity: Date.now(),
-    userInfo: undefined,
+    userInfo: defaultUserInfo,
     userChartState: newMCPChartState()
   };
 
@@ -81,14 +81,14 @@ function createSession(): { sessionId: string; entry: SessionEntry } {
 
 type SessionResult = { sessionId: string; entry: SessionEntry; internalNote?: string };
 
-function verifyMCPSession(sessionId?: string): SessionResult {
+function verifyMCPSession(sessionId?: string, defaultUserInfo?: SharedUser): SessionResult {
   // No sessionId provided -> Create one
   if (!sessionId) {
-    const created = createSession();
+    const created = createSession(defaultUserInfo);
     return {
       sessionId: created.sessionId,
       entry: created.entry,
-      internalNote: "No sessionId provided -> created a new pre-login session"
+      internalNote: "No sessionId provided -> created a new session"
     };
   }
 
@@ -96,12 +96,16 @@ function verifyMCPSession(sessionId?: string): SessionResult {
 
   // Provided sessionId is unknown/expired -> Create a new one
   if (!entry) {
-    const created = createSession();
+    const created = createSession(defaultUserInfo);
     return {
       sessionId: created.sessionId,
       entry: created.entry,
       internalNote: "Provided sessionId not found/expired -> created a new sessionId"
     };
+  }
+
+  if (defaultUserInfo && !entry.userInfo) {
+    entry.userInfo = defaultUserInfo;
   }
 
   return { sessionId, entry };
@@ -298,7 +302,9 @@ function mergeColumnToggleSettings(
   };
 }
 
-export const createMCPServer = () => {
+export const createMCPServer = (authenticatedUser?: SharedUser) => {
+  const verifySession = (sessionId?: string) => verifyMCPSession(sessionId, authenticatedUser);
+
   const server = new McpServer({
     name: "demo-server",
     version: "1.0.0",
@@ -321,7 +327,7 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      const es = verifyMCPSession(sessionId);
+      const es = verifySession(sessionId);
       const sess = requireSession(es);
 
       // Ask TSCOnline to push its latest in-browser chart state for this session.
@@ -392,7 +398,7 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      const es = verifyMCPSession(sessionId);
+      const es = verifySession(sessionId);
 
       const sess = requireSession(es);
 
@@ -411,7 +417,7 @@ export const createMCPServer = () => {
       inputSchema: updateChartArgsSchema.shape
     },
     async (args) => {
-      const es = verifyMCPSession(args.sessionId);
+      const es = verifySession(args.sessionId);
 
       const sess = requireSession(es);
 
@@ -509,13 +515,12 @@ export const createMCPServer = () => {
       }
     },
     async ({ sessionId }) => {
-      const es = verifyMCPSession(sessionId);
+      const es = verifySession(sessionId);
       const sess = requireSession(es);
 
       try {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
-        const entry = sessionId ? sessions.get(sessionId) : undefined;
-        const uuid = entry?.userInfo?.uuid;
+        const uuid = sess.entry.userInfo?.uuid;
 
         const res = await fetch(`${internalServerUrl}/mcp/datapacks`, {
           method: "POST",
@@ -547,12 +552,11 @@ export const createMCPServer = () => {
       }
     },
     async ({ datapackTitles, sessionId }) => {
-      const es = verifyMCPSession(sessionId);
+      const es = verifySession(sessionId);
       const sess = requireSession(es);
 
       try {
-        const entry = sessionId ? sessions.get(sessionId) : undefined;
-        const uuid = entry?.userInfo?.uuid;
+        const uuid = sess.entry.userInfo?.uuid;
 
         const res = await fetch(`${internalServerUrl}/mcp/list-columns`, {
           method: "POST",
@@ -582,11 +586,22 @@ export const createMCPServer = () => {
     },
     async ({ sessionId }) => {
       try {
+        const es = verifySession(sessionId);
+        requireSession(es);
+
+        if (es.entry.userInfo) {
+          return wrapResponse(
+            {
+              message: `Already logged in as ${es.entry.userInfo.username || "authenticated user"}.`
+            },
+            es.sessionId
+          );
+        }
+
         // Rate limit: check number of pre-login sessions
         const preLoginCount = Array.from(sessions.values()).filter((entry) => entry.userInfo === undefined).length;
 
         if (preLoginCount >= MAX_CONCURRENT_LOGIN_REQUESTS) {
-          const es = verifyMCPSession(sessionId);
           return wrapResponse(
             {
               error:
@@ -595,9 +610,6 @@ export const createMCPServer = () => {
             es.sessionId
           );
         }
-
-        const es = verifyMCPSession(sessionId);
-        requireSession(es);
 
         const loginUrl = `${frontendUrl}/login?mcp_session=${es.sessionId}`;
         return wrapResponse(
@@ -676,11 +688,11 @@ export const createMCPServer = () => {
       pdfFilesUris
     }): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> => {
       //Update session activity
-      if (!sessionId) {
+      if (!sessionId && !authenticatedUser) {
         return wrapResponse({ error: "No session ID provided. Please login again." }, sessionId || "");
       }
 
-      const es = verifyMCPSession(sessionId);
+      const es = verifySession(sessionId);
       const sess = requireSession(es);
 
       const entry = sess.entry;

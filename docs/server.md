@@ -10,7 +10,7 @@
 
 ---
 
-We set up the assets folder to contain all supporting files. The jars are not found on the public repo since they contain sensitive information on private applications.
+We set up the assets folder to contain all supporting files used during startup and chart generation.
 
 ```lua
 server
@@ -22,17 +22,21 @@ server
     |   `-- *.txt
     |-- decrypted
     |   `--[decrypted datapacks]
+    |-- images
+    |-- translations
     |-- jars
-    |   | -- TSCreator.jar
-    |   ` -- decrypt.jar
-    `-- configs.json
+    |   | -- TSCreator*.jar
+    |   ` -- datapack-decrypter*.jar
+    |-- config.json
+    |-- colors.json
+    `-- file-metadata.json
 ```
 
-We keep datapacks used on the server in this folder `assets/datapacks`. The configs.json folder will detail which of this datapacks are to be used in the `activeDatapacks` field.
+We keep datapacks used on the server in this folder `assets/datapacks`.
 
 Again, make sure to denote the name of your jars in their respective fields. EX. (`decryptionJar: "assets/jars/decrypt.jar"`)
 
-`configs.json` contains all the information of where assets are to be used on the server side. This is asserted in `server/src/types.ts`. Any changes to `configs.json` will need to be additionally changed in the `types.ts` files.
+`config.json` contains all the information of where assets are to be used on the server side. This is asserted in `server/src/types.ts`. Any changes to `config.json` will need to be additionally changed in the `types.ts` files.
 
 ---
 
@@ -40,11 +44,11 @@ Again, make sure to denote the name of your jars in their respective fields. EX.
 
 ---
 
-We hold all the service files here for the app. The app is able to access all files so do not put any sensitive information here (including the decrypted datapacks and jars). The presets, and charts cache are all located here.
+We hold all the service files here for the app. The app is able to access all files so do not put any sensitive information here. The presets and charts cache are all located here.
 
 #### public/presets
 
-The presets in `public/presets` will contain specific configurations of certain datapack combinations. The naming convention of these will be `public/presets/*-*` (EX: 001-TSC2020). The `config.json` will hold the information for each preset. **Right now, the settings parser, xml to json, and json to xml functions are not working so the settings are currently default.**
+The presets in `public/presets` will contain specific configurations of certain datapack combinations. The naming convention of these will be `public/presets/*-*` (EX: 001-TSC2020). The `config.json` will hold the information for each preset.
 
 **_Ask Professor Ogg for any preset ideas._**
 
@@ -64,7 +68,7 @@ On starting the server with `yarn start`, the server will create a fastify serve
 
 We then `glob` all the presets by parsing each preset in `public/presets`. This is done in `src/preset.ts`. Any error here will simply dismiss that folder/preset and the server will continue running.
 
-After grabbing all the pre-initialized presets we parse the `assets/config.json` file to grab all the correct filepaths and datapacks to be used. Any error in reading this config file will stop the server.
+After grabbing all the pre-initialized presets we parse the `assets/config.json` file to grab all the correct filepaths and datapacks to be used. Any error in reading this config file will stop the server. The configured chart-generation and decryption jars are also verified during startup.
 
 ### Datapacks
 
@@ -84,13 +88,13 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ---
 
-### GET /charts/:usecache
+### GET /chart
 
 ---
 
-`params`: {usecache (default `false`)}
+This route is now a WebSocket endpoint used to generate charts and stream progress updates back to the client.
 
-This will service the function `routes.fetchChart`. If the user decides to use the chart cache, the `GET` request will contain a URL param for `usecache` with string value `true`.
+This will service the function `routes.handleChartGeneration`.
 
 A chart request must be
 
@@ -102,7 +106,7 @@ export type ChartRequest = {
 };
 ```
 
-We hash the `settings` and `datapacks` to check if the chart already exists in `public/charts` if `cache` is true.
+We hash the `settings` and `datapacks` to check if the chart already exists in the chart cache.
 
 If cache is not used or the directory doesn't exist then we make the directory. If any datapacks requested do not exist in `assetconfigs.activeDatapacks` we return a `ServerResponseError`.
 
@@ -112,7 +116,7 @@ After checking datapacks, we proceed to call the java file TSCreator.jar. We cal
 java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar TSCreator.jar -node -s {settings_filepath} -d {datapacks} -o {chart_filepath}
 ```
 
-We reply to the app with the chart path and hash that we have just used.
+We reply to the app with progress messages and then the chart path and hash that we have just used.
 
 ### POST /removecache
 
@@ -120,25 +124,43 @@ We reply to the app with the chart path and hash that we have just used.
 
 We simply delete `public/charts`. If any error occurs we return `ServerResponseError`
 
-### GET /pdfstatus/:hash
+### GET /cached-chart/:chartHash
 
 ---
 
-`params`: {hash: string}
+`params`: {chartHash: string}
 
-We check `public/charts/{hash}` for the chart and if it exists and is readable we return true, otherwise false.
+We check the cached chart directory for the chart and if it exists we return the cached filepaths.
 
-**_NOTE: if hash is wrong there is not way of knowing. Will possibly need a fix_**
-
-### GET /datapackinfo/:files
+### GET /cache-stats
 
 ---
 
-`params`: {files: a string of space indented datapack filenames}
+This route reports stats for the cached chart directory.
+
+### POST /mcp/*
+
+---
+
+The main server also exposes MCP-related routes under `/mcp` for the standalone MCP server to call internally. These include datapack listing, column listing, chart rendering, session creation, chart state updates, chart state requests, datapack upload, and user info helpers.
+
+These routes are registered in `server/src/index.ts` and handled in `server/src/routes/mcp-routes.ts`.
+
+### GET /mcp/chart-state-sync
+
+---
+
+This route is a WebSocket endpoint used to sync the user's live chart state between TSCOnline and MCP-driven workflows.
+
+### GET /markdown-tree
+
+---
+
+This route returns the processed help markdown tree used by the app help pages.
 
 #### Parse Datapacks
 
-For all the datapacks in the paramaters return all the column data and any map data along with that. The datapack parsing takes place in `src/parse.ts`.
+For all the datapacks in the paramaters return all the column data and any map data along with that. The datapack parsing now takes place across the parsing and route files in `server/src`.
 
 **_TODO: check if the files passed in the params even exist. What should be the intended action after?_**
 

@@ -1,0 +1,85 @@
+name: Copilot Review
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  copilot-review:
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/review' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout CODEOWNERS file from main branch
+        uses: Bhacaz/checkout-files@v2
+        with:
+          files: .github/CODEOWNERS
+          branch: main
+
+      - name: Check if commenter is a code owner
+        env:
+          COMMENTER: ${{ github.event.comment.user.login }}
+        run: |
+          echo "Commenter: $COMMENTER"
+
+          if grep -Eq "(^|[[:space:]])@${COMMENTER}([[:space:]]|$)" .github/CODEOWNERS; then
+            echo "Commenter is a code owner"
+          else
+            echo "Commenter is not a code owner"
+            exit 1
+          fi
+
+      - name: React to /review comment
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+
+      - name: Request Copilot review
+        id: request_review
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                reviewers: ['copilot-pull-request-reviewer[bot]']
+              });
+              core.setOutput('result', 'requested');
+            } catch (error) {
+              if (error.status === 422) {
+                core.setOutput('result', 'already-requested-or-unavailable');
+              } else {
+                throw error;
+              }
+            }
+
+      - name: Confirm review requested
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const result = '${{ steps.request_review.outputs.result }}';
+            const body =
+              result === 'requested'
+                ? '🤖 Copilot code review requested.'
+                : 'ℹ️ Copilot review could not be newly requested. It may already be requested, already completed, or Copilot code review may not be enabled for this repository.';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });

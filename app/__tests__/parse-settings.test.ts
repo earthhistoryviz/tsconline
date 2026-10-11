@@ -789,4 +789,35 @@ describe("json to xml", () => {
     expect(xml).toContain('<setting name="title">Marsupials</setting>');
     expect(xml).toContain('<setting name="title">Marsupials for Parent</setting>');
   });
+
+  it("should normalize RootColumn id for non-Ma units by stripping Chart Title in prefix", () => {
+    const root = makeColumn({
+      name: "Chart Root",
+      columnDisplayType: "RootColumn",
+      children: [
+        makeColumn({
+          name: "Chart Title in ka (before AD2000)",
+          editName: "ka (before AD2000)",
+          columnDisplayType: "RootColumn",
+          originalTscId: "class datastore.RootColumn:Chart Title in ka (before AD2000)",
+          parent: "Chart Root"
+        } as ColumnInfo)
+      ]
+    });
+
+    const xml = parseSettings.jsonToXml(root, new Map(), {
+      timeSettings: {},
+      noIndentPattern: false,
+      enableColumnBackground: false,
+      enableChartLegend: false,
+      enablePriority: false,
+      enableHideBlockLabel: false,
+      mouseOverPopupsEnabled: false,
+      datapackContainsSuggAge: false,
+      useDatapackSuggestedAge: true
+    });
+
+    expect(xml).toContain('<column id="class datastore.RootColumn:ka (before AD2000)">');
+    expect(xml).not.toContain('<column id="class datastore.RootColumn:Chart Title in ka (before AD2000)">');
+  });
 });

@@ -169,6 +169,27 @@ const members = [
     homeTown: "Seoul, South Korea",
     timeWorked: "2025 - Present",
     proPic: "HosungRyu.png"
+  },
+  {
+    name: "Maddie Reiser",
+    role: "Member",
+    homeTown: "Freehold, New Jersey",
+    timeWorked: "2026 - Present",
+    proPic: "MaddieReiser.jpeg"
+  },
+  {
+    name: "Aaron Yu",
+    role: "Member",
+    homeTown: "Lexington, Massachussetts",
+    timeWorked: "2026 - Present",
+    proPic: "AaronYu.png"
+  },
+  {
+    name: "Sripoorna Modugula",
+    role: "Member",
+    homeTown: "Plano, Texas",
+    timeWorked: "2026 - Present",
+    proPic: "SripoornaModugula.JPG"
   }
 ];
 
