@@ -315,6 +315,9 @@ translation.settings.font.notes2,Changing one here will affect the entire chart.
 translation.settings.font.notes3,NOTE: These fonts can be changed on a column by column basis by using the Font button for each column
 translation.settings.map-points.included,Included Maps
 translation.settings.map-points.not-avaliable,No Map Points available for this datapack
+translation.settings.datapacks.page-title,Add Datapacks
+translation.settings.datapacks.page-subtitle,Pick the packs you want, then generate the chart.
+translation.settings.datapacks.staged-count,staged
 translation.settings.datapacks.see-info-guidance,Click a datapack to see more information!
 translation.settings.datapacks.add-datapack-guidance,Select one or more datapacks to build your chart. Each adds geologic events. Confirm your selection, then generate your chart.
 translation.settings.datapacks.add-to-chart,Add to chart

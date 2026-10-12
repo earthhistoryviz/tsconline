@@ -35,7 +35,8 @@
   width: 100%;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .settings-container > :not(.settings-tabs-side-bar) .datapack-display-container {
   width: 100%;

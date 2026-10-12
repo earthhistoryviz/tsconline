@@ -47,7 +47,7 @@ export const ForgotPassword: React.FC = observer(() => {
     setLoading(true);
     setShowResendForm(false);
     try {
-      const recaptchaToken = await executeRecaptcha("resetpassword");
+      const recaptchaToken = await executeRecaptcha("sendForgotPasswordEmail");
       if (!recaptchaToken) {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;

@@ -441,7 +441,7 @@ export const forgotPassword = async function forgotPassword(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken, password);
+    const score = await checkRecaptchaToken(recaptchaToken, "resetpassword");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;

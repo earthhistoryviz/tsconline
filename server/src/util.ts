@@ -481,6 +481,8 @@ export function extractMetadataFromDatapack(datapack: Datapack) {
     references: datapack.references,
     isPublic: datapack.isPublic,
     priority: datapack.priority,
+    ...(datapack.officialHeader !== undefined ? { officialHeader: datapack.officialHeader } : {}),
+    ...(datapack.officialHeaderOrder !== undefined ? { officialHeaderOrder: datapack.officialHeaderOrder } : {}),
     hasFiles: datapack.hasFiles,
     type: datapack.type,
     ...(datapack.date ? { date: datapack.date } : {}),
