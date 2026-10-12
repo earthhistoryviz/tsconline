@@ -119,9 +119,12 @@ export const Help = observer(function Help() {
         actions.setTab(4);
         break;
       case "qsg":
-      case "workshops":
         navigate("/help");
         actions.setTab(5);
+        break;
+      case "workshops":
+        navigate("/workshops");
+        actions.setTab(6);
         break;
       default:
         console.warn(`Unknown tour name: ${tourName}`);
