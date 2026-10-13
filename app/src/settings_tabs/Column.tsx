@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext, useEffect, useRef, createContext, useMemo, useCallback } from "react";
 import Typography from "@mui/material/Typography";
-import { Box, IconButton, InputAdornment, TextField } from "@mui/material";
+import { Box, Chip, IconButton, InputAdornment, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie, StyledScrollbar } from "../components";
 import LayersClearOutlinedIcon from "@mui/icons-material/LayersClearOutlined";
@@ -107,12 +107,16 @@ const ColumnSidebarHeader = observer(() => {
   const { state: globalState, actions: globalActions } = useContext(context);
   const { t } = useTranslation();
   const hideDefaults = globalState.settingsTabs.hideDatapackDefaults;
+  const selectedColumnCount = Array.from(state.columnHashMap.values()).filter((column) => column.on).length;
 
   return (
     <div className="column-sidebar-header">
-      <Typography variant="subtitle2" fontWeight={600} className="column-sidebar-title">
-        {t("settings.column.titles.sidebar-title")}
-      </Typography>
+      <div className="column-sidebar-heading">
+        <Typography variant="subtitle2" fontWeight={600} className="column-sidebar-title">
+          {t("settings.column.titles.sidebar-title")}
+        </Typography>
+        <Chip size="small" label={selectedColumnCount} className="column-selected-count" />
+      </div>
       <div className="column-sidebar-actions">
         <CustomTooltip title={t("settings.column.hide-default-columns.tooltip")} placement="top">
           <IconButton
