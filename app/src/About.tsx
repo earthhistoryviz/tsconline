@@ -190,6 +190,13 @@ const members = [
     homeTown: "Plano, Texas",
     timeWorked: "2026 - Present",
     proPic: "SripoornaModugula.JPG"
+  },
+  {
+    name: "Rykken Johnson",
+    role: "Member",
+    homeTown: "Arlington, VA",
+    timeWorked: "2026 - Present",
+    proPic: "RykkenJohnson.jpeg"
   }
 ];
 
