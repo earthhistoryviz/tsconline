@@ -39,11 +39,25 @@
   flex-shrink: 0;
 }
 
+.column-sidebar-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .column-sidebar-title {
   letter-spacing: 0.02em;
   text-transform: uppercase;
   font-size: 0.7rem !important;
   opacity: 0.65;
+}
+
+.MuiChip-root.column-selected-count {
+  height: 18px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--column-selection-accent);
+  background-color: var(--column-selection-bg);
 }
 
 .column-sidebar-actions {
