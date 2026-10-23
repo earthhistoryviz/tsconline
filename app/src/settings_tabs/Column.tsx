@@ -172,8 +172,9 @@ const ColumnSidebarHeader = observer(() => {
 
 const ColumnSidebarSearch = observer(() => {
   const { state } = useContext(ColumnContext);
-  const { actions: globalActions } = useContext(context);
+  const { state: globalState, actions: globalActions } = useContext(context);
   const { t } = useTranslation();
+  const isLoading = globalState.settingsTabs.showColumnSearchLoader;
 
   return (
     <div className={`column-sidebar-search ${state.columnSearchTerm ? "column-sidebar-search-filtered" : ""}`}>
@@ -201,6 +202,11 @@ const ColumnSidebarSearch = observer(() => {
           ) : undefined
         }}
       />
+      {state.columnSearchTerm &&
+        !isLoading &&
+        !Array.from(state.columnHashMap.values()).some((column) => column.show) && (
+          <Typography variant="body2">No columns found</Typography>
+        )}
     </div>
   );
 });
@@ -387,6 +393,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
 const ColumnIcon = observer(({ column, isBranch = false }: { column: RenderColumnInfo; isBranch?: boolean }) => {
   const { state, actions } = useContext(ColumnContext);
   const { t } = useTranslation();
+  const isLoading = useContext(context).state.settingsTabs.showColumnSearchLoader;
   const theme = useTheme();
   const unitSettings = state.timeSettings[column.units];
   const dataInRange = useMemo(() => {
