@@ -12,25 +12,34 @@ export const Font = observer(function Font() {
   const { state } = useContext(context);
   const rootColumn = state.settingsTabs.renderColumns;
   const { t } = useTranslation();
+
+  const isChartGenerating =
+    state.chartTab?.state?.stage === "Generating" ||
+    state.crossPlot?.loading ||
+    false;
+
   return (
     <>
       {rootColumn ? (
         <div className="root-font-options">
           <div className="root-font-description">
-            <Typography> {t("settings.font.notes1")}</Typography>
-            <Typography> {t("settings.font.notes2")}</Typography>
-            <Typography> {t("settings.font.notes3")}</Typography>
+            <Typography>{t("settings.font.notes1")}</Typography>
+            <Typography>{t("settings.font.notes2")}</Typography>
+            <Typography>{t("settings.font.notes3")}</Typography>
           </div>
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
             <LeafColumnFontMenu className="font-menu-setting-tab-config" column={rootColumn} />
           </div>
         </div>
+      ) : isChartGenerating ? (
+        <div className="chart-root-not-available">
+          <Typography sx={{ fontSize: theme.typography.pxToRem(18) }}>
+            Waiting for the chart to generate...
+          </Typography>
+        </div>
       ) : (
         <div className="chart-root-not-available">
-          <Typography
-            sx={{
-              fontSize: theme.typography.pxToRem(18)
-            }}>
+          <Typography sx={{ fontSize: theme.typography.pxToRem(18) }}>
             No Datapack is Selected
           </Typography>
         </div>
