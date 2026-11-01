@@ -393,7 +393,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
 const ColumnIcon = observer(({ column, isBranch = false }: { column: RenderColumnInfo; isBranch?: boolean }) => {
   const { state, actions } = useContext(ColumnContext);
   const { t } = useTranslation();
-  const isLoading = useContext(context).state.settingsTabs.showColumnSearchLoader;
   const theme = useTheme();
   const unitSettings = state.timeSettings[column.units];
   const dataInRange = useMemo(() => {
