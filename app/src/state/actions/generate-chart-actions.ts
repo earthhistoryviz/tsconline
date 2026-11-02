@@ -33,7 +33,7 @@ export const handlePopupResponse = action(
       from?: string;
     }
   ) => {
-    if (response) setDatapackTimeDefaults();
+    if (response) resetDatapackTimeSettings();
     compileChartRequest(navigate, options);
   }
 );
@@ -43,14 +43,14 @@ type UnitValues = {
   baseStageAge: number;
   verticalScale: number;
 };
-function setDatapackTimeDefaults() {
+export const resetDatapackTimeSettings = action("resetDatapackTimeSettings", (unit?: string) => {
   const unitMap = new Map<string, UnitValues>();
 
   // combine the datapacks and the min and max ages for their respective units
   // (can't just min or max the time settings immediately, since we have to set it on top of the user settings)
   for (const datapack of state.config.datapacks) {
     const pack = getDatapackFromArray(datapack, state.datapacks);
-    if (!pack) continue;
+    if (!pack || (unit && pack.ageUnits !== unit)) continue;
     const timeSettings = state.settings.timeSettings[pack.ageUnits];
     if (!timeSettings) continue;
     if (!unitMap.has(pack.ageUnits)) {
@@ -78,7 +78,7 @@ function setDatapackTimeDefaults() {
       generalActions.setUnitsPerMY(values.verticalScale, unit);
     }
   }
-}
+});
 
 // Shows the user a popup before chart generation if there are age spans on the datapack
 // only pops up if they are in the configure datapacks page, or not in the settings page

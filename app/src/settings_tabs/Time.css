@@ -61,6 +61,7 @@
 .generate-button-container {
   display: flex;
   justify-content: flex-start;
+  gap: 10px;
   margin-bottom: 10px;
 }
 .time-settings-header-and-settings {
