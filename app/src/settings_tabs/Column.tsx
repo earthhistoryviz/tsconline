@@ -172,8 +172,9 @@ const ColumnSidebarHeader = observer(() => {
 
 const ColumnSidebarSearch = observer(() => {
   const { state } = useContext(ColumnContext);
-  const { actions: globalActions } = useContext(context);
+  const { state: globalState, actions: globalActions } = useContext(context);
   const { t } = useTranslation();
+  const isLoading = globalState.settingsTabs.showColumnSearchLoader;
 
   return (
     <div className={`column-sidebar-search ${state.columnSearchTerm ? "column-sidebar-search-filtered" : ""}`}>
@@ -201,6 +202,11 @@ const ColumnSidebarSearch = observer(() => {
           ) : undefined
         }}
       />
+      {state.columnSearchTerm &&
+        !isLoading &&
+        !Array.from(state.columnHashMap.values()).some((column) => column.show) && (
+          <Typography variant="body2">No columns found</Typography>
+        )}
     </div>
   );
 });
