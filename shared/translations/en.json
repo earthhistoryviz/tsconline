@@ -311,7 +311,8 @@
                     "base-name": "Base Age/Stage Name",
                     "vertical-scale": "Vertical Scale (cm per 1)",
                     "helper-text": "Base age should be older than top age",
-                    "vertical-scale-header": "Vertical Scale"
+                    "vertical-scale-header": "Vertical Scale",
+                    "reset-range-and-scale": "Reset Range and Scale"
                 }
             },
             "preferences": {

@@ -205,6 +205,7 @@ translation.settings.time.interval.base-name,Base Age/Stage Name
 translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1)
 translation.settings.time.interval.helper-text,Base age should be older than top age
 translation.settings.time.interval.vertical-scale-header,Vertical Scale
+translation.settings.time.interval.reset-range-and-scale,Reset Range and Scale
 translation.settings.preferences.checkboxs.skip-empty-columns,Gray out (and do not draw) columns which do not have data on the selected time interval
 translation.settings.preferences.checkboxs.mouse-over-info,Add MouseOver info (popups)
 translation.settings.preferences.checkboxs.global-priority,Enabled Global Priority Filtering for block columns

@@ -205,6 +205,7 @@ translation.settings.time.interval.base-name,Название нижнего в�
 translation.settings.time.interval.vertical-scale,Вертикальный масштаб (см на 1)
 translation.settings.time.interval.helper-text,Возраст основания должен быть старше, чем возраст верха
 translation.settings.time.interval.vertical-scale-header,Вертикальный масштаб
+translation.settings.time.interval.reset-range-and-scale,Сбросить диапазон и масштаб
 translation.settings.preferences.checkboxs.skip-empty-columns,Затенять (и не отображать) колонки без данных в выбранном интервале времени
 translation.settings.preferences.checkboxs.mouse-over-info,Добавить всплывающие подсказки при наведении
 translation.settings.preferences.checkboxs.global-priority,Включить глобальную приоритетную фильтрацию для блоковых колонок

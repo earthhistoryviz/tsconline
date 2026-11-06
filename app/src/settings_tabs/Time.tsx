@@ -165,6 +165,12 @@ export const Time = observer(function Time() {
           />
           <div className="generate-button-container">
             <TSCButton
+              buttonType="secondary"
+              className="reset-datapack-range-button"
+              onClick={() => actions.resetDatapackTimeSettings(units)}>
+              {t("settings.time.interval.reset-range-and-scale")}
+            </TSCButton>
+            <TSCButton
               buttonType="gradient"
               className="generate-button"
               onClick={async () => {
