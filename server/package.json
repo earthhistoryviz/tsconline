@@ -70,7 +70,7 @@
     "@types/ws": "^8.18.1",
     "form-auto-content": "^3.2.1",
     "typescript": "5.2.2",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.11"
   },
   "keywords": [],
   "license": "ISC",
